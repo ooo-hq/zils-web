@@ -10,7 +10,7 @@ import { discordUrl, docsUrl } from '@/lib/shared';
 const LINKS = [
   { href: '/model', label: 'research', id: 'model' },
   { href: '/playground', label: 'playground' },
-  { href: '/train', label: 'sign in', id: 'train' },
+  { href: '/train', label: 'login', id: 'train' },
 ] as const;
 
 /** Everything else lives in the footer (components/site-footer.tsx). */
