@@ -12,8 +12,10 @@ export const submissionSchema = z.object({
 export type Submission = z.infer<typeof submissionSchema>;
 export const STATUSES = ['uploading', 'validating', 'awaiting_approval', 'queued', 'running', 'evaluating', 'completed', 'failed'] as const;
 const metrics = z.object({ accuracy: z.number().min(0).max(1), brier: z.number().min(0).max(2), skill: z.number().min(0).max(1) });
+const modelSchema = z.object({ id: z.enum(['kev-0.8b-v1', 'jevk5-4b-v0.3']), name: z.string(), base: z.string(), base_revision: z.string().regex(/^[a-f0-9]{40}$/) });
 export const jobSchema = z.object({
   id: z.string().uuid(), name: z.string(), status: z.enum(STATUSES), created_at: z.string().optional(), error: z.string().nullable().optional(),
+  model: modelSchema.nullable().optional(),
   result: z.object({
     delivery: z.object({ status: z.enum(['accepted', 'no_qualifying_model']), uid: z.number().optional(), sha256: z.string().optional(), brier_improvement: z.number().optional(), acceptance: acceptanceSchema }),
     baseline: metrics,
@@ -25,6 +27,8 @@ export type Job = z.infer<typeof jobSchema>;
 export const terminal = (job: Job) => job.status === 'completed' || job.status === 'failed';
 export const canDownload = (job: Job) => job.status === 'completed' && job.result?.delivery.status === 'accepted';
 export const DOWNLOAD_FILES = ['adapter_config.json', 'adapter_model.safetensors', 'head.pt', 'release.json'] as const;
+const JEVK5_DOWNLOAD_FILES = ['adapter_config.json', 'adapter_model.safetensors', 'model.json', 'release.json'] as const;
+export const downloadFiles = (job: Job) => job.model?.id === 'jevk5-4b-v0.3' ? JEVK5_DOWNLOAD_FILES : DOWNLOAD_FILES;
 
 export function serviceUrl(raw: string): string {
   const url = new URL(raw);
@@ -64,7 +68,7 @@ export async function validateDatasets(files: Record<Split, Blob>, signal?: Abor
       const choices = q.type === 'noul' ? ['false', 'true'] : q.type === 'score' && Array.isArray(q.criteria) ? q.criteria.map((_, i) => String(i)) : q.type === 'choice' && q.criteria && typeof q.criteria === 'object' && !Array.isArray(q.criteria) ? Object.keys(q.criteria) : [];
       if (q.type === 'noul' && q.criteria != null && (typeof q.criteria !== 'object' || Array.isArray(q.criteria) || Object.keys(q.criteria).some(key => !['true', 'false'].includes(key)))) throw new Error(`${split}, line ${line}: noul criteria must use true/false keys.`);
       if (new TextEncoder().encode(JSON.stringify(input)).length > 128 * 1024) throw new Error(`${split}, line ${line}: case exceeds 128 KiB.`);
-      if (choices.length < 2 || choices.length > 255 || choices.some(key => !key) || !choices.includes(row.label)) throw new Error(`${split}, line ${line}: question needs at least two outcomes and a label matching an outcome.`);
+      if (choices.length < 2 || choices.length > 16 || choices.some(key => !key) || !choices.includes(row.label)) throw new Error(`${split}, line ${line}: question needs 2–16 outcomes and a label matching an outcome.`);
       if (ids.has(row.id)) throw new Error(`${split}, line ${line}: duplicate case ID across the datasets.`);
       ids.add(row.id);
       if (groups.has(row.group_id) && groups.get(row.group_id) !== split) throw new Error(`${split}, line ${line}: related source group crosses dataset splits.`);
@@ -141,9 +145,11 @@ export function trainingApi(baseUrl: string, storageUrl: string, token: () => Pr
     submit: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/submit`, z.object({ job: jobSchema }), {}, signal),
     downloads: async (job: Job, signal?: AbortSignal) => {
       if (!canDownload(job)) throw new Error('Downloads require a completed, accepted model.');
-      const schema = z.object({ downloads: z.object({ 'adapter_config.json': z.object({ url: z.string() }), 'adapter_model.safetensors': z.object({ url: z.string() }), 'head.pt': z.object({ url: z.string() }), 'release.json': z.object({ url: z.string() }) }) });
+      const schema = z.object({ downloads: z.record(z.string(), z.object({ url: z.string() })) });
       const data = await call(`${idPath(job.id)}/downloads`, schema, undefined, signal);
-      return DOWNLOAD_FILES.map(name => ({ name, url: signedUrl(data.downloads[name].url) }));
+      const files = downloadFiles(job);
+      if (Object.keys(data.downloads).length !== files.length || files.some(name => !data.downloads[name])) throw new Error('The model download does not match this job’s model version.');
+      return files.map(name => ({ name, url: signedUrl(data.downloads[name].url) }));
     },
     upload: async (split: Split, descriptor: z.infer<typeof uploadSchema>, file: Blob, signal?: AbortSignal) => {
       const valid = uploadSchema.parse(descriptor);

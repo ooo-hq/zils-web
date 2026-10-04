@@ -2,7 +2,7 @@
 
 import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { canDownload, DOWNLOAD_FILES, SPLITS, submissionSchema, terminal, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
+import { canDownload, downloadFiles, SPLITS, submissionSchema, terminal, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
 import { TrainingGuide } from '@/components/training-guide';
 import { TrainingIntake } from '@/components/training-intake';
 import { TrainingRunStatus } from '@/components/training-run-status';
@@ -198,7 +198,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
           {selected.result && <><h3 className={styles.resultTitle}>Measured results</h3><p className={styles.help}>Measured on this job’s held-out data; not a guarantee on future inputs. Artifact delivery does not deploy an inference endpoint.</p><div className={styles.metrics}><div><span>Baseline accuracy</span><strong>{metric(selected.result.baseline.accuracy, true)}</strong></div><div><span>Baseline Brier loss</span><strong>{metric(selected.result.baseline.brier)}</strong></div></div><p className={styles.help}>Required: {metric(selected.result.delivery.acceptance.min_accuracy, true)} accuracy; {metric(selected.result.delivery.acceptance.min_brier_improvement)} absolute Brier improvement.</p>
             <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Candidate evaluations"><table><thead><tr><th>Candidate</th><th>Status</th><th>Accuracy</th><th>Brier ↓</th></tr></thead><tbody>{selected.result.miners.map(miner => <tr key={miner.uid}><th>{miner.uid}{selected.result?.delivery.uid === miner.uid ? ' · selected' : ''}</th><td>{miner.status}</td><td>{metric(miner.accuracy, true)}</td><td>{metric(miner.brier)}</td></tr>)}</tbody></table></div>
             {selected.result.delivery.sha256 && <p className={styles.hash}>Checkpoint SHA-256<br /><code>{selected.result.delivery.sha256}</code></p>}
-            {canDownload(selected) && <><button disabled={busy} className={styles.button} onClick={() => getDownloads(selected)}>Get private download links</button><p className={styles.help}>Links expire. Generate fresh links when needed. Files: {DOWNLOAD_FILES.join(', ')}.</p>{downloads.length > 0 && <ul className={styles.downloads}>{downloads.map(file => <li key={file.name}><a href={file.url} target="_blank" rel="noreferrer">{file.name} ↗</a></li>)}</ul>}</>}
+            {canDownload(selected) && <><button disabled={busy} className={styles.button} onClick={() => getDownloads(selected)}>Get private download links</button><p className={styles.help}>Links expire. Generate fresh links when needed. Files: {downloadFiles(selected).join(', ')}.</p>{downloads.length > 0 && <ul className={styles.downloads}>{downloads.map(file => <li key={file.name}><a href={file.url} target="_blank" rel="noreferrer">{file.name} ↗</a></li>)}</ul>}</>}
           </>}
         </div>}
       </section>
