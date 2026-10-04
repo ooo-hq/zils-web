@@ -8,6 +8,7 @@ export function TrainingRunStatus({ job }: { job: Job }) {
     <div role="status" aria-atomic="true">
       <h3 className={styles.runHeadline}>{status.title}</h3>
       <p className={styles.runExplanation}>{status.detail}</p>
+      {job.model && <p className={styles.help}>Starting model: <strong>{job.model.name}</strong></p>}
     </div>
     {status.stage !== null && <ol className={styles.runStages} aria-label="Training run progress">
       {TRAINING_STAGES.map((title, index) => {

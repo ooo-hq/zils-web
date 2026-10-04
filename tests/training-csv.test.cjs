@@ -85,7 +85,7 @@ test('insufficient independent examples for an outcome blocks preparation', asyn
 test('oversized examples and invalid decision settings are rejected', async () => {
   const csv=parseCsv(sample);csv.rows[0][1]='a'.repeat(128*1024);
   await assert.rejects(prepare(csv),/record 2.*128 KiB/);
-  for (const config of [{...decision,question:''},{...decision,name:'bad name'},{...decision,outcomes:['Yes','Yes']}]) await assert.rejects(prepare(undefined,mapping,config));
+  for (const config of [{...decision,question:''},{...decision,name:'bad name'},{...decision,outcomes:['Yes','Yes']},{...decision,outcomes:Array.from({length:17},(_,i)=>`Outcome ${i}`)}]) await assert.rejects(prepare(undefined,mapping,config));
 });
 test('Unicode text respects the coordinator’s escaped-JSON size limit', async () => {
   const csv=parseCsv(sample);csv.rows[0][1]='发票'.repeat(15000);

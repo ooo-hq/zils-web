@@ -52,7 +52,7 @@ export function TrainingIntake({ busy, onSubmit, onFiles, pending = false }: Pro
   }
   function nextDecision(event: FormEvent) {
     event.preventDefault();
-    if (outcomes.length < 2 || outcomes.length > 50 || new Set(outcomes).size !== outcomes.length || outcomes.some(value => value.length > 100)) { setError('Enter 2–50 different possible answers, one per line, up to 100 characters each.'); return; }
+    if (outcomes.length < 2 || outcomes.length > 16 || new Set(outcomes).size !== outcomes.length || outcomes.some(value => value.length > 100)) { setError('Enter 2–16 different possible answers, one per line, up to 100 characters each.'); return; }
     go(1);
   }
   async function readFile(file: File | undefined) {
