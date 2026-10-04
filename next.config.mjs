@@ -3,6 +3,12 @@ const config = {
   reactStrictMode: true,
   async redirects() {
     return [
+      // Fez's app and application policies remain on the chat product's site.
+      ...['app', 'cli', 'privacy', 'terms'].map((path) => ({
+        source: `/${path}/:path*`,
+        destination: `https://fez.chat/${path}/:path*`,
+        permanent: true,
+      })),
       { source: '/docs', destination: 'https://docs.fez.chat', permanent: true },
       { source: '/docs/:path*', destination: 'https://docs.fez.chat/:path*', permanent: true },
       // The Sidecar/agent-network page is the CLI page now.

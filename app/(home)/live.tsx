@@ -60,7 +60,7 @@ export function DecisionInstrument() {
   return (
     <div className="relative mx-auto w-full max-w-xl rounded-[22px] border border-black/10 bg-white/60 p-2.5 shadow-[0_30px_80px_-30px_rgba(40,60,120,0.45)] backdrop-blur-md">
       <div className="flex items-center justify-between px-3 pb-2 pt-1 font-mono text-[10px] tracking-[0.14em] text-neutral-500">
-        <span>FEZ · DECISION INSTRUMENT</span>
+        <span>ZILS · DECISION INSTRUMENT</span>
         <span className="flex items-center gap-1.5">
           <span className={`size-1.5 rounded-full ${stamped ? 'bg-emerald-500' : 'bg-[#FF6A00]'}`} />
           ILLUSTRATIVE
@@ -158,7 +158,7 @@ export function RoundReplay({ tabs, caption }: { tabs: readonly ReplayTab[]; cap
       </div>
       <div className="mt-5 overflow-hidden rounded-2xl bg-[#0b0b0c] shadow-[0_30px_80px_-30px_rgba(0,0,0,0.5)] ring-1 ring-black/10">
         <div className="flex items-center justify-between border-b border-white/5 bg-white/[0.03] px-5 py-3">
-          <span className="font-mono text-xs text-neutral-300">fez · recorded round replay</span>
+          <span className="font-mono text-xs text-neutral-300">zils · recorded round replay</span>
           <span className="flex gap-1.5" aria-hidden="true">
             <span className="size-2.5 rounded-full bg-[#ff5f57]" />
             <span className="size-2.5 rounded-full bg-[#febc2e]" />

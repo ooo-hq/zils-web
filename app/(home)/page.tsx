@@ -274,7 +274,7 @@ export default function HomePage() {
                 <span className="text-[#9ee89e]/40">/{fez.n_attempted}</span>
               </p>
               <p className="mt-3 text-xs text-[#9ee89e]/70">
-                fez = published kev · +{jevbench.paired_outcomes.fez_corrected} / −{jevbench.paired_outcomes.fez_regressed} items
+                zils = published kev · +{jevbench.paired_outcomes.fez_corrected} / −{jevbench.paired_outcomes.fez_regressed} items
               </p>
             </div>
           </div>
