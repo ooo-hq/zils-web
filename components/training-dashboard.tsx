@@ -30,7 +30,7 @@ export function TrainingDashboard({ config }: { config: Config }) {
     try {
       const { error } = await client.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: `${window.location.origin}/train` } });
       if (error) throw error;
-      setNotice('Check your email for a sign-in link. Open it to return to your training dashboard.');
+      setNotice('Check your email for a sign-in link. Open it to return to your training workspace.');
     } catch (error) { setError(message(error)); } finally { setBusy(false); }
   }
   async function signOut() {
@@ -44,7 +44,7 @@ export function TrainingDashboard({ config }: { config: Config }) {
     {session ? <>
       <div id="training-workspace" className={styles.account}><span>Signed in as <strong>{session.user.email || 'your account'}</strong></span><button className={styles.secondary} onClick={signOut}>Sign out</button></div>
       <SignedInDashboard key={session.user.id} client={client} config={config} onExpired={signOut} />
-    </> : <><TrainingGuide /><section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}><span className={styles.badge}>Private workspace</span><h2>Start your training workspace.</h2><p>Log in to define your decision, prepare a CSV, and review the examples before submitting. You can also return to existing training jobs here.</p><form onSubmit={signIn}><label htmlFor="training-email">Email address</label><input id="training-email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" disabled={busy} /><button className={styles.button} disabled={busy}>{busy ? 'Sending link…' : 'Email me a sign-in link'}</button></form>{notice && <p role="status" className={styles.notice}>{notice}</p>}</section></>}
+    </> : <><TrainingGuide /><section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}><span className={styles.badge}>Private workspace</span><h2>Start your training workspace.</h2><p>Log in to choose what Zils should learn, add examples, and check them before sending for training. You can also return to your previous training runs here.</p><form onSubmit={signIn}><label htmlFor="training-email">Email address</label><input id="training-email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" disabled={busy} /><button className={styles.button} disabled={busy}>{busy ? 'Sending link…' : 'Email me a sign-in link'}</button></form>{notice && <p role="status" className={styles.notice}>{notice}</p>}</section></>}
   </>;
 }
 
@@ -120,7 +120,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
     let createdId = '';
     try {
       await validateDatasets(datasets, controller.signal);
-      setProgress('Creating your job…');
+      setProgress('Preparing your training run…');
       const { job, uploads } = await api.create(parsed.data, controller.signal);
       createdId = job.id; setPendingUpload(job.id); replaceJob(job); setSelectedId(job.id);
       for (const split of SPLITS) {
@@ -130,7 +130,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
       }
       setProgress('Submitting for validation…');
       const submitted = await api.submit(job.id, controller.signal);
-      replaceJob(submitted.job); setProgress('Submitted. The coordinator will validate the data before worker approval.');
+      replaceJob(submitted.job); setProgress('Sent for training review. We’ll check your examples before approving the run.');
       setFiles({}); setPendingUpload(''); setFormVersion(v => v + 1);
       requestAnimationFrame(() => statusMessage.current?.focus());
     } catch (error) {
@@ -155,7 +155,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
       }
       const result = await api.submit(job.id, controller.signal);
       replaceJob(result.job); setFiles({}); setPendingUpload(''); setFormVersion(v => v + 1);
-      setProgress('Uploads complete. Submitted for validation.');
+      setProgress('Uploads complete. Your examples have been sent for training review.');
     } catch (error) { if (controller.signal.aborted) setProgress('Stopped locally. Saved uploads remain.'); else handleError(error); }
     finally { setBusy(false); setCancellable(false); operation.current = null; }
   }
@@ -185,10 +185,10 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
         {progress && <p ref={statusMessage} tabIndex={-1} role="status" className={styles.notice}>{progress}</p>}
         {busy && cancellable && <button type="button" className={styles.secondary} onClick={() => operation.current?.abort()}>Stop upload</button>}
       </div>
-      <section className={styles.panel}><div className={styles.panelHeader}><div><h2>Your training jobs</h2></div><button className={styles.secondary} onClick={refresh} disabled={busy}>Refresh</button></div>
-        {loading ? <p role="status">Loading your jobs…</p> : jobs.length === 0 ? <p className={styles.empty}>Your first training job will appear here after submission. Prepare and submit your examples to get started.</p> : <ul className={styles.jobs}>{jobs.map(job => <li key={job.id}><button disabled={busy} className={styles.jobButton} aria-pressed={selectedId === job.id} onClick={() => selectJob(job)}><strong>{job.name}</strong><span className={styles.badge}>{label(job.status)}</span></button></li>)}</ul>}
+      <section className={styles.panel}><div className={styles.panelHeader}><div><h2>Your training runs</h2></div><button className={styles.secondary} onClick={refresh} disabled={busy}>Refresh</button></div>
+        {loading ? <p role="status">Loading your training runs…</p> : jobs.length === 0 ? <p className={styles.empty}>Your training run will appear here after you send your examples. Follow the steps to get started.</p> : <ul className={styles.jobs}>{jobs.map(job => <li key={job.id}><button disabled={busy} className={styles.jobButton} aria-pressed={selectedId === job.id} onClick={() => selectJob(job)}><strong>{job.name}</strong><span className={styles.badge}>{label(job.status)}</span></button></li>)}</ul>}
         {selected && <div className={styles.jobDetail}><h3>{selected.name}</h3><p className={styles.id}>{selected.id}</p>{selected.created_at && <p className={styles.help}>Created {new Date(selected.created_at).toLocaleString()}</p>}<p className={styles.notice} role="status">{STATUS_COPY[selected.status]}</p>{selected.error && <p role="alert" className={styles.error}>{selected.error}</p>}
-          {selected.status === 'uploading' && <><p className={styles.help}>If all three uploads completed, retry submission. To resume a failed upload, prepare the same CSV with the original settings, or choose the original files in advanced JSONL upload. Completed uploads are skipped; existing files are not overwritten.</p><button className={styles.secondary} disabled={busy} onClick={() => retrySubmit(selected)}>Retry submission</button><button className={styles.secondary} disabled={busy} onClick={() => resumeUploads(selected)}>Resume missing uploads</button><button className={styles.secondary} disabled={busy} onClick={() => cancelJob(selected)}>Cancel this job</button></>}
+          {selected.status === 'uploading' && <><p className={styles.help}>If all three uploads completed, retry submission. To resume a failed upload, prepare the same CSV with the original settings, or choose the original files in “Advanced: prepared files”. Completed uploads are skipped; existing files are not overwritten.</p><button className={styles.secondary} disabled={busy} onClick={() => retrySubmit(selected)}>Retry submission</button><button className={styles.secondary} disabled={busy} onClick={() => resumeUploads(selected)}>Resume missing uploads</button><button className={styles.secondary} disabled={busy} onClick={() => cancelJob(selected)}>Cancel this run</button></>}
           {selected.status === 'completed' && !selected.result && <p>Result details are not available yet. Refresh to try again.</p>}
           {selected.result && <><h3 className={styles.resultTitle}>{selected.result.delivery.status === 'accepted' ? 'A model met your criteria.' : 'No model met your criteria.'}</h3><p className={styles.help}>Measured on this job’s held-out data; not a guarantee on future inputs. Artifact delivery does not deploy an inference endpoint.</p><div className={styles.metrics}><div><span>Baseline accuracy</span><strong>{metric(selected.result.baseline.accuracy, true)}</strong></div><div><span>Baseline Brier loss</span><strong>{metric(selected.result.baseline.brier)}</strong></div></div><p className={styles.help}>Required: {metric(selected.result.delivery.acceptance.min_accuracy, true)} accuracy; {metric(selected.result.delivery.acceptance.min_brier_improvement)} absolute Brier improvement.</p>
             <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Candidate evaluations"><table><thead><tr><th>Candidate</th><th>Status</th><th>Accuracy</th><th>Brier ↓</th></tr></thead><tbody>{selected.result.miners.map(miner => <tr key={miner.uid}><th>{miner.uid}{selected.result?.delivery.uid === miner.uid ? ' · selected' : ''}</th><td>{miner.status}</td><td>{metric(miner.accuracy, true)}</td><td>{metric(miner.brier)}</td></tr>)}</tbody></table></div>
