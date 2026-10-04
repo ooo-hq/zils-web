@@ -4,7 +4,7 @@ import { ZilsWordmark } from '@/components/zils-wordmark';
 import s from '@/components/light.module.css';
 
 /** The one footer: app, CLI, docs and Discord live here, not in the header. */
-export function SiteFooter({ tone = 'light' }: { tone?: 'light' | 'dark' }) {
+export function SiteFooter({ tone = 'light', showSmallWordmark = true }: { tone?: 'light' | 'dark'; showSmallWordmark?: boolean }) {
   if (tone === 'dark') {
     return (
       <footer className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-5 border-t border-neutral-900 px-6 py-8 font-mono text-xs text-neutral-500 sm:px-8">
@@ -19,11 +19,11 @@ export function SiteFooter({ tone = 'light' }: { tone?: 'light' | 'dark' }) {
     <footer className="overflow-hidden border-t border-neutral-200 bg-white text-neutral-950">
       <div className="mx-auto grid max-w-5xl gap-10 px-6 pt-14 sm:px-8 md:grid-cols-[1fr_auto]">
         <div>
-          <Link href="/" aria-label="Zils home" className="inline-block leading-none"><ZilsWordmark className="text-[42px]" /></Link>
-          <p className="mt-3 text-sm text-neutral-600">Specialized models.<br />Decisions that are yours.</p>
+          {showSmallWordmark && <Link href="/" aria-label="Zils home" className="inline-block leading-none"><ZilsWordmark className="text-[42px]" /></Link>}
+          <p className={`${showSmallWordmark ? 'mt-3' : ''} text-sm text-neutral-600`}>Specialized models.<br />Decisions that are yours.</p>
         </div>
         <nav aria-label="Footer" className="grid grid-cols-2 gap-x-12 gap-y-1.5 text-sm sm:grid-cols-3">
-          {FOOTER_LINKS.map((l) => <Link key={l.href + l.label} href={l.href} className="hover:text-[#3455dc]">{l.label}</Link>)}
+          {FOOTER_LINKS.map((l) => <Link key={l.href + l.label} href={l.href} className="hover:text-[var(--zils-accent,#3455dc)]">{l.label}</Link>)}
         </nav>
       </div>
       <div className="mx-auto mt-10 flex max-w-5xl justify-between gap-4 px-6 font-mono text-[10px] tracking-[0.1em] text-neutral-500 sm:px-8">
