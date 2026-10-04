@@ -22,13 +22,6 @@
 .phosphor { text-shadow: 0 0 5px currentColor; }
 .tube { box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.8); }
 
-/* Fez mark: strokes draw in once, then the tassel sways from the crown. */
-@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
-.mark :is(path, ellipse) { stroke-dasharray: 1; animation: draw 1.4s cubic-bezier(0.65, 0, 0.35, 1) both; }
-.mark .tassel :is(path) { animation-delay: 0.9s; }
-@keyframes sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(5deg); } }
-.tassel { transform-origin: 60px 30px; animation: sway 3.6s ease-in-out 2.3s infinite; }
-
 @keyframes blink { 50% { opacity: 0; } }
 .cursor { animation: blink 1s steps(1) infinite; }
 @keyframes lineIn { from { opacity: 0; transform: translateY(4px); } }
@@ -37,5 +30,5 @@
 .stamp { animation: stamp 0.25s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .drift, .driftSlow, .marquee, .mark :is(path, ellipse), .tassel, .cursor, .lineIn, .stamp { animation: none; }
+  .drift, .driftSlow, .marquee, .cursor, .lineIn, .stamp { animation: none; }
 }

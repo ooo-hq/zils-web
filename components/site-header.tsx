@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ZilsWordmark } from '@/components/zils-wordmark';
 import { discordUrl, docsUrl } from '@/lib/shared';
 
 /**
@@ -30,8 +31,8 @@ export function SiteHeader({ current, tone = 'dark' }: { current?: string; tone?
   return (
     <header className="flex flex-col items-start gap-5 py-6 text-xs sm:flex-row sm:items-center sm:justify-between sm:py-8">
       <a href="#main-content" className="sr-only z-50 bg-black px-4 py-3 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to content</a>
-      <Link href="/" className={`shrink-0 ${tone === 'light' ? 'text-2xl font-semibold tracking-tight text-black' : 'text-base font-bold text-white'}`}>
-        zils<span className="text-[#FF6A00]">▴</span>
+      <Link href="/" aria-label="Zils home" className={`shrink-0 leading-none ${tone === 'light' ? 'text-black' : 'text-white'}`}>
+        <ZilsWordmark className="text-[42px]" />
       </Link>
       <nav aria-label="Main navigation" className="grid grid-cols-3 gap-x-6 gap-y-3 sm:flex sm:flex-wrap sm:gap-x-5">
         {LINKS.map((l) => (

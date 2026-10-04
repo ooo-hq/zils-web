@@ -6,7 +6,7 @@ import { discordUrl } from '@/lib/shared';
 import jevbench from '@/public/model/jevbench-public-001.json';
 import round from '@/public/model/testnet-round-001.json';
 import { DecisionInstrument, RoundReplay, type ReplayTab } from './live';
-import { FezMark } from './mark';
+import { ZilsWordmark } from '@/components/zils-wordmark';
 import s from '@/components/light.module.css';
 
 const TITLE = 'Your data. Your decision model.';
@@ -118,7 +118,7 @@ export default function HomePage() {
         <main id="main-content" tabIndex={-1} className="relative">
           {/* ── Hero ─────────────────────────────────────────── */}
           <section className="mx-auto max-w-4xl px-6 pb-24 pt-8 text-center sm:px-8">
-            <FezMark className="mx-auto h-32 w-auto text-[#2c3a60]" />
+            <ZilsWordmark className="text-[112px] text-[#2c3a60] sm:text-[144px]" />
             <p className="mt-8 flex items-center justify-center gap-2 text-[12px] font-medium">
               <span aria-hidden="true" className="text-base">✳</span> Specialized decision models · Early access
             </p>
@@ -308,7 +308,7 @@ export default function HomePage() {
           <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(ellipse_at_15%_120%,rgba(52,85,220,0.55),transparent_50%),radial-gradient(ellipse_at_90%_-10%,rgba(243,195,240,0.35),transparent_50%)]" />
           <span aria-hidden="true" className={`pointer-events-none absolute inset-0 ${s.scanlinesDark}`} />
           <div className="relative">
-            <FezMark className="mx-auto h-16 w-auto text-white/75" />
+            <ZilsWordmark className="text-[80px] text-white/90" />
             <h2 id="cta" className="mt-8 text-balance text-[clamp(2.1rem,5vw,3.4rem)] font-semibold leading-[1.02] tracking-[-0.055em] text-white">
               Your next model starts
               <br />
