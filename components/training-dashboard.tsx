@@ -2,14 +2,15 @@
 
 import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { canDownload, DOWNLOAD_FILES, SPLITS, STATUS_COPY, submissionSchema, terminal, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
+import { canDownload, DOWNLOAD_FILES, SPLITS, submissionSchema, terminal, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
 import { TrainingGuide } from '@/components/training-guide';
 import { TrainingIntake } from '@/components/training-intake';
+import { TrainingRunStatus } from '@/components/training-run-status';
+import { trainingProgress } from '@/lib/training-status';
 import styles from '@/app/(home)/train/train.module.css';
 
 type Config = { url: string; key: string; apiUrl: string };
 const message = (error: unknown) => error instanceof Error ? error.message : 'Something went wrong. Please try again.';
-const label = (status: string) => status.replaceAll('_', ' ');
 const metric = (value: number | undefined, percent = false) => value === undefined ? '—' : percent ? `${(value * 100).toFixed(2)}%` : value.toFixed(4);
 
 export function TrainingDashboard({ config }: { config: Config }) {
@@ -52,6 +53,9 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedId, setSelectedId] = useState('');
   const [loading, setLoading] = useState(true);
+  const [checkedAt, setCheckedAt] = useState<number | null>(null);
+  const [refreshError, setRefreshError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
@@ -60,7 +64,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
   const [downloads, setDownloads] = useState<{ name: string; url: string }[]>([]);
   const [formVersion, setFormVersion] = useState(0);
   const [pendingUpload, setPendingUpload] = useState('');
-  const statusMessage = useRef<HTMLParagraphElement>(null);
+  const statusMessage = useRef<HTMLHeadingElement>(null);
   const life = useRef<AbortController | null>(null);
   const operation = useRef<AbortController | null>(null);
   const selected = jobs.find(job => job.id === selectedId);
@@ -83,27 +87,30 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
       try {
         const { jobs } = await api.list(controller.signal);
         if (controller.signal.aborted) return;
-        setJobs(jobs); setLoading(false);
+        setJobs(jobs); setLoading(false); setCheckedAt(Date.now()); setRefreshError(false);
+        setSelectedId(previous => previous || jobs[0]?.id || '');
         setPendingUpload(previous => jobs.some(job => job.id === previous && job.status !== 'uploading') ? '' : previous);
-        if (jobs.some(job => !terminal(job) && job.status !== 'uploading')) timer = setTimeout(poll, 10_000);
-      } catch (error) { if (!controller.signal.aborted) { errorHandler.current(error); setLoading(false); timer = setTimeout(poll, 30_000); } }
+        timer = setTimeout(poll, jobs.some(job => !terminal(job)) ? 10_000 : 30_000);
+      } catch (error) { if (!controller.signal.aborted) { if (error instanceof TrainingApiError && error.status === 401) errorHandler.current(error); setLoading(false); setRefreshError(true); timer = setTimeout(poll, 30_000); } }
     }
     void poll();
     return () => { controller.abort(); operation.current?.abort(); clearTimeout(timer); };
   }, [api, formVersion]);
 
   const refresh = async () => {
-    setError('');
+    setError(''); setRefreshing(true);
     try {
       const { jobs } = await api.list(life.current?.signal);
       if (!life.current?.signal.aborted) {
-        setJobs(jobs);
+        setJobs(jobs); setCheckedAt(Date.now()); setRefreshError(false);
+        setSelectedId(previous => previous || jobs[0]?.id || '');
         setPendingUpload(previous => jobs.some(job => job.id === previous && job.status !== 'uploading') ? '' : previous);
       }
-    } catch (error) { if (!life.current?.signal.aborted) handleError(error); }
+    } catch (error) { if (!life.current?.signal.aborted) { if (error instanceof TrainingApiError && error.status === 401) handleError(error); setRefreshError(true); } }
+    finally { setRefreshing(false); }
   };
   function replaceJob(job: Job) {
-    setJobs(previous => [job, ...previous.filter(other => other.id !== job.id)]);
+    setJobs(previous => previous.some(other => other.id === job.id) ? previous.map(other => other.id === job.id ? job : other) : [job, ...previous]);
     if (job.status !== 'uploading') setPendingUpload(previous => previous === job.id ? '' : previous);
   }
   async function selectJob(job: Job) {
@@ -130,7 +137,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
       }
       setProgress('Submitting for validation…');
       const submitted = await api.submit(job.id, controller.signal);
-      replaceJob(submitted.job); setProgress('Sent for training review. We’ll check your examples before approving the run.');
+      replaceJob(submitted.job); setProgress('');
       setFiles({}); setPendingUpload(''); setFormVersion(v => v + 1);
       requestAnimationFrame(() => statusMessage.current?.focus());
     } catch (error) {
@@ -155,19 +162,20 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
       }
       const result = await api.submit(job.id, controller.signal);
       replaceJob(result.job); setFiles({}); setPendingUpload(''); setFormVersion(v => v + 1);
-      setProgress('Uploads complete. Your examples have been sent for training review.');
+      setProgress('');
+      requestAnimationFrame(() => statusMessage.current?.focus());
     } catch (error) { if (controller.signal.aborted) setProgress('Stopped locally. Saved uploads remain.'); else handleError(error); }
     finally { setBusy(false); setCancellable(false); operation.current = null; }
   }
   async function cancelJob(job: Job) {
-    setBusy(true); setError(''); setDownloads([]);
+    setBusy(true); setError(''); setDownloads([]); setProgress('');
     try { const result = await api.cancel(job.id, life.current?.signal); replaceJob(result.job); if (job.id === pendingUpload) setPendingUpload(''); }
     catch (error) { if (!life.current?.signal.aborted) handleError(error); }
     finally { setBusy(false); }
   }
   async function retrySubmit(job: Job) {
     setBusy(true); setError(''); setDownloads([]);
-    try { const result = await api.submit(job.id, life.current?.signal); replaceJob(result.job); setPendingUpload(''); setFiles({}); setFormVersion(v => v + 1); }
+    try { const result = await api.submit(job.id, life.current?.signal); replaceJob(result.job); setPendingUpload(''); setFiles({}); setFormVersion(v => v + 1); setProgress(''); requestAnimationFrame(() => statusMessage.current?.focus()); }
     catch (error) { if (!life.current?.signal.aborted) handleError(error); }
     finally { setBusy(false); }
   }
@@ -179,24 +187,24 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
   }
   return <>
     {error && <p className={styles.error} role="alert">{error}</p>}
-    <div className={styles.grid}>
-      <div>
-        <TrainingIntake key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} />
-        {progress && <p ref={statusMessage} tabIndex={-1} role="status" className={styles.notice}>{progress}</p>}
+    <div className={styles.workspace}>
+      <section className={styles.panel}><div className={styles.panelHeader}><div><h2 ref={statusMessage} tabIndex={-1}>Your training runs</h2></div><button className={styles.secondary} onClick={refresh} disabled={busy || refreshing}>{refreshing ? 'Checking…' : 'Refresh status'}</button></div>
+        {progress && <p role="status" className={styles.notice}>{progress}</p>}
         {busy && cancellable && <button type="button" className={styles.secondary} onClick={() => operation.current?.abort()}>Stop upload</button>}
-      </div>
-      <section className={styles.panel}><div className={styles.panelHeader}><div><h2>Your training runs</h2></div><button className={styles.secondary} onClick={refresh} disabled={busy}>Refresh</button></div>
-        {loading ? <p role="status">Loading your training runs…</p> : jobs.length === 0 ? <p className={styles.empty}>Your training run will appear here after you send your examples. Follow the steps to get started.</p> : <ul className={styles.jobs}>{jobs.map(job => <li key={job.id}><button disabled={busy} className={styles.jobButton} aria-pressed={selectedId === job.id} onClick={() => selectJob(job)}><strong>{job.name}</strong><span className={styles.badge}>{label(job.status)}</span></button></li>)}</ul>}
-        {selected && <div className={styles.jobDetail}><h3>{selected.name}</h3><p className={styles.id}>{selected.id}</p>{selected.created_at && <p className={styles.help}>Created {new Date(selected.created_at).toLocaleString()}</p>}<p className={styles.notice} role="status">{STATUS_COPY[selected.status]}</p>{selected.error && <p role="alert" className={styles.error}>{selected.error}</p>}
+        {loading ? <p role="status">Loading your training runs…</p> : jobs.length === 0 ? refreshError ? <p role="alert" className={styles.error}>We couldn’t load your training runs. Use “Refresh status” to try again.</p> : <p className={styles.empty}>Your training run will appear here after you send your examples. Follow the steps to get started.</p> : jobs.length > 1 ? <ul className={styles.jobs} aria-label="Choose a training run">{jobs.map(job => <li key={job.id}><button disabled={busy} className={styles.jobButton} aria-pressed={selectedId === job.id} onClick={() => selectJob(job)}><strong>{job.name}</strong><span className={styles.badge}>{trainingProgress(job).label}</span></button></li>)}</ul> : null}
+        {selected && <div className={styles.jobDetail}><p className={styles.runName}>{selected.name}</p><TrainingRunStatus job={selected} /><p className={styles.statusFreshness} data-stale={refreshError}>{refreshError ? 'Connection interrupted. Showing the last known status; we’ll retry automatically.' : <>Last checked {checkedAt ? new Date(checkedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }) : 'just now'}. {!terminal(selected) && 'Updates automatically every 10 seconds while this page is open.'}</>}</p><details className={styles.details}><summary>Run details</summary><p className={styles.id}>Run ID: {selected.id}</p>{selected.created_at && <p>Submitted {new Date(selected.created_at).toLocaleString()}</p>}</details>{selected.error && <p role="alert" className={styles.error}>{selected.error}</p>}
           {selected.status === 'uploading' && <><p className={styles.help}>If all three uploads completed, retry submission. To resume a failed upload, prepare the same CSV with the original settings, or choose the original files in “Advanced: prepared files”. Completed uploads are skipped; existing files are not overwritten.</p><button className={styles.secondary} disabled={busy} onClick={() => retrySubmit(selected)}>Retry submission</button><button className={styles.secondary} disabled={busy} onClick={() => resumeUploads(selected)}>Resume missing uploads</button><button className={styles.secondary} disabled={busy} onClick={() => cancelJob(selected)}>Cancel this run</button></>}
           {selected.status === 'completed' && !selected.result && <p>Result details are not available yet. Refresh to try again.</p>}
-          {selected.result && <><h3 className={styles.resultTitle}>{selected.result.delivery.status === 'accepted' ? 'A model met your criteria.' : 'No model met your criteria.'}</h3><p className={styles.help}>Measured on this job’s held-out data; not a guarantee on future inputs. Artifact delivery does not deploy an inference endpoint.</p><div className={styles.metrics}><div><span>Baseline accuracy</span><strong>{metric(selected.result.baseline.accuracy, true)}</strong></div><div><span>Baseline Brier loss</span><strong>{metric(selected.result.baseline.brier)}</strong></div></div><p className={styles.help}>Required: {metric(selected.result.delivery.acceptance.min_accuracy, true)} accuracy; {metric(selected.result.delivery.acceptance.min_brier_improvement)} absolute Brier improvement.</p>
+          {selected.result && <><h3 className={styles.resultTitle}>Measured results</h3><p className={styles.help}>Measured on this job’s held-out data; not a guarantee on future inputs. Artifact delivery does not deploy an inference endpoint.</p><div className={styles.metrics}><div><span>Baseline accuracy</span><strong>{metric(selected.result.baseline.accuracy, true)}</strong></div><div><span>Baseline Brier loss</span><strong>{metric(selected.result.baseline.brier)}</strong></div></div><p className={styles.help}>Required: {metric(selected.result.delivery.acceptance.min_accuracy, true)} accuracy; {metric(selected.result.delivery.acceptance.min_brier_improvement)} absolute Brier improvement.</p>
             <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Candidate evaluations"><table><thead><tr><th>Candidate</th><th>Status</th><th>Accuracy</th><th>Brier ↓</th></tr></thead><tbody>{selected.result.miners.map(miner => <tr key={miner.uid}><th>{miner.uid}{selected.result?.delivery.uid === miner.uid ? ' · selected' : ''}</th><td>{miner.status}</td><td>{metric(miner.accuracy, true)}</td><td>{metric(miner.brier)}</td></tr>)}</tbody></table></div>
             {selected.result.delivery.sha256 && <p className={styles.hash}>Checkpoint SHA-256<br /><code>{selected.result.delivery.sha256}</code></p>}
             {canDownload(selected) && <><button disabled={busy} className={styles.button} onClick={() => getDownloads(selected)}>Get private download links</button><p className={styles.help}>Links expire. Generate fresh links when needed. Files: {DOWNLOAD_FILES.join(', ')}.</p>{downloads.length > 0 && <ul className={styles.downloads}>{downloads.map(file => <li key={file.name}><a href={file.url} target="_blank" rel="noreferrer">{file.name} ↗</a></li>)}</ul>}</>}
           </>}
         </div>}
       </section>
+      <div>
+        <TrainingIntake key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} />
+      </div>
     </div>
   </>;
 }

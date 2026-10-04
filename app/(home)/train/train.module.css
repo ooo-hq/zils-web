@@ -88,3 +88,30 @@
 .panel .teachingPreview .previewPlaceholder { font-size:13px; color:#626270; }
 .relatedChoice { padding:0 0 0 26px; }
 @media(max-width:520px) { .dataChoices { grid-template-columns:minmax(0,1fr); }.teachingPreview { grid-template-columns:minmax(0,1fr); }.teachingPreview>div:last-child { border-left:0; border-top:1px solid #dddfe8; }.relatedChoice { padding-left:0; } }
+
+.workspace { display:grid; gap:28px; }
+.workspace>div { min-width:0; }
+.panel .runName { font-size:14px; color:#626270; margin:0 0 18px; overflow-wrap:anywhere; }
+.runStatus { --status-accent:#4942c7; }
+.runStatus[data-tone=stopped] { --status-accent:#943044; }
+.panel .runHeadline { font-size:clamp(24px,3vw,34px); line-height:1.2; font-weight:500; letter-spacing:-.035em; margin:0 0 12px; max-width:30ch; }
+.panel .runExplanation { font-size:14px; color:#575765; max-width:68ch; margin:0; }
+.runStages { list-style:none; padding:0; margin:28px 0; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; }
+.runStages li { display:flex; gap:10px; align-items:flex-start; min-width:0; padding-top:14px; border-top:2px solid #e5e6ed; color:#626270; }
+.runStages li[data-state=done],.runStages li[data-state=current],.runStages li[data-state=waiting] { border-color:#4942c7; }
+.stageMarker { flex-shrink:0; width:24px; height:24px; display:flex; align-items:center; justify-content:center; border:1px solid #bfc3d1; border-radius:50%; font-size:11px; }
+.runStages li[data-state=done] .stageMarker { background:#4942c7; border-color:#4942c7; color:white; }
+.runStages li[data-state=current] .stageMarker,.runStages li[data-state=waiting] .stageMarker { border:2px solid #4942c7; color:#4942c7; background:#f1f1fc; }
+.runStages strong { display:block; font-size:13px; font-weight:500; color:#15151a; }
+.runStages small { font-size:11px; margin:3px 0 0; }
+.panel .runNext { font-size:13px; margin:24px 0 16px; padding:14px 16px; background:#f6f7fa; border-left:3px solid var(--status-accent); max-width:80ch; }
+.panel .statusFreshness { font-size:11px; color:#626270; margin:14px 0; }
+.workspace .jobs { max-height:180px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+.workspace .jobDetail { margin-top:18px; }
+@media(max-width:650px) { .runStages { grid-template-columns:1fr; gap:0; margin:22px 0; }.runStages li { border-top:0; border-left:2px solid #e5e6ed; padding:0 0 20px 16px; margin-left:11px; position:relative; }.runStages li:last-child { padding-bottom:0; border-color:transparent; }.stageMarker { margin-left:-29px; background:white; }.runStages li>span:last-child { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }.runStages small { margin:0; }.workspace .jobs { grid-template-columns:1fr; } }
+.page:has(.account) .hero { padding:24px 0; max-width:none; }
+.page:has(.account) .hero h1 { font-size:clamp(26px,3vw,36px); margin:10px 0 12px; }
+.page:has(.account) .hero>p:last-child { font-size:14px; }
+.statusFreshness[data-stale=true] { color:#943044; }
+.page:has(.account) .hero>p { max-width:68ch; }
+.workspace .jobButton .badge { text-transform:none; }

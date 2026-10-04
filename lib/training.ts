@@ -22,12 +22,6 @@ export const jobSchema = z.object({
   }).nullable().optional(),
 });
 export type Job = z.infer<typeof jobSchema>;
-export const STATUS_COPY: Record<Job['status'], string> = {
-  uploading: 'Waiting for dataset uploads and submission.', validating: 'Checking dataset structure and separation.',
-  awaiting_approval: 'An operator must assign approved workers before training data is shared.',
-  queued: 'Approved and waiting for a worker.', running: 'Workers are training candidates.', evaluating: 'Comparing candidates against the baseline.',
-  completed: 'Evaluation finished. Review the delivery decision below.', failed: 'This job could not finish. Review the error below.',
-};
 export const terminal = (job: Job) => job.status === 'completed' || job.status === 'failed';
 export const canDownload = (job: Job) => job.status === 'completed' && job.result?.delivery.status === 'accepted';
 export const DOWNLOAD_FILES = ['adapter_config.json', 'adapter_model.safetensors', 'head.pt', 'release.json'] as const;
