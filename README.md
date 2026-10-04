@@ -48,12 +48,49 @@ For training, configure Supabase Auth's site URL and redirect allowlist for
 origin. See the [training service setup](https://github.com/ooo-hq/zils/blob/main/docs/supabase-training.md).
 Public browser settings are baked into the build, so changes require a new build.
 
+## Customer training setup
+
+The `/train` page explains suitable examples before sign-in and provides a blank
+CSV template and a synthetic support-routing example. After signing in, customers
+can define a decision, choose its 2–50 possible answers, load a UTF-8 CSV, map
+information/answer/source-group columns, and review the prepared data before
+submitting to the existing training coordinator.
+
+Guided CSV preparation runs in browser memory. It accepts up to 10 MiB, 20,000
+examples, and 64 columns. The selected answer and source-group columns are excluded
+from model inputs. Missing or unknown answers, duplicate inputs (including
+conflicting labels), and missing group values block preparation. Each answer must
+occur in at least three independent source groups. This is a structural minimum,
+not a recommendation for sufficient training or evaluation data.
+
+Whole groups are assigned deterministically to learning, calibration, and test
+sets, aiming for 70/15/15 while representing every answer in each set. Group sizes
+can change these ratios; difficult overlapping groups may require manual splitting.
+The converter produces the coordinator's existing JSONL format and runs the same
+local validator as advanced upload. These checks do not identify semantic duplicates,
+incorrect labels, or information that would not be available at prediction time.
+
+Customers review actual set sizes, answer coverage, input examples, acceptance
+criteria, and worker-sharing consent before upload. Draft data is not persisted:
+keep the original CSV and settings or download the prepared JSONL files before
+leaving. Advanced JSONL upload remains available for manually prepared datasets and
+interrupted-upload recovery. An in-memory saved job locks its preparation form
+until resumed, submitted, or canceled to avoid accidental duplicate creation.
+
+Training still requires approved workers. Completion may produce no qualifying
+model; an accepted download does not provision a prediction API.
+
 ## Checks and GitHub deployment
 
 ```sh
+npm test
 npm run types:check
 npm run build
 ```
+
+The tests cover CSV parsing, split isolation and coverage, repeatable output,
+invalid data, and the existing create/upload/submit contract using a local request
+double. They do not run model training or contact Supabase.
 
 GitHub Actions runs those checks from a clean dependency installation. Connect
 this repository through Vercel's GitHub integration with:

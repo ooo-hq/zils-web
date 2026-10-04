@@ -7,7 +7,8 @@
     "dev": "next dev",
     "start": "next start",
     "types:check": "next typegen && tsc --noEmit",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "tsc --ignoreConfig --module commonjs --target es2022 --esModuleInterop --skipLibCheck --outDir .private/test-build lib/training-csv.ts && node --test tests/training-csv.test.cjs"
   },
   "dependencies": {
     "@fezchat/artifact-viewers": "^0.1.0",
