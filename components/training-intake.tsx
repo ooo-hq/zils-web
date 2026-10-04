@@ -4,20 +4,27 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { MAX_CSV_BYTES, parseCsv, prepareTraining, type ColumnMapping, type CsvData, type PreparedTraining } from '@/lib/training-csv';
 import { MAX_DATASET_BYTES, SPLITS, submissionSchema, validateDatasets, type Split, type Submission } from '@/lib/training';
 import { TrainingExampleSetup } from '@/components/training-example-setup';
+import { SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
 import styles from '@/app/(home)/train/train.module.css';
 
 type Props = {
   busy: boolean;
   onSubmit: (input: Submission, files: Record<Split, File>) => Promise<void>;
   onFiles: (files: Partial<Record<Split, File>>) => void;
+  onCloseAutoFocus: (event: Event) => void;
   pending?: boolean;
+  pendingName?: string;
+  submissionError: string;
+  progress: string;
+  onStopUpload?: () => void;
 };
-const steps = ['Decision', 'Examples', 'Teach', 'Review'];
-const stepTitles = ['Choose a decision to teach', 'Bring examples with known answers', 'Explain an example to Zils', 'Check what you’re sending'];
-const splitNames = { train: 'Learn patterns', calibration: 'Check confidence', test: 'Test decisions' };
+const steps = ['Decision', 'Examples', 'Review'];
+const stepTitles = ['What should Zils decide?', 'Show Zils your past decisions.', 'Ready for training?'];
+const splitNames = { train: 'Training', calibration: 'Calibration', test: 'Evaluation' };
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : 'Could not prepare the file. Try exporting it as CSV again.';
 
-export function TrainingIntake({ busy, onSubmit, onFiles, pending = false }: Props) {
+// State lives outside SheetContent so closing the panel preserves this browser's draft.
+export function TrainingIntake({ busy, onSubmit, onFiles, onCloseAutoFocus, pending = false, pendingName, submissionError, progress, onStopUpload }: Props) {
   const [advanced, setAdvanced] = useState(false);
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
@@ -38,12 +45,13 @@ export function TrainingIntake({ busy, onSubmit, onFiles, pending = false }: Pro
   const heading = useRef<HTMLHeadingElement>(null);
   const alert = useRef<HTMLParagraphElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
-  const locked = busy || working || pending;
+  const preparedName = useRef('');
+  const locked = busy || working;
   const outcomes = answers.split('\n').map(value => value.trim()).filter(Boolean);
-  useEffect(() => { if (error) alert.current?.focus(); }, [error]);
+  useEffect(() => { if (error || submissionError) alert.current?.focus(); }, [error, submissionError]);
   function go(next: number) {
     setStep(next); setError('');
-    if (next < 3) { setPrepared(null); setConsent(false); setReviewed(false); onFiles({}); }
+    if (next < 2) { setPrepared(null); setConsent(false); setReviewed(false); onFiles({}); }
     requestAnimationFrame(() => heading.current?.focus());
   }
   function useExample() {
@@ -53,15 +61,16 @@ export function TrainingIntake({ busy, onSubmit, onFiles, pending = false }: Pro
   function nextDecision(event: FormEvent) {
     event.preventDefault();
     if (outcomes.length < 2 || outcomes.length > 16 || new Set(outcomes).size !== outcomes.length || outcomes.some(value => value.length > 100)) { setError('Enter 2–16 different possible answers, one per line, up to 100 characters each.'); return; }
+    if (!name) setName(question.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 64) || 'decision-training');
     go(1);
   }
   async function readFile(file: File | undefined) {
-    setCsv(null); setFilename(''); setPrepared(null); setError(''); onFiles({});
+    setCsv(null); setFilename(''); setPrepared(null); setError(''); setConsent(false); setReviewed(false); onFiles({});
     if (!file) return;
     setWorking(true);
     try {
       if (!/\.csv$/i.test(file.name)) throw new Error('Export your spreadsheet as a comma-separated .csv file. Excel workbooks and PDFs are not supported here.');
-      if (file.size > MAX_CSV_BYTES) throw new Error('Choose a CSV smaller than 10 MiB, or choose “Advanced: prepared files.”');
+      if (file.size > MAX_CSV_BYTES) throw new Error('Choose a CSV smaller than 10 MiB, or use prepared JSONL files in advanced setup.');
       let source: string;
       try { source = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer()); }
       catch { throw new Error('Save the spreadsheet as CSV UTF-8 and choose the exported file again.'); }
@@ -77,9 +86,11 @@ export function TrainingIntake({ busy, onSubmit, onFiles, pending = false }: Pro
     event.preventDefault(); if (!csv) return;
     setWorking(true); setError('');
     try {
-      const result = await prepareTraining(csv, mapping, { name, question, outcomes }, independent);
+      const runName = pendingName || name;
+      const result = await prepareTraining(csv, mapping, { name: runName, question, outcomes }, independent);
       await validateDatasets(result.files);
-      setPrepared(result); onFiles(result.files); setStep(3);
+      setName(runName); preparedName.current = runName;
+      setPrepared(result); onFiles(result.files); setStep(2);
       requestAnimationFrame(() => heading.current?.focus());
     } catch (error) { setError(errorMessage(error)); }
     finally { setWorking(false); }
@@ -96,87 +107,89 @@ export function TrainingIntake({ busy, onSubmit, onFiles, pending = false }: Pro
   async function submit(event: FormEvent) {
     event.preventDefault(); setError('');
     const parsed = submissionSchema.safeParse({ name, acceptance: { min_accuracy: accuracy === '' ? NaN : Number(accuracy) / 100, min_brier_improvement: improvement === '' ? NaN : Number(improvement) }, allow_training_data_export: consent });
-    if (!parsed.success) { setError('Check your project name, success criteria, and data-sharing permission.'); return; }
-    const files = advanced ? advancedFiles : prepared?.files;
+    if (!parsed.success) { setError('Check your run name, success criteria, and data-sharing permission.'); return; }
+    let files = advanced ? advancedFiles : prepared?.files;
     if (!files?.train || !files.calibration || !files.test) { setError('Prepare all three dataset files before submitting.'); return; }
-    if (!advanced && !reviewed) { setError('Review what Zils will read and the answers it should learn before sending your examples.'); return; }
-    await onSubmit(parsed.data, { train: files.train, calibration: files.calibration, test: files.test });
+    if (!advanced && !reviewed) { setError('Confirm that you checked the examples before sending them for training.'); return; }
+    setWorking(true);
+    try {
+      if (!advanced && csv && preparedName.current !== name) {
+        const result = await prepareTraining(csv, mapping, { name, question, outcomes }, independent);
+        files = result.files; setPrepared(result); preparedName.current = name; onFiles(result.files);
+      }
+      await onSubmit(parsed.data, { train: files.train!, calibration: files.calibration!, test: files.test! });
+    } catch (error) { setError(errorMessage(error)); }
+    finally { setWorking(false); }
   }
   function switchMode() {
     setAdvanced(value => !value); setError(''); setConsent(false); setReviewed(false);
     onFiles(advanced ? (prepared?.files || {}) : advancedFiles);
+    requestAnimationFrame(() => heading.current?.focus());
   }
   const criteria = <>
-    <label htmlFor="min-accuracy">How often should Zils get it right? (%)</label>
-    <input id="min-accuracy" type="number" required min="0" max="100" step="any" value={accuracy} onChange={event => setAccuracy(event.target.value)} />
-    <small>80% means 80 correct decisions out of 100. Choose a target that makes sense for your task; we measure it on examples Zils did not learn from.</small>
-    <details className={styles.details}><summary>Advanced evaluation settings</summary>
+    <details className={styles.details}><summary>Success criteria: at least {accuracy || '—'}% accuracy</summary>
+      <label htmlFor="min-accuracy">Minimum accuracy (%)</label><input id="min-accuracy" type="number" required min="0" max="100" step="any" value={accuracy} onChange={event => setAccuracy(event.target.value)} />
+      <small>Measured on examples kept aside from training. The trained model must also improve its probability estimates over the base model.</small>
       <label htmlFor="min-brier">Minimum Brier improvement</label><input id="min-brier" type="number" required min="0" max="2" step="any" value={improvement} onChange={event => setImprovement(event.target.value)} />
-      <p>The model must improve its probability estimates over the starting model. This is an absolute Brier loss decrease from 0 to 2, not a percentage. The starting value is 0.01.</p>
+      <small>An absolute Brier loss decrease from 0 to 2, not a percentage. The default is 0.01.</small>
     </details>
-    <p className={styles.help}>We compare the trained model with the starting model. You receive a model download only if it improves and meets your target. Training does not automatically connect it to your software.</p>
     <label className={styles.consent}><input type="checkbox" required checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I am authorized to use and share these examples. I permit the learning data to be copied to assigned, approved workers, whose operators can read and retain it. Confidence-check and final-evaluation data stay with the validator. This is not confidential compute.</span></label>
   </>;
-  return <section className={styles.panel} aria-label="Prepare a training job">
-    <div className={styles.intakeHeader}><h2>Teach Zils your decision.</h2><button type="button" className={styles.textButton} onClick={switchMode} disabled={locked}>{advanced ? 'Back to guided setup' : 'Advanced: prepared files'}</button></div>
-    {!advanced && <ol className={styles.steps} aria-label="Training setup progress">{steps.map((title, index) => <li key={title} aria-current={step === index ? 'step' : undefined}><span>{index + 1}</span>{title}</li>)}</ol>}
-    {error && <p ref={alert} tabIndex={-1} role="alert" className={styles.error}>{error}</p>}
-    {pending && <p className={styles.notice}>This job is already saved. Use “Resume missing uploads” or “Retry submission” in Your training runs. Cancel that job before creating another from this form.</p>}
-    {!advanced && <h3 className={styles.stepTitle} ref={heading} tabIndex={-1}>{stepTitles[step]}</h3>}
-    {advanced ? <form onSubmit={submit}><fieldset disabled={locked}>
-      <p>Already prepared learning, calibration, and test files? Submit them directly. Keep related source records and duplicate prompts within one set.</p>
-      <label htmlFor="advanced-name">Project name</label><input id="advanced-name" required pattern="[a-z0-9][a-z0-9-]{0,63}" maxLength={64} placeholder="support-routing-v1" value={name} onChange={event => setName(event.target.value)} />
-      <small>Use lowercase letters, numbers, and hyphens. Change the version when you change the examples.</small>
-      {SPLITS.map(split => <div key={split} className={styles.file}><label htmlFor={`dataset-${split}`}>{split} dataset</label><input id={`dataset-${split}`} type="file" accept=".jsonl,application/jsonl,application/x-ndjson" required onChange={event => {
-        const file = event.target.files?.[0]; const files = { ...advancedFiles, [split]: file }; setAdvancedFiles(files); onFiles(files);
-        if (file && file.size > MAX_DATASET_BYTES) setError(`${split}: maximum file size is 128 MiB.`);
-      }} /><small>JSONL · 128 MiB maximum{advancedFiles[split] ? ` · ${advancedFiles[split]!.name}` : ''}</small></div>)}
-      <details className={styles.details}><summary>JSONL format</summary><p>Each line is a JSON object with id, group_id, family, state, question, and label. IDs must be unique across all files. Calibration and test must have the same families, all present in training.</p><pre>{'{"id":"ticket-001","group_id":"conversation-001","family":"support-routing","state":{"message":"Please send my invoice."},"question":{"type":"choice","criteria":{"billing":"Billing","technical":"Technical support"}},"label":"billing"}'}</pre><p>Questions also support noul (true/false) and score (an ordered list of outcomes). Server validation runs again after submission.</p></details>
-      {criteria}<button className={styles.button} disabled={locked || pending}>{busy ? 'Sending…' : 'Send for training'}</button>
-    </fieldset></form> : <>
-      {step === 0 && <form onSubmit={nextDecision}><fieldset disabled={locked}>
-        <p>Think of a question your team answers repeatedly. For example: which team should handle a support ticket? List the answers Zils can choose from.</p>
-        <button type="button" className={styles.secondary} onClick={useExample}>Use the support-routing example</button>
-        <label htmlFor="decision-name">Project name</label><input id="decision-name" required maxLength={64} pattern="[a-z0-9][a-z0-9-]{0,63}" placeholder="support-routing-v1" value={name} onChange={event => setName(event.target.value)} /><small>Lowercase letters, numbers, and hyphens. Use a new version for changed data.</small>
-        <label htmlFor="decision-question">What should Zils decide?</label><textarea id="decision-question" required maxLength={1000} rows={2} placeholder="Which team should handle this support ticket?" value={question} onChange={event => setQuestion(event.target.value)} />
-        <label htmlFor="decision-answers">Possible answers, one per line</label><textarea id="decision-answers" required rows={4} placeholder={'Billing\nTechnical support\nAccount changes'} value={answers} onChange={event => setAnswers(event.target.value)} /><small>Use these same answer names in your examples, including capitalization.</small>
-        <div className={styles.actions}><button className={styles.button}>Continue to examples</button></div>
-      </fieldset></form>}
-      {step === 1 && <fieldset disabled={locked}>
-        <p>Bring a spreadsheet of past cases where you already know the right answer. Each row should describe one case and the answer your team checked.</p>
-        <div className={styles.actions}><a className={styles.secondary} href="/training/decision-template.csv" download>Download a template</a><a className={styles.textButton} href="/training/support-routing-example.csv" download>Download filled-in example</a><button type="button" className={styles.textButton} onClick={() => { void loadExample(); }}>Try with the example file</button></div>
-        <label htmlFor="decision-csv">Choose your spreadsheet file (.csv)</label><input ref={fileInput} id="decision-csv" type="file" accept=".csv,text/csv" onChange={event => { void readFile(event.target.files?.[0]); }} /><small>Save or download your spreadsheet as CSV UTF-8 first. Maximum file size: 10 MiB; up to 20,000 examples.</small>
-        <p className={styles.localNote}>Your file stays in this browser until you choose “Send for training.” Keep a copy: leaving or refreshing this page clears your draft.</p>
-        {working && <p role="status">Reading your CSV…</p>}
-        {csv && <p role="status" className={styles.notice}>{filename}: {csv.rows.length.toLocaleString()} examples found. Next, show Zils what to read and which part is the right answer.</p>}
-        <details className={styles.details}><summary>My data doesn’t have correct answers yet</summary><p>Ask someone who knows the task to review each case and record the right answer next to it. Use one of the answer names you chose earlier. Resolve disagreements before training; Zils learns from the answers you provide.</p></details>
-        <div className={styles.actions}><button type="button" className={styles.secondary} onClick={() => go(0)}>Back</button><button type="button" className={styles.button} disabled={!csv || locked} onClick={() => go(2)}>Explain an example</button></div>
-      </fieldset>}
-      {step === 2 && csv && <form onSubmit={prepare}><fieldset disabled={locked}>
-        <TrainingExampleSetup csv={csv} mapping={mapping} independent={independent} onMapping={setMapping} onIndependent={setIndependent} />
-        <div className={styles.actions}><button type="button" className={styles.secondary} onClick={() => go(1)}>Back</button><button className={styles.button}>{working ? 'Checking your examples…' : 'Review my examples'}</button></div>
-      </fieldset></form>}
-      {step === 3 && prepared && <form onSubmit={submit}><fieldset disabled={locked}>
-        <p><strong>{question}</strong><br />{prepared.total.toLocaleString()} examples from {prepared.groups.toLocaleString()} separate cases.</p>
-        <div className={styles.splitSummary}>{SPLITS.map(split => <div key={split}><strong>{prepared.counts[split].toLocaleString()}</strong><span>{splitNames[split]}</span></div>)}</div>
-        <p className={styles.help}>Some examples teach Zils the patterns. Others are kept aside to check how sure it is and test its decisions on cases it hasn’t learned from.</p>
-        <details className={styles.details}><summary>How your examples are separated</summary>
-        <p className={styles.help}>We aim for 70% learning, 15% confidence checks, and 15% final evaluation. Actual sizes vary to keep source groups together and every answer represented. Confidence checks tune probability estimates; final evaluation measures performance on cases withheld from fitting.</p>
-        <div className={styles.tableWrap} role="region" aria-label="Answer coverage" tabIndex={0}><table><caption>Every answer appears in all three sets.</caption><thead><tr><th>Answer</th>{SPLITS.map(split => <th key={split}>{splitNames[split]}</th>)}</tr></thead><tbody>{prepared.distribution.map(row => <tr key={row.outcome}><th>{row.outcome}</th>{SPLITS.map(split => <td key={split}>{row[split]}</td>)}</tr>)}</tbody></table></div>
-        </details>
-        <h4>A final look at what you’re teaching</h4><p className={styles.help}>Check these examples: Zils reads the information, then learns the right answer shown beside it.</p>
-        <PreparedExamples rows={prepared.preview.slice(0, 1)} />
-        {prepared.preview.length > 1 && <details className={styles.details}><summary>Check {prepared.preview.length - 1} more examples</summary><PreparedExamples rows={prepared.preview.slice(1)} /></details>}
-        <p className={styles.help}>More varied, well-reviewed examples make this a more useful test. We can spot exact duplicates, but you still need to check the answers and remove details that would only be known after deciding.</p>
-        <label className={styles.checkLabel}><input type="checkbox" required checked={reviewed} onChange={event => setReviewed(event.target.checked)} /><span>I checked the answers and the information Zils will read. Examples from the same case are kept together.</span></label>
-        {criteria}
-        <div className={styles.actions}><button type="button" className={styles.secondary} onClick={() => go(2)}>Back</button><button className={styles.button} disabled={locked || pending}>{busy ? 'Sending…' : 'Send for training'}</button></div>
-        <details className={styles.details}><summary>Keep the prepared files</summary><p>Download these private files for inspection or to resume an interrupted upload. Keep them with your original CSV.</p><div className={styles.actions}>{SPLITS.map(split => <button key={split} type="button" className={styles.secondary} onClick={() => {
-          const url = URL.createObjectURL(prepared.files[split]); const link = document.createElement('a'); link.href = url; link.download = prepared.files[split].name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
-        }}>Download {split}</button>)}</div></details>
-      </fieldset></form>}
-    </>}
-  </section>;
+  return <SheetContent className={`${styles.page} ${styles.trainingSheet}`} onCloseAutoFocus={onCloseAutoFocus} onOpenAutoFocus={event => { event.preventDefault(); heading.current?.focus(); }}>
+    <div className={styles.sheetHeader}><SheetTitle>Train a model</SheetTitle><SheetDescription>Turn reviewed examples into a tested decision model.</SheetDescription></div>
+    <div className={styles.sheetBody}>
+      {!advanced && <ol className={styles.steps} aria-label="Training setup progress">{steps.map((title, index) => <li key={title} aria-current={step === index ? 'step' : undefined}><span>{index + 1}</span>{title}</li>)}</ol>}
+      <h3 className={styles.stepTitle} ref={heading} tabIndex={-1}>{advanced ? 'Upload prepared files.' : stepTitles[step]}</h3>
+      {(error || submissionError) && <p ref={alert} tabIndex={-1} role="alert" className={styles.error}>{error || submissionError}</p>}
+      {progress && <p role="status" className={styles.notice}>{progress}</p>}
+      {onStopUpload && <button type="button" className={styles.secondary} onClick={onStopUpload}>Stop upload</button>}
+      {pending && !busy && <p className={styles.notice}>A run is already saved. To recover its upload, prepare the original file here, then close this panel and choose “Resume missing uploads.”</p>}
+      {advanced ? <form onSubmit={submit} onInvalid={event => { const details = (event.target as HTMLElement).closest('details'); if (details) details.open = true; }}><fieldset disabled={locked}>
+        <p className={styles.intakeIntro}>For prepared training, calibration, and evaluation files. Keep related cases within one set.</p>
+        <label htmlFor="advanced-name">Run name</label><input id="advanced-name" required pattern="[a-z0-9]([a-z0-9]|-){0,63}" maxLength={64} placeholder="support-routing-v1" value={name} onChange={event => setName(event.target.value)} />
+        {SPLITS.map(split => <div key={split} className={styles.file}><label htmlFor={`dataset-${split}`}>{splitNames[split]} file</label><input id={`dataset-${split}`} type="file" accept=".jsonl,application/jsonl,application/x-ndjson" required={!advancedFiles[split]} onChange={event => {
+          const file = event.target.files?.[0]; const files = { ...advancedFiles, [split]: file }; setAdvancedFiles(files); onFiles(files);
+          if (file && file.size > MAX_DATASET_BYTES) setError(`${split}: maximum file size is 128 MiB.`);
+        }} /><small>{advancedFiles[split]?.name || 'JSONL · 128 MiB maximum'}</small></div>)}
+        <details className={styles.details}><summary>JSONL format</summary><p>Each line requires id, group_id, family, state, question, and label. IDs must be unique across all files. Calibration and test must share the same families, all present in training.</p><pre>{'{"id":"ticket-001","group_id":"conversation-001","family":"support-routing","state":{"message":"Please send my invoice."},"question":{"type":"choice","criteria":{"billing":"Billing","technical":"Technical support"}},"label":"billing"}'}</pre></details>
+        {criteria}<div className={styles.wizardActions}><button type="button" className={styles.secondary} onClick={switchMode}>Guided setup</button><button className={styles.button} disabled={locked || pending}>{busy ? 'Sending…' : 'Send for training'}</button></div>
+      </fieldset></form> : <>
+        {step === 0 && <form onSubmit={nextDecision}><fieldset disabled={locked}>
+          <p className={styles.intakeIntro}>Choose one decision your team makes repeatedly.</p>
+          <label htmlFor="decision-question">The decision</label><textarea id="decision-question" required maxLength={1000} rows={3} placeholder="Which team should handle this support ticket?" value={question} onChange={event => setQuestion(event.target.value)} />
+          <label htmlFor="decision-answers">Possible answers</label><textarea id="decision-answers" required rows={3} placeholder={'Billing\nTechnical support\nAccount changes'} value={answers} onChange={event => setAnswers(event.target.value)} /><small>One answer per line. Your examples should use these exact names.</small>
+          <button type="button" className={styles.textButton} onClick={useExample}>Try the support-routing example</button>
+          <div className={styles.wizardActions}><button type="button" className={styles.textButton} onClick={switchMode}>Use prepared files</button><button className={styles.button}>Continue</button></div>
+        </fieldset></form>}
+        {step === 1 && <form onSubmit={prepare}><fieldset disabled={locked}>
+          <p className={styles.intakeIntro}>Each example needs a situation and the answer your team chose.</p>
+          <label htmlFor="decision-csv">Spreadsheet (.csv)</label><input ref={fileInput} id="decision-csv" type="file" accept=".csv,text/csv" onChange={event => { void readFile(event.target.files?.[0]); }} /><small>CSV UTF-8 · Up to 10 MiB or 20,000 examples</small>
+          {!csv && <div className={styles.fileHelp}><a href="/training/decision-template.csv" download>Download a template</a>{outcomes.length === 3 && ['Billing', 'Technical support', 'Account changes'].every(answer => outcomes.includes(answer)) && <button type="button" className={styles.textButton} onClick={() => { void loadExample(); }}>Try sample examples</button>}</div>}
+          {working && <p role="status" className={styles.localNote}>Checking your examples…</p>}
+          {csv && <><p role="status" className={styles.fileReady}><strong>{csv.rows.length.toLocaleString()} examples found</strong><span>{filename}</span></p><TrainingExampleSetup csv={csv} mapping={mapping} independent={independent} onMapping={setMapping} onIndependent={setIndependent} /></>}
+          {!csv && <details className={styles.details}><summary>My data doesn’t have answers yet</summary><p>Have someone who knows the task review each case and record the right answer. Use the answer names you chose in the first step.</p></details>}
+          <div className={styles.wizardActions}><button type="button" className={styles.secondary} onClick={() => go(0)}>Back</button><button className={styles.button} disabled={!csv || locked}>{working ? 'Checking…' : 'Review examples'}</button></div>
+        </fieldset></form>}
+        {step === 2 && prepared && <form onSubmit={submit} onInvalid={event => { const details = (event.target as HTMLElement).closest('details'); if (details) details.open = true; }}><fieldset disabled={locked}>
+          <p className={styles.intakeIntro}>Zils will train on your examples and check whether the result improves on the base model. A run may finish without a qualifying model.</p>
+          <label htmlFor="decision-name">Run name</label><input id="decision-name" required maxLength={64} pattern="[a-z0-9]([a-z0-9]|-){0,63}" value={name} onChange={event => setName(event.target.value)} /><small>Lowercase letters, numbers, and hyphens.</small>
+          <div className={styles.reviewSummary}><strong>{question}</strong><p>{prepared.total.toLocaleString()} examples from {prepared.groups.toLocaleString()} separate cases.</p></div>
+          <PreparedExamples rows={prepared.preview.slice(0, 1)} />
+          <details className={styles.details}><summary>More examples and evaluation details</summary>
+            <PreparedExamples rows={prepared.preview.slice(1)} />
+            <div className={styles.splitSummary}>{SPLITS.map(split => <div key={split}><strong>{prepared.counts[split].toLocaleString()}</strong><span>{splitNames[split]}</span></div>)}</div>
+            <p>We aim for a 70/15/15 split. Related cases stay together and every answer is represented. Calibration checks confidence; final evaluation uses cases withheld from fitting.</p>
+            <div className={styles.tableWrap} role="region" aria-label="Answer coverage" tabIndex={0}><table><thead><tr><th>Answer</th>{SPLITS.map(split => <th key={split}>{splitNames[split]}</th>)}</tr></thead><tbody>{prepared.distribution.map(row => <tr key={row.outcome}><th>{row.outcome}</th>{SPLITS.map(split => <td key={split}>{row[split]}</td>)}</tr>)}</tbody></table></div>
+            <div className={styles.actions}>{SPLITS.map(split => <button key={split} type="button" className={styles.secondary} onClick={() => { const url = URL.createObjectURL(prepared.files[split]); const link = document.createElement('a'); link.href = url; link.download = prepared.files[split].name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }}>Download {split}</button>)}</div>
+          </details>
+          <label className={styles.checkLabel}><input type="checkbox" required checked={reviewed} onChange={event => setReviewed(event.target.checked)} /><span>I checked the answers and the information Zils will read. Examples from the same case are kept together.</span></label>
+          {criteria}
+          <div className={styles.wizardActions}><button type="button" className={styles.secondary} onClick={() => go(1)}>Back</button><button className={styles.button} disabled={locked || pending}>{busy ? 'Sending…' : 'Send for training'}</button></div>
+        </fieldset></form>}
+      </>}
+      <p className={styles.draftNote}>Your draft stays here when you close this panel. Refreshing or leaving this page clears it. Files are uploaded only when you send them for training.</p>
+    </div>
+  </SheetContent>;
 }
 
 function PreparedExamples({ rows }: { rows: PreparedTraining['preview'] }) {

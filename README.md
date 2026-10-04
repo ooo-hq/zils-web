@@ -50,11 +50,15 @@ Public browser settings are baked into the build, so changes require a new build
 
 ## Customer training setup
 
-The `/train` page explains suitable examples before sign-in and provides a blank
-CSV template and a synthetic support-routing example. After signing in, customers
-can define a decision, choose its 2–50 possible answers, load a UTF-8 CSV, map
-information/answer/source-group columns, and review the prepared data before
-submitting to the existing training coordinator.
+The `/train` workspace prioritizes the current unfinished run and lists past runs
+below it. “Train a model” opens a shadcn-based side panel with three steps:
+Decision, Examples, and Review. The panel fills the screen on mobile.
+
+Customers define a decision with 2–16 possible answers and load a UTF-8 CSV.
+Recognized fields produce an example preview; customers can correct which
+information and answer Zils should use, identify related cases, and review the
+data before submitting to the existing training coordinator. A blank CSV template
+and a synthetic support-routing example are included.
 
 Guided CSV preparation runs in browser memory. It accepts up to 10 MiB, 20,000
 examples, and 64 columns. The selected answer and source-group columns are excluded
@@ -71,11 +75,13 @@ local validator as advanced upload. These checks do not identify semantic duplic
 incorrect labels, or information that would not be available at prediction time.
 
 Customers review actual set sizes, answer coverage, input examples, acceptance
-criteria, and worker-sharing consent before upload. Draft data is not persisted:
-keep the original CSV and settings or download the prepared JSONL files before
-leaving. Advanced JSONL upload remains available for manually prepared datasets and
-interrupted-upload recovery. An in-memory saved job locks its preparation form
-until resumed, submitted, or canceled to avoid accidental duplicate creation.
+criteria, and worker-sharing consent before upload. Closing the panel preserves
+the draft in browser memory; refreshing, leaving the page, or signing out clears
+it. Keep the original CSV and settings or download the prepared JSONL files before
+leaving. Advanced JSONL upload remains available for prepared datasets and
+interrupted-upload recovery. An unfinished upload blocks new submissions while
+allowing customers to prepare the original files for recovery. Successful submission
+closes the panel and returns focus to the current run.
 
 Training still requires approved workers. Completion may produce no qualifying
 model; an accepted download does not provision a prediction API.

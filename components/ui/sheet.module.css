@@ -1,0 +1,15 @@
+.overlay { position:fixed; inset:0; z-index:60; background:rgb(21 21 26 / 30%); }
+.content { position:fixed; z-index:61; inset:0 0 0 auto; width:min(640px,100%); height:100dvh; background:#fff; border-left:1px solid #e5e6ed; box-shadow:-12px 0 40px rgb(21 21 26 / 8%); display:flex; flex-direction:column; }
+.close { position:absolute; top:24px; right:24px; display:flex; justify-content:center; align-items:center; width:40px; height:40px; border:1px solid #e5e6ed; border-radius:5px; background:#fff; color:#15151a; cursor:pointer; }
+.close:hover { background:#f1f1fc; }
+.overlay[data-state=open] { animation:fade-in 160ms ease-out; }
+.overlay[data-state=closed] { animation:fade-out 160ms ease-in; }
+.content[data-state=open] { animation:slide-in 220ms ease-out; }
+.content[data-state=closed] { animation:slide-out 160ms ease-in; }
+@keyframes fade-in { from { opacity:0; } to { opacity:1; } }
+@keyframes fade-out { from { opacity:1; } to { opacity:0; } }
+@keyframes slide-in { from { transform:translateX(100%); } to { transform:translateX(0); } }
+@keyframes slide-out { from { transform:translateX(0); } to { transform:translateX(100%); } }
+@media(prefers-reduced-motion:reduce) { .overlay,.content { animation:none!important; } }
+@media(max-width:640px) { .content { border-left:0; } .close { top:18px; right:18px; } }
+@media(pointer:coarse) { .close { width:44px; height:44px; } }
