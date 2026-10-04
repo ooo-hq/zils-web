@@ -14,14 +14,14 @@ const LINKS = [
 
 /** Everything else lives in the footer (components/site-footer.tsx). */
 export const FOOTER_LINKS = [
-  { href: '/app', label: 'Mac app' },
-  { href: '/cli', label: 'CLI' },
+  { href: 'https://fez.chat', label: 'Fez chat app' },
+  { href: 'https://fez.chat/cli', label: 'Fez CLI' },
   // The manual lives on its own hostname — an absolute link, not a path.
   { href: docsUrl, label: 'Docs' },
   { href: discordUrl, label: 'Discord' },
   { href: '/model', label: 'Research' },
   { href: '/playground', label: 'Playground' },
-  { href: 'https://github.com/ooo-hq/fez', label: 'Model source' },
+  { href: 'https://github.com/ooo-hq/zils', label: 'Model source' },
   { href: '/privacy', label: 'Privacy' },
   { href: '/terms', label: 'Terms' },
 ] as const;
@@ -31,7 +31,7 @@ export function SiteHeader({ current, tone = 'dark' }: { current?: string; tone?
     <header className="flex flex-col items-start gap-5 py-6 text-xs sm:flex-row sm:items-center sm:justify-between sm:py-8">
       <a href="#main-content" className="sr-only z-50 bg-black px-4 py-3 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to content</a>
       <Link href="/" className={`shrink-0 ${tone === 'light' ? 'text-2xl font-semibold tracking-tight text-black' : 'text-base font-bold text-white'}`}>
-        fez<span className="text-[#FF6A00]">▴</span>
+        zils<span className="text-[#FF6A00]">▴</span>
       </Link>
       <nav aria-label="Main navigation" className="grid grid-cols-3 gap-x-6 gap-y-3 sm:flex sm:flex-wrap sm:gap-x-5">
         {LINKS.map((l) => (

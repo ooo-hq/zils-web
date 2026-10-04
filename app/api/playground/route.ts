@@ -21,6 +21,6 @@ export async function POST(request: Request) {
   } catch (error) {
     const known = error instanceof InferenceError;
     const timedOut = error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError');
-    return Response.json({ error: known ? error.message : timedOut ? 'The Fez model timed out. Try fewer questions or try again later.' : 'Could not reach the Fez model. Try again shortly.' }, { status: known ? error.status : timedOut ? 504 : 502, headers });
+    return Response.json({ error: known ? error.message : timedOut ? 'The Zils model timed out. Try fewer questions or try again later.' : 'Could not reach the Zils model. Try again shortly.' }, { status: known ? error.status : timedOut ? 504 : 502, headers });
   }
 }

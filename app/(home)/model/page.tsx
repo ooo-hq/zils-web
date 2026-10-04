@@ -7,12 +7,12 @@ import { benchmark, readComparison, percent, decimal, milliseconds, comparisonHe
 import testnet from '@/public/model/testnet-round-001.json';
 
 export const metadata: Metadata = {
-  title: 'fez — decision model research',
-  description: 'Fez’s experimental 0.8B decision model. Recorded public benchmarks, checkpoint evidence, and the current state of its training competition.',
-  alternates: { canonical: 'https://fez.chat/model' },
+  title: 'zils — decision model research',
+  description: 'Zils’s experimental 0.8B decision model. Recorded public benchmarks, checkpoint evidence, and the current state of its training competition.',
+  alternates: { canonical: 'https://zils.ai/model' },
 };
 
-const REPO = 'https://github.com/ooo-hq/fez';
+const REPO = 'https://github.com/ooo-hq/zils';
 const METHOD = `${REPO}/blob/main/docs/jevbench-public.md`;
 const SOURCE = '/model/jevbench-public-001.json';
 const TESTNET_SOURCE = '/model/testnet-round-001.json';
@@ -80,7 +80,7 @@ export default function ModelPage() {
         <header className="relative mx-auto max-w-5xl px-6 pb-16 pt-10 sm:px-8 sm:pt-16">
           <p className="flex items-center gap-2 text-[12px] font-medium"><span aria-hidden="true" className="text-base">✳</span> Research · Open about the evidence</p>
           <h1 className="mt-5 max-w-[16ch] text-[clamp(2.7rem,6.5vw,4.8rem)] font-semibold leading-[0.98] tracking-[-0.06em]">Decision model research.</h1>
-          <p className="mt-6 max-w-[58ch] text-lg leading-8 text-neutral-600">Fez is an experimental 0.8B decision model for yes/no questions, choices, and scores. It returns structured probabilities without generating prose.</p>
+          <p className="mt-6 max-w-[58ch] text-lg leading-8 text-neutral-600">Zils is an experimental 0.8B decision model for yes/no questions, choices, and scores. It returns structured probabilities without generating prose.</p>
           <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs text-neutral-600 ring-1 ring-neutral-200"><span className="size-1.5 shrink-0 rounded-full bg-[#FF6A00]" />Experimental candidate. No public model release or automatic winner promotion yet.</p>
           <a href="#testnet" className="group mt-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-neutral-950 px-5 py-4 text-sm text-white transition hover:-translate-y-0.5">
             <span className="flex items-center gap-2 font-mono text-xs text-[#9ee89e]"><span className="size-1.5 rounded-full bg-[#9ee89e]" />BITTENSOR TESTNET · SUBNET {testnet.chain.netuid}</span>
@@ -104,7 +104,7 @@ export default function ModelPage() {
 
         <Section id="overview" eyebrow="Overview" title="Probabilities. Without the prose.">
           <div className="grid gap-6 md:grid-cols-[1.2fr_1fr]">
-            <p className="max-w-[58ch] text-[15px] leading-7 text-neutral-600">Fez returns structured probabilities without generating a text answer. Applications can load a selected checkpoint directly.</p>
+            <p className="max-w-[58ch] text-[15px] leading-7 text-neutral-600">Zils returns structured probabilities without generating a text answer. Applications can load a selected checkpoint directly.</p>
             <div className={`${CARD} p-5`}>
               <p className="font-mono text-[10px] tracking-[0.12em] text-neutral-500">PUBLIC BENCHMARK CANDIDATE</p>
               <code className="mt-3 block break-all font-mono text-xs leading-6 text-neutral-800">{fez.checkpoint_sha256}</code>
@@ -124,7 +124,7 @@ export default function ModelPage() {
                 <div key={label}><p className="text-[10px] tracking-[0.14em] text-[#9ee89e]/60">{label}</p><p className="mt-2 text-4xl tracking-[-0.04em]">{value}</p><p className="mt-2 text-[11px] text-[#9ee89e]/70">{note}</p></div>
               ))}
             </div>
-            <p className="relative mt-6 border-t border-[#9ee89e]/15 pt-4 text-xs text-[#c9f5c9]/80">Fez corrected {benchmark.paired_outcomes.fez_corrected} reference-model errors and introduced {benchmark.paired_outcomes.fez_regressed}. No general improvement is established.</p>
+            <p className="relative mt-6 border-t border-[#9ee89e]/15 pt-4 text-xs text-[#c9f5c9]/80">Zils corrected {benchmark.paired_outcomes.fez_corrected} reference-model errors and introduced {benchmark.paired_outcomes.fez_regressed}. No general improvement is established.</p>
           </div>
 
           <div className={CARD}>
@@ -134,8 +134,8 @@ export default function ModelPage() {
             </div>
             <div role="region" aria-label="Overall model comparison" tabIndex={0} className="overflow-x-auto overscroll-x-contain">
               <table className="w-full min-w-[320px] border-collapse text-sm">
-                <caption className="sr-only">Recorded Fez and published Kev results on the same public items</caption>
-                <thead className="bg-neutral-50 text-xs text-neutral-600"><tr><th scope="col" className={HEAD}>Metric</th><th scope="col" className={`${CELL} text-[#E05E00]`}>Fez candidate<span className="mt-1 block font-normal text-neutral-500">Experimental checkpoint</span></th><th scope="col" className={CELL}>Published Kev 0.8B<span className="mt-1 block font-normal text-neutral-500">Comparison baseline</span></th></tr></thead>
+                <caption className="sr-only">Recorded Zils and published Kev results on the same public items</caption>
+                <thead className="bg-neutral-50 text-xs text-neutral-600"><tr><th scope="col" className={HEAD}>Metric</th><th scope="col" className={`${CELL} text-[#E05E00]`}>Zils candidate<span className="mt-1 block font-normal text-neutral-500">Experimental checkpoint</span></th><th scope="col" className={CELL}>Published Kev 0.8B<span className="mt-1 block font-normal text-neutral-500">Comparison baseline</span></th></tr></thead>
                 <tbody>{rows.map(([name, hint, baseline, candidate]) => <tr key={name} className="hover:bg-neutral-50"><th scope="row" className={HEAD}>{name}<span className="mt-1 block text-xs text-neutral-500">{hint}</span></th><td className={`${CELL} font-medium`}>{candidate ?? 'Unavailable'}</td><td className={`${CELL} text-neutral-600`}>{baseline ?? 'Unavailable'}</td></tr>)}</tbody>
               </table>
             </div>
@@ -148,7 +148,7 @@ export default function ModelPage() {
               <div role="region" aria-label="Accuracy by difficulty" tabIndex={0} className="overflow-x-auto overscroll-x-contain">
                 <table className="w-full min-w-[310px] border-collapse text-sm">
                   <caption className="sr-only">Correct and total counts, with accuracy, for each public subset</caption>
-                  <thead className="bg-neutral-50 text-xs text-neutral-600"><tr><th scope="col" className={HEAD}>Subset</th><th scope="col" className={`${CELL} text-[#E05E00]`}>Fez</th><th scope="col" className={CELL}>Kev baseline</th></tr></thead>
+                  <thead className="bg-neutral-50 text-xs text-neutral-600"><tr><th scope="col" className={HEAD}>Subset</th><th scope="col" className={`${CELL} text-[#E05E00]`}>Zils</th><th scope="col" className={CELL}>Kev baseline</th></tr></thead>
                   <tbody>{(['easy', 'original', 'hard'] as const).map(name => <tr key={name}><th scope="row" className={`${HEAD} capitalize`}>{name}</th>{[fez, kev].map(model => <td key={model.id} className={CELL}>{model.slices[name]?.n_correct ?? 'Unavailable'} / {model.slices[name]?.n_scorable ?? 'Unavailable'}<span className="block text-xs text-neutral-500">{percent(model.slices[name]?.accuracy)}</span></td>)}</tr>)}</tbody>
                 </table>
               </div>
@@ -169,16 +169,16 @@ export default function ModelPage() {
           <details className="rounded-2xl bg-neutral-100 px-5 py-4 text-sm">
             <summary className="cursor-pointer font-medium marker:text-[#FF6A00] hover:text-[#3455dc]">Method, checkpoint identities & limitations</summary>
             <div className="mt-5 space-y-5 text-sm leading-7 text-neutral-700">
-              <p>Fez fine-tunes a published Kev 0.8B checkpoint built on Qwen3.5-0.8B-Base. The unchanged published checkpoint is the baseline in this comparison.</p>
+              <p>Zils fine-tunes a published Kev 0.8B checkpoint built on Qwen3.5-0.8B-Base. The unchanged published checkpoint is the baseline in this comparison.</p>
               <p>No official JevBench rank or composite score is available: private and sealed tests were not run. Hosted cost was not measured. Other experiment suites are documented separately and cannot form an improvement line with this comparison.</p>
               <dl className="space-y-4 text-xs">
                 <div><dt className="font-medium text-neutral-950">Experiment / collection started</dt><dd>{benchmark.id} / <time dateTime={benchmark.started_at}>{time(benchmark.started_at)}</time></dd></div>
-                {[['Fez checkpoint SHA-256', fez.checkpoint_sha256], ['Published Kev checkpoint SHA-256', kev.checkpoint_sha256], ['Public dataset SHA-256', benchmark.benchmark.dataset_sha256], ['Harness revision', benchmark.benchmark.harness_commit]].map(([label, hash]) => <div key={label}><dt className="font-medium text-neutral-950">{label}</dt><dd><code className="break-all font-mono">{hash}</code></dd></div>)}
+                {[['Zils checkpoint SHA-256', fez.checkpoint_sha256], ['Published Kev checkpoint SHA-256', kev.checkpoint_sha256], ['Public dataset SHA-256', benchmark.benchmark.dataset_sha256], ['Harness revision', benchmark.benchmark.harness_commit]].map(([label, hash]) => <div key={label}><dt className="font-medium text-neutral-950">{label}</dt><dd><code className="break-all font-mono">{hash}</code></dd></div>)}
                 <div><dt className="font-medium text-neutral-950">Latency scope</dt><dd>{benchmark.runtime.latency_scope}.</dd></div>
-                <div><dt className="font-medium text-neutral-950">Saved temperatures</dt><dd>Fez: {decimal(fez.temperature)}. Kev: {decimal(kev.temperature)}.</dd></div>
+                <div><dt className="font-medium text-neutral-950">Saved temperatures</dt><dd>Zils: {decimal(fez.temperature)}. Kev: {decimal(kev.temperature)}.</dd></div>
               </dl>
               <ul className="list-disc space-y-2 pl-5">{benchmark.limitations.map(limit => <li key={limit}>{limit}</li>)}</ul>
-              <p>The experimental Fez checkpoint is not distributed, so the full comparison cannot be reproduced from the checkout alone.</p>
+              <p>The experimental Zils checkpoint is not distributed, so the full comparison cannot be reproduced from the checkout alone.</p>
               <div className="flex flex-wrap gap-x-6 gap-y-3"><a href={METHOD} className={LINK}>Full methodology</a><a href={benchmark.benchmark.upstream_url} className={LINK}>Pinned benchmark harness</a><a href={`${REPO}/blob/main/docs/experiments.md`} className={LINK}>Other experiment suites</a></div>
             </div>
           </details>
@@ -218,7 +218,7 @@ export default function ModelPage() {
           <p className="mt-3 text-xs leading-6 text-neutral-600">This closed rehearsal demonstrates the training-to-chain path. It does not establish mainnet deployment, miner earnings, open competition, or automatic model promotion.</p>
           <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3 text-sm"><a href={TESTNET_SOURCE} className={LINK}>Scores, methodology & chain evidence</a><a href={`${REPO}/blob/main/docs/testnet.md`} className={LINK}>Testnet guide</a><a href={`${REPO}/blob/main/docs/roadmap.md`} className={LINK}>Roadmap</a></div>
         </Section>
-        <p className="border-t border-neutral-200 py-8 text-xs text-neutral-500">Fez decision model. Public evidence, read-only access.</p>
+        <p className="border-t border-neutral-200 py-8 text-xs text-neutral-500">Zils decision model. Public evidence, read-only access.</p>
       </main>
       <SiteFooter />
     </div>

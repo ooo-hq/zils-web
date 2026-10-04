@@ -4,7 +4,7 @@ export const MAX_BODY_BYTES = 32_768;
 
 export function playgroundConfig(): { configured: boolean; models: ModelOption[] } {
   const model = process.env.FEZ_DECISION_MODEL || 'fez-0.8b-experimental';
-  return { configured: Boolean(process.env.FEZ_DECISION_API_URL), models: [{ id: model, label: process.env.FEZ_DECISION_LABEL || 'Fez 0.8B · experimental' }] };
+  return { configured: Boolean(process.env.FEZ_DECISION_API_URL), models: [{ id: model, label: process.env.FEZ_DECISION_LABEL || 'Zils 0.8B · experimental' }] };
 }
 
 export class InferenceError extends Error {
@@ -37,7 +37,7 @@ async function check(response: Response): Promise<Response> {
 
 export async function infer(request: DecisionRequest, signal: AbortSignal) {
   const endpoint = process.env.FEZ_DECISION_API_URL;
-  if (!endpoint) throw new InferenceError('The Fez model endpoint is not connected yet.');
+  if (!endpoint) throw new InferenceError('The Zils model endpoint is not connected yet.');
   const options = { signal, cache: 'no-store' as const, redirect: 'error' as const };
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (process.env.FEZ_DECISION_API_KEY) headers.Authorization = `Bearer ${process.env.FEZ_DECISION_API_KEY}`;

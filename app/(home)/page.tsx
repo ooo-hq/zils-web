@@ -13,17 +13,17 @@ const TITLE = 'Your data. Your decision model.';
 const DESCRIPTION = 'Train, evaluate, and deploy models for your business’s decisions.';
 
 export const metadata: Metadata = {
-  title: `fez — ${TITLE}`,
+  title: `zils — ${TITLE}`,
   description: `${DESCRIPTION} A trainable decision primitive for your AI stack, built around authorized labeled examples. Early access; customer delivery is planned.`,
-  alternates: { canonical: 'https://fez.chat' },
+  alternates: { canonical: 'https://zils.ai' },
   openGraph: {
-    title: `fez — ${TITLE}`,
+    title: `zils — ${TITLE}`,
     description: `${DESCRIPTION} Early access; customer delivery is planned.`,
-    url: 'https://fez.chat',
-    siteName: 'Fez',
+    url: 'https://zils.ai',
+    siteName: 'Zils',
     type: 'website',
   },
-  twitter: { card: 'summary', title: `fez — ${TITLE}`, description: `${DESCRIPTION} Early access; customer delivery is planned.` },
+  twitter: { card: 'summary', title: `zils — ${TITLE}`, description: `${DESCRIPTION} Early access; customer delivery is planned.` },
 };
 
 // ── Everything numeric below comes from the two public records. ──────────
@@ -34,8 +34,8 @@ const counts = round.benchmark.counts;
 const onChain = round.chain.verification.on_chain_weights as Record<string, number>;
 
 const TICKER = [
-  `JEVBENCH PUBLIC · FEZ ${fez.n_correct}/${fez.n_attempted} · KEV ${kev.n_correct}/${kev.n_attempted} · TIED`,
-  `CALIBRATION ECE · FEZ ${fez.ece.toFixed(3)} VS ${kev.ece.toFixed(3)} · REGRESSED`,
+  `JEVBENCH PUBLIC · ZILS ${fez.n_correct}/${fez.n_attempted} · KEV ${kev.n_correct}/${kev.n_attempted} · TIED`,
+  `CALIBRATION ECE · ZILS ${fez.ece.toFixed(3)} VS ${kev.ece.toFixed(3)} · REGRESSED`,
   `P50 LATENCY · ${Math.round(fez.latency.p50_s * 1000)} MS · LOCALHOST`,
   `TESTNET ${round.chain.netuid} · WEIGHTS VERIFIED · BLOCK ${round.chain.verification.block}`,
   ...miners.map((m) => `MINER UID ${m.uid} · ${m.correct}/${m.cases} HELD-OUT · U16 ${m.on_chain_u16}`),
@@ -136,7 +136,7 @@ export default function HomePage() {
                 See how it works ↓
               </a>
             </div>
-            <p className="mt-3 text-[11px] text-neutral-500">Via the Fez Discord community. Customer delivery is planned.</p>
+            <p className="mt-3 text-[11px] text-neutral-500">Via the Zils Discord community. Customer delivery is planned.</p>
 
             <div className="mt-16">
               <DecisionInstrument />
@@ -154,7 +154,7 @@ export default function HomePage() {
               <br />A big part of your AI bill.
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-[15px] leading-7 text-neutral-600">
-              Model selection. Tool choice. Escalation. Fez is building a trainable decision primitive for these repeated judgments: context in, probabilities out. The goal is to replace full LLM calls where a specialized model can meet your quality bar.
+              Model selection. Tool choice. Escalation. Zils is building a trainable decision primitive for these repeated judgments: context in, probabilities out. The goal is to replace full LLM calls where a specialized model can meet your quality bar.
             </p>
             <p className="mx-auto mt-3 max-w-md text-xs leading-5 text-neutral-500">
               Potential savings depend on call volume, serving costs, and quality. Customer cost savings have not yet been measured.
@@ -257,7 +257,7 @@ export default function HomePage() {
         <div className="mt-6 grid gap-2 rounded-2xl bg-neutral-100 p-6 text-sm md:grid-cols-[12rem_1fr]">
           <span className="font-semibold">Data, considered.</span>
           <p className="leading-6 text-neutral-600">
-            Current research worker bundles include copies of training data; confidential distributed training is not supported. Data handling is part of scoping. No Fez model release is publicly available yet.
+            Current research worker bundles include copies of training data; confidential distributed training is not supported. Data handling is part of scoping. No Zils model release is publicly available yet.
           </p>
         </div>
       </section>

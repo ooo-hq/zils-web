@@ -48,7 +48,7 @@ export function DecisionPlayground({ configured, models }: { configured: boolean
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
-  const [origin, setOrigin] = useState('https://fez.chat');
+  const [origin, setOrigin] = useState('https://zils.ai');
   const active = useRef<AbortController | null>(null);
 
   useEffect(() => () => { active.current?.abort(); }, []);
@@ -135,7 +135,7 @@ export function DecisionPlayground({ configured, models }: { configured: boolean
           </button>
           {busy ? <button type="button" className="text-sm text-neutral-600 hover:text-neutral-950" onClick={() => { active.current?.abort(); setError('Request canceled.'); }}>Cancel</button> : <span className="text-xs text-neutral-500">One request. Every decision.</span>}
         </div>
-        <p className="mt-3 text-[11px] leading-5 text-neutral-500">Run sends your input to Fez’s model server. Use non-sensitive examples.</p>
+        <p className="mt-3 text-[11px] leading-5 text-neutral-500">Run sends your input to Zils’s model server. Use non-sensitive examples.</p>
       </form>
 
       <section aria-label="Decision results" aria-busy={busy} className="flex min-w-0 flex-col rounded-[22px] bg-white/60 p-2.5 ring-1 ring-neutral-200">
@@ -152,7 +152,7 @@ export function DecisionPlayground({ configured, models }: { configured: boolean
               <span className={`size-1.5 rounded-full ${busy ? `bg-[#FFB070] ${s.cursor}` : configured ? 'bg-[#9ee89e]' : 'bg-[#FF6A00]'}`} aria-hidden="true" />{status}
             </p>
             {view === 'API' ? <>
-              <p className="mb-3 text-[#9ee89e]/70">Send the same context and typed decisions from your own code. This request uses the Fez endpoint on this website.</p>
+              <p className="mb-3 text-[#9ee89e]/70">Send the same context and typed decisions from your own code. This request uses the Zils endpoint on this website.</p>
               <pre className="overflow-x-auto whitespace-pre text-[#c9f5c9]"><code>{requestCode}</code></pre>
             </> : run ? <>
               <p className="mb-5 flex flex-wrap gap-x-4 gap-y-1 text-[10px] tracking-[0.08em] text-[#9ee89e]/60">
@@ -165,7 +165,7 @@ export function DecisionPlayground({ configured, models }: { configured: boolean
             </> : <div className="grid min-h-[400px] place-items-center text-center">
               <div>
                 <p className="text-3xl text-[#FF6A00]" aria-hidden="true">▴</p>
-                <h2 className="mt-4 text-base text-[#c9f5c9]">{busy ? 'Reading your decisions.' : configured ? 'Context in. Probabilities out.' : 'The Fez endpoint isn’t connected.'}</h2>
+                <h2 className="mt-4 text-base text-[#c9f5c9]">{busy ? 'Reading your decisions.' : configured ? 'Context in. Probabilities out.' : 'The Zils endpoint isn’t connected.'}</h2>
                 <p className="mx-auto mt-2 max-w-xs text-[12px] leading-5 text-[#9ee89e]/60">{busy ? 'Answers appear here when the model finishes.' : configured ? 'Pick a use case or write your own, then run it to see the probability of every option.' : 'You can still explore the examples and copy the API request. Live answers appear once the model endpoint is connected.'}</p>
                 {!busy && <span className={`mt-6 inline-block h-4 w-2 bg-[#9ee89e] ${s.cursor}`} aria-hidden="true" />}
               </div>
