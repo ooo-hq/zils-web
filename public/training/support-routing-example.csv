@@ -1,0 +1,19 @@
+case_group,customer_message,correct_decision
+ticket-001,Please send last month's invoice.,Billing
+ticket-002,The app crashes when I open it.,Technical support
+ticket-003,I need to change my account email.,Account changes
+ticket-004,I was charged twice for this month.,Billing
+ticket-005,My file upload stops halfway through.,Technical support
+ticket-006,Please update our company name.,Account changes
+ticket-007,Where can I find my payment receipt?,Billing
+ticket-008,The dashboard displays a blank screen.,Technical support
+ticket-009,I want to add a teammate to our account.,Account changes
+ticket-010,Can you explain this extra charge?,Billing
+ticket-011,Our integration returns an error.,Technical support
+ticket-012,Please remove a former employee's access.,Account changes
+ticket-013,How do I update the card used for payments?,Billing
+ticket-014,Search results never finish loading.,Technical support
+ticket-015,I need to transfer account ownership.,Account changes
+ticket-016,The invoice has the wrong billing address.,Billing
+ticket-017,Notifications stopped arriving yesterday.,Technical support
+ticket-018,How can I change my display name?,Account changes
