@@ -60,10 +60,9 @@ export function DecisionInstrument() {
           type="button"
           onClick={() => setPaused((value) => !value)}
           aria-label={paused ? 'Play decision animation' : 'Pause decision animation'}
-          disabled={reduced !== false}
-          className="rounded-sm px-2 py-1 text-[var(--zils-accent)] hover:bg-[var(--zils-soft)] disabled:text-neutral-400"
+          className="rounded-sm px-2 py-1 text-[var(--zils-accent)] hover:bg-[var(--zils-soft)] motion-reduce:hidden"
         >
-          {reduced !== false ? 'Animation off' : paused ? 'Play' : 'Pause'}
+          {paused ? 'Play' : 'Pause'}
         </button>
       </div>
       <div className="bg-[var(--zils-ink)] px-5 py-6 text-sm leading-6 sm:px-6">
