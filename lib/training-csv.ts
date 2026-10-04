@@ -16,7 +16,7 @@ export type PreparedTraining = {
 
 /** Strict comma-separated CSV, including quoted newlines, CRLF and escaped quotes. */
 export function parseCsv(source: string): CsvData {
-  if (new TextEncoder().encode(source).length > MAX_CSV_BYTES) throw new Error('Choose a CSV smaller than 10 MiB, or use advanced JSONL upload.');
+  if (new TextEncoder().encode(source).length > MAX_CSV_BYTES) throw new Error('Choose a CSV smaller than 10 MiB, or choose “Advanced: prepared files.”');
   const text = source.replace(/^\uFEFF/, '');
   const records: string[][] = [];
   let row: string[] = [], field = '', quoted = false, closed = false;
@@ -28,7 +28,7 @@ export function parseCsv(source: string): CsvData {
     finishField();
     if (row.some(value => value !== '')) records.push(row);
     row = [];
-    if (records.length > MAX_CSV_ROWS + 1) throw new Error('Use at most 20,000 examples per CSV, or use advanced JSONL upload.');
+    if (records.length > MAX_CSV_ROWS + 1) throw new Error('Use at most 20,000 examples per CSV, or choose “Advanced: prepared files.”');
   }
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
@@ -107,10 +107,10 @@ export async function prepareTraining(csv: CsvData, mapping: ColumnMapping, deci
   if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(decision.name)) throw new Error('Use a project name with 1–64 lowercase letters, numbers, or hyphens.');
   if (!decision.question.trim() || decision.question.length > 1000) throw new Error('Describe the decision in 1–1,000 characters.');
   if (outcomes.length < 2 || outcomes.length > 50 || outcomes.some(value => !value || value.length > 100) || new Set(outcomes).size !== outcomes.length) throw new Error('Add 2–50 different possible answers, one per line (up to 100 characters each).');
-  if (!mapping.answer || !csv.headers.includes(mapping.answer)) throw new Error('Choose the column containing the correct answer.');
-  if (!mapping.inputs.length || mapping.inputs.some(name => !csv.headers.includes(name)) || new Set(mapping.inputs).size !== mapping.inputs.length) throw new Error('Choose at least one information column.');
-  if (mapping.inputs.includes(mapping.answer) || (mapping.group && mapping.inputs.includes(mapping.group)) || mapping.group === mapping.answer) throw new Error('Keep the answer and source-group columns separate from the information used to make the decision.');
-  if (mapping.group ? !csv.headers.includes(mapping.group) : !independent) throw new Error('Choose a source-group column, or confirm that every row is an independent case.');
+  if (!mapping.answer || !csv.headers.includes(mapping.answer)) throw new Error('Choose which part of your example is the correct answer.');
+  if (!mapping.inputs.length || mapping.inputs.some(name => !csv.headers.includes(name)) || new Set(mapping.inputs).size !== mapping.inputs.length) throw new Error('Choose at least one piece of information Zils should read before deciding.');
+  if (mapping.inputs.includes(mapping.answer) || (mapping.group && mapping.inputs.includes(mapping.group)) || mapping.group === mapping.answer) throw new Error('Keep the answer and case reference separate from the information Zils reads to make the decision.');
+  if (mapping.group ? !csv.headers.includes(mapping.group) : !independent) throw new Error('Choose the reference that connects related examples, or confirm that each example is a separate case.');
   const inputs = [...mapping.inputs].sort();
   const seen = new Map<string, { answer: string; row: number }>();
   const groups = new Map<string, Group>();
@@ -123,13 +123,13 @@ export async function prepareTraining(csv: CsvData, mapping: ColumnMapping, deci
     if (!answer) throw new Error(`CSV record ${row}: the correct answer is missing. Have someone review and label this case before training.`);
     if (!outcomes.includes(answer)) throw new Error(`CSV record ${row}: the answer does not match your allowed answers. Check spelling and capitalization in the CSV or edit your decision.`);
     const information = Object.fromEntries(inputs.map(header => [header, record[header]]));
-    if (Object.values(information).every(value => !value.trim())) throw new Error(`CSV record ${row}: all selected information columns are empty.`);
+    if (Object.values(information).every(value => !value.trim())) throw new Error(`CSV record ${row}: all the information you chose for Zils to read is empty.`);
     const fingerprint = JSON.stringify(information);
     const prior = seen.get(fingerprint);
     if (prior) throw new Error(`CSV records ${prior.row} and ${row} have identical information${prior.answer !== answer ? ' but conflicting answers' : ''}. Review them and keep one correct example, or include a missing field that distinguishes the cases.`);
     seen.set(fingerprint, { answer, row });
     const rawGroup = mapping.group ? record[mapping.group].trim() : fingerprint;
-    if (!rawGroup) throw new Error(`CSV record ${row}: the source-group value is missing. Related records must stay together.`);
+    if (!rawGroup) throw new Error(`CSV record ${row}: the shared case reference is missing. Examples from the same case must stay together.`);
     const groupId = `group-${await digest(rawGroup)}`;
     const example: Example = { id: `case-${await digest(fingerprint)}`, group_id: groupId, family: decision.name, state: { decision: decision.question.trim(), information }, question: { type: 'choice', criteria }, label: answer };
     if (coordinatorJson(example).length > 128 * 1024) throw new Error(`CSV record ${row}: this example exceeds 128 KiB in the training format. Shorten its information or remove unnecessary columns.`);
