@@ -175,6 +175,11 @@ This repository preserves the extracted `web/` history from
 The inherited Fez application routes and policy pages describe that separate
 application; this extraction does not create new contractual terms.
 
+Zils documentation is hosted at [docs.zils.ai](https://docs.zils.ai), and the
+website links there directly. This app does not serve or redirect `/docs` paths.
+The extensions directory and judge page belong to `fez.chat`; old Zils URLs
+redirect to their matching Fez pages without publishing duplicate page content.
+
 `public/model/` contains recorded public benchmark and testnet snapshots from
 the model repository. Keep their original identifiers, timestamps, metrics, and
 hashes. Experimental results are not a released model or a live network feed.

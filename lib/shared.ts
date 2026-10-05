@@ -1,6 +1,5 @@
 export const appName = 'zils';
 export const discordUrl = 'https://discord.gg/25yJSpvhC';
-// The manual lives in its own app now, on its own hostname. next.config.mjs
-// permanently redirects this app's /docs paths there.
-export const docsHost = 'docs.fez.chat';
+// Zils documentation lives on its own hostname; this app has no /docs route.
+export const docsHost = 'docs.zils.ai';
 export const docsUrl = `https://${docsHost}`;
