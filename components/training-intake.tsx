@@ -126,6 +126,18 @@ export function TrainingIntake({ busy, onSubmit, onFiles, onCloseAutoFocus, pend
     onFiles(advanced ? (prepared?.files || {}) : advancedFiles);
     requestAnimationFrame(() => heading.current?.focus());
   }
+  async function downloadPrepared(split: Split) {
+    if (!csv || !prepared) return;
+    setWorking(true); setError('');
+    try {
+      const result = preparedName.current === name ? prepared : await prepareTraining(csv, mapping, { name, question, outcomes }, independent);
+      setPrepared(result); preparedName.current = name; onFiles(result.files);
+      const url = URL.createObjectURL(result.files[split]);
+      const link = document.createElement('a'); link.href = url; link.download = result.files[split].name; link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) { setError(errorMessage(error)); }
+    finally { setWorking(false); }
+  }
   const criteria = <>
     <details className={styles.details}><summary>Success criteria: at least {accuracy || '—'}% accuracy</summary>
       <label htmlFor="min-accuracy">Minimum accuracy (%)</label><input id="min-accuracy" type="number" required min="0" max="100" step="any" value={accuracy} onChange={event => setAccuracy(event.target.value)} />
@@ -172,7 +184,7 @@ export function TrainingIntake({ busy, onSubmit, onFiles, onCloseAutoFocus, pend
         </fieldset></form>}
         {step === 2 && prepared && <form onSubmit={submit} onInvalid={event => { const details = (event.target as HTMLElement).closest('details'); if (details) details.open = true; }}><fieldset disabled={locked}>
           <p className={styles.intakeIntro}>Zils will train on your examples and check whether the result improves on the base model. A run may finish without a qualifying model.</p>
-          <label htmlFor="decision-name">Run name</label><input id="decision-name" required maxLength={64} pattern="[a-z0-9]([a-z0-9]|-){0,63}" value={name} onChange={event => setName(event.target.value)} /><small>Lowercase letters, numbers, and hyphens.</small>
+          <label htmlFor="decision-name">Run name</label><input id="decision-name" required readOnly={pending} maxLength={64} pattern="[a-z0-9]([a-z0-9]|-){0,63}" value={name} onChange={event => setName(event.target.value)} /><small>{pending ? 'The original run name is kept for upload recovery.' : 'Lowercase letters, numbers, and hyphens.'}</small>
           <div className={styles.reviewSummary}><strong>{question}</strong><p>{prepared.total.toLocaleString()} examples from {prepared.groups.toLocaleString()} separate cases.</p></div>
           <PreparedExamples rows={prepared.preview.slice(0, 1)} />
           <details className={styles.details}><summary>More examples and evaluation details</summary>
@@ -180,7 +192,7 @@ export function TrainingIntake({ busy, onSubmit, onFiles, onCloseAutoFocus, pend
             <div className={styles.splitSummary}>{SPLITS.map(split => <div key={split}><strong>{prepared.counts[split].toLocaleString()}</strong><span>{splitNames[split]}</span></div>)}</div>
             <p>We aim for a 70/15/15 split. Related cases stay together and every answer is represented. Calibration checks confidence; final evaluation uses cases withheld from fitting.</p>
             <div className={styles.tableWrap} role="region" aria-label="Answer coverage" tabIndex={0}><table><thead><tr><th>Answer</th>{SPLITS.map(split => <th key={split}>{splitNames[split]}</th>)}</tr></thead><tbody>{prepared.distribution.map(row => <tr key={row.outcome}><th>{row.outcome}</th>{SPLITS.map(split => <td key={split}>{row[split]}</td>)}</tr>)}</tbody></table></div>
-            <div className={styles.actions}>{SPLITS.map(split => <button key={split} type="button" className={styles.secondary} onClick={() => { const url = URL.createObjectURL(prepared.files[split]); const link = document.createElement('a'); link.href = url; link.download = prepared.files[split].name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }}>Download {split}</button>)}</div>
+            <div className={styles.actions}>{SPLITS.map(split => <button key={split} type="button" className={styles.secondary} onClick={() => { void downloadPrepared(split); }}>Download {split}</button>)}</div>
           </details>
           <label className={styles.checkLabel}><input type="checkbox" required checked={reviewed} onChange={event => setReviewed(event.target.checked)} /><span>I checked the answers and the information Zils will read. Examples from the same case are kept together.</span></label>
           {criteria}
