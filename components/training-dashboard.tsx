@@ -5,13 +5,14 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } fro
 import { canDownload, downloadFiles, SPLITS, submissionSchema, terminal, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
 import { TrainingGuide } from '@/components/training-guide';
 import { TrainingIntake } from '@/components/training-intake';
+import { ApiKeysPanel } from '@/components/api-keys-panel';
 import { Plus, ChevronDown } from 'lucide-react';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { TrainingRunStatus } from '@/components/training-run-status';
 import { currentTrainingJob, trainingProgress } from '@/lib/training-status';
 import styles from '@/app/(home)/train/train.module.css';
 
-type Config = { url: string; key: string; apiUrl: string };
+type Config = { url: string; key: string; apiUrl: string; decisionApiUrl: string | null };
 const message = (error: unknown) => error instanceof Error ? error.message : 'Something went wrong. Please try again.';
 const metric = (value: number | undefined, percent = false) => value === undefined ? '—' : percent ? `${(value * 100).toFixed(2)}%` : value.toFixed(4);
 
@@ -36,11 +37,11 @@ export function TrainingDashboard({ config }: { config: Config }) {
       setNotice('Check your email for a sign-in link. Open it to return to your training workspace.');
     } catch (error) { setError(message(error)); } finally { setBusy(false); }
   }
-  async function signOut() {
+  const signOut = useCallback(async () => {
     setError('');
     const { error } = await client.auth.signOut({ scope: 'local' });
     if (error) setError(error.message);
-  }
+  }, [client]);
   if (session === undefined) return <div className={styles.workspaceHeading}><h1>Training</h1><p role="status">Checking your session…</p></div>;
   return <>
     {error && <p role="alert" className={styles.error}>{error}</p>}
@@ -244,7 +245,10 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
   return <Sheet open={panelOpen} onOpenChange={open => { if (open) focusSubmitted.current = false; setPanelOpen(open); }}>
     <div className={styles.workspaceHeading}>
       <div><h1>Training</h1><p>Follow your runs and train a new model.</p></div>
-      <SheetTrigger asChild><button className={styles.button} disabled={busy}><Plus size={16} aria-hidden="true" />Train a model</button></SheetTrigger>
+      <div className={styles.workspaceActions}>
+        <ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={onExpired} />
+        <SheetTrigger asChild><button className={styles.button} disabled={busy}><Plus size={16} aria-hidden="true" />Train a model</button></SheetTrigger>
+      </div>
     </div>
     {error && <p className={styles.error} role="alert">{error}</p>}
     {progress && <p role="status" className={styles.notice}>{progress}</p>}

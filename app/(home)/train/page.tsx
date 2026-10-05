@@ -4,6 +4,7 @@ import { SiteHeader } from '@/components/site-header';
 import { TrainingGuide } from '@/components/training-guide';
 import { TrainingDashboard } from '@/components/training-dashboard';
 import { serviceUrl } from '@/lib/training';
+import { decisionApiUrl } from '@/lib/api-keys';
 import styles from './train.module.css';
 
 export const metadata: Metadata = {
@@ -18,10 +19,12 @@ export default function TrainPage() {
   const apiUrl = process.env.NEXT_PUBLIC_FEZ_TRAINING_API_URL || '';
   let configured = Boolean(url && key && apiUrl && !key.startsWith('sb_secret_'));
   try { if (configured) { serviceUrl(url); serviceUrl(apiUrl); } } catch { configured = false; }
+  let keysApiUrl: string | null = null;
+  try { if (configured) keysApiUrl = decisionApiUrl(apiUrl, process.env.NEXT_PUBLIC_ZILS_API_URL); } catch { /* Keep training available if the optional key-service URL is invalid. */ }
   return <div className={styles.page}><div className={styles.container}>
     <SiteHeader tone="light" current="train" />
     <main id="main-content" tabIndex={-1}>
-      {configured ? <TrainingDashboard config={{ url, key, apiUrl }} /> : <><div className={styles.workspaceHeading}><h1>Training</h1></div><section id="training-workspace" className={styles.panel} aria-labelledby="offline-title"><h2 id="offline-title">Training is not configured here yet.</h2><p>Sign-in, uploads, and job submission become available once this environment is connected to Supabase and the training coordinator. No jobs are simulated.</p><div className={styles.actions}><Link href="/" className={styles.button}>Back to Zils</Link><Link href="/model" className={styles.secondary}>Explore the research</Link></div></section><details className={styles.signInGuide}><summary>What examples should I bring?</summary><TrainingGuide /></details></>}
+      {configured ? <TrainingDashboard config={{ url, key, apiUrl, decisionApiUrl: keysApiUrl }} /> : <><div className={styles.workspaceHeading}><h1>Training</h1></div><section id="training-workspace" className={styles.panel} aria-labelledby="offline-title"><h2 id="offline-title">Training is not configured here yet.</h2><p>Sign-in, uploads, and job submission become available once this environment is connected to Supabase and the training coordinator. No jobs are simulated.</p><div className={styles.actions}><Link href="/" className={styles.button}>Back to Zils</Link><Link href="/model" className={styles.secondary}>Explore the research</Link></div></section><details className={styles.signInGuide}><summary>What examples should I bring?</summary><TrainingGuide /></details></>}
     </main>
     <footer className={styles.footer}><span>Zils training · Experimental</span><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></footer>
   </div></div>;
