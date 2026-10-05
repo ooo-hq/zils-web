@@ -115,3 +115,107 @@
 .statusFreshness[data-stale=true] { color:#943044; }
 .page:has(.account) .hero>p { max-width:68ch; }
 .workspace .jobButton .badge { text-transform:none; }
+
+/* Training workspace: a focused run, quiet history, and a separate setup sheet. */
+.workspaceHeading { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px; padding:24px 0 36px; }
+.workspaceHeading h1 { font-size:clamp(30px,4vw,38px); font-weight:600; line-height:1.08; letter-spacing:-.05em; margin:0; }
+.workspaceHeading p { margin:10px 0 0; font-size:14px; color:#626270; }
+.workspaceHeading .button { flex-shrink:0; }
+.workspace { gap:34px; }
+.currentLabel { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:12px; font-size:13px; color:#626270; }
+.currentLabel .textButton { color:#626270; font-size:11px; }
+.currentRunHeader { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:26px; }
+.currentRunHeader h2 { margin:0; overflow-wrap:anywhere; min-width:0; flex:1; }
+.currentRunHeader h2:focus { outline:none; }
+.runBadge { font-size:12px; padding:4px 9px; background:#f1f1fc; color:#4942c7; border-radius:4px; }
+.runBadge[data-tone=stopped] { background:#fff1f3; color:#943044; }
+.runBadge[data-tone=done] { background:#f6f7fa; color:#575765; }
+.runMessage { padding:18px; background:#f6f7fa; border-left:3px solid var(--status-accent); }
+.runMessage .runHeadline { margin:0 0 8px; font-size:20px; line-height:1.3; font-weight:500; letter-spacing:-.02em; max-width:none; }
+.runMessage .runExplanation { margin:0; font-size:14px; color:#575765; max-width:68ch; }
+.runMessage .runNext { margin:10px 0 0; font-size:12px; padding:0; background:none; border:0; color:#626270; }
+.runStages { grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; margin:26px 0 20px; }
+.runStages li { padding-top:12px; gap:7px; }
+.runStages strong { font-size:12px; font-weight:400; }
+.runStages small { font-size:11px; }
+.stageMarker { width:20px; height:20px; font-size:10px; }
+.currentRun .details { margin:18px 0 0; }
+.currentRun .statusFreshness { font-size:11px; color:#626270; margin:16px 0 0; }
+.currentRun .statusFreshness[data-stale=true] { color:#943044; }
+.runHistory h2 { font-size:21px; line-height:1.3; font-weight:500; letter-spacing:-.025em; margin:0 0 14px; }
+.runHistory ul { list-style:none; padding:0; margin:0; }
+.runHistory li { border-top:1px solid #e5e6ed; }
+.historyRow { display:flex; align-items:center; justify-content:space-between; gap:16px; width:100%; padding:18px 0; background:#fff; border:0; text-align:left; color:#15151a; cursor:pointer; font:inherit; font-size:14px; }
+.historyRow:hover { color:#4942c7; }
+.historyRow>span:first-child { min-width:0; }
+.historyRow strong { display:block; font-weight:400; overflow-wrap:anywhere; }
+.historyRow time { display:block; font-size:11px; color:#626270; margin-top:3px; }
+.historyStatus { display:flex; align-items:center; gap:10px; font-size:12px; color:#626270; }
+.historyStatus svg { flex-shrink:0; transition:transform 150ms; }
+.historyRow[aria-expanded=true] svg { transform:rotate(180deg); }
+.historyDetail { padding:4px 0 24px; }
+.historyDetail .runHeadline { font-size:18px; }
+.historyDetail .details { margin-bottom:0; }
+.modelDownloads { margin:22px 0; }
+.emptyWorkspace { padding:44px 28px; border:1px solid #e5e6ed; border-radius:8px; }
+.emptyWorkspace h2 { font-size:26px; font-weight:500; letter-spacing:-.035em; margin:0 0 12px; }
+.emptyWorkspace p { font-size:14px; color:#626270; max-width:56ch; margin:0 0 24px; }
+.account { margin:36px 0 0; padding-top:20px; border-top:1px solid #e5e6ed; color:#626270; font-size:11px; }
+.account strong { font-weight:400; color:#15151a; }
+.signInGuide { margin-top:28px; font-size:13px; }
+.signInGuide>summary { color:#4942c7; cursor:pointer; }
+.signInGuide .guide { margin:28px 0 0; padding-bottom:0; border:0; }
+.page.trainingSheet { min-height:0; color-scheme:light; }
+.sheetHeader { flex-shrink:0; padding:28px 78px 22px 28px; border-bottom:1px solid #e5e6ed; }
+.sheetHeader h2 { margin:0; font-size:26px; font-weight:600; letter-spacing:-.035em; line-height:1.2; }
+.sheetHeader p { margin:8px 0 0; color:#626270; font-size:12px; }
+.sheetBody { padding:0 28px 24px; overflow-y:auto; overscroll-behavior:contain; min-height:0; }
+.trainingSheet .steps { grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:0 0 28px; }
+.trainingSheet .steps li { display:flex; align-items:center; gap:8px; font-size:12px; padding:16px 0; }
+.trainingSheet .steps li span { margin:0; }
+.trainingSheet .stepTitle { font-size:23px; line-height:1.25; font-weight:500; letter-spacing:-.03em; margin:0 0 10px; }
+.trainingSheet .stepTitle:focus { outline:none; }
+.intakeIntro { color:#575765; font-size:14px; margin:0 0 24px; max-width:60ch; }
+.trainingSheet .textButton { margin-top:12px; }
+.wizardActions { display:flex; justify-content:space-between; align-items:center; gap:14px; position:sticky; bottom:-24px; background:#fff; padding:20px 0; margin-top:28px; border-top:1px solid #e5e6ed; z-index:1; }
+.wizardActions .textButton { margin:0; }
+.draftNote { font-size:11px; color:#626270; margin:16px 0 0; }
+.fileHelp { display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin:18px 0; font-size:12px; color:#4942c7; }
+.fileHelp a { text-decoration:underline; text-underline-offset:3px; }
+.fileHelp .textButton { margin:0; }
+.fileReady { display:flex; flex-direction:column; padding:14px 0; margin-top:12px; font-size:13px; }
+.fileReady span { font-size:11px; color:#626270; overflow-wrap:anywhere; }
+.trainingSheet .exampleNavigator { margin:0 0 16px; padding:12px 0; }
+.trainingSheet .teachingPreview { margin:0; }
+.trainingSheet .teachingPreview h4 { margin:0 0 8px; font-size:12px; font-weight:500; color:#626270; }
+.trainingSheet .teachingPreview p { font-size:15px; margin:0; white-space:pre-wrap; overflow-wrap:anywhere; max-height:220px; overflow:auto; }
+.trainingSheet .teachingPreview p+p { margin-top:10px; }
+.trainingSheet .teachingQuestion { margin:24px 0; }
+.trainingSheet .teachingQuestion legend { font-size:16px; }
+.trainingSheet .teachingQuestion>p { font-size:12px; color:#626270; margin:8px 0 16px; }
+.trainingSheet .dataChoices { grid-template-columns:1fr; }
+.trainingSheet .relatedChoice { padding-left:26px; }
+.trainingSheet .details { color:#575765; font-size:12px; }
+.trainingSheet .details summary { color:#4942c7; }
+.reviewSummary { margin:24px 0 18px; font-size:14px; }
+.reviewSummary strong { font-weight:500; }
+.reviewSummary p { font-size:12px; margin-top:8px; color:#626270; }
+@media(max-width:650px) {
+  .runStages { grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; margin:22px 0; }
+  .runStages li { display:block; border-left:0; border-top:2px solid #e5e6ed; margin:0; padding:12px 0 0; }
+  .runStages li:last-child { border-top-color:#e5e6ed; }
+  .runStages li:last-child[data-state=done] { border-top-color:#4942c7; }
+  .stageMarker { display:none; }
+  .runStages li>span:last-child { display:block; }
+  .runStages small { margin-top:4px; }
+  .runMessage { padding:14px; }
+  .historyRow { align-items:flex-start; }
+  .historyStatus { max-width:45%; text-align:right; justify-content:flex-end; }
+  .sheetHeader { padding:24px 68px 20px 20px; }
+  .sheetBody { padding:0 20px 24px; }
+  .sheetHeader h2 { font-size:24px; }
+  .trainingSheet .teachingPreview { grid-template-columns:1fr; }
+  .trainingSheet .teachingPreview>div:last-child { border-left:0; border-top:1px solid #dddfe8; }
+  .trainingSheet input:not([type=checkbox]):not([type=radio]),.trainingSheet textarea,.trainingSheet select { font-size:16px; }
+}
+@media(prefers-reduced-motion:reduce) { .historyStatus svg { transition:none; } }

@@ -5,10 +5,10 @@ import styles from '@/app/(home)/train/train.module.css';
 export function TrainingRunStatus({ job }: { job: Job }) {
   const status = trainingProgress(job);
   return <div className={styles.runStatus} data-tone={status.tone}>
-    <div role="status" aria-atomic="true">
+    <div className={styles.runMessage} role="status" aria-atomic="true">
       <h3 className={styles.runHeadline}>{status.title}</h3>
       <p className={styles.runExplanation}>{status.detail}</p>
-      {job.model && <p className={styles.help}>Starting model: <strong>{job.model.name}</strong></p>}
+      <p className={styles.runNext}>{status.next}</p>
     </div>
     {status.stage !== null && <ol className={styles.runStages} aria-label="Training run progress">
       {TRAINING_STAGES.map((title, index) => {
@@ -19,6 +19,5 @@ export function TrainingRunStatus({ job }: { job: Job }) {
         </li>;
       })}
     </ol>}
-    <p className={styles.runNext}>{status.next}</p>
   </div>;
 }

@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { trainingProgress, TRAINING_STAGES } = require('../.private/test-build/training-status.js');
+const { trainingProgress, TRAINING_STAGES, currentTrainingJob } = require('../.private/test-build/training-status.js');
 const { STATUSES, jobSchema } = require('../.private/test-build/training.js');
 const job = status => ({ id: '123e4567-e89b-42d3-a456-426614174000', name: 'support-routing-v1', status });
 
@@ -37,7 +37,30 @@ test('completed, qualified, and non-qualifying results stay distinct', () => {
 });
 test('a stale result cannot turn a running job into a completed one', () => {
   const state = trainingProgress({ ...job('running'), result: { delivery: { status: 'accepted' } } });
-  assert.equal(state.stage, 3);
+  assert.equal(state.stage, 1);
   assert.equal(state.tone, 'active');
   assert.equal(jobSchema.parse(job('awaiting_approval')).status, 'awaiting_approval');
+});
+
+test('the workspace prioritizes unfinished work over a newer completed run', () => {
+  const complete = { ...job('completed'), id: 'finished' };
+  const active = { ...job('awaiting_approval'), id: 'waiting' };
+  assert.equal(currentTrainingJob([complete, active]), active);
+  assert.equal(currentTrainingJob([complete]), complete);
+  assert.equal(currentTrainingJob([]), undefined);
+});
+
+test('capacity waits and activation retries explain the next automatic step', () => {
+  const waiting = trainingProgress({ ...job('awaiting_approval'), workflow: { state: 'waiting_capacity' } });
+  assert.match(waiting.title, /capacity/i);
+  assert.equal(waiting.tone, 'waiting');
+  const accepted = { ...job('completed'), result: { delivery: { status: 'accepted' } } };
+  const retrying = trainingProgress({ ...accepted, workflow: { state: 'activation_failed' } });
+  assert.match(retrying.next, /retry/i);
+  assert.doesNotMatch(retrying.title, /ready to use/i);
+  const ready = trainingProgress({ ...accepted, workflow: { state: 'ready', model_id: 'customer-model' } });
+  assert.match(ready.title, /ready to use/i);
+  assert.match(ready.next, /API key/i);
+  const stale = trainingProgress({ ...job('running'), workflow: { state: 'ready' } });
+  assert.equal(stale.tone, 'active');
 });

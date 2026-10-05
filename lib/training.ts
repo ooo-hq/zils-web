@@ -16,6 +16,7 @@ const modelSchema = z.object({ id: z.enum(['kev-0.8b-v1', 'jevk5-4b-v0.3']), nam
 export const jobSchema = z.object({
   id: z.string().uuid(), name: z.string(), status: z.enum(STATUSES), created_at: z.string().optional(), error: z.string().nullable().optional(),
   model: modelSchema.nullable().optional(),
+  workflow: z.object({ state: z.string(), message: z.string().optional(), model_id: z.string().optional(), fingerprint: z.string().optional() }).nullable().optional(),
   result: z.object({
     delivery: z.object({ status: z.enum(['accepted', 'no_qualifying_model']), uid: z.number().optional(), sha256: z.string().optional(), brier_improvement: z.number().optional(), acceptance: acceptanceSchema }),
     baseline: metrics,
