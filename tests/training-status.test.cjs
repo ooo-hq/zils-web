@@ -49,3 +49,18 @@ test('the workspace prioritizes unfinished work over a newer completed run', () 
   assert.equal(currentTrainingJob([complete]), complete);
   assert.equal(currentTrainingJob([]), undefined);
 });
+
+test('capacity waits and activation retries explain the next automatic step', () => {
+  const waiting = trainingProgress({ ...job('awaiting_approval'), workflow: { state: 'waiting_capacity' } });
+  assert.match(waiting.title, /capacity/i);
+  assert.equal(waiting.tone, 'waiting');
+  const accepted = { ...job('completed'), result: { delivery: { status: 'accepted' } } };
+  const retrying = trainingProgress({ ...accepted, workflow: { state: 'activation_failed' } });
+  assert.match(retrying.next, /retry/i);
+  assert.doesNotMatch(retrying.title, /ready to use/i);
+  const ready = trainingProgress({ ...accepted, workflow: { state: 'ready', model_id: 'customer-model' } });
+  assert.match(ready.title, /ready to use/i);
+  assert.match(ready.next, /API key/i);
+  const stale = trainingProgress({ ...job('running'), workflow: { state: 'ready' } });
+  assert.equal(stale.tone, 'active');
+});

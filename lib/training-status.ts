@@ -17,8 +17,16 @@ const progress: Record<Job['status'], Progress> = {
 };
 
 export function trainingProgress(job: Job): Progress {
+  const workflow = job.workflow?.state;
+  if (job.status === 'awaiting_approval') {
+    if (workflow === 'waiting_capacity') return { ...progress.awaiting_approval, label: 'Waiting for capacity', title: 'Waiting for training capacity.', detail: 'Your examples passed the checks and are saved. The training GPU is currently in use.', next: 'Training will start automatically when capacity is available. No need to resubmit.' };
+    if (workflow === 'waiting_worker') return { ...progress.awaiting_approval, title: 'Waiting for a training worker.', detail: 'Your examples are ready. An approved worker will pick up this run when it is available.', next: 'No need to resubmit. This page updates automatically.' };
+    if (workflow === 'needs_review') return { ...progress.awaiting_approval, label: 'Needs review', title: 'Zils needs to review this run.', detail: 'The run needs an operator check before it can be assigned safely.', next: 'Your examples are saved. Zils needs to resolve this before training can start.' };
+  }
   if (job.status !== 'completed' || !job.result) return progress[job.status];
+  if (job.result.delivery.status === 'accepted' && workflow === 'ready' && job.workflow?.model_id) return { ...progress.completed, label: 'API ready', title: 'Your model is ready to use.', detail: 'Your adapter passed evaluation and is available through the Zils API.', next: 'Use the model ID below with your existing API key.' };
+  if (job.result.delivery.status === 'accepted' && ['activating', 'activation_failed'].includes(workflow || '')) return { ...progress.completed, stage: 3, tone: 'waiting', label: 'Activating API access', title: 'Training passed. Preparing API access.', detail: 'Your adapter met the evaluation targets. Zils is connecting it to your account.', next: workflow === 'activation_failed' ? 'Activation hit a temporary issue and will retry automatically. Your accepted model is saved.' : 'This page will show your model ID once activation is verified.' };
   return job.result.delivery.status === 'accepted'
-    ? { ...progress.completed, label: 'Model ready', title: 'Your model is ready to download.', detail: 'A trained model improved on the starting model and met your targets on the test examples.', next: 'Get your private download links below. This does not create a live prediction API.' }
+    ? { ...progress.completed, label: 'Training passed', title: 'Your model is ready to download.', detail: 'A trained model improved on the starting model and met your targets on the test examples.', next: 'API access has not been confirmed yet. Activation status will appear here when available.' }
     : { ...progress.completed, label: 'No qualifying model', title: 'Finished. No model met your targets.', detail: 'The run completed, but no model passed every required check. No model download was released.', next: 'Review the results below before deciding whether to try more varied, reviewed examples.' };
 }

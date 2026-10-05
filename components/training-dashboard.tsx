@@ -205,8 +205,13 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
         <button className={styles.textButton} disabled={busy} onClick={() => cancelJob(job)}>Cancel this run</button>
       </div>}
       {canDownload(job) && <div className={styles.modelDownloads}>
+        {job.workflow?.state === 'ready' && job.workflow.model_id && <>
+          <p><strong>API model ID</strong></p>
+          <p className={styles.hash}><code>{job.workflow.model_id}</code></p>
+          <p className={styles.help}>Set your request’s model to this ID. Your existing API key gives access to models owned by your account.</p>
+        </>}
         <button disabled={busy} className={styles.button} onClick={() => getDownloads(job)}>Get model files</button>
-        <p className={styles.help}>Private downloads. API activation is a separate step.</p>
+        <p className={styles.help}>Optional: download a private copy of the accepted adapter.</p>
         {downloadJobId === job.id && downloads.length > 0 && <ul className={styles.downloads}>{downloads.map(file => <li key={file.name}><a href={file.url} target="_blank" rel="noreferrer">{file.name}</a></li>)}</ul>}
       </div>}
       <details className={styles.details}>
