@@ -2,7 +2,7 @@ import { SPLITS, type Split } from './training';
 
 export const MAX_CSV_BYTES = 10 * 1024 * 1024;
 export const MAX_CSV_ROWS = 20_000;
-export type CsvData = { headers: string[]; rows: string[][] };
+export type CsvData = { headers: string[]; rows: string[][]; sourceRows?: number[] };
 export type ColumnMapping = { inputs: string[]; answer: string; group: string };
 export type Decision = { name: string; question: string; outcomes: string[] };
 export type PreparedTraining = {
@@ -19,6 +19,8 @@ export function parseCsv(source: string): CsvData {
   if (new TextEncoder().encode(source).length > MAX_CSV_BYTES) throw new Error('Choose a CSV smaller than 10 MiB, or choose “Advanced: prepared files.”');
   const text = source.replace(/^\uFEFF/, '');
   const records: string[][] = [];
+  const sourceRows: number[] = [];
+  let sourceRow = 1;
   let row: string[] = [], field = '', quoted = false, closed = false;
   function finishField() {
     row.push(field.trim()); field = ''; closed = false;
@@ -26,7 +28,8 @@ export function parseCsv(source: string): CsvData {
   }
   function finishRow() {
     finishField();
-    if (row.some(value => value !== '')) records.push(row);
+    if (row.some(value => value !== '')) { records.push(row); sourceRows.push(sourceRow); }
+    sourceRow++;
     row = [];
     if (records.length > MAX_CSV_ROWS + 1) throw new Error('Use at most 20,000 examples per CSV, or choose “Advanced: prepared files.”');
   }
@@ -40,17 +43,18 @@ export function parseCsv(source: string): CsvData {
     } else if (char === ',') finishField();
     else if (char === '\n' || char === '\r') { if (char === '\r' && text[i + 1] === '\n') i++; finishRow(); }
     else if (char === '"' && !field && !closed) quoted = true;
-    else if (closed || char === '"') throw new Error(`CSV record ${records.length + 1}: misplaced quote. Export the spreadsheet as a comma-separated CSV again.`);
+    else if (closed || char === '"') throw new Error(`CSV record ${sourceRow}: misplaced quote. Export the spreadsheet as a comma-separated CSV again.`);
     else field += char;
   }
   if (quoted) throw new Error('The CSV ends inside a quoted cell. Close the quote or export the file again.');
   if (field || row.length || closed) finishRow();
   const headers = records.shift();
+  sourceRows.shift();
   if (!headers || headers.length < 2) throw new Error('Add a header row and at least two columns: the information to decide on and the correct answer.');
   if (headers.some(header => !header) || new Set(headers).size !== headers.length) throw new Error('Give every column a unique, nonempty header.');
   if (!records.length) throw new Error('This CSV has headers but no examples. Add rows with information and a reviewed correct answer.');
-  for (const [i, record] of records.entries()) if (record.length !== headers.length) throw new Error(`CSV record ${i + 2}: expected ${headers.length} cells, found ${record.length}. Check commas and quotes.`);
-  return { headers, rows: records };
+  for (const [i, record] of records.entries()) if (record.length !== headers.length) throw new Error(`CSV record ${sourceRows[i]}: expected ${headers.length} cells, found ${record.length}. Check commas and quotes.`);
+  return { headers, rows: records, ...(sourceRows.some((row, index) => row !== index + 2) ? { sourceRows } : {}) };
 }
 
 async function digest(value: string) {
@@ -119,7 +123,7 @@ export async function prepareTraining(csv: CsvData, mapping: ColumnMapping, deci
   for (const [index, cells] of csv.rows.entries()) {
     const record = Object.fromEntries(csv.headers.map((header, i) => [header, cells[i]]));
     const answer = record[mapping.answer].trim();
-    const row = index + 2;
+    const row = csv.sourceRows?.[index] ?? index + 2;
     if (!answer) throw new Error(`CSV record ${row}: the correct answer is missing. Have someone review and label this case before training.`);
     if (!outcomes.includes(answer)) throw new Error(`CSV record ${row}: the answer does not match your allowed answers. Check spelling and capitalization in the CSV or edit your decision.`);
     const information = Object.fromEntries(inputs.map(header => [header, record[header]]));
