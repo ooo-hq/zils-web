@@ -7,6 +7,7 @@ import jevbench from '@/public/model/jevbench-public-001.json';
 import round from '@/public/model/testnet-round-001.json';
 import { DecisionInstrument, RoundReplay, type ReplayTab } from './live';
 import { ZilsWordmark } from '@/components/zils-wordmark';
+import { FlightStudySummary } from '@/components/flight-study';
 import s from './home.module.css';
 
 const TITLE = 'Your data. Your decision model.';
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
   twitter: { card: 'summary', title: `zils — ${TITLE}`, description: `${DESCRIPTION} Early access; customer delivery is planned.` },
 };
 
-// ── Everything numeric below comes from the two public records. ──────────
+// Recorded figures are sourced from public experiment records.
 const fez = jevbench.models.find((m) => m.id === 'fez')!.metrics;
 const miners = round.miners;
 const counts = round.benchmark.counts;
@@ -133,6 +134,8 @@ export default function HomePage() {
             </div>
           </section>
 
+          <FlightStudySummary />
+
           {/* ── Intro ────────────────────────────────────────── */}
           <section aria-labelledby="intro" className="mx-auto max-w-5xl border-t border-neutral-200 px-6 pt-20 text-center sm:px-8">
             <h2 id="intro" className="mt-5 text-[clamp(2.1rem,4.4vw,3.3rem)] font-semibold leading-[1.04] tracking-[-0.055em]">
@@ -181,7 +184,7 @@ export default function HomePage() {
       <section id="workflow" aria-labelledby="workflow-h" className="scroll-mt-8 bg-[var(--zils-surface)] px-6 py-24 sm:px-8">
         <div className="mx-auto max-w-5xl">
           <p className="flex items-center justify-center gap-2 text-[12px] font-medium">
-            Proposed customer workflow
+            Training workflow
           </p>
           <h2 id="workflow-h" className="mx-auto mt-4 max-w-2xl text-balance text-center text-[clamp(2.1rem,4.4vw,3.3rem)] font-semibold leading-[1.04] tracking-[-0.055em]">
             Good examples in.
@@ -189,7 +192,7 @@ export default function HomePage() {
             Evidence behind every decision.
           </h2>
           <p className="mx-auto mt-4 max-w-md text-center text-sm leading-6 text-neutral-600">
-            Customer-specific jobs and delivery are planned. Today’s research system already exercises training, checkpoint verification, and evaluation.
+            Train a task-specific adapter, verify its checkpoint, and compare its predictions with a starting model. Evaluate quality before using a candidate for decisions.
           </p>
 
           <ol className="mt-14 grid gap-px overflow-hidden rounded-md bg-neutral-200 ring-1 ring-neutral-200 md:grid-cols-4">
@@ -241,34 +244,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Evidence split ─────────────────────────────────── */}
-      <section aria-labelledby="evidence" className="mx-auto max-w-5xl px-6 pb-24 sm:px-8">
-        <div className="grid overflow-hidden rounded-md border border-neutral-200 md:grid-cols-2">
-          <div className="grid min-h-[320px] place-items-center bg-[var(--zils-surface)] p-8 sm:p-10">
-            <div className="text-center">
-              <p className="text-xs text-neutral-600">Jevbench public items</p>
-              <p className="mt-4 font-mono text-[clamp(3.5rem,9vw,5.5rem)] leading-none tracking-[-0.06em]">
-                {fez.n_correct}
-                <span className="text-neutral-400">/{fez.n_attempted}</span>
-              </p>
-              <p className="mt-4 text-xs text-neutral-600">
-                Zils = published KEV · +{jevbench.paired_outcomes.fez_corrected} / −{jevbench.paired_outcomes.fez_regressed} items
-              </p>
-            </div>
-          </div>
-          <div className="bg-[var(--zils-accent)] p-8 text-white sm:p-12">
-            <div>
-              <p className="text-xs font-medium">Open about the evidence</p>
-              <h2 id="evidence" className="mt-5 max-w-xs text-[30px] font-semibold leading-[1.06] tracking-[-0.045em]">
-                Accuracy tied. Confidence quality regressed.
-              </h2>
-              <p className="mt-4 max-w-sm text-sm leading-6 text-white/80">
-                We publish the result as it came out, including where it got worse. This does not establish a general improvement.
-              </p>
-              <div className="mt-8 flex flex-col gap-2 text-sm font-medium">
-                <Link href="/model#quality" className="hover:underline hover:underline-offset-4">Read the comparison &amp; limitations ↗</Link>
-                <Link href="/model#testnet" className="hover:underline hover:underline-offset-4">Inspect the recorded round ↗</Link>
-              </div>
+      {/* Earlier measurements remain visible alongside the latest study. */}
+      <section aria-labelledby="evidence" className="mx-auto max-w-5xl px-6 pb-20 sm:px-8">
+        <div className="grid gap-6 border-t border-neutral-200 pt-8 md:grid-cols-[1fr_1.4fr]">
+          <h2 id="evidence" className="max-w-[19ch] text-2xl font-semibold leading-tight tracking-[-0.035em]">Earlier results stay on the record.</h2>
+          <div>
+            <p className="text-sm leading-7 text-neutral-600">In an earlier Kev 0.8B experiment, Zils and the published baseline both answered {fez.n_correct} of {fez.n_attempted} public JevBench items correctly, while confidence quality regressed. That comparison is separate from the flight study above.</p>
+            <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3 text-sm">
+              <Link href="/model#quality" className="underline decoration-neutral-300 underline-offset-4 hover:text-[var(--zils-accent)]">Read the earlier comparison</Link>
+              <Link href="/model#testnet" className="underline decoration-neutral-300 underline-offset-4 hover:text-[var(--zils-accent)]">Inspect the recorded testnet round</Link>
             </div>
           </div>
         </div>
@@ -304,8 +288,8 @@ function ResearchStatus() {
     <div className="border-b border-neutral-200 bg-[var(--zils-surface)] text-[11px] text-neutral-600">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-6 py-2.5 sm:px-8">
         <span>Research preview</span>
-        <Link href="/model#testnet" className="hover:text-[var(--zils-accent)]">
-          Testnet {round.chain.netuid} · weights verified <span aria-hidden="true">↗</span>
+        <Link href="/model#flight-study" className="hover:text-[var(--zils-accent)]">
+          Flight study · recorded results <span aria-hidden="true">↗</span>
         </Link>
       </div>
     </div>
