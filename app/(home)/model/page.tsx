@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { LightBackdrop, SiteFooter } from '@/components/site-footer';
+import { SiteFooter } from '@/components/site-footer';
+import { FlightStudyDetails } from '@/components/flight-study';
+import { flightMethod, flightSource } from '@/lib/flight-study';
 import { SiteHeader } from '@/components/site-header';
 import s from '@/components/light.module.css';
 import { benchmark, readComparison, percent, decimal, milliseconds, comparisonHeadline } from '@/lib/model-benchmark';
@@ -8,7 +10,7 @@ import testnet from '@/public/model/testnet-round-001.json';
 
 export const metadata: Metadata = {
   title: 'zils — decision model research',
-  description: 'Zils’s experimental 0.8B decision model. Recorded public benchmarks, checkpoint evidence, and the current state of its training competition.',
+  description: 'Measured results from Zils decision-model research: a JevK5 flight adapter, comparisons with unchanged models and simple baselines, and reproducible evidence.',
   alternates: { canonical: 'https://zils.ai/model' },
 };
 
@@ -21,8 +23,9 @@ const CELL = 'border-t border-neutral-200 px-3 py-3 text-right tabular-nums sm:p
 const HEAD = 'border-t border-neutral-200 px-3 py-3 text-left font-normal text-neutral-950 sm:px-5';
 const CARD = 'rounded-2xl bg-white ring-1 ring-neutral-200';
 const SECTIONS = [
-  { id: 'overview', title: 'Overview' },
-  { id: 'quality', title: 'Model quality' },
+  { id: 'flight-study', title: 'Flight adapter study' },
+  { id: 'overview', title: 'Earlier research' },
+  { id: 'quality', title: 'JevBench comparison' },
   { id: 'training', title: 'Training & evaluation' },
   { id: 'participants', title: 'Participants' },
   { id: 'testnet', title: 'Testnet publication' },
@@ -34,9 +37,9 @@ const PROCESS = [
   ['Reward', 'Family-macro Brier skill determines proposed weights across eligible candidates.'],
 ] as const;
 const RESOURCES = [
-  { href: REPO, title: 'GitHub repository', description: 'Explore the training and evaluation code.', bg: 'bg-[#FF9AD5]' },
-  { href: METHOD, title: 'Methodology', description: 'Read how the comparison was run and its limits.', bg: 'bg-[#6C93FF]' },
-  { href: SOURCE, title: 'Source data', description: 'Inspect the exact recorded results as JSON.', bg: 'bg-[#46DFEF]' },
+  { href: REPO, title: 'Research code', description: 'Explore training and evaluation.', bg: 'bg-white' },
+  { href: flightMethod, title: 'Flight study report', description: 'Read the method and measured limits.', bg: 'bg-white' },
+  { href: flightSource, title: 'Recorded results', description: 'Inspect the flight study’s source data.', bg: 'bg-white' },
 ] as const;
 
 function time(value: string) {
@@ -73,22 +76,18 @@ export default function ModelPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white font-sans text-neutral-950 antialiased selection:bg-[#FF6A00] selection:text-black">
-      <div className="relative overflow-hidden">
-        <LightBackdrop />
+    <div className="min-h-screen bg-white font-sans text-neutral-950 antialiased selection:bg-[#4942c7] selection:text-white">
+      <div className="relative overflow-hidden bg-[#f6f7fa]">
         <div className="relative mx-auto max-w-6xl px-6 sm:px-8"><SiteHeader tone="light" current="model" /></div>
         <header className="relative mx-auto max-w-5xl px-6 pb-16 pt-10 sm:px-8 sm:pt-16">
           <p className="flex items-center gap-2 text-[12px] font-medium"><span aria-hidden="true" className="text-base">✳</span> Research · Open about the evidence</p>
           <h1 className="mt-5 max-w-[16ch] text-[clamp(2.7rem,6.5vw,4.8rem)] font-semibold leading-[0.98] tracking-[-0.06em]">Decision model research.</h1>
-          <p className="mt-6 max-w-[58ch] text-lg leading-8 text-neutral-600">Zils is an experimental 0.8B decision model for yes/no questions, choices, and scores. It returns structured probabilities without generating prose.</p>
-          <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs text-neutral-600 ring-1 ring-neutral-200"><span className="size-1.5 shrink-0 rounded-full bg-[#FF6A00]" />Experimental candidate. No public model release or automatic winner promotion yet.</p>
-          <a href="#testnet" className="group mt-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-neutral-950 px-5 py-4 text-sm text-white transition hover:-translate-y-0.5">
-            <span className="flex items-center gap-2 font-mono text-xs text-[#9ee89e]"><span className="size-1.5 rounded-full bg-[#9ee89e]" />BITTENSOR TESTNET · SUBNET {testnet.chain.netuid}</span>
-            <span className="text-neutral-300 group-hover:text-white">First training round verified on-chain <span aria-hidden="true">↓</span></span>
-          </a>
+          <p className="mt-6 max-w-[58ch] text-lg leading-8 text-neutral-600">Can training make a decision model better at a specific task? We test that question against unchanged models and simple alternatives, then publish what improved and what did not.</p>
+          <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs text-neutral-600 ring-1 ring-neutral-200"><span className="size-1.5 shrink-0 rounded-full bg-[#FF6A00]" />Recorded experiments. Evidence and limitations published together.</p>
+          <a href="#flight-study" className="mt-8 inline-flex min-h-11 items-center rounded-md bg-[#4942c7] px-5 py-3 text-sm font-medium text-white hover:bg-[#39339f]">Read the latest flight study</a>
           <nav aria-label="Project resources" className="mt-4 grid gap-3 sm:grid-cols-3">
             {RESOURCES.map(r => (
-              <a key={r.href} href={r.href} className={`group rounded-2xl p-5 transition hover:-translate-y-0.5 ${r.bg}`}>
+              <a key={r.href} href={r.href} className={`group rounded-md border border-neutral-200 p-5 transition-colors hover:border-[#4942c7] ${r.bg}`}>
                 <span className="flex items-center justify-between gap-4 font-semibold tracking-[-0.02em]">{r.title}<span aria-hidden="true" className="transition-transform group-hover:rotate-45">↗</span></span>
                 <span className="mt-2 block text-sm leading-6 text-black/70">{r.description}</span>
               </a>
@@ -102,9 +101,11 @@ export default function ModelPage() {
           {SECTIONS.map(section => <a key={section.id} href={`#${section.id}`} className="shrink-0 rounded-full bg-white px-4 py-1.5 text-xs text-neutral-600 ring-1 ring-neutral-200 hover:text-neutral-950">{section.title}</a>)}
         </nav>
 
-        <Section id="overview" eyebrow="Overview" title="Probabilities. Without the prose.">
+        <FlightStudyDetails />
+
+        <Section id="overview" eyebrow="Earlier research · Kev 0.8B" title="Previous experiments, preserved.">
           <div className="grid gap-6 md:grid-cols-[1.2fr_1fr]">
-            <p className="max-w-[58ch] text-[15px] leading-7 text-neutral-600">Zils returns structured probabilities without generating a text answer. Applications can load a selected checkpoint directly.</p>
+            <p className="max-w-[58ch] text-[15px] leading-7 text-neutral-600">The sections below preserve the earlier Kev 0.8B public comparison and testnet rehearsal. They used different models, tasks, and scoring rules from the JevK5 flight study. Their percentages should not be combined into a single improvement claim.</p>
             <div className={`${CARD} p-5`}>
               <p className="font-mono text-[10px] tracking-[0.12em] text-neutral-500">PUBLIC BENCHMARK CANDIDATE</p>
               <code className="mt-3 block break-all font-mono text-xs leading-6 text-neutral-800">{fez.checkpoint_sha256}</code>
@@ -112,7 +113,7 @@ export default function ModelPage() {
           </div>
         </Section>
 
-        <Section id="quality" eyebrow="Model quality" title={comparisonHeadline(fez, kev)}>
+        <Section id="quality" eyebrow="Earlier JevBench comparison" title={comparisonHeadline(fez, kev)}>
           <div className={`relative mb-6 overflow-hidden rounded-2xl bg-[#0c0f0c] p-6 font-mono sm:p-8 ${s.tube}`}>
             <span aria-hidden="true" className={`pointer-events-none absolute inset-0 ${s.scanlinesDark}`} />
             <div className={`relative grid gap-6 text-[#9ee89e] sm:grid-cols-3 ${s.phosphor}`}>
@@ -169,7 +170,7 @@ export default function ModelPage() {
           <details className="rounded-2xl bg-neutral-100 px-5 py-4 text-sm">
             <summary className="cursor-pointer font-medium marker:text-[#FF6A00] hover:text-[#3455dc]">Method, checkpoint identities & limitations</summary>
             <div className="mt-5 space-y-5 text-sm leading-7 text-neutral-700">
-              <p>Zils fine-tunes a published Kev 0.8B checkpoint built on Qwen3.5-0.8B-Base. The unchanged published checkpoint is the baseline in this comparison.</p>
+              <p>This earlier experiment fine-tuned a published Kev 0.8B checkpoint built on Qwen3.5-0.8B-Base. The unchanged published checkpoint is the baseline in this comparison.</p>
               <p>No official JevBench rank or composite score is available: private and sealed tests were not run. Hosted cost was not measured. Other experiment suites are documented separately and cannot form an improvement line with this comparison.</p>
               <dl className="space-y-4 text-xs">
                 <div><dt className="font-medium text-neutral-950">Experiment / collection started</dt><dd>{benchmark.id} / <time dateTime={benchmark.started_at}>{time(benchmark.started_at)}</time></dd></div>
