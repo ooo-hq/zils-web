@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default function TrainPage() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-  const apiUrl = process.env.NEXT_PUBLIC_FEZ_TRAINING_API_URL || '';
+  const apiUrl = process.env.NEXT_PUBLIC_ZILS_TRAINING_API_URL ?? process.env.NEXT_PUBLIC_FEZ_TRAINING_API_URL ?? '';
   let configured = Boolean(url && key && apiUrl && !key.startsWith('sb_secret_'));
   try { if (configured) { serviceUrl(url); serviceUrl(apiUrl); } } catch { configured = false; }
   let keysApiUrl: string | null = null;

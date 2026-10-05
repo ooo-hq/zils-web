@@ -93,7 +93,7 @@ export function DecisionPlayground({ configured, models }: { configured: boolean
     catch { setError('Clipboard access is unavailable. Select and copy the code directly.'); }
   }
 
-  const status = busy ? 'WAITING FOR FEZ · TIMES OUT AFTER 60 S' : run ? `${Object.keys(run.response.answers).length} ANSWERS RETURNED` : configured ? 'READY' : 'ENDPOINT NOT CONNECTED';
+  const status = busy ? 'WAITING FOR ZILS · TIMES OUT AFTER 60 S' : run ? `${Object.keys(run.response.answers).length} ANSWERS RETURNED` : configured ? 'READY' : 'ENDPOINT NOT CONNECTED';
 
   return <div>
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Example decisions">
@@ -143,7 +143,7 @@ export function DecisionPlayground({ configured, models }: { configured: boolean
           <div role="tablist" aria-label="Result view" className="flex gap-1">{(['Answers', 'JSON', 'API'] as const).map(tab => <button type="button" role="tab" key={tab} aria-selected={view === tab} onClick={() => { setView(tab); setCopied(false); setOrigin(window.location.origin); }}
             className={view === tab ? 'rounded-full bg-neutral-950 px-3.5 py-1 text-xs font-medium text-white' : 'rounded-full px-3.5 py-1 text-xs text-neutral-600 hover:text-neutral-950'}>{tab}</button>)}</div>
           {code && view !== 'Answers' ? <button type="button" className="text-xs text-neutral-600 hover:text-[#3455dc]" onClick={() => void copy()}>{copied ? 'Copied' : 'Copy'}</button>
-            : <span className="font-mono text-[10px] tracking-[0.14em] text-neutral-500">FEZ · DECISION INSTRUMENT</span>}
+            : <span className="font-mono text-[10px] tracking-[0.14em] text-neutral-500">ZILS · DECISION INSTRUMENT</span>}
         </div>
         <div className={`relative min-h-[520px] flex-1 overflow-hidden rounded-2xl bg-[#0c0f0c] px-5 py-5 font-mono text-[12.5px] leading-6 sm:px-6 ${s.tube}`}>
           <span aria-hidden="true" className={`pointer-events-none absolute inset-0 ${s.scanlinesDark}`} />

@@ -3,8 +3,8 @@ import { parseResponse, type DecisionRequest, type ModelOption } from './playgro
 export const MAX_BODY_BYTES = 32_768;
 
 export function playgroundConfig(): { configured: boolean; models: ModelOption[] } {
-  const model = process.env.FEZ_DECISION_MODEL || 'fez-0.8b-experimental';
-  return { configured: Boolean(process.env.FEZ_DECISION_API_URL), models: [{ id: model, label: process.env.FEZ_DECISION_LABEL || 'Zils 0.8B · experimental' }] };
+  const model = (process.env.ZILS_DECISION_MODEL ?? process.env.FEZ_DECISION_MODEL) || 'fez-0.8b-experimental';
+  return { configured: Boolean((process.env.ZILS_DECISION_API_URL ?? process.env.FEZ_DECISION_API_URL)), models: [{ id: model, label: (process.env.ZILS_DECISION_LABEL ?? process.env.FEZ_DECISION_LABEL) || 'Zils 0.8B · experimental' }] };
 }
 
 export class InferenceError extends Error {
@@ -36,11 +36,11 @@ async function check(response: Response): Promise<Response> {
 }
 
 export async function infer(request: DecisionRequest, signal: AbortSignal) {
-  const endpoint = process.env.FEZ_DECISION_API_URL;
+  const endpoint = (process.env.ZILS_DECISION_API_URL ?? process.env.FEZ_DECISION_API_URL);
   if (!endpoint) throw new InferenceError('The Zils model endpoint is not connected yet.');
   const options = { signal, cache: 'no-store' as const, redirect: 'error' as const };
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (process.env.FEZ_DECISION_API_KEY) headers.Authorization = `Bearer ${process.env.FEZ_DECISION_API_KEY}`;
+  if ((process.env.ZILS_DECISION_API_KEY ?? process.env.FEZ_DECISION_API_KEY)) headers.Authorization = `Bearer ${(process.env.ZILS_DECISION_API_KEY ?? process.env.FEZ_DECISION_API_KEY)}`;
   const result = await check(await fetch(endpoint, { ...options, method: 'POST', headers, body: JSON.stringify(request) }));
   const raw: unknown = JSON.parse(await readLimited(result, 1_000_000));
   try {

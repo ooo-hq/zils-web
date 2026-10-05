@@ -1,4 +1,4 @@
-const UPSTREAM = process.env.FEZ_EMAIL_SIGNUPS_URL
+const UPSTREAM = process.env.ZILS_EMAIL_SIGNUPS_URL ?? process.env.FEZ_EMAIL_SIGNUPS_URL
   ?? 'https://oxspgofacphchtuduaum.supabase.co/functions/v1/email-signups';
 
 export async function POST(request: Request) {
@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   // Host identifies the public destination even behind TLS termination.
   const host = request.headers.get('host') ?? new URL(request.url).host;
   if (origin && ![`https://${host}`, `http://${host}`].includes(origin)) {
-    return Response.json({ error: 'Submit this form from fez.chat.' }, { status: 403 });
+    return Response.json({ error: 'Submit this form from zils.ai.' }, { status: 403 });
   }
   try {
     const body = await request.text();
