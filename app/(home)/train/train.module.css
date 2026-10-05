@@ -220,3 +220,32 @@
   .trainingSheet input:not([type=checkbox]):not([type=radio]),.trainingSheet textarea,.trainingSheet select { font-size:16px; }
 }
 @media(prefers-reduced-motion:reduce) { .historyStatus svg { transition:none; } }
+
+/* Spreadsheet intake extends the existing training sheet. */
+.trainingSheet .steps { grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.spreadsheetDrop { padding:20px; border:1px dashed #a8abc0; border-radius:8px; background:#f6f7fa; }
+.spreadsheetDrop[data-dragging=true] { border:2px solid #4942c7; padding:19px; background:#f1f1fc; }
+.page .spreadsheetDrop label { margin:0 0 12px; font-size:15px; }
+.page .spreadsheetDrop input[type=file] { background:#fff; }
+.readinessStats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding:18px 0; border-block:1px solid #e5e6ed; }
+.readinessStats strong { display:block; font-size:26px; line-height:1.2; font-weight:500; }
+.readinessStats span { display:block; margin-top:6px; font-size:11px; color:#626270; }
+.readinessStats [data-attention=true] strong { color:#943044; }
+.reviewExample { padding:18px; border:1px solid #dddfe8; border-radius:6px; }
+.reviewExample[data-excluded=true] { background:#f6f7fa; }
+.reviewExampleHeading { display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.reviewExampleHeading h4 { margin:0; font-size:13px; font-weight:500; }
+.reviewExampleHeading>span { font-size:11px; color:#626270; }
+.reviewExample dl { max-height:260px; overflow:auto; margin:18px 0; }
+.reviewExample dt { font-size:11px; color:#626270; overflow-wrap:anywhere; }
+.reviewExample dd { margin:3px 0 12px; font-size:14px; white-space:pre-wrap; overflow-wrap:anywhere; }
+.reviewActions { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:20px; }
+.trainingSheet .reviewActions .textButton { margin:0; }
+.reviewIssues { padding:12px 12px 12px 28px; font-size:12px; background:#fff1f3; color:#943044; border-radius:4px; }
+.reviewIssues li+li { margin-top:8px; }
+.readinessChecks { margin-top:24px; padding:16px 18px; background:#f6f7fa; border-left:3px solid #4942c7; font-size:12px; }
+.readinessChecks h4 { margin:0 0 8px; font-weight:500; font-size:14px; }
+.readinessChecks p { margin:8px 0; color:#575765; }
+.readinessChecks ul { padding-left:18px; }
+.readinessChecks li { margin:6px 0; }
+@media(max-width:420px) { .trainingSheet .steps { gap:5px; }.trainingSheet .steps li { font-size:11px; gap:5px; }.spreadsheetDrop { padding:14px; }.spreadsheetDrop[data-dragging=true] { padding:13px; }.reviewExample { padding:14px; } }
