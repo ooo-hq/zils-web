@@ -32,20 +32,25 @@ Set the same values in the appropriate Vercel environment before building.
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public browser key; never a service-role key |
-| `NEXT_PUBLIC_FEZ_TRAINING_API_URL` | Reachable HTTPS training coordinator |
+| `NEXT_PUBLIC_ZILS_TRAINING_API_URL` | Reachable HTTPS training coordinator |
 | `NEXT_PUBLIC_ZILS_API_URL` | Optional decision API base URL for key management; defaults to the training coordinator URL followed by `/decision` |
-| `FEZ_DECISION_API_URL` | Complete server-side inference endpoint URL |
-| `FEZ_DECISION_API_KEY` | Server-only inference bearer credential |
-| `FEZ_DECISION_MODEL` | Exact model identifier expected by the inference server |
-| `FEZ_DECISION_LABEL` | Public display label, such as `Zils 0.8B · experimental` |
+| `ZILS_DECISION_API_URL` | Complete server-side inference endpoint URL |
+| `ZILS_DECISION_API_KEY` | Server-only inference bearer credential |
+| `ZILS_DECISION_MODEL` | Exact model identifier expected by the inference server |
+| `ZILS_DECISION_LABEL` | Public display label, such as `Zils 0.8B · experimental` |
 | `RESEND_API_KEY` | Server-only sending credential for the contact form |
 | `ZILS_CONTACT_FROM` | Bare sender email address on a Resend-verified domain |
 | `ZILS_CONTACT_TO` | Fixed inbox receiving contact inquiries |
 
-The existing `FEZ_*` setting names, model identifiers, and recorded evidence
-schemas remain compatible with running services. Rebranding does not change
-checkpoints or recorded results. Never commit credentials or copy production
-secrets into a preview deployment.
+`ZILS_*` and `NEXT_PUBLIC_ZILS_TRAINING_API_URL` are the canonical settings.
+The corresponding `FEZ_*` names remain fallbacks for existing deployments; a
+present Zils setting takes precedence, including an empty value. Credentials
+remain server-only. The older playground model ID is an inference contract,
+not a claim that it uses the shared JevK5 model.
+
+New training sessions use `zils-training-auth`. Existing sessions and pending
+sign-in links continue using their original storage key until sign-out, avoiding
+token copies or competing refresh locks in already-open tabs.
 
 For training, configure Supabase Auth's site URL and redirect allowlist for
 `https://zils.ai/train`. The coordinator must allow `https://zils.ai` as its web

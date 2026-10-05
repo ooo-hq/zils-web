@@ -9,6 +9,7 @@ import { ApiKeysPanel } from '@/components/api-keys-panel';
 import { Plus, ChevronDown } from 'lucide-react';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { TrainingRunStatus } from '@/components/training-run-status';
+import { trainingAuthStorageKey } from '@/lib/training-auth';
 import { currentTrainingJob, trainingProgress } from '@/lib/training-status';
 import styles from '@/app/(home)/train/train.module.css';
 
@@ -17,7 +18,7 @@ const message = (error: unknown) => error instanceof Error ? error.message : 'So
 const metric = (value: number | undefined, percent = false) => value === undefined ? '—' : percent ? `${(value * 100).toFixed(2)}%` : value.toFixed(4);
 
 export function TrainingDashboard({ config }: { config: Config }) {
-  const [client] = useState(() => createClient(config.url, config.key, { auth: { storageKey: 'fez-training-auth', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }));
+  const [client] = useState(() => createClient(config.url, config.key, { auth: { storageKey: trainingAuthStorageKey(), persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }));
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
