@@ -38,6 +38,9 @@ Set the same values in the appropriate Vercel environment before building.
 | `FEZ_DECISION_API_KEY` | Server-only inference bearer credential |
 | `FEZ_DECISION_MODEL` | Exact model identifier expected by the inference server |
 | `FEZ_DECISION_LABEL` | Public display label, such as `Zils 0.8B · experimental` |
+| `RESEND_API_KEY` | Server-only sending credential for the contact form |
+| `ZILS_CONTACT_FROM` | Bare sender email address on a Resend-verified domain |
+| `ZILS_CONTACT_TO` | Fixed inbox receiving contact inquiries |
 
 The existing `FEZ_*` setting names, model identifiers, and recorded evidence
 schemas remain compatible with running services. Rebranding does not change
@@ -54,6 +57,31 @@ Configure preview and local-development origins only on services intended for
 those environments; a Vercel preview does not automatically gain production API
 access. The public API base URL is not a credential. Never place a customer key
 in a `NEXT_PUBLIC_*` setting.
+
+## Contact form
+
+The homepage's **Contact us** links open `/contact`. Visitors provide a name,
+email, optional company, and a message of up to 3,000 characters. The server sends
+plain text to `ZILS_CONTACT_TO` through Resend, with the visitor's email as Reply-To.
+The recipient and sender cannot be supplied by the visitor. Contact details are
+not added to a mailing list or stored by this application.
+
+Configure all three contact-delivery settings above in the intended Vercel
+environment before merging the feature. Use a sending-only credential restricted
+to the verified sender domain. Missing settings or provider errors return an
+error, preserve the form contents, and never claim delivery succeeded. Retries
+of the same submission use Resend's idempotency header. The route bounds request
+size, checks the browser origin, validates fields, and includes a honeypot.
+Before enabling public delivery, configure a Vercel Firewall rate-limit rule:
+request path equals `/api/contact` AND method equals `POST`, fixed 60-second
+window, 5 requests per IP address, action **Too Many Requests (429)**. Publish
+the rule separately from the application deployment. The form preserves inputs
+and explains when a visitor needs to wait before retrying.
+
+See [Resend's send-email contract](https://resend.com/docs/api-reference/emails/send-email)
+for sender verification, Reply-To, and idempotency behavior. Tests use a local
+request double; they do not send email. Provider acceptance does not guarantee
+inbox placement.
 
 ## Customer API keys
 

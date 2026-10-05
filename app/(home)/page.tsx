@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
-import { discordUrl } from '@/lib/shared';
 import jevbench from '@/public/model/jevbench-public-001.json';
 import round from '@/public/model/testnet-round-001.json';
 import { DecisionInstrument, RoundReplay, type ReplayTab } from './live';
@@ -117,14 +116,13 @@ export default function HomePage() {
             </h1>
             <p className="mx-auto mt-6 max-w-lg text-[18px] leading-7 text-neutral-600">{DESCRIPTION}</p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
-              <a href={discordUrl} className="inline-flex items-center gap-6 rounded-md bg-neutral-950 px-5 py-3 text-[13px] font-medium text-white transition-colors hover:bg-[var(--zils-accent)]">
-                Discuss your use case <span aria-hidden="true">↗</span>
-              </a>
+              <Link href="/contact" className="inline-flex items-center rounded-md bg-neutral-950 px-5 py-3 text-[13px] font-medium text-white transition-colors hover:bg-[var(--zils-accent)]">
+                Contact us
+              </Link>
               <a href="#workflow" className="text-[13px] hover:text-[var(--zils-accent)]">
                 See how it works ↓
               </a>
             </div>
-            <p className="mt-3 text-[11px] text-neutral-500">Via the Zils Discord community. Customer delivery is planned.</p>
 
             <div className="mt-16">
               <DecisionInstrument />
@@ -270,10 +268,9 @@ export default function HomePage() {
             <p className="mx-auto mt-5 max-w-md text-sm leading-6 text-neutral-400">
               Where do repeated decisions add up in your AI stack? Tell us about the calls, your labeled examples, and the quality bar a smaller model would need to meet.
             </p>
-            <a href={discordUrl} className="mt-8 inline-flex items-center gap-6 rounded-md bg-white px-5 py-3 text-[13px] font-medium text-black transition-colors hover:bg-[var(--zils-soft)]">
-              Discuss your use case <span aria-hidden="true">↗</span>
-            </a>
-            <p className="mt-3 text-[11px] text-neutral-500">Opens Discord. Start with a task description; don’t share private data.</p>
+            <Link href="/contact" className="mt-8 inline-flex items-center rounded-md bg-white px-5 py-3 text-[13px] font-medium text-black transition-colors hover:bg-[var(--zils-soft)]">
+              Contact us
+            </Link>
           </div>
         </div>
       </section>
