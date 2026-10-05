@@ -33,6 +33,7 @@ Set the same values in the appropriate Vercel environment before building.
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public browser key; never a service-role key |
 | `NEXT_PUBLIC_FEZ_TRAINING_API_URL` | Reachable HTTPS training coordinator |
+| `NEXT_PUBLIC_ZILS_API_URL` | Optional decision API base URL for key management; defaults to the training coordinator URL followed by `/decision` |
 | `FEZ_DECISION_API_URL` | Complete server-side inference endpoint URL |
 | `FEZ_DECISION_API_KEY` | Server-only inference bearer credential |
 | `FEZ_DECISION_MODEL` | Exact model identifier expected by the inference server |
@@ -47,6 +48,27 @@ For training, configure Supabase Auth's site URL and redirect allowlist for
 `https://zils.ai/train`. The coordinator must allow `https://zils.ai` as its web
 origin. See the [training service setup](https://github.com/ooo-hq/zils/blob/main/docs/supabase-training.md).
 Public browser settings are baked into the build, so changes require a new build.
+
+The decision API must also allow the website origin for browser key management.
+Configure preview and local-development origins only on services intended for
+those environments; a Vercel preview does not automatically gain production API
+access. The public API base URL is not a credential. Never place a customer key
+in a `NEXT_PUBLIC_*` setting.
+
+## Customer API keys
+
+Signed-in customers can open **API keys** beside **Train a model** to create a
+named key, copy its secret once, view active and revoked keys, or revoke a key
+after confirmation. The full secret stays in component memory until the panel
+closes, the customer acknowledges saving it, or the session ends. It is not
+written to browser storage. Revoking a key stops requests using that key.
+
+Key management uses the existing Supabase sign-in session and the decision API's
+`GET /v1/keys`, `POST /v1/keys`, and `POST /v1/keys/{id}/revoke` routes. API keys
+authorize prediction requests to models available to the account; they do not
+create or train a model. See the
+[decision API documentation](https://github.com/ooo-hq/zils/blob/main/docs/decision-api.md)
+for model selection and server-side requests.
 
 ## Customer training setup
 
@@ -96,7 +118,9 @@ npm run build
 
 The tests cover CSV parsing, split isolation and coverage, repeatable output,
 invalid data, and the existing create/upload/submit contract using a local request
-double. They do not run model training or contact Supabase.
+double. Key tests cover authenticated create/list/revoke requests, metadata
+redaction, invalid inputs, expired sessions, and ambiguous service failures.
+They do not run model training or contact Supabase.
 
 GitHub Actions runs those checks from a clean dependency installation. Connect
 this repository through Vercel's GitHub integration with:
