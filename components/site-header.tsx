@@ -22,6 +22,7 @@ export const FOOTER_LINKS = [
   { href: discordUrl, label: 'Discord' },
   { href: '/model', label: 'Research' },
   { href: '/playground', label: 'Playground' },
+  { href: '/contact', label: 'Contact' },
   { href: 'https://github.com/ooo-hq/zils', label: 'Model source' },
   { href: '/privacy', label: 'Privacy' },
   { href: '/terms', label: 'Terms' },
