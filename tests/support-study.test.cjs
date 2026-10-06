@@ -36,3 +36,22 @@ test('the headline uses the untouched comparison, with distinct development scor
   assert.equal(study.test.frozen_success_gate_passed, true);
   assert.ok(candidate.mean_confidence > candidate.accuracy);
 });
+
+test('published decision examples retain all choices and include a recorded regression', () => {
+  const { examples, split, selection } = record('abcd-002-examples.json');
+  assert.equal(split, 'test');
+  assert.match(selection, /not a representative sample/);
+  assert.equal(new Set(examples.map(example => example.id)).size, 4);
+  for (const example of examples) {
+    assert.match(example.id, /^abcd-test-\d+-turn-\d+$/);
+    for (const model of [example.unchanged, example.trained]) {
+      const entries = Object.entries(model.probabilities);
+      assert.equal(entries.length, 30);
+      assert.ok(entries.every(([, p]) => p >= 0 && p <= 1));
+      assert.ok(Math.abs(entries.reduce((sum, [, p]) => sum + p, 0) - 1) < 1e-6);
+      assert.equal(model.choice, entries.reduce((best, next) => next[1] > best[1] ? next : best)[0]);
+    }
+  }
+  assert.equal(examples.filter(example => example.unchanged.choice !== example.expected_action && example.trained.choice === example.expected_action).length, 3);
+  assert.equal(examples.filter(example => example.unchanged.choice === example.expected_action && example.trained.choice !== example.expected_action).length, 1);
+});
