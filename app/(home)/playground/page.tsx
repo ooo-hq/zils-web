@@ -27,7 +27,7 @@ export default function PlaygroundPage() {
         </div>
       </header>
     </div>
-    <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl px-6 pb-20 sm:px-8">
+    <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl px-6 pb-20 pt-8 sm:px-8 sm:pt-10">
       <DecisionPlayground {...playgroundConfig()} />
       <p className="mt-10 border-t border-edge pt-6 text-xs leading-6 text-subtle">Playground examples are illustrative, not an evaluation benchmark. Answers come only from the connected Zils checkpoint; there is no fallback model.</p>
     </main>

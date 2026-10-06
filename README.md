@@ -42,7 +42,7 @@ Set the same values in the appropriate Vercel environment before building.
 | `ZILS_DECISION_API_URL` | Complete server-side inference endpoint URL |
 | `ZILS_DECISION_API_KEY` | Server-only inference bearer credential |
 | `ZILS_DECISION_MODEL` | Exact model identifier expected by the inference server |
-| `ZILS_DECISION_LABEL` | Public display label, such as `Zils 0.8B · experimental` |
+| `ZILS_DECISION_LABEL` | Public display label, such as `Zils shared · JevK5 4B` |
 | `RESEND_API_KEY` | Server-only sending credential for the contact form |
 | `ZILS_CONTACT_FROM` | Bare sender email address on a Resend-verified domain |
 | `ZILS_CONTACT_TO` | Fixed inbox receiving contact inquiries |
@@ -50,8 +50,18 @@ Set the same values in the appropriate Vercel environment before building.
 `ZILS_*` and `NEXT_PUBLIC_ZILS_TRAINING_API_URL` are the canonical settings.
 The corresponding `FEZ_*` names remain fallbacks for existing deployments; a
 present Zils setting takes precedence, including an empty value. Credentials
-remain server-only. The older playground model ID is an inference contract,
-not a claim that it uses the shared JevK5 model.
+remain server-only.
+
+The playground defaults to the shared JevK5 4B release `zils-jevk5-v0.3-r1`.
+Connect it to `https://training.zils.ai/decision/v1/systemone` with a server-only
+API key authorized to use that model. Both endpoint and key are required to enable
+Run. Pin the exact release ID rather than the `zils-shared` alias: the proxy checks
+that the returned model matches the requested release and rejects incomplete answers.
+The shared API does not report model latency; the playground measures total request
+time and shows model timing only when a connected runtime actually supplies it.
+Explicit older model settings remain supported and are not relabeled as JevK5.
+When migrating an existing deployment, update the endpoint, API key, model ID,
+and label together; changing the source defaults does not override deployed settings.
 
 New training sessions use `zils-training-auth`. Existing sessions and pending
 sign-in links continue using their original storage key until sign-out, avoiding
@@ -67,6 +77,20 @@ Configure preview and local-development origins only on services intended for
 those environments; a Vercel preview does not automatically gain production API
 access. The public API base URL is not a credential. Never place a customer key
 in a `NEXT_PUBLIC_*` setting.
+
+## Pricing page
+
+`/pricing` presents the proposed beta launch plan: $5 prepaid credit with one
+standard training run included, $2 for each additional standard run, and $0.042
+per million input tokens with free output tokens. The scope of a standard run
+must be agreed before starting. Larger jobs require an upfront estimate.
+
+The page includes a local usage estimator and a link from the shared footer.
+It does not initiate training, collect payments, or change the API meter.
+Paid access and spending caps are explicitly planned.
+Before enabling checkout, implement credit accounting and billing that counts
+shared context once per request, then verify the advertised terms against the
+customer training and serving workflows. Early-access links use `/contact`.
 
 ## Contact form
 

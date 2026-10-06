@@ -23,6 +23,7 @@ export const FOOTER_LINKS = [
   { href: '/model', label: 'Research' },
   { href: '/bittensor', label: 'Bittensor' },
   { href: '/playground', label: 'Playground' },
+  { href: '/pricing', label: 'Pricing' },
   { href: '/contact', label: 'Contact' },
   { href: 'https://github.com/ooo-hq/zils', label: 'Model source' },
   { href: '/privacy', label: 'Privacy' },
@@ -37,7 +38,7 @@ export function SiteHeader({ current, tone = 'dark' }: { current?: string; tone?
         <ZilsWordmark className="text-[42px]" />
       </Link>
       <div className="flex w-full flex-wrap items-center gap-x-2 gap-y-3 sm:w-auto sm:gap-x-3">
-        <nav aria-label="Main navigation" className="flex items-center gap-x-4 sm:gap-x-5">
+        <nav aria-label="Main navigation" className="flex flex-wrap items-center gap-x-4 gap-y-3 sm:gap-x-5">
           {LINKS.map((l) => (
             <Link
               key={l.href}

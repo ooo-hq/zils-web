@@ -1,0 +1,93 @@
+.page {
+  min-height: 100vh;
+  background: var(--zils-page);
+  color: var(--zils-ink);
+  font-family: var(--font-plex-sans), sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container { max-width: 1152px; margin: auto; padding: 0 32px; }
+.hero { padding: 54px 0 44px; }
+.status { display: inline-block; margin: 0 0 22px; border-radius: 5px; background: var(--zils-soft); padding: 7px 11px; color: var(--zils-accent); font-size: 12px; font-weight: 500; }
+.hero h1 { margin: 0; font-size: clamp(46px, 6.5vw, 76px); font-weight: 600; line-height: 1.02; letter-spacing: -.06em; }
+.intro { margin: 22px 0 0; color: var(--zils-muted); font-size: 18px; line-height: 1.65; }
+.plan { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); border: 1px solid var(--zils-edge); border-radius: 16px; overflow: hidden; }
+.start { display: flex; flex-direction: column; align-items: flex-start; padding: 34px; background: var(--zils-soft); }
+.start h2 { margin: 0; font-size: 20px; font-weight: 500; letter-spacing: -.025em; }
+.start .startAmount { display: flex; align-items: baseline; flex-wrap: wrap; gap: 14px; margin: 24px 0 18px; color: var(--zils-ink); font-size: 72px; line-height: 1; font-weight: 500; letter-spacing: -.065em; }
+.startAmount span { color: var(--zils-muted); font-size: 14px; font-weight: 400; letter-spacing: 0; }
+.start > p { max-width: 36ch; margin: 0; color: var(--zils-muted); font-size: 14px; line-height: 1.7; }
+.button { display: inline-flex; min-height: 46px; align-items: center; justify-content: center; border-radius: 6px; padding: 12px 20px; background: var(--zils-action); color: var(--zils-on-action); text-align: center; font-size: 13px; font-weight: 500; text-decoration: none; }
+.button:hover { background: var(--zils-action-hover); }
+.start .button { margin-top: 26px; }
+.start .availability { margin-top: 12px; font-size: 12px; }
+.rates { padding: 14px 34px 22px; }
+.rates dl { margin: 0; }
+.rate { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 22px 0; border-bottom: 1px solid var(--zils-edge); }
+.rate dt { font-size: 15px; font-weight: 500; }
+.rate dt span { display: block; margin-top: 5px; max-width: 31ch; color: var(--zils-muted); font-size: 12px; font-weight: 400; line-height: 1.65; }
+.rate dd { margin: 0; flex-shrink: 0; font-size: 20px; font-weight: 500; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+.rate dd span { font-size: 12px; font-weight: 400; color: var(--zils-muted); letter-spacing: 0; }
+.rateNote { margin: 18px 0 0; max-width: 58ch; color: var(--zils-muted); font-size: 12px; line-height: 1.7; }
+.training { display: grid; grid-template-columns: 1fr 1.4fr; gap: 60px; padding: 36px 0 56px; }
+.training h2 { margin: 0; font-size: 18px; font-weight: 500; letter-spacing: -.025em; }
+.training p { margin: 0; color: var(--zils-muted); font-size: 14px; line-height: 1.8; }
+.training p + p { margin-top: 12px; }
+.training strong { color: var(--zils-ink); font-weight: 500; }
+.estimate { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; border-top: 1px solid var(--zils-edge); padding: 64px 0; }
+.estimate h2, .sectionIntro h2, .closing h2 { margin: 0; font-size: clamp(27px, 3.1vw, 36px); line-height: 1.15; letter-spacing: -.045em; font-weight: 500; }
+.estimateInputs > p, .sectionIntro > p { margin: 16px 0 0; max-width: 42ch; color: var(--zils-muted); font-size: 14px; line-height: 1.8; }
+.fields { display: grid; gap: 18px; margin-top: 28px; }
+.fields label { display: grid; gap: 8px; font-size: 13px; font-weight: 500; }
+.fields input { width: 100%; min-width: 0; border: 1px solid var(--zils-edge-strong); border-radius: 6px; padding: 11px 13px; background: var(--zils-page); color: var(--zils-ink); font: inherit; font-size: 16px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.estimateInputs .estimateHint { font-size: 12px; }
+.receipt { align-self: center; border: 1px solid var(--zils-edge); border-radius: 12px; padding: 32px; background: var(--zils-surface); }
+.receipt h3 { margin: 0 0 28px; font-size: 16px; font-weight: 500; }
+.receipt dl { display: grid; gap: 19px; margin: 0; }
+.receipt dl > div { display: flex; justify-content: space-between; gap: 20px; font-size: 13px; }
+.receipt dt { color: var(--zils-muted); }
+.receipt dd { min-width: 0; margin: 0; text-align: right; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.total { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--zils-edge-strong); margin-top: 28px; padding-top: 22px; }
+.total span { font-size: 13px; }
+.total strong { font-size: clamp(30px, 4.2vw, 52px); font-weight: 500; line-height: 1.1; letter-spacing: -.055em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.balance { margin: 18px 0 0; color: var(--zils-accent); font-size: 14px; line-height: 1.6; }
+.receiptNote { margin: 20px 0 0; color: var(--zils-muted); font-size: 12px; line-height: 1.7; }
+.questions { display: grid; grid-template-columns: 1fr 1.4fr; gap: 60px; border-top: 1px solid var(--zils-edge); padding: 64px 0; }
+.answers details { border-bottom: 1px solid var(--zils-edge); }
+.answers details:first-child { border-top: 1px solid var(--zils-edge); }
+.answers summary { position: relative; padding: 21px 32px 21px 0; list-style: none; font-size: 15px; font-weight: 500; cursor: pointer; }
+.answers summary::-webkit-details-marker { display: none; }
+.answers summary::after { content: '+'; position: absolute; right: 4px; top: 17px; font-size: 22px; font-weight: 400; color: var(--zils-accent); }
+.answers details[open] summary::after { content: '−'; }
+.answers p { margin: 0; padding: 0 28px 22px 0; color: var(--zils-muted); font-size: 14px; line-height: 1.8; }
+.answers a { color: var(--zils-accent); text-decoration: underline; text-underline-offset: 4px; }
+.closing { display: flex; align-items: center; justify-content: space-between; gap: 32px; border-top: 1px solid var(--zils-edge); padding: 76px 0; }
+.closing p { margin: 14px 0 0; color: var(--zils-muted); font-size: 15px; }
+.closing .button { flex-shrink: 0; }
+
+@media (max-width: 800px) {
+  .hero { padding-top: 32px; }
+  .plan { grid-template-columns: 1fr; }
+  .start > p { max-width: 48ch; }
+  .rates { padding-top: 6px; }
+  .training, .questions { grid-template-columns: 1fr; gap: 22px; }
+  .estimate { gap: 32px; }
+  .receipt { padding: 24px; }
+  .closing { align-items: flex-start; flex-direction: column; }
+}
+
+@media (max-width: 600px) {
+  .container { padding: 0 24px; }
+  .hero { padding-bottom: 32px; }
+  .intro { font-size: 16px; }
+  .desktopBreak { display: none; }
+  .start { padding: 26px 24px; }
+  .rates { padding-right: 24px; padding-left: 24px; }
+  .rate { gap: 14px; }
+  .rate dd { font-size: 18px; }
+  .rate dt { font-size: 14px; }
+  .estimate { grid-template-columns: 1fr; }
+  .estimate, .questions { padding: 44px 0; }
+  .receipt { width: 100%; }
+  .closing { padding: 52px 0; }
+}

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// The TypeSafe /v1/systemone contract, also implemented by kev.serve.
+// The typed decision contract used by the shared Zils API and the legacy runtime.
 const content = z.json();
 const question = z.discriminatedUnion('type', [
   z.object({ type: z.literal('noul'), instructions: content.optional(), criteria: z.object({ true: content.optional(), false: content.optional() }).strict().optional() }).strict(),
@@ -19,10 +19,10 @@ const responseSchema = z.object({
   answers: z.record(z.string(), z.discriminatedUnion('type', [
     z.object({ type: z.literal('noul'), noul: probability }),
     z.object({ type: z.literal('choice'), choice: z.string(), confidence: probability, probabilities: distribution }),
-    z.object({ type: z.literal('score'), score: z.number().min(0), confidence: probability, probabilities: distribution, legend: z.record(z.string(), z.string()) }),
+    z.object({ type: z.literal('score'), score: z.number().min(0), confidence: probability, probabilities: distribution, legend: z.record(z.string(), content) }),
   ])),
   usage: z.object({ input_tokens: z.number().int().nonnegative(), output_tokens: z.number().int().nonnegative() }),
-  latency_ms: z.number().nonnegative(),
+  latency_ms: z.number().nonnegative().optional(),
 });
 
 export type DecisionRequest = z.infer<typeof requestSchema>;
