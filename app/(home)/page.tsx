@@ -251,7 +251,7 @@ export default function HomePage() {
             <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3 text-sm">
               <Link href="/model#flight-study" className="underline decoration-edge-strong underline-offset-4 hover:text-[var(--zils-accent)]">Read the flight study</Link>
               <Link href="/model#quality" className="underline decoration-edge-strong underline-offset-4 hover:text-[var(--zils-accent)]">Read the JevBench comparison</Link>
-              <Link href="/model#testnet" className="underline decoration-edge-strong underline-offset-4 hover:text-[var(--zils-accent)]">Inspect the recorded testnet round</Link>
+              <Link href="/bittensor#testnet" className="underline decoration-edge-strong underline-offset-4 hover:text-[var(--zils-accent)]">Inspect the recorded testnet round</Link>
             </div>
           </div>
         </div>

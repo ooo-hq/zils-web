@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { SiteFooter } from '@/components/site-footer';
 import { FlightStudyDetails } from '@/components/flight-study';
 import { SupportStudyDetails } from '@/components/support-study';
@@ -7,7 +8,6 @@ import { supportMethod, supportSource } from '@/lib/support-study';
 import { SiteHeader } from '@/components/site-header';
 import s from '@/components/light.module.css';
 import { benchmark, readComparison, percent, decimal, milliseconds, comparisonHeadline } from '@/lib/model-benchmark';
-import testnet from '@/public/model/testnet-round-001.json';
 
 export const metadata: Metadata = {
   title: 'zils — decision model research',
@@ -18,7 +18,6 @@ export const metadata: Metadata = {
 const REPO = 'https://github.com/ooo-hq/zils';
 const METHOD = `${REPO}/blob/main/docs/jevbench-public.md`;
 const SOURCE = '/model/jevbench-public-001.json';
-const TESTNET_SOURCE = '/model/testnet-round-001.json';
 const LINK = 'underline decoration-edge-strong underline-offset-4 hover:text-accent hover:decoration-accent';
 const CELL = 'border-t border-edge px-3 py-3 text-right tabular-nums sm:px-5';
 const HEAD = 'border-t border-edge px-3 py-3 text-left font-normal text-ink sm:px-5';
@@ -28,15 +27,6 @@ const SECTIONS = [
   { id: 'flight-study', title: 'Flight adapter study' },
   { id: 'overview', title: 'Earlier research' },
   { id: 'quality', title: 'JevBench comparison' },
-  { id: 'training', title: 'Training & evaluation' },
-  { id: 'participants', title: 'Participants' },
-  { id: 'testnet', title: 'Testnet publication' },
-] as const;
-const PROCESS = [
-  ['Train', 'Miners train compatible adapters and decision heads with a fixed one-epoch recipe and different seeds.'],
-  ['Submit', 'Each miner freezes a candidate and signs its checkpoint hash for the validator.'],
-  ['Evaluate', 'The validator verifies the checkpoint and runs its own evaluation of the model’s probabilities.'],
-  ['Reward', 'Family-macro Brier skill determines proposed weights across eligible candidates.'],
 ] as const;
 const RESOURCES = [
   { href: REPO, title: 'Research code', description: 'Explore training and evaluation.', bg: 'bg-page' },
@@ -109,7 +99,7 @@ export default function ModelPage() {
 
         <Section id="overview" eyebrow="Earlier research · Kev 0.8B" title="Previous experiments, preserved.">
           <div className="grid gap-6 md:grid-cols-[1.2fr_1fr]">
-            <p className="max-w-[58ch] text-[15px] leading-7 text-muted">The sections below preserve the earlier Kev 0.8B public comparison and testnet rehearsal. They used different models, tasks, and scoring rules from the JevK5 support and flight studies. Their percentages should not be combined into a single improvement claim.</p>
+            <p className="max-w-[58ch] text-[15px] leading-7 text-muted">The comparison below preserves the earlier Kev 0.8B public benchmark. It used different models, tasks, and scoring rules from the JevK5 support and flight studies. Their percentages should not be combined into a single improvement claim.</p>
             <div className={`${CARD} p-5`}>
               <p className="font-mono text-[10px] tracking-[0.12em] text-subtle">PUBLIC BENCHMARK CANDIDATE</p>
               <code className="mt-3 block break-all font-mono text-xs leading-6 text-ink">{fez.checkpoint_sha256}</code>
@@ -189,40 +179,11 @@ export default function ModelPage() {
           </details>
         </Section>
 
-        <Section id="training" eyebrow="Training & evaluation" title="Train. Submit. Evaluate. Reward.">
-          <ol className="grid gap-px overflow-hidden rounded-2xl bg-edge ring-1 ring-edge sm:grid-cols-2 lg:grid-cols-4">{PROCESS.map(([title, description], index) => <li key={title} className="bg-page p-6"><span className="font-mono text-xs text-[#FF6A00]">0{index + 1}</span><h3 className="mt-4 font-semibold tracking-[-0.02em]">{title}</h3><p className="mt-2 text-[13px] leading-6 text-muted">{description}</p></li>)}</ol>
-          <div className="mt-6 rounded-2xl border border-dashed border-edge-strong p-6"><h3 className="font-semibold tracking-[-0.02em]">One testnet round completed</h3><p className="mt-2 text-sm leading-6 text-muted">Training, signed submissions, evaluation, and revealed chain weights are recorded below. A live submission queue and round feed are not connected.</p><a href="#testnet" className={`${LINK} mt-3 inline-block text-sm`}>View the verified round</a></div>
-          <p className="mt-5 max-w-[70ch] text-sm leading-7 text-muted">The local loop works on Apple Silicon and an RTX 4090. Accuracy and latency are diagnostics, not separate reward components. The subnet’s family-macro Brier and JevBench Brier use different aggregation rules.</p>
-          <a href={`${REPO}/blob/main/docs/evaluation.md`} className={`${LINK} mt-4 inline-block text-sm`}>Evaluation contract</a>
-        </Section>
-
-        <Section id="participants" eyebrow="Participants" title="Three miners. One validator. One host.">
-          <p className="mb-5 text-sm text-muted">Three registered miners and one validator completed the recorded subnet {testnet.chain.netuid} rehearsal.</p>
-          <dl className={`divide-y divide-edge ${CARD}`}>{[['Miners · UIDs 1–3', 'Trained and submitted three distinct checkpoints'], ['Validator · UID 0', 'Evaluated the checkpoints and published weights']].map(([role, description]) => <div key={role} className="grid gap-x-4 gap-y-1 p-5 sm:grid-cols-[1fr_auto]"><dt className="font-medium">{role}</dt><dd className="text-xs text-muted sm:col-start-1">{description}</dd><dd className="mt-2 font-mono text-[10px] tracking-[0.1em] text-subtle sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:mt-0 sm:self-center">RECORDED PARTICIPATION</dd></div>)}</dl>
-          <p className="mt-4 text-xs leading-6 text-subtle">One operator ran all four processes on one host. Services exited after the round; these counts do not indicate current availability or independent operators.</p>
-          <a href={`${REPO}/blob/main/docs/mining.md`} className={`${LINK} mt-4 inline-block text-sm`}>Miner guide</a>
-        </Section>
-
-        <Section id="testnet" eyebrow="Testnet publication" title={`Bittensor testnet · Subnet ${testnet.chain.netuid}`}>
-          <div className={CARD}>
-            <div className="flex flex-wrap items-start justify-between gap-4 p-5">
-              <p className="flex items-center gap-2 text-sm"><span className="size-1.5 rounded-full bg-emerald-500" />First training-to-chain round completed. Revealed weights verified.</p>
-              <a href={TESTNET_SOURCE} className={`${LINK} text-sm`}>Round evidence (JSON) ↗</a>
-            </div>
-            <dl className="grid gap-6 border-t border-edge p-5 text-xs sm:grid-cols-2 lg:grid-cols-4">{[['Network', 'Bittensor testnet'], ['Publication receipt', testnet.chain.weight_transaction.extrinsic_id], ['Verified at block', testnet.chain.verification.block.toLocaleString('en-US')], ['Round status', 'Completed · recorded rehearsal']].map(([label, value]) => <div key={label}><dt className="text-subtle">{label}</dt><dd className="mt-2 font-mono">{value}</dd></div>)}</dl>
-            <div role="region" aria-label="Recorded testnet miner weights" tabIndex={0} className="overflow-x-auto overscroll-x-contain">
-              <table className="w-full min-w-[420px] border-collapse text-sm">
-                <caption className="sr-only">Three evaluated miners and their verified testnet weight allocation</caption>
-                <thead className="bg-surface text-xs text-muted"><tr><th scope="col" className={HEAD}>Miner UID</th><th scope="col" className={CELL}>Correct / 224</th><th scope="col" className={CELL}>Requested weight</th><th scope="col" className={CELL}>On-chain value</th></tr></thead>
-                <tbody>{testnet.miners.map(miner => <tr key={miner.uid} className="hover:bg-surface"><th scope="row" className={HEAD}>{miner.uid}</th><td className={CELL}>{miner.correct} / {miner.cases}</td><td className={`${CELL} font-medium`}>{percent(miner.requested_weight)}</td><td className={`${CELL} font-mono`}>{miner.on_chain_u16.toLocaleString('en-US')}</td></tr>)}</tbody>
-              </table>
-            </div>
-            <p className="border-t border-edge p-5 text-xs leading-6 text-subtle">Weights are based on family-macro Brier skill. The chain stores maximum-scaled integers; their normalized proportions matched the requested allocation within quantization tolerance. Verified <time dateTime={testnet.verified_at}>{time(testnet.verified_at)}</time>. This is the observation time, not a live refresh.</p>
-          </div>
-          <p className="mt-4 text-xs leading-6 text-muted">Each 0.8B checkpoint trained for one epoch on 224 examples, calibrated on 112 questions, and was evaluated on the same 224 test questions. This reused synthetic development benchmark is separate from the public JevBench comparison above. All compute ran on one Apple M4 Pro with 24 GiB memory, with GPU jobs serialized.</p>
-          <p className="mt-3 text-xs leading-6 text-muted">This closed rehearsal demonstrates the training-to-chain path. It does not establish mainnet deployment, miner earnings, open competition, or automatic model promotion.</p>
-          <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3 text-sm"><a href={TESTNET_SOURCE} className={LINK}>Scores, methodology & chain evidence</a><a href={`${REPO}/blob/main/docs/testnet.md`} className={LINK}>Testnet guide</a><a href={`${REPO}/blob/main/docs/roadmap.md`} className={LINK}>Roadmap</a></div>
-        </Section>
+        <aside id="training" aria-label="Bittensor mining" className="scroll-mt-16 border-t border-edge py-8 text-sm leading-7 text-muted">
+          <span id="participants" className="block scroll-mt-16" />
+          <span id="testnet" className="block scroll-mt-16" />
+          Mining, validation, and the recorded testnet round are on the <Link href="/bittensor" className={LINK}>Bittensor page</Link>.
+        </aside>
         <p className="border-t border-edge py-8 text-xs text-subtle">Zils decision model. Public evidence, read-only access.</p>
       </main>
       <SiteFooter />
