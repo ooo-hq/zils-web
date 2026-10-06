@@ -1,10 +1,18 @@
 import { parseResponse, type DecisionRequest, type ModelOption } from './playground';
 
 export const MAX_BODY_BYTES = 32_768;
+const SHARED_MODEL = 'zils-jevk5-v0.3-r1';
 
 export function playgroundConfig(): { configured: boolean; models: ModelOption[] } {
-  const model = (process.env.ZILS_DECISION_MODEL ?? process.env.FEZ_DECISION_MODEL) || 'fez-0.8b-experimental';
-  return { configured: Boolean((process.env.ZILS_DECISION_API_URL ?? process.env.FEZ_DECISION_API_URL)), models: [{ id: model, label: (process.env.ZILS_DECISION_LABEL ?? process.env.FEZ_DECISION_LABEL) || 'Zils 0.8B · experimental' }] };
+  const model = (process.env.ZILS_DECISION_MODEL ?? process.env.FEZ_DECISION_MODEL) || SHARED_MODEL;
+  const defaultLabel = model === SHARED_MODEL ? 'Zils shared · JevK5 4B'
+    : model === 'fez-0.8b-experimental' ? 'Zils 0.8B · experimental' : model;
+  const endpoint = process.env.ZILS_DECISION_API_URL ?? process.env.FEZ_DECISION_API_URL;
+  const key = process.env.ZILS_DECISION_API_KEY ?? process.env.FEZ_DECISION_API_KEY;
+  return {
+    configured: Boolean(endpoint && key),
+    models: [{ id: model, label: (process.env.ZILS_DECISION_LABEL ?? process.env.FEZ_DECISION_LABEL) || defaultLabel }],
+  };
 }
 
 export class InferenceError extends Error {
@@ -37,10 +45,10 @@ async function check(response: Response): Promise<Response> {
 
 export async function infer(request: DecisionRequest, signal: AbortSignal) {
   const endpoint = (process.env.ZILS_DECISION_API_URL ?? process.env.FEZ_DECISION_API_URL);
-  if (!endpoint) throw new InferenceError('The Zils model endpoint is not connected yet.');
+  const key = process.env.ZILS_DECISION_API_KEY ?? process.env.FEZ_DECISION_API_KEY;
+  if (!endpoint || !key) throw new InferenceError('The Zils model endpoint is not connected yet.');
   const options = { signal, cache: 'no-store' as const, redirect: 'error' as const };
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if ((process.env.ZILS_DECISION_API_KEY ?? process.env.FEZ_DECISION_API_KEY)) headers.Authorization = `Bearer ${(process.env.ZILS_DECISION_API_KEY ?? process.env.FEZ_DECISION_API_KEY)}`;
+  const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` };
   const result = await check(await fetch(endpoint, { ...options, method: 'POST', headers, body: JSON.stringify(request) }));
   const raw: unknown = JSON.parse(await readLimited(result, 1_000_000));
   try {

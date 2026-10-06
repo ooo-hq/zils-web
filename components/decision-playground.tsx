@@ -15,7 +15,7 @@ const TEXTAREA = 'w-full resize-y rounded-xl bg-surface p-4 font-mono text-[13px
 function AnswerCard({ id, question, answer }: { id: string; question: DecisionRequest['questions'][string]; answer: Answer }) {
   const rows = answer.type === 'noul'
     ? [['yes', answer.noul], ['no', 1 - answer.noul]] as const
-    : Object.entries(answer.probabilities).map(([key, value]) => [answer.type === 'score' ? `${key} · ${answer.legend[key]}` : key, value] as const);
+    : Object.entries(answer.probabilities).map(([key, value]) => [answer.type === 'score' ? `${key} · ${asText(answer.legend[key])}` : key, value] as const);
   const sorted = [...rows].sort((a, b) => b[1] - a[1]);
   const headline = answer.type === 'noul' ? (answer.noul >= 0.5 ? 'yes' : 'no') : answer.type === 'choice' ? answer.choice : `${answer.score.toFixed(2)} / ${rows.length - 1}`;
   return <article className={`border-t border-[#9ee89e]/15 py-5 first:border-t-0 first:pt-0 ${s.lineIn}`}>
@@ -98,10 +98,10 @@ export function DecisionPlayground({ configured, models }: { configured: boolean
   return <div>
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Example decisions">
       {PRESETS.map((p, i) => <button type="button" key={p.name} aria-pressed={preset === i} disabled={busy} onClick={() => selectPreset(i)}
-        className={`group relative flex text-[#15151a] min-h-36 flex-col rounded-2xl p-5 text-left transition hover:-translate-y-0.5 disabled:opacity-60 ${CARD_COLORS[i % CARD_COLORS.length]} ${preset === i ? 'ring-2 ring-accent ring-offset-2 ring-offset-page' : 'opacity-80 hover:opacity-100'}`}>
+        className={`group relative row-span-3 grid min-h-36 grid-rows-subgrid gap-2 rounded-2xl p-5 text-left text-[#15151a] transition hover:-translate-y-0.5 disabled:opacity-60 ${CARD_COLORS[i % CARD_COLORS.length]} ${preset === i ? 'ring-2 ring-accent ring-offset-2 ring-offset-page' : 'opacity-80 hover:opacity-100'}`}>
         <span className="font-mono text-[10px] tracking-[0.12em] text-black/60">0{i + 1} / {p.tag.toUpperCase()}</span>
-        <span className="mt-2 text-lg font-semibold leading-tight tracking-[-0.03em]">{p.name}</span>
-        <span className="mt-2 text-xs leading-5 text-black/70">{p.description}</span>
+        <span className="text-lg font-semibold leading-tight tracking-[-0.03em]">{p.name}</span>
+        <span className="text-xs leading-5 text-black/70">{p.description}</span>
       </button>)}
     </div>
 
@@ -156,7 +156,7 @@ export function DecisionPlayground({ configured, models }: { configured: boolean
               <pre className="overflow-x-auto whitespace-pre text-[#c9f5c9]"><code>{requestCode}</code></pre>
             </> : run ? <>
               <p className="mb-5 flex flex-wrap gap-x-4 gap-y-1 text-[10px] tracking-[0.08em] text-[#9ee89e]/60">
-                <span>{run.response.model}</span><span>{Math.round(run.response.latency_ms).toLocaleString()} MS MODEL TIME</span><span>{run.response.usage.input_tokens.toLocaleString()} INPUT TOKENS</span><span>{(run.elapsed / 1000).toFixed(1)} S TOTAL</span>
+                <span>{run.response.model}</span>{run.response.latency_ms !== undefined && <span>{Math.round(run.response.latency_ms).toLocaleString()} MS MODEL TIME</span>}<span>{run.response.usage.input_tokens.toLocaleString()} INPUT TOKENS</span><span>{(run.elapsed / 1000).toFixed(1)} S TOTAL</span>
               </p>
               {view === 'JSON' ? <pre className="overflow-x-auto whitespace-pre text-[#c9f5c9]"><code>{code}</code></pre> : <>
                 {Object.entries(run.response.answers).map(([id, answer]) => <AnswerCard key={id} id={id} question={run.request.questions[id]} answer={answer} />)}
