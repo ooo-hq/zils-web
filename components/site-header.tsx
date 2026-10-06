@@ -10,6 +10,7 @@ import { ThemeToggle } from '@/components/theme';
  */
 const LINKS = [
   { href: '/model', label: 'research', id: 'model' },
+  { href: '/bittensor', label: 'bittensor' },
   { href: '/playground', label: 'playground' },
   { href: '/train', label: 'login', id: 'train' },
 ] as const;
