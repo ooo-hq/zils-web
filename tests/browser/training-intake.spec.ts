@@ -106,8 +106,12 @@ test('Excel import, corrections and exclusions reach the existing submission con
 });
 
 test('mobile CSV review preserves the draft and requires resolving expert flags', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
   await page.setViewportSize({ width: 390, height: 844 });
   const { mutations } = await workspace(page);
+  const background = await page.locator('body').evaluate(element => getComputedStyle(element).backgroundColor);
+  await expect(page.getByRole('dialog')).toHaveCSS('background-color', background);
+  await expect(page.getByRole('dialog')).toHaveCSS('color-scheme', 'dark');
   const input = page.getByLabel('Drop your spreadsheet here or choose a file');
   await input.setInputFiles({ name: 'old.xls', mimeType: 'application/vnd.ms-excel', buffer: Buffer.from('old') });
   await expect(page.getByRole('alert')).toContainText('.xlsx');

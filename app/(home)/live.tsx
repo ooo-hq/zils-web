@@ -26,35 +26,53 @@ const DECISIONS = [
   },
 ] as const;
 
-const TICK_MS = 40;
-const CYCLE = 150; // ticks per decision (6s)
+const CYCLE_MS = 3400;
+const FADE_MS = 160;
+const TYPE_MS = 560;
+const BAR_START_MS = 800;
+const BAR_MS = 500;
+const RESULT_MS = BAR_START_MS + BAR_MS;
 
 /** Context and probabilities animate together in the single illustrative demo. */
 export function DecisionInstrument() {
   const reduced = useReducedMotion();
   // Start on the settled first frame: identical on server and client, and
   // the whole story for no-JS and reduced-motion visitors.
-  const [tick, setTick] = useState(CYCLE - 1);
+  const [elapsed, setElapsed] = useState(RESULT_MS);
+  const elapsedRef = useRef(RESULT_MS);
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     if (reduced !== false || paused) return;
-    const id = setInterval(() => setTick((t) => t + 1), TICK_MS);
-    return () => clearInterval(id);
+    let frame: number;
+    let previous: number | undefined;
+    function advance(now: number) {
+      if (previous !== undefined) {
+        // Keep the current case when returning from a background tab.
+        elapsedRef.current = (elapsedRef.current + Math.min(now - previous, 64)) % (CYCLE_MS * DECISIONS.length);
+        setElapsed(elapsedRef.current);
+      }
+      previous = now;
+      frame = requestAnimationFrame(advance);
+    }
+    frame = requestAnimationFrame(advance);
+    return () => cancelAnimationFrame(frame);
   }, [reduced, paused]);
 
-  const d = DECISIONS[Math.floor(tick / CYCLE) % DECISIONS.length];
-  const local = tick % CYCLE;
-  const typed = Math.min(d.context.length, local * 2);
-  const barStart = Math.ceil(d.context.length / 2) + 6;
-  const settle = Math.min(Math.max((local - barStart) / 34, 0), 1);
-  const stamped = settle >= 1;
+  const position = reduced ? RESULT_MS : elapsed;
+  const d = DECISIONS[Math.floor(position / CYCLE_MS) % DECISIONS.length];
+  const local = position % CYCLE_MS;
+  const typed = Math.floor(d.context.length * Math.min(Math.max((local - FADE_MS) / TYPE_MS, 0), 1));
+  const progress = Math.min(Math.max((local - BAR_START_MS) / BAR_MS, 0), 1);
+  const settle = 1 - (1 - progress) ** 3;
+  const stamped = progress >= 1;
+  const opacity = Math.min(local / FADE_MS, 1, (CYCLE_MS - local) / FADE_MS);
   const probs: readonly number[] = d.p;
   const best = probs.indexOf(Math.max(...probs));
 
   return (
-    <div className="mx-auto w-full max-w-xl overflow-hidden rounded-md border border-neutral-200 text-left">
-      <div className="flex items-center justify-between gap-4 bg-white px-5 py-3 text-xs text-neutral-600">
+    <div className="mx-auto w-full max-w-xl overflow-hidden rounded-md border border-edge text-left">
+      <div className="flex items-center justify-between gap-4 bg-page px-5 py-3 text-xs text-muted">
         <span>Decision example <span className="text-neutral-400">/ illustrative</span></span>
         <button
           type="button"
@@ -65,30 +83,32 @@ export function DecisionInstrument() {
           {paused ? 'Play' : 'Pause'}
         </button>
       </div>
-      <div className="bg-[var(--zils-ink)] px-5 py-6 text-sm leading-6 sm:px-6">
-        <p className="text-xs text-[#b5b0f4]">{d.task}</p>
-        <p className="mt-3 min-h-[4.5rem] text-neutral-100 sm:min-h-12">
-          {d.context.slice(0, typed)}
-          {typed < d.context.length && <span aria-hidden="true" className="ml-1 inline-block h-3.5 w-px translate-y-0.5 bg-[#b5b0f4]" />}
-        </p>
-        <div className="mt-5 space-y-3" role="img" aria-label={`Probabilities: ${d.options.map((option, i) => `${option} ${d.p[i]}`).join(', ')}`}>
-          {d.options.map((option, i) => {
-            const value = d.p[i] * settle;
-            const selected = stamped && i === best;
-            return (
-              <div key={option} className="grid grid-cols-[6.25rem_1fr_2.5rem] items-center gap-3 font-mono text-xs sm:grid-cols-[7.5rem_1fr_3rem]">
-                <span className={selected ? 'text-white' : 'text-neutral-400'}>{option}</span>
-                <span aria-hidden="true" className="h-1.5 overflow-hidden rounded-sm bg-white/10">
-                  <span className={`block h-full ${selected ? 'bg-[#b5b0f4]' : 'bg-neutral-500'}`} style={{ width: `${value * 100}%` }} />
-                </span>
-                <span className={`text-right tabular-nums ${selected ? 'text-[#b5b0f4]' : 'text-neutral-400'}`}>{value.toFixed(2)}</span>
-              </div>
-            );
-          })}
-        </div>
-        <div className="mt-6 flex min-h-12 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-white/15 pt-4 text-xs">
-          <span className="text-neutral-400">Probabilities out. No generated prose.</span>
-          <span className="font-medium text-[#b5b0f4]">{stamped ? d.options[best] : 'Reading context…'}</span>
+      <div className="bg-[#15151a] px-5 py-6 text-sm leading-6 sm:px-6">
+        <div style={{ opacity }}>
+          <p className="text-xs text-[#b5b0f4]">{d.task}</p>
+          <p className="mt-3 min-h-[4.5rem] text-neutral-100 sm:min-h-12">
+            {d.context.slice(0, typed)}
+            {typed < d.context.length && <span aria-hidden="true" className="ml-1 inline-block h-3.5 w-px translate-y-0.5 bg-[#b5b0f4]" />}
+          </p>
+          <div className="mt-5 min-h-[4.5rem] space-y-3" role="img" aria-label={`Probabilities: ${d.options.map((option, i) => `${option} ${d.p[i]}`).join(', ')}`}>
+            {d.options.map((option, i) => {
+              const value = d.p[i] * settle;
+              const selected = stamped && i === best;
+              return (
+                <div key={option} className="grid grid-cols-[6.25rem_1fr_2.5rem] items-center gap-3 font-mono text-xs sm:grid-cols-[7.5rem_1fr_3rem]">
+                  <span className={`whitespace-nowrap ${selected ? 'text-white' : 'text-neutral-400'}`}>{option}</span>
+                  <span aria-hidden="true" className="h-1.5 overflow-hidden rounded-sm bg-white/10">
+                    <span className={`block h-full origin-left ${selected ? 'bg-[#b5b0f4]' : 'bg-neutral-500'}`} style={{ transform: `scaleX(${value})` }} />
+                  </span>
+                  <span className={`text-right tabular-nums ${selected ? 'text-[#b5b0f4]' : 'text-neutral-400'}`}>{value.toFixed(2)}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-6 flex min-h-12 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-white/15 pt-4 text-xs">
+            <span className="text-neutral-400">Probabilities out. No generated prose.</span>
+            <span className="font-medium text-[#b5b0f4]">{stamped ? d.options[best] : 'Reading context…'}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -130,19 +150,19 @@ export function RoundReplay({ tabs, caption }: { tabs: readonly ReplayTab[]; cap
               setSelected(next);
               buttons.current[next]?.focus();
             }}
-            className={`rounded-sm px-4 py-2 text-xs font-medium transition-colors ${index === selected ? 'bg-[var(--zils-accent)] text-white' : 'bg-white text-neutral-600 ring-1 ring-neutral-200 hover:text-[var(--zils-accent)]'}`}
+            className={`rounded-sm px-4 py-2 text-xs font-medium transition-colors ${index === selected ? 'bg-[#4942c7] text-white' : 'bg-page text-muted ring-1 ring-edge hover:text-[var(--zils-accent)]'}`}
           >
             {tab.tab}
           </button>
         ))}
       </div>
-      <div id="round-panel" role="tabpanel" aria-labelledby={`round-tab-${selected}`} tabIndex={0} className="mt-4 overflow-hidden rounded-md bg-[var(--zils-ink)]">
+      <div id="round-panel" role="tabpanel" aria-labelledby={`round-tab-${selected}`} tabIndex={0} className="mt-4 overflow-hidden rounded-md bg-[#15151a]">
         <div className="border-b border-white/15 px-5 py-3 text-xs text-neutral-400">Recorded testnet round</div>
         <pre className="min-h-[320px] overflow-x-auto px-5 py-5 font-mono text-xs leading-7">
           {lines.map(([tone, text], index) => <div key={`${selected}-${index}`} className={TONE[tone]}>{text}</div>)}
         </pre>
       </div>
-      <p className="mt-3 text-xs leading-5 text-neutral-500">{caption}</p>
+      <p className="mt-3 text-xs leading-5 text-subtle">{caption}</p>
     </div>
   );
 }

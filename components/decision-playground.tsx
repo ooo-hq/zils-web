@@ -9,7 +9,7 @@ const asText = (value: unknown) => typeof value === 'string' ? value : JSON.stri
 const percentage = (value: number) => `${(value * 100).toFixed(1)}%`;
 const CARD_COLORS = ['bg-[#FF9AD5]', 'bg-[#6C93FF]', 'bg-[#46DFEF]', 'bg-[#FFB36B]'];
 const CELLS = 20;
-const TEXTAREA = 'w-full resize-y rounded-xl bg-neutral-50 p-4 font-mono text-[13px] leading-6 text-neutral-900 ring-1 ring-neutral-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3455dc]';
+const TEXTAREA = 'w-full resize-y rounded-xl bg-surface p-4 font-mono text-[13px] leading-6 text-ink ring-1 ring-edge focus:bg-page focus:outline-none focus:ring-2 focus:ring-accent';
 
 /** One answer on the instrument: every option as a block-character bar, winner lit. */
 function AnswerCard({ id, question, answer }: { id: string; question: DecisionRequest['questions'][string]; answer: Answer }) {
@@ -98,7 +98,7 @@ export function DecisionPlayground({ configured, models }: { configured: boolean
   return <div>
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Example decisions">
       {PRESETS.map((p, i) => <button type="button" key={p.name} aria-pressed={preset === i} disabled={busy} onClick={() => selectPreset(i)}
-        className={`group relative flex min-h-36 flex-col rounded-2xl p-5 text-left transition hover:-translate-y-0.5 disabled:opacity-60 ${CARD_COLORS[i % CARD_COLORS.length]} ${preset === i ? 'ring-2 ring-neutral-950 ring-offset-2' : 'opacity-80 hover:opacity-100'}`}>
+        className={`group relative flex text-[#15151a] min-h-36 flex-col rounded-2xl p-5 text-left transition hover:-translate-y-0.5 disabled:opacity-60 ${CARD_COLORS[i % CARD_COLORS.length]} ${preset === i ? 'ring-2 ring-accent ring-offset-2 ring-offset-page' : 'opacity-80 hover:opacity-100'}`}>
         <span className="font-mono text-[10px] tracking-[0.12em] text-black/60">0{i + 1} / {p.tag.toUpperCase()}</span>
         <span className="mt-2 text-lg font-semibold leading-tight tracking-[-0.03em]">{p.name}</span>
         <span className="mt-2 text-xs leading-5 text-black/70">{p.description}</span>
@@ -106,44 +106,44 @@ export function DecisionPlayground({ configured, models }: { configured: boolean
     </div>
 
     <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.1fr]">
-      <form className="rounded-2xl bg-white p-5 ring-1 ring-neutral-200 sm:p-6" onSubmit={e => { e.preventDefault(); void decide(); }} onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); void decide(); } }}>
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-neutral-50 px-4 py-3 text-xs ring-1 ring-neutral-200">
+      <form className="rounded-2xl bg-page p-5 ring-1 ring-edge sm:p-6" onSubmit={e => { e.preventDefault(); void decide(); }} onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); void decide(); } }}>
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface px-4 py-3 text-xs ring-1 ring-edge">
           <span className="flex items-center gap-2"><span className={`size-1.5 rounded-full ${configured ? 'bg-emerald-500' : 'bg-[#FF6A00]'}`} aria-hidden="true" /><strong className="font-medium">{models[0].label}</strong></span>
-          <label className="flex items-center gap-2 text-neutral-500">Model<select value={model} disabled={busy} onChange={e => { changed(); setModel(e.target.value); }} className="rounded-md bg-white px-2 py-1 text-neutral-900 ring-1 ring-neutral-200">
+          <label className="flex items-center gap-2 text-subtle">Model<select value={model} disabled={busy} onChange={e => { changed(); setModel(e.target.value); }} className="rounded-md bg-page px-2 py-1 text-ink ring-1 ring-edge">
             {models.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
           </select></label>
         </div>
         <fieldset disabled={busy} className="space-y-5">
           <div>
-            <label htmlFor="decision-state" className="flex items-baseline justify-between text-sm font-medium">Context <span className="text-xs font-normal text-neutral-500">text or JSON the model reads</span></label>
+            <label htmlFor="decision-state" className="flex items-baseline justify-between text-sm font-medium">Context <span className="text-xs font-normal text-subtle">text or JSON the model reads</span></label>
             <textarea id="decision-state" spellCheck={false} value={state} onChange={e => { changed(); setState(e.target.value); }} className={`mt-2 min-h-32 ${TEXTAREA}`} />
           </div>
           <div>
             <div className="flex items-baseline justify-between gap-3">
-              <label htmlFor="decision-questions" className="text-sm font-medium">Decisions <span className="text-xs font-normal text-neutral-500">yes/no, choice, or score</span></label>
-              <button type="button" className="text-xs text-neutral-500 hover:text-[#3455dc]" onClick={() => {
+              <label htmlFor="decision-questions" className="text-sm font-medium">Decisions <span className="text-xs font-normal text-subtle">yes/no, choice, or score</span></label>
+              <button type="button" className="text-xs text-subtle hover:text-accent" onClick={() => {
                 try { setQuestions(JSON.stringify(JSON.parse(questions), null, 2)); setError(''); } catch { setError('Questions must be valid JSON before formatting.'); }
               }}>Format JSON</button>
             </div>
             <textarea id="decision-questions" spellCheck={false} autoCapitalize="off" autoCorrect="off" value={questions} onChange={e => { changed(); setQuestions(e.target.value); }} className={`mt-2 min-h-72 ${TEXTAREA}`} />
           </div>
         </fieldset>
-        {error && <p role="alert" className="mt-4 rounded-lg bg-orange-50 px-4 py-3 text-sm text-[#B84A00]">{error}</p>}
+        {error && <p role="alert" className="mt-4 rounded-lg bg-danger-soft px-4 py-3 text-sm text-danger">{error}</p>}
         <div className="mt-5 flex flex-wrap items-center gap-4">
-          <button type="submit" disabled={busy || !configured} className="inline-flex items-center gap-6 rounded-md bg-neutral-950 px-5 py-3 text-[13px] font-medium text-white transition hover:-translate-y-0.5 hover:bg-[#3455dc] disabled:translate-y-0 disabled:bg-neutral-300 disabled:text-neutral-500">
+          <button type="submit" disabled={busy || !configured} className="inline-flex items-center gap-6 rounded-md bg-action px-5 py-3 text-[13px] font-medium text-on-action transition hover:-translate-y-0.5 hover:bg-action-hover disabled:translate-y-0 disabled:bg-edge-strong disabled:text-subtle">
             {busy ? 'Deciding…' : 'Run decisions'}<span aria-hidden="true" className="font-mono text-[11px] opacity-70">⌘ ↵</span>
           </button>
-          {busy ? <button type="button" className="text-sm text-neutral-600 hover:text-neutral-950" onClick={() => { active.current?.abort(); setError('Request canceled.'); }}>Cancel</button> : <span className="text-xs text-neutral-500">One request. Every decision.</span>}
+          {busy ? <button type="button" className="text-sm text-muted hover:text-ink" onClick={() => { active.current?.abort(); setError('Request canceled.'); }}>Cancel</button> : <span className="text-xs text-subtle">One request. Every decision.</span>}
         </div>
-        <p className="mt-3 text-[11px] leading-5 text-neutral-500">Run sends your input to Zils’s model server. Use non-sensitive examples.</p>
+        <p className="mt-3 text-[11px] leading-5 text-subtle">Run sends your input to Zils’s model server. Use non-sensitive examples.</p>
       </form>
 
-      <section aria-label="Decision results" aria-busy={busy} className="flex min-w-0 flex-col rounded-[22px] bg-white/60 p-2.5 ring-1 ring-neutral-200">
+      <section aria-label="Decision results" aria-busy={busy} className="flex min-w-0 flex-col rounded-[22px] bg-page/60 p-2.5 ring-1 ring-edge">
         <div className="flex flex-wrap items-center justify-between gap-2 px-3 pb-2 pt-1">
           <div role="tablist" aria-label="Result view" className="flex gap-1">{(['Answers', 'JSON', 'API'] as const).map(tab => <button type="button" role="tab" key={tab} aria-selected={view === tab} onClick={() => { setView(tab); setCopied(false); setOrigin(window.location.origin); }}
-            className={view === tab ? 'rounded-full bg-neutral-950 px-3.5 py-1 text-xs font-medium text-white' : 'rounded-full px-3.5 py-1 text-xs text-neutral-600 hover:text-neutral-950'}>{tab}</button>)}</div>
-          {code && view !== 'Answers' ? <button type="button" className="text-xs text-neutral-600 hover:text-[#3455dc]" onClick={() => void copy()}>{copied ? 'Copied' : 'Copy'}</button>
-            : <span className="font-mono text-[10px] tracking-[0.14em] text-neutral-500">ZILS · DECISION INSTRUMENT</span>}
+            className={view === tab ? 'rounded-full bg-action px-3.5 py-1 text-xs font-medium text-on-action' : 'rounded-full px-3.5 py-1 text-xs text-muted hover:text-ink'}>{tab}</button>)}</div>
+          {code && view !== 'Answers' ? <button type="button" className="text-xs text-muted hover:text-accent" onClick={() => void copy()}>{copied ? 'Copied' : 'Copy'}</button>
+            : <span className="font-mono text-[10px] tracking-[0.14em] text-subtle">ZILS · DECISION INSTRUMENT</span>}
         </div>
         <div className={`relative min-h-[520px] flex-1 overflow-hidden rounded-2xl bg-[#0c0f0c] px-5 py-5 font-mono text-[12.5px] leading-6 sm:px-6 ${s.tube}`}>
           <span aria-hidden="true" className={`pointer-events-none absolute inset-0 ${s.scanlinesDark}`} />

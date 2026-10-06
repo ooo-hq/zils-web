@@ -1,0 +1,13 @@
+{
+  "files": {
+    "baseline-check.json": "69e883ce0c57dff6937a59383dcd9f38e4da8b7d70f6f8fbdd8122ededdbd470",
+    "dev-baselines.json": "cef3dbd4390230b50b727ea6bd626f3368e84c360ff633bf528ae9b81d17a49c",
+    "dev-inputs.jsonl": "5613ef23f6175467d23b3ab90f6e120e47681da2e82edbae108f5097fe4d6813",
+    "dev-labels.jsonl": "4fba9dc1a8313c08caaf36f6167e596c1f2d830e63c1d571442c3a507ea17aa8",
+    "protocol.json": "29b7cf9059e5b4383e434736df8011b9ffb88c0bab5bc473f3c6da3d1f6348d1",
+    "train.jsonl": "21af4b0bc322cb0396af14ceaa44c4eeff80fc7752b1801fd44e38874ed39231"
+  },
+  "prepare_sha256": "6f38d3d6044b7c5960eac417484959d5e36abfc50ec6209f3fe86d8d0f53c9e6",
+  "prior_manifest_sha256": "ccd80878bb6212764ccbf5ad1fb46b5a8e0c1f5e5f1d0f69b81daa1f19612b67",
+  "timing_amendment_prior_manifest_sha256": "f0f896d77851f2ef888b631dc9dece3cd955d26e631c5bb45827bd6545453431"
+}

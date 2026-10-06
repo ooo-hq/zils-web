@@ -16,17 +16,17 @@ export function SiteFooter({ tone = 'light', showSmallWordmark = true }: { tone?
     );
   }
   return (
-    <footer className="overflow-hidden border-t border-neutral-200 bg-white text-neutral-950">
+    <footer className="overflow-hidden border-t border-edge bg-page text-ink">
       <div className="mx-auto grid max-w-5xl gap-10 px-6 pt-14 sm:px-8 md:grid-cols-[1fr_auto]">
         <div>
           {showSmallWordmark && <Link href="/" aria-label="Zils home" className="inline-block leading-none"><ZilsWordmark className="text-[42px]" /></Link>}
-          <p className={`${showSmallWordmark ? 'mt-3' : ''} text-sm text-neutral-600`}>Specialized models.<br />Decisions that are yours.</p>
+          <p className={`${showSmallWordmark ? 'mt-3' : ''} text-sm text-muted`}>Specialized models.<br />Decisions that are yours.</p>
         </div>
         <nav aria-label="Footer" className="grid grid-cols-2 gap-x-12 gap-y-1.5 text-sm sm:grid-cols-3">
           {FOOTER_LINKS.map((l) => <Link key={l.href + l.label} href={l.href} className="hover:text-[var(--zils-accent,#3455dc)]">{l.label}</Link>)}
         </nav>
       </div>
-      <div className="mx-auto mt-10 flex max-w-5xl justify-between gap-4 px-6 font-mono text-[10px] tracking-[0.1em] text-neutral-500 sm:px-8">
+      <div className="mx-auto mt-10 flex max-w-5xl justify-between gap-4 px-6 font-mono text-[10px] tracking-[0.1em] text-subtle sm:px-8">
         <span>YOUR DATA. YOUR DECISION MODEL.</span>
         <span>ZILS.AI / EARLY ACCESS</span>
       </div>
@@ -40,7 +40,7 @@ export function SiteFooter({ tone = 'light', showSmallWordmark = true }: { tone?
 /** Drifting pastel light + grain + scanlines behind a light page's top. */
 export function LightBackdrop() {
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 dark:opacity-15">
       <div className={`absolute -right-40 -top-48 size-[720px] rounded-full bg-[radial-gradient(circle,#a9c9ff_0%,transparent_60%)] blur-2xl ${s.drift}`} />
       <div className={`absolute -right-10 top-32 size-[520px] rounded-full bg-[radial-gradient(circle,#f3c3f0_0%,transparent_60%)] blur-2xl ${s.driftSlow}`} />
       <div className={`absolute right-[38%] -top-20 size-[420px] rounded-full bg-[radial-gradient(circle,#bdf1f8_0%,transparent_62%)] blur-2xl ${s.drift}`} />

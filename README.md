@@ -23,6 +23,11 @@ Open http://localhost:3000. Without service settings, research pages work,
 the playground reports that inference is disconnected, and the training page
 reports that sign-in and uploads are not configured. No results are simulated.
 
+The header's sun/moon button changes the theme across the Zils
+pages, including training panels. A first visit follows the device's color
+setting; a manual choice is saved in browser storage and shared across tabs.
+If browser storage is unavailable, switching still works for the current visit.
+
 ## Service settings
 
 Copy `.env.example` to `.env.local` and supply the settings for your own services.

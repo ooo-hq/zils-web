@@ -6,7 +6,7 @@ import jevbench from '@/public/model/jevbench-public-001.json';
 import round from '@/public/model/testnet-round-001.json';
 import { DecisionInstrument, RoundReplay, type ReplayTab } from './live';
 import { ZilsWordmark } from '@/components/zils-wordmark';
-import { FlightStudySummary } from '@/components/flight-study';
+import { SupportStudySummary } from '@/components/support-study';
 import s from './home.module.css';
 
 const TITLE = 'Your data. Your decision model.';
@@ -94,7 +94,7 @@ const DELIVERABLES = [
 
 export default function HomePage() {
   return (
-    <div className={`${s.home} min-h-screen bg-white font-sans text-[var(--zils-ink)] antialiased`}>
+    <div className={`${s.home} min-h-screen bg-page font-sans text-[var(--zils-ink)] antialiased`}>
       <ResearchStatus />
 
       <div className="relative overflow-hidden">
@@ -114,9 +114,9 @@ export default function HomePage() {
               <br />
               Your decision model.
             </h1>
-            <p className="mx-auto mt-6 max-w-lg text-[18px] leading-7 text-neutral-600">{DESCRIPTION}</p>
+            <p className="mx-auto mt-6 max-w-lg text-[18px] leading-7 text-muted">{DESCRIPTION}</p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
-              <Link href="/contact" className="inline-flex items-center rounded-md bg-neutral-950 px-5 py-3 text-[13px] font-medium text-white transition-colors hover:bg-[var(--zils-accent)]">
+              <Link href="/contact" className="inline-flex items-center rounded-md bg-action px-5 py-3 text-[13px] font-medium text-on-action transition-colors hover:bg-action-hover">
                 Contact us
               </Link>
               <a href="#workflow" className="text-[13px] hover:text-[var(--zils-accent)]">
@@ -126,33 +126,33 @@ export default function HomePage() {
 
             <div className="mt-16">
               <DecisionInstrument />
-              <p className="mt-4 text-xs leading-5 text-neutral-500">
+              <p className="mt-4 text-xs leading-5 text-subtle">
                 Illustrative examples. These are not model outputs.
               </p>
             </div>
           </section>
 
-          <FlightStudySummary />
+          <SupportStudySummary />
 
           {/* ── Intro ────────────────────────────────────────── */}
-          <section aria-labelledby="intro" className="mx-auto max-w-5xl border-t border-neutral-200 px-6 pt-20 text-center sm:px-8">
+          <section aria-labelledby="intro" className="mx-auto max-w-5xl border-t border-edge px-6 pt-20 text-center sm:px-8">
             <h2 id="intro" className="mt-5 text-[clamp(2.1rem,4.4vw,3.3rem)] font-semibold leading-[1.04] tracking-[-0.055em]">
               Small decisions.
               <br />A big part of your AI bill.
             </h2>
-            <p className="mx-auto mt-5 max-w-xl text-[15px] leading-7 text-neutral-600">
+            <p className="mx-auto mt-5 max-w-xl text-[15px] leading-7 text-muted">
               Model selection. Tool choice. Escalation. Zils is building a trainable decision primitive for these repeated judgments: context in, probabilities out. The goal is to replace full LLM calls where a specialized model can meet your quality bar.
             </p>
-            <p className="mx-auto mt-3 max-w-md text-xs leading-5 text-neutral-500">
+            <p className="mx-auto mt-3 max-w-md text-xs leading-5 text-subtle">
               Potential savings depend on call volume, serving costs, and quality. Customer cost savings have not yet been measured.
             </p>
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 border-y border-neutral-200 py-6 text-[11px] text-neutral-600">
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 border-y border-edge py-6 text-[11px] text-muted">
               <span className="flex items-center gap-2">
                 <span className="size-1.5 rounded-full bg-[var(--zils-accent)]" />
                 Training &amp; evaluation implemented
               </span>
               <span>Customer delivery planned</span>
-              <Link href="/model" className="text-neutral-950 hover:text-[var(--zils-accent)]">
+              <Link href="/model" className="text-ink hover:text-[var(--zils-accent)]">
                 Explore the research ↗
               </Link>
             </div>
@@ -165,11 +165,11 @@ export default function HomePage() {
               <br />
               where the calls add up.
             </Heading>
-            <div className="mt-12 grid gap-10 md:grid-cols-3 md:gap-0 md:divide-x md:divide-neutral-200">
+            <div className="mt-12 grid gap-10 md:grid-cols-3 md:gap-0 md:divide-x md:divide-edge">
               {USE_CASES.map(([title, body, io]) => (
                 <article key={title} className="flex flex-col md:px-8 first:md:pl-0 last:md:pr-0">
                   <h3 className="text-[22px] font-semibold tracking-[-0.035em]">{title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-neutral-600">{body}</p>
+                  <p className="mt-3 text-sm leading-6 text-muted">{body}</p>
                   <span className="mt-6 self-start font-mono text-xs text-[var(--zils-accent)]">{io}</span>
                 </article>
               ))}
@@ -189,28 +189,28 @@ export default function HomePage() {
             <br />
             Evidence behind every decision.
           </h2>
-          <p className="mx-auto mt-4 max-w-md text-center text-sm leading-6 text-neutral-600">
+          <p className="mx-auto mt-4 max-w-md text-center text-sm leading-6 text-muted">
             Train a task-specific adapter, verify its checkpoint, and compare its predictions with a starting model. Evaluate quality before using a candidate for decisions.
           </p>
 
-          <ol className="mt-14 grid gap-px overflow-hidden rounded-md bg-neutral-200 ring-1 ring-neutral-200 md:grid-cols-4">
+          <ol className="mt-14 grid gap-px overflow-hidden rounded-md bg-edge ring-1 ring-edge md:grid-cols-4">
             {STEPS.map(([title, body], i) => (
-              <li key={title} className="bg-white/90 p-6">
+              <li key={title} className="bg-page/90 p-6">
                 <span className="font-mono text-xs text-[var(--zils-accent)]">0{i + 1}</span>
                 <h3 className="mt-5 text-[15px] font-semibold tracking-[-0.02em]">{title}</h3>
-                <p className="mt-2 text-[13px] leading-6 text-neutral-600">{body}</p>
+                <p className="mt-2 text-[13px] leading-6 text-muted">{body}</p>
               </li>
             ))}
           </ol>
 
           <div className="mt-20 grid gap-10 md:grid-cols-[0.8fr_1.2fr] md:items-start">
             <div className="md:pt-12">
-              <p className="text-xs text-neutral-500">Recorded testnet round</p>
+              <p className="text-xs text-subtle">Recorded testnet round</p>
               <h3 className="mt-3 text-[28px] font-semibold leading-[1.08] tracking-[-0.04em]">Train. Evaluate. Verify. On the record.</h3>
-              <p className="mt-4 text-sm leading-6 text-neutral-600">
+              <p className="mt-4 text-sm leading-6 text-muted">
                 Inspect the recorded Bittensor testnet round, from training through on-chain verification. Every number comes from the public record.
               </p>
-              <a href="/model/testnet-round-001.json" className="mt-5 inline-block font-mono text-xs underline decoration-neutral-300 underline-offset-4 hover:decoration-neutral-950">
+              <a href="/model/testnet-round-001.json" className="mt-5 inline-block font-mono text-xs underline decoration-edge-strong underline-offset-4 hover:decoration-ink">
                 testnet-round-001.json ↗
               </a>
             </div>
@@ -227,16 +227,16 @@ export default function HomePage() {
         </Heading>
         <div className="mt-12 grid gap-4 md:grid-cols-3">
           {DELIVERABLES.map((d) => (
-            <article key={d.title} className="relative flex min-h-[290px] flex-col overflow-hidden rounded-md border border-[#dcdcf0] bg-[var(--zils-soft)] p-6">
+            <article key={d.title} className="relative flex min-h-[290px] flex-col overflow-hidden rounded-md border border-edge bg-[var(--zils-soft)] p-6">
               <h3 className="text-[22px] font-semibold tracking-[-0.035em]">{d.title}</h3>
-              <p className="mt-2 max-w-[24ch] text-[13px] leading-5 text-black/70">{d.body}</p>
+              <p className="mt-2 max-w-[24ch] text-[13px] leading-5 text-muted">{d.body}</p>
               <LineArt kind={d.art} />
             </article>
           ))}
         </div>
         <div className="mt-6 grid gap-2 rounded-md bg-[var(--zils-surface)] p-6 text-sm md:grid-cols-[12rem_1fr]">
           <span className="font-semibold">Data, considered.</span>
-          <p className="leading-6 text-neutral-600">
+          <p className="leading-6 text-muted">
             Current research worker bundles include copies of training data; confidential distributed training is not supported. Data handling is part of scoping. No Zils model release is publicly available yet.
           </p>
         </div>
@@ -244,13 +244,14 @@ export default function HomePage() {
 
       {/* Earlier measurements remain visible alongside the latest study. */}
       <section aria-labelledby="evidence" className="mx-auto max-w-5xl px-6 pb-20 sm:px-8">
-        <div className="grid gap-6 border-t border-neutral-200 pt-8 md:grid-cols-[1fr_1.4fr]">
+        <div className="grid gap-6 border-t border-edge pt-8 md:grid-cols-[1fr_1.4fr]">
           <h2 id="evidence" className="max-w-[19ch] text-2xl font-semibold leading-tight tracking-[-0.035em]">Earlier results stay on the record.</h2>
           <div>
-            <p className="text-sm leading-7 text-neutral-600">In an earlier Kev 0.8B experiment, Zils and the published baseline both answered {fez.n_correct} of {fez.n_attempted} public JevBench items correctly, while confidence quality regressed. That comparison is separate from the flight study above.</p>
+            <p className="text-sm leading-7 text-muted">The earlier flight adapter improved probability estimates over its base model, while simple historical rates remained stronger. In an earlier Kev 0.8B experiment, Zils and the published baseline both answered {fez.n_correct} of {fez.n_attempted} public JevBench items correctly, while confidence quality regressed. These are separate tasks from the support study above.</p>
             <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3 text-sm">
-              <Link href="/model#quality" className="underline decoration-neutral-300 underline-offset-4 hover:text-[var(--zils-accent)]">Read the earlier comparison</Link>
-              <Link href="/model#testnet" className="underline decoration-neutral-300 underline-offset-4 hover:text-[var(--zils-accent)]">Inspect the recorded testnet round</Link>
+              <Link href="/model#flight-study" className="underline decoration-edge-strong underline-offset-4 hover:text-[var(--zils-accent)]">Read the flight study</Link>
+              <Link href="/model#quality" className="underline decoration-edge-strong underline-offset-4 hover:text-[var(--zils-accent)]">Read the JevBench comparison</Link>
+              <Link href="/model#testnet" className="underline decoration-edge-strong underline-offset-4 hover:text-[var(--zils-accent)]">Inspect the recorded testnet round</Link>
             </div>
           </div>
         </div>
@@ -258,7 +259,7 @@ export default function HomePage() {
 
       {/* ── CTA ────────────────────────────────────────────── */}
       <section aria-labelledby="cta" className="px-6 pb-24 sm:px-8">
-        <div className="mx-auto max-w-5xl rounded-md bg-[var(--zils-ink)] px-6 py-16 text-center sm:px-12 sm:py-20">
+        <div className="mx-auto max-w-5xl rounded-md bg-[#15151a] px-6 py-16 text-center sm:px-12 sm:py-20">
           <div>
             <h2 id="cta" className="text-balance text-[clamp(2.1rem,5vw,3.4rem)] font-semibold leading-[1.02] tracking-[-0.055em] text-white">
               Your next model starts
@@ -268,7 +269,7 @@ export default function HomePage() {
             <p className="mx-auto mt-5 max-w-md text-sm leading-6 text-neutral-400">
               Where do repeated decisions add up in your AI stack? Tell us about the calls, your labeled examples, and the quality bar a smaller model would need to meet.
             </p>
-            <Link href="/contact" className="mt-8 inline-flex items-center rounded-md bg-white px-5 py-3 text-[13px] font-medium text-black transition-colors hover:bg-[var(--zils-soft)]">
+            <Link href="/contact" className="mt-8 inline-flex items-center rounded-md bg-[#fff] px-5 py-3 text-[13px] font-medium text-black transition-colors hover:bg-[#eceafa]">
               Contact us
             </Link>
           </div>
@@ -282,11 +283,11 @@ export default function HomePage() {
 
 function ResearchStatus() {
   return (
-    <div className="border-b border-neutral-200 bg-[var(--zils-surface)] text-[11px] text-neutral-600">
+    <div className="border-b border-edge bg-[var(--zils-surface)] text-[11px] text-muted">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-6 py-2.5 sm:px-8">
         <span>Research preview</span>
-        <Link href="/model#flight-study" className="hover:text-[var(--zils-accent)]">
-          Flight study · recorded results <span aria-hidden="true">↗</span>
+        <Link href="/model#support-study" className="hover:text-[var(--zils-accent)]">
+          Trained vs unchanged · support decisions <span aria-hidden="true">↗</span>
         </Link>
       </div>
     </div>
@@ -304,7 +305,7 @@ function Heading({ id, eyebrow, aside, children }: { id: string; eyebrow: string
           {children}
         </h2>
       </div>
-      <p className="text-sm leading-6 text-neutral-600">{aside}</p>
+      <p className="text-sm leading-6 text-muted">{aside}</p>
     </div>
   );
 }

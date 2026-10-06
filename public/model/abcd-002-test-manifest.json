@@ -1,0 +1,16 @@
+{
+  "count": 500,
+  "excluded": {},
+  "files": {
+    "inputs.jsonl": "d5b81470e9d9b7ae4c2bf2c42e7d9f06533c635cc8b1da2a8f719269ed7ae193",
+    "labels.jsonl": "cefc5660bc04b5d1dc5f303d5794bbbddbc48b742b5853c24f3fd30b897bfbc1",
+    "selection.json": "ce4860f63778c637e6504b5f801aa7ba334a2e9a8fb92a1db990de4610d2f399"
+  },
+  "prepare_sha256": "f07abcc874dd6a28bc2a6ada007c5af9acc2049b26fd1cfdc0bfa674d0187df2",
+  "source_commit": "6b8700ce67c6b37b062dd7a60abc76d7ef832a97",
+  "test_used_for_training_or_selection": false,
+  "token_estimates": {
+    "max": 2888,
+    "min": 1969
+  }
+}
