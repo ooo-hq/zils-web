@@ -3,10 +3,10 @@ import Link from 'next/link';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { PricingEstimate } from './pricing-estimate';
+import { BETA_PRICING as PRICING } from '@/lib/pricing';
 import home from '../home.module.css';
 import s from './pricing.module.css';
 
-const PRICING = { startingCredit: 5, trainingRun: 2, millionInputTokens: 0.042 };
 const DESCRIPTION = 'Zils beta launch pricing: $5 prepaid credit, your first standard training run included, and pay-as-you-go inference. No subscriptions or model-slot fees.';
 
 export const metadata: Metadata = {

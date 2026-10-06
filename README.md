@@ -92,6 +92,17 @@ Before enabling checkout, implement credit accounting and billing that counts
 shared context once per request, then verify the advertised terms against the
 customer training and serving workflows. Early-access links use `/contact`.
 
+`/pricing-lab` is an unlisted scenario calculator for 100, 1,000, and 2,000
+paying active customers. It shares the public page's rates and allows changes to
+usage, delivery costs, fixed overhead, top-up size, and the share of customers
+using their first included training run. Cost presets are hypothetical; payment
+fees are amortized over consumed credit. Surplus excludes payroll, marketing,
+and taxes. Inputs stay in tab memory and reset on refresh.
+
+The lab has no navigation links pointing to it and requests `noindex, nofollow`.
+It is not access-controlled: anyone with its URL can open it. Keep it out of any
+future sitemap and do not store private business data in its defaults.
+
 ## Contact form
 
 The homepage's **Contact us** links open `/contact`. Visitors provide a name,
