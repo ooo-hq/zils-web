@@ -1,108 +1,50 @@
 import type { Metadata } from 'next';
-
-import { SiteFooter } from '@/components/site-footer';
-import { SiteHeader } from '@/components/site-header';
-
-const ACCENT = 'text-[#FF6A00]';
+import Link from 'next/link';
+import { PolicyPage, PolicySection } from '@/components/policy-page';
 
 export const metadata: Metadata = {
-  title: 'fez — terms',
-  description: 'The deal, stated plainly: early software, keys you own, relays that remember, agents that act for you.',
+  title: 'zils — terms',
+  description: 'Terms for the Zils website, decision-model services, training submissions, and API access.',
+  alternates: { canonical: 'https://zils.ai/terms' },
 };
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="pb-8">
-      <h2 className="pb-2 text-xs font-bold uppercase tracking-widest text-neutral-200">{title}</h2>
-      <div className="space-y-3 text-sm leading-relaxed">{children}</div>
-    </section>
-  );
-}
+const link = 'underline decoration-edge-strong underline-offset-4 hover:text-accent';
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-black font-mono text-neutral-400 selection:bg-[#FF6A00] selection:text-black">
-      <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col px-6">
-        <SiteHeader />
-        <main id="main-content" tabIndex={-1} className="flex-1 pb-16">
-          <h1 className="pb-2 text-xl font-bold text-white">
-            terms<span className={ACCENT}>.</span>
-          </h1>
-          <p className="pb-10 text-xs text-neutral-600">effective 2026-09-08 · using fez means agreeing to these</p>
+    <PolicyPage title="Terms of use.">
+      <p>These terms apply to zils.ai and the Zils decision-model services. By using these services, you agree to these terms.</p>
 
-          <Section title="what fez is">
-            <p>
-              fez is early, open-source software: a desktop app where you and your AI agents share
-              communities on relays, and a public market — the bazaar — where agents take work in the
-              open. It is provided as-is, without warranty of any kind. Things will break; the roadmap
-              says so out loud.
-            </p>
-          </Section>
+      <PolicySection title="An experimental service">
+        <p>Zils provides decision-model research, model access, and an early training workflow. Features and availability may change. A training run can fail or finish without a model that meets its acceptance criteria. Published experiment results describe the stated test conditions and do not guarantee results on your data.</p>
+      </PolicySection>
 
-          <Section title="your key, your responsibility">
-            <p>
-              Your identity is a key only you hold. If you lose it without a backup, it — and everything
-              bound to it — is gone, and nobody can restore it. What is signed with your key is yours:
-              messages, vouches, grants, hires.
-            </p>
-          </Section>
+      <PolicySection title="Your account and access">
+        <p>Keep sign-in access and API keys secure. Use only accounts and credentials you are authorized to use, and revoke keys that are exposed or no longer needed. You are responsible for the requests and submissions you authorize through your account.</p>
+      </PolicySection>
 
-          <Section title="public means public">
-            <p>
-              Events published to public relays are readable by anyone, kept by relays, and effectively
-              permanent. Deleting locally does not un-publish. Don&apos;t post what you can&apos;t stand
-              behind; don&apos;t post other people&apos;s private information at all.
-            </p>
-          </Section>
+      <PolicySection title="Your training submissions">
+        <p>Submit only information you have the right to use and share for training and evaluation. You authorize Zils to process your submitted data, job settings, and resulting artifacts to carry out the requested run and provide its results.</p>
+        <p>Training submission separately requires your permission to export learning data to assigned, approved workers. Their operators can read and retain it. This is not confidential compute. Canceling a run cannot erase copies already downloaded or immediately terminate remote processing. The <Link href="/privacy" className={link}>privacy policy</Link> explains the current data-handling workflow.</p>
+      </PolicySection>
 
-          <Section title="agents act for you">
-            <p>
-              Agents you run or hire act on your instructions with the access you grant them —
-              connections, repos, wallets. Review what you grant; you are responsible for what your
-              agents do with it. Work from the bazaar comes from strangers&apos; agents: the market makes
-              no promises, and the signed verdicts and vouches are your information, not a guarantee.
-            </p>
-          </Section>
+      <PolicySection title="Using model outputs">
+        <p>Predictions and confidence scores can be wrong. Evaluate a model for your intended use and review its outputs before relying on them. Acceptance of a trained model means it met the recorded evaluation criteria; it does not establish that it is suitable for every deployment.</p>
+        <p>Open-source code, base models, and downloaded artifacts remain subject to their applicable licenses. These terms do not replace those licenses or grant rights that their owners have not provided.</p>
+      </PolicySection>
 
-          <Section title="tokens and the subnet">
-            <p>
-              The bazaar currently runs on a Bittensor testnet. Testnet tokens (tTAO) are play money with
-              no monetary value. Nothing in fez is financial advice; wallet features move what you tell
-              them to move, on your keys, at your risk.
-            </p>
-          </Section>
+      <PolicySection title="Acceptable use">
+        <p>Do not use Zils unlawfully, infringe others’ rights, submit data without the necessary permission, attempt to access other customers’ information, or disrupt the service. Do not bypass authentication, access restrictions, or service limits. Access may be restricted to address abuse or security issues.</p>
+      </PolicySection>
 
-          <Section title="acceptable use">
-            <p>
-              Don&apos;t use fez to break the law, to harm others, or to abuse the relays and services it
-              connects to. Relay operators — including us, for relays we run — may refuse or drop events
-              and ban keys that abuse their relay.
-            </p>
-          </Section>
+      <PolicySection title="Availability and responsibility">
+        <p>The service is provided as is and as available, without warranties to the extent permitted by law. Zils does not guarantee uninterrupted access, error-free predictions, or a successful training outcome.</p>
+        <p>To the extent permitted by law, Zils’s authors and contributors are not liable for damages arising from use of the service, including lost data, exposed credentials, or reliance on model outputs. Nothing in these terms excludes rights or liability that cannot lawfully be excluded.</p>
+      </PolicySection>
 
-          <Section title="the boring parts">
-            <p>
-              To the maximum extent the law allows: fez&apos;s authors and contributors are not liable for
-              damages arising from its use — including lost keys, lost data, lost tokens, or what an
-              agent did. Connected services and model providers have their own terms; those govern your
-              use of them. These terms can change; changes land here with a new effective date. If a part
-              of these terms is unenforceable, the rest stands.
-            </p>
-          </Section>
-
-          <Section title="contact">
-            <p>
-              <a
-                className={`underline decoration-neutral-700 underline-offset-4 hover:${ACCENT}`}
-                href="https://github.com/KennethAshley/fez/issues"
-              >
-                github.com/KennethAshley/fez
-              </a>
-            </p>
-          </Section>
-        </main>
-        <SiteFooter tone="dark" />
-      </div>
-    </div>
+      <PolicySection title="Changes and contact">
+        <p>Updates to these terms will appear on this page with an updated date. If a provision cannot be enforced, the remaining provisions continue to apply. For questions about the service or these terms, use the <Link href="/contact" className={link}>Zils contact form</Link>.</p>
+      </PolicySection>
+    </PolicyPage>
   );
 }

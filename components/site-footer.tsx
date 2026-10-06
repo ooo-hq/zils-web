@@ -3,7 +3,7 @@ import { FOOTER_LINKS } from '@/components/site-header';
 import { ZilsWordmark } from '@/components/zils-wordmark';
 import s from '@/components/light.module.css';
 
-/** The one footer: app, CLI, docs and Discord live here, not in the header. */
+/** Shared Zils resources and policy links for every page. */
 export function SiteFooter({ tone = 'light', showSmallWordmark = true }: { tone?: 'light' | 'dark'; showSmallWordmark?: boolean }) {
   if (tone === 'dark') {
     return (
