@@ -3,8 +3,9 @@ const config = {
   reactStrictMode: true,
   async redirects() {
     return [
-      // Fez's app and application policies remain on the chat product's site.
-      ...['app', 'cli', 'extensions', 'judge', 'privacy', 'terms'].map((path) => ({
+      // Legacy Fez product routes remain on the chat product's site.
+      // Zils serves its own Privacy and Terms pages locally.
+      ...['app', 'cli', 'extensions', 'judge'].map((path) => ({
         source: `/${path}/:path*`,
         destination: `https://fez.chat/${path}/:path*`,
         permanent: true,

@@ -17,8 +17,6 @@ const LINKS = [
 
 /** Everything else lives in the footer (components/site-footer.tsx). */
 export const FOOTER_LINKS = [
-  { href: 'https://fez.chat', label: 'Fez chat app' },
-  { href: 'https://fez.chat/cli', label: 'Fez CLI' },
   // The manual lives on its own hostname — an absolute link, not a path.
   { href: docsUrl, label: 'Docs' },
   { href: discordUrl, label: 'Discord' },
