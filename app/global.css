@@ -1,8 +1,65 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@theme inline {
+  --color-page: var(--zils-page);
+  --color-surface: var(--zils-surface);
+  --color-soft: var(--zils-soft);
+  --color-ink: var(--zils-ink);
+  --color-muted: var(--zils-muted);
+  --color-subtle: var(--zils-subtle);
+  --color-edge: var(--zils-edge);
+  --color-edge-strong: var(--zils-edge-strong);
+  --color-accent: var(--zils-accent);
+  --color-action: var(--zils-action);
+  --color-action-hover: var(--zils-action-hover);
+  --color-on-action: var(--zils-on-action);
+  --color-danger: var(--zils-danger);
+  --color-danger-soft: var(--zils-danger-soft);
+}
+
 :root {
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  color-scheme: light;
+  --zils-page: #fff;
+  --zils-surface: #f6f7fa;
+  --zils-soft: #f1f1fc;
+  --zils-ink: #15151a;
+  --zils-muted: #575765;
+  --zils-subtle: #6b687b;
+  --zils-edge: #e5e6ed;
+  --zils-edge-strong: #bfc3d1;
+  --zils-accent: #4942c7;
+  --zils-action: #15151a;
+  --zils-action-hover: #4942c7;
+  --zils-on-action: #fff;
+  --zils-danger: #943044;
+  --zils-danger-soft: #fff1f3;
+}
+
+:root[data-theme=dark] {
+  color-scheme: dark;
+  --zils-page: #101014;
+  --zils-surface: #1b1b23;
+  --zils-soft: #24213a;
+  --zils-ink: #f2f0f8;
+  --zils-muted: #b7b5c6;
+  --zils-subtle: #9996ab;
+  --zils-edge: #363440;
+  --zils-edge-strong: #646174;
+  --zils-accent: #b5b0ff;
+  --zils-action: #ded9ff;
+  --zils-action-hover: #c7c0ff;
+  --zils-on-action: #1a1633;
+  --zils-danger: #ff9bab;
+  --zils-danger-soft: #351e28;
+}
+
+body {
+  background: var(--zils-page);
+  color: var(--zils-ink);
 }
 
 ::selection {

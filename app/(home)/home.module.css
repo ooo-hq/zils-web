@@ -1,12 +1,5 @@
-.home {
-  --zils-accent: #4942c7;
-  --zils-soft: #f1f1fc;
-  --zils-surface: #f6f7fa;
-  --zils-ink: #15151a;
-}
-
 .home ::selection {
-  background: var(--zils-accent);
+  background: #4942c7;
   color: white;
 }
 

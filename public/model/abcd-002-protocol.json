@@ -1,0 +1,51 @@
+{
+  "conditional_final": "Only after candidate freeze:500 official test conversations, same conversation/action hash selection and exact-prefix/context exclusions. Exclude prefixes matching any official train action prefix or development input. Native base and candidate scored on identical label-free inputs; labels stay local.",
+  "development": "Exactly the frozen500 abcd-001 inputs/labels; no new calibration or prompt edits",
+  "development_gate": "Accuracy>=0.59, multiclass Brier<0.6565208812860769, macroF1>=0.4461993240772881",
+  "evaluation": "Reload serialized BF16 adapter; native batch1/no-graphs readout; all30 options, published temperatures1.22 and0.93",
+  "exclusions_before1024": {},
+  "experiment": "abcd-002",
+  "final_success": "At least5 percentage point accuracy gain over base; paired95% bootstrap accuracy-gain and Brier-improvement intervals both strictly above0; macroF1 does not regress. Report frozen frequency baselines and all failures.",
+  "inputs": "Identical full conversation-prefix and compact workflow representation to abcd-001",
+  "limitations": "Development selection is exploratory; recorded action agreement is not full policy compliance or conversation success. Public pretraining overlap cannot be excluded.",
+  "limits": "One recipe,1024 train examples;75min training/dev budget;80min hard service cap; separate20min cap for conditional final inference",
+  "promotion": "Research only; no live model, registry, or website changes",
+  "question": "Can a small domain adapter beat unchanged JevK5 on recorded ABCD next-action prediction?",
+  "recipe": {
+    "alpha": 32,
+    "checkpoint_examples": [
+      256,
+      512,
+      1024
+    ],
+    "dropout": 0.05,
+    "effective_batch": 4,
+    "epochs": 1,
+    "gradient_clip": 1,
+    "initialization": "unchanged JevK5 v0.3; fresh attention-only LoRA",
+    "learning_rate": 1e-05,
+    "loss": "Cross entropy on native BF16 option logits divided by1.22, label smoothing0.05",
+    "microbatch": 1,
+    "optimizer": "AdamW weight_decay0",
+    "rank": 16,
+    "seed": 553
+  },
+  "selection": "Highest accuracy among qualifying checkpoints, then lowerBrier, then earlier checkpoint; retain base if none qualify",
+  "source_commit": "6b8700ce67c6b37b062dd7a60abc76d7ef832a97",
+  "step_zero_check": "First8 unchanged dev probability vectors must match within1e-6 before training",
+  "timing_amendment": {
+    "reason": "Measured20.07seconds for8 training cases implies~43minutes training plus three500-case dev evaluations; original60minute cap risks truncating final checkpoint",
+    "recipe_or_selection_changes": false,
+    "smoke_results_sha256": "266910cb73a46a9659e6a5c3e3d218d9f3b60a2f6cd90c20d08304a61263438b",
+    "stage": "After8-case capacity smoke; before any main training or adapted evaluation",
+    "utc": "2026-10-06T03:43:26Z"
+  },
+  "training": "1024 distinct official train conversations, one hash-selected action each, seed553, one shuffled epoch",
+  "training_context_tokens": {
+    "cap": 3072,
+    "max": 2936,
+    "min": 1887
+  },
+  "training_views": "Half gold-containing native15-option group; half gold plus15 random negative actions in shuffled order. One view per conversation, frozen before training. Native evaluation always offers all30 actions.",
+  "uncertainty": "2000 paired conversation resamples, seed553; one case per conversation"
+}

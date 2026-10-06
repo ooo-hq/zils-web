@@ -1,7 +1,7 @@
 .overlay { position:fixed; inset:0; z-index:60; background:rgb(21 21 26 / 30%); }
-.content { position:fixed; z-index:61; inset:0 0 0 auto; width:min(640px,100%); height:100dvh; background:#fff; border-left:1px solid #e5e6ed; box-shadow:-12px 0 40px rgb(21 21 26 / 8%); display:flex; flex-direction:column; }
-.close { position:absolute; top:24px; right:24px; display:flex; justify-content:center; align-items:center; width:40px; height:40px; border:1px solid #e5e6ed; border-radius:5px; background:#fff; color:#15151a; cursor:pointer; }
-.close:hover { background:#f1f1fc; }
+.content { position:fixed; z-index:61; inset:0 0 0 auto; width:min(640px,100%); height:100dvh; background:var(--zils-page); border-left:1px solid var(--zils-edge); box-shadow:-12px 0 40px rgb(21 21 26 / 8%); display:flex; flex-direction:column; }
+.close { position:absolute; top:24px; right:24px; display:flex; justify-content:center; align-items:center; width:40px; height:40px; border:1px solid var(--zils-edge); border-radius:5px; background:var(--zils-page); color:var(--zils-ink); cursor:pointer; }
+.close:hover { background:var(--zils-soft); }
 .overlay[data-state=open] { animation:fade-in 160ms ease-out; }
 .overlay[data-state=closed] { animation:fade-out 160ms ease-in; }
 .content[data-state=open] { animation:slide-in 220ms ease-out; }

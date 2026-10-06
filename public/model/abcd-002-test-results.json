@@ -1,0 +1,685 @@
+{
+  "accuracy_gain_95_percent_paired_bootstrap_percentage_points": [
+    16.8,
+    25.8
+  ],
+  "accuracy_gain_percentage_points": 21.4,
+  "brier_improvement": 0.2793887746271798,
+  "brier_improvement_95_percent_paired_bootstrap": [
+    0.2213867081272137,
+    0.33584692554146667
+  ],
+  "brier_relative_improvement_percent": 45.28664523405119,
+  "experiment": "abcd-002",
+  "frozen_success_gate_passed": true,
+  "hashes_verified": true,
+  "limitations": [
+    "Recorded next-action agreement, conditional on an action being due; not full dialogue success.",
+    "Compact workflow sequences, not full policy prose.",
+    "Public-data pretraining overlap cannot be excluded.",
+    "One recipe and one training seed; no across-training-seed uncertainty measured."
+  ],
+  "metrics": {
+    "base": {
+      "accuracy": 0.578,
+      "confident_cases_at_90_percent": 65,
+      "confident_wrong_at_90_percent": 16,
+      "correct": 289,
+      "count": 500,
+      "ece_10_bins": 0.10175795422630485,
+      "log_loss": 1.5107449360579095,
+      "macro_f1": 0.49643748291373646,
+      "mean_confidence": 0.6744458796737537,
+      "multiclass_brier": 0.6169341384932315,
+      "per_action": [
+        {
+          "action": "ask-the-oracle",
+          "correct": 16,
+          "support": 22
+        },
+        {
+          "action": "enter-details",
+          "correct": 6,
+          "support": 27
+        },
+        {
+          "action": "instructions",
+          "correct": 3,
+          "support": 8
+        },
+        {
+          "action": "log-out-in",
+          "correct": 14,
+          "support": 20
+        },
+        {
+          "action": "make-password",
+          "correct": 6,
+          "support": 7
+        },
+        {
+          "action": "make-purchase",
+          "correct": 5,
+          "support": 8
+        },
+        {
+          "action": "membership",
+          "correct": 0,
+          "support": 16
+        },
+        {
+          "action": "notify-team",
+          "correct": 10,
+          "support": 11
+        },
+        {
+          "action": "offer-refund",
+          "correct": 5,
+          "support": 6
+        },
+        {
+          "action": "promo-code",
+          "correct": 6,
+          "support": 9
+        },
+        {
+          "action": "pull-up-account",
+          "correct": 90,
+          "support": 99
+        },
+        {
+          "action": "record-reason",
+          "correct": 2,
+          "support": 23
+        },
+        {
+          "action": "search-boots",
+          "correct": 1,
+          "support": 1
+        },
+        {
+          "action": "search-faq",
+          "correct": 0,
+          "support": 33
+        },
+        {
+          "action": "search-jacket",
+          "correct": 6,
+          "support": 7
+        },
+        {
+          "action": "search-jeans",
+          "correct": 3,
+          "support": 3
+        },
+        {
+          "action": "search-membership",
+          "correct": 5,
+          "support": 7
+        },
+        {
+          "action": "search-policy",
+          "correct": 6,
+          "support": 12
+        },
+        {
+          "action": "search-pricing",
+          "correct": 4,
+          "support": 7
+        },
+        {
+          "action": "search-shirt",
+          "correct": 7,
+          "support": 8
+        },
+        {
+          "action": "search-timing",
+          "correct": 5,
+          "support": 5
+        },
+        {
+          "action": "select-faq",
+          "correct": 3,
+          "support": 30
+        },
+        {
+          "action": "send-link",
+          "correct": 6,
+          "support": 6
+        },
+        {
+          "action": "shipping-status",
+          "correct": 2,
+          "support": 9
+        },
+        {
+          "action": "subscription-status",
+          "correct": 4,
+          "support": 4
+        },
+        {
+          "action": "try-again",
+          "correct": 8,
+          "support": 12
+        },
+        {
+          "action": "update-account",
+          "correct": 7,
+          "support": 8
+        },
+        {
+          "action": "update-order",
+          "correct": 9,
+          "support": 17
+        },
+        {
+          "action": "validate-purchase",
+          "correct": 24,
+          "support": 25
+        },
+        {
+          "action": "verify-identity",
+          "correct": 26,
+          "support": 50
+        }
+      ]
+    },
+    "candidate": {
+      "accuracy": 0.792,
+      "confident_cases_at_90_percent": 381,
+      "confident_wrong_at_90_percent": 44,
+      "correct": 396,
+      "count": 500,
+      "ece_10_bins": 0.09674588703698009,
+      "log_loss": 0.9160290729773535,
+      "macro_f1": 0.7583245392546261,
+      "mean_confidence": 0.8887458870369801,
+      "multiclass_brier": 0.33754536386605183,
+      "per_action": [
+        {
+          "action": "ask-the-oracle",
+          "correct": 15,
+          "support": 22
+        },
+        {
+          "action": "enter-details",
+          "correct": 13,
+          "support": 27
+        },
+        {
+          "action": "instructions",
+          "correct": 6,
+          "support": 8
+        },
+        {
+          "action": "log-out-in",
+          "correct": 13,
+          "support": 20
+        },
+        {
+          "action": "make-password",
+          "correct": 3,
+          "support": 7
+        },
+        {
+          "action": "make-purchase",
+          "correct": 5,
+          "support": 8
+        },
+        {
+          "action": "membership",
+          "correct": 12,
+          "support": 16
+        },
+        {
+          "action": "notify-team",
+          "correct": 10,
+          "support": 11
+        },
+        {
+          "action": "offer-refund",
+          "correct": 3,
+          "support": 6
+        },
+        {
+          "action": "promo-code",
+          "correct": 9,
+          "support": 9
+        },
+        {
+          "action": "pull-up-account",
+          "correct": 97,
+          "support": 99
+        },
+        {
+          "action": "record-reason",
+          "correct": 13,
+          "support": 23
+        },
+        {
+          "action": "search-boots",
+          "correct": 1,
+          "support": 1
+        },
+        {
+          "action": "search-faq",
+          "correct": 24,
+          "support": 33
+        },
+        {
+          "action": "search-jacket",
+          "correct": 6,
+          "support": 7
+        },
+        {
+          "action": "search-jeans",
+          "correct": 3,
+          "support": 3
+        },
+        {
+          "action": "search-membership",
+          "correct": 5,
+          "support": 7
+        },
+        {
+          "action": "search-policy",
+          "correct": 6,
+          "support": 12
+        },
+        {
+          "action": "search-pricing",
+          "correct": 3,
+          "support": 7
+        },
+        {
+          "action": "search-shirt",
+          "correct": 7,
+          "support": 8
+        },
+        {
+          "action": "search-timing",
+          "correct": 5,
+          "support": 5
+        },
+        {
+          "action": "select-faq",
+          "correct": 30,
+          "support": 30
+        },
+        {
+          "action": "send-link",
+          "correct": 6,
+          "support": 6
+        },
+        {
+          "action": "shipping-status",
+          "correct": 9,
+          "support": 9
+        },
+        {
+          "action": "subscription-status",
+          "correct": 4,
+          "support": 4
+        },
+        {
+          "action": "try-again",
+          "correct": 6,
+          "support": 12
+        },
+        {
+          "action": "update-account",
+          "correct": 6,
+          "support": 8
+        },
+        {
+          "action": "update-order",
+          "correct": 12,
+          "support": 17
+        },
+        {
+          "action": "validate-purchase",
+          "correct": 23,
+          "support": 25
+        },
+        {
+          "action": "verify-identity",
+          "correct": 41,
+          "support": 50
+        }
+      ]
+    },
+    "previous_action_frequency": {
+      "accuracy": 0.448,
+      "confident_cases_at_90_percent": 0,
+      "confident_wrong_at_90_percent": 0,
+      "correct": 224,
+      "count": 500,
+      "ece_10_bins": 0.04862389521478632,
+      "log_loss": 1.7592347347312585,
+      "macro_f1": 0.19304468200897887,
+      "mean_confidence": 0.3993761047852137,
+      "multiclass_brier": 0.7074638723873563,
+      "per_action": [
+        {
+          "action": "ask-the-oracle",
+          "correct": 9,
+          "support": 22
+        },
+        {
+          "action": "enter-details",
+          "correct": 7,
+          "support": 27
+        },
+        {
+          "action": "instructions",
+          "correct": 5,
+          "support": 8
+        },
+        {
+          "action": "log-out-in",
+          "correct": 6,
+          "support": 20
+        },
+        {
+          "action": "make-password",
+          "correct": 0,
+          "support": 7
+        },
+        {
+          "action": "make-purchase",
+          "correct": 5,
+          "support": 8
+        },
+        {
+          "action": "membership",
+          "correct": 0,
+          "support": 16
+        },
+        {
+          "action": "notify-team",
+          "correct": 0,
+          "support": 11
+        },
+        {
+          "action": "offer-refund",
+          "correct": 1,
+          "support": 6
+        },
+        {
+          "action": "promo-code",
+          "correct": 0,
+          "support": 9
+        },
+        {
+          "action": "pull-up-account",
+          "correct": 96,
+          "support": 99
+        },
+        {
+          "action": "record-reason",
+          "correct": 5,
+          "support": 23
+        },
+        {
+          "action": "search-boots",
+          "correct": 0,
+          "support": 1
+        },
+        {
+          "action": "search-faq",
+          "correct": 0,
+          "support": 33
+        },
+        {
+          "action": "search-jacket",
+          "correct": 0,
+          "support": 7
+        },
+        {
+          "action": "search-jeans",
+          "correct": 0,
+          "support": 3
+        },
+        {
+          "action": "search-membership",
+          "correct": 6,
+          "support": 7
+        },
+        {
+          "action": "search-policy",
+          "correct": 0,
+          "support": 12
+        },
+        {
+          "action": "search-pricing",
+          "correct": 0,
+          "support": 7
+        },
+        {
+          "action": "search-shirt",
+          "correct": 0,
+          "support": 8
+        },
+        {
+          "action": "search-timing",
+          "correct": 0,
+          "support": 5
+        },
+        {
+          "action": "select-faq",
+          "correct": 30,
+          "support": 30
+        },
+        {
+          "action": "send-link",
+          "correct": 4,
+          "support": 6
+        },
+        {
+          "action": "shipping-status",
+          "correct": 0,
+          "support": 9
+        },
+        {
+          "action": "subscription-status",
+          "correct": 0,
+          "support": 4
+        },
+        {
+          "action": "try-again",
+          "correct": 1,
+          "support": 12
+        },
+        {
+          "action": "update-account",
+          "correct": 0,
+          "support": 8
+        },
+        {
+          "action": "update-order",
+          "correct": 5,
+          "support": 17
+        },
+        {
+          "action": "validate-purchase",
+          "correct": 0,
+          "support": 25
+        },
+        {
+          "action": "verify-identity",
+          "correct": 44,
+          "support": 50
+        }
+      ]
+    },
+    "training_action_frequency": {
+      "accuracy": 0.198,
+      "confident_cases_at_90_percent": 0,
+      "confident_wrong_at_90_percent": 0,
+      "correct": 99,
+      "count": 500,
+      "ece_10_bins": 0.006737103174603187,
+      "log_loss": 3.0125472598103746,
+      "macro_f1": 0.011018363939899833,
+      "mean_confidence": 0.2047371031746032,
+      "multiclass_brier": 0.9260296760341868,
+      "per_action": [
+        {
+          "action": "ask-the-oracle",
+          "correct": 0,
+          "support": 22
+        },
+        {
+          "action": "enter-details",
+          "correct": 0,
+          "support": 27
+        },
+        {
+          "action": "instructions",
+          "correct": 0,
+          "support": 8
+        },
+        {
+          "action": "log-out-in",
+          "correct": 0,
+          "support": 20
+        },
+        {
+          "action": "make-password",
+          "correct": 0,
+          "support": 7
+        },
+        {
+          "action": "make-purchase",
+          "correct": 0,
+          "support": 8
+        },
+        {
+          "action": "membership",
+          "correct": 0,
+          "support": 16
+        },
+        {
+          "action": "notify-team",
+          "correct": 0,
+          "support": 11
+        },
+        {
+          "action": "offer-refund",
+          "correct": 0,
+          "support": 6
+        },
+        {
+          "action": "promo-code",
+          "correct": 0,
+          "support": 9
+        },
+        {
+          "action": "pull-up-account",
+          "correct": 99,
+          "support": 99
+        },
+        {
+          "action": "record-reason",
+          "correct": 0,
+          "support": 23
+        },
+        {
+          "action": "search-boots",
+          "correct": 0,
+          "support": 1
+        },
+        {
+          "action": "search-faq",
+          "correct": 0,
+          "support": 33
+        },
+        {
+          "action": "search-jacket",
+          "correct": 0,
+          "support": 7
+        },
+        {
+          "action": "search-jeans",
+          "correct": 0,
+          "support": 3
+        },
+        {
+          "action": "search-membership",
+          "correct": 0,
+          "support": 7
+        },
+        {
+          "action": "search-policy",
+          "correct": 0,
+          "support": 12
+        },
+        {
+          "action": "search-pricing",
+          "correct": 0,
+          "support": 7
+        },
+        {
+          "action": "search-shirt",
+          "correct": 0,
+          "support": 8
+        },
+        {
+          "action": "search-timing",
+          "correct": 0,
+          "support": 5
+        },
+        {
+          "action": "select-faq",
+          "correct": 0,
+          "support": 30
+        },
+        {
+          "action": "send-link",
+          "correct": 0,
+          "support": 6
+        },
+        {
+          "action": "shipping-status",
+          "correct": 0,
+          "support": 9
+        },
+        {
+          "action": "subscription-status",
+          "correct": 0,
+          "support": 4
+        },
+        {
+          "action": "try-again",
+          "correct": 0,
+          "support": 12
+        },
+        {
+          "action": "update-account",
+          "correct": 0,
+          "support": 8
+        },
+        {
+          "action": "update-order",
+          "correct": 0,
+          "support": 17
+        },
+        {
+          "action": "validate-purchase",
+          "correct": 0,
+          "support": 25
+        },
+        {
+          "action": "verify-identity",
+          "correct": 0,
+          "support": 50
+        }
+      ]
+    }
+  },
+  "paired_cases_improved": 128,
+  "paired_cases_worsened": 21,
+  "selected_checkpoint_examples": 1024,
+  "stage": "frozen500-conversation final test",
+  "test_used_for_selection": false
+}
