@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { SiteFooter } from '@/components/site-footer';
-import { SupportDecisionExamples } from '@/components/support-decision-examples';
+import { FlightStudyDetails } from '@/components/flight-study';
 import { SupportStudyDetails } from '@/components/support-study';
 import { supportMethod, supportSource } from '@/lib/support-study';
 import { SiteHeader } from '@/components/site-header';
@@ -25,7 +25,7 @@ const HEAD = 'border-t border-edge px-3 py-3 text-left font-normal text-ink sm:p
 const CARD = 'rounded-2xl bg-page ring-1 ring-edge';
 const SECTIONS = [
   { id: 'support-study', title: 'Support decisions' },
-  { id: 'support-examples', title: 'Decision examples' },
+  { id: 'flight-study', title: 'Flight adapter study' },
   { id: 'overview', title: 'Earlier research' },
   { id: 'quality', title: 'JevBench comparison' },
   { id: 'training', title: 'Training & evaluation' },
@@ -105,11 +105,7 @@ export default function ModelPage() {
 
         <SupportStudyDetails />
 
-        <SupportDecisionExamples />
-
-        <aside id="flight-study" aria-label="Archived flight study" className="scroll-mt-20 border-t border-edge py-6 text-sm leading-7 text-muted">
-          Earlier flight-delay results are preserved in the <a href="/model/flight-study" className={LINK}>flight study archive</a>. The adapter improved over its base model, but historical delay rates remained stronger.
-        </aside>
+        <FlightStudyDetails />
 
         <Section id="overview" eyebrow="Earlier research · Kev 0.8B" title="Previous experiments, preserved.">
           <div className="grid gap-6 md:grid-cols-[1.2fr_1fr]">
