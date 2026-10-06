@@ -287,7 +287,7 @@ function ResearchStatus() {
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-6 py-2.5 sm:px-8">
         <span>Research preview</span>
         <Link href="/model#support-study" className="hover:text-[var(--zils-accent)]">
-          Trained vs unchanged · support decisions <span aria-hidden="true">↗</span>
+          Before and after training · support decisions <span aria-hidden="true">↗</span>
         </Link>
       </div>
     </div>
