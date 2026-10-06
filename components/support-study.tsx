@@ -50,7 +50,7 @@ export function SupportStudySummary() {
           <h2 id="support-evidence-heading" className="mt-4 max-w-[18ch] text-[clamp(2rem,4.4vw,3.25rem)] font-semibold leading-[1.04] tracking-[-0.055em]">Training improved support decisions.</h2>
           <p className="mt-5 max-w-[45ch] text-[15px] leading-7 text-muted">
             We trained JevK5 to choose the next support tool from {supportStudy.splits.action_choices} options.
-            On {supportBase.count} untouched conversations, the trained adapter made <strong className="font-semibold text-ink">{supportErrorReduction}% fewer mistakes</strong> than the unchanged model.
+            On {supportBase.count} untouched conversations, it made <strong className="font-semibold text-ink">{supportErrorReduction}% fewer mistakes</strong> after training.
           </p>
           <p className="mt-5 text-sm text-muted">{number(supportStudy.splits.training_conversations)} training conversations. Separate development and test sets.</p>
           <Link href="/model#support-study" className="mt-7 inline-flex min-h-11 items-center rounded-md bg-action px-5 py-3 text-[13px] font-medium text-on-action hover:bg-action-hover">See the comparison</Link>
@@ -67,7 +67,7 @@ export function SupportStudyDetails() {
   const baseline = supportStudy.development.baseline;
   const checkpoints = supportStudy.development.candidates;
   const metrics = [
-    ['Unchanged JevK5', supportBase], ['Trained JevK5', supportAdapter],
+    ['Before training', supportBase], ['After training', supportAdapter],
     ['Previous-action frequency', test.metrics.previous_action_frequency],
     ['Training-action frequency', test.metrics.training_action_frequency],
   ] as const;
@@ -95,7 +95,7 @@ export function SupportStudyDetails() {
       <div className="mt-10 grid gap-6 border-y border-edge py-6 sm:grid-cols-3">
         {[
           ['Accuracy gain', `+${supportGain} points`, 'On the final test set'],
-          ['Fewer mistakes', `${supportErrorReduction}%`, 'Compared with unchanged JevK5'],
+          ['Fewer mistakes', `${supportErrorReduction}%`, 'Compared with before training'],
           ['Lower probability error', `${test.brier_relative_improvement_percent.toFixed(1)}%`, 'Relative decrease in multiclass Brier score'],
         ].map(([label, value, note]) => <div key={label}><p className="text-xs text-muted">{label}</p><p className="mt-2 text-2xl font-semibold tracking-[-0.035em] tabular-nums">{value}</p><p className="mt-2 text-xs leading-5 text-subtle">{note}</p></div>)}
       </div>
@@ -115,7 +115,7 @@ export function SupportStudyDetails() {
             <table className="w-full min-w-[480px] border-collapse text-sm">
               <caption className="pb-4 text-left text-xs leading-6 text-muted">Development results used for selection. These are a separate set of 500 conversations, not the final test above.</caption>
               <thead><tr><th scope="col" className="px-4 py-3 text-left font-medium">Training examples</th><th scope="col" className="px-4 py-3 text-right font-medium">Accuracy</th><th scope="col" className="px-4 py-3 text-right font-medium">Brier error</th></tr></thead>
-              <tbody>{[{ checkpoint_examples: 0, ...baseline }, ...checkpoints].map(row => <tr key={row.checkpoint_examples}><th scope="row" className="border-t border-edge px-4 py-4 text-left font-normal">{row.checkpoint_examples === 0 ? 'Unchanged' : number(row.checkpoint_examples)}</th><td className={cell}>{percent(row.accuracy)}</td><td className={cell}>{row.multiclass_brier.toFixed(6)}</td></tr>)}</tbody>
+              <tbody>{[{ checkpoint_examples: 0, ...baseline }, ...checkpoints].map(row => <tr key={row.checkpoint_examples}><th scope="row" className="border-t border-edge px-4 py-4 text-left font-normal">{row.checkpoint_examples === 0 ? 'Before training' : number(row.checkpoint_examples)}</th><td className={cell}>{percent(row.accuracy)}</td><td className={cell}>{row.multiclass_brier.toFixed(6)}</td></tr>)}</tbody>
             </table>
           </div>
           <div className="mt-8 space-y-5 text-sm leading-7 text-muted">
