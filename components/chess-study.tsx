@@ -42,7 +42,7 @@ export function ChessStudySummary() {
           <h2 id="chess-study-heading" className="mt-4 max-w-[20ch] text-[clamp(2rem,4.4vw,3.25rem)] font-semibold leading-[1.04] tracking-[-0.055em]">Training improved mate-in-one choices.</h2>
           <p className="mt-5 max-w-[48ch] text-[15px] leading-7 text-muted">
             A fresh chess adapter selected a checkmating move in <strong className="font-semibold text-ink">260 of 512 held-out positions</strong>.
-            Accuracy improved by {chessPoints(chessStudy.paired_comparisons.trained_minus_shared.accuracy.right_minus_left)} percentage points over shared JevK5
+            Accuracy improved by {chessPoints(chessStudy.paired_comparisons.trained_minus_shared.accuracy.right_minus_left)} percentage points over shared Zils
             and {chessPoints(chessStudy.paired_comparisons.trained_minus_jev.accuracy.right_minus_left)} over TypeSafe Jev.
           </p>
           <Link href="/model/chess-study" className="mt-7 inline-flex min-h-11 items-center rounded-md bg-action px-5 py-3 text-sm font-medium text-on-action hover:bg-action-hover">Read the chess study</Link>
@@ -77,7 +77,7 @@ export function ChessStudyDetails() {
         <h2 id="chess-differences" className="text-xl font-semibold tracking-[-0.035em]">An improvement with measured uncertainty.</h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {([
-            ['shared', 'Compared with shared JevK5'],
+            ['shared', 'Compared with shared Zils'],
             ['jev', 'Compared with TypeSafe Jev'],
           ] as const).map(([key, label]) => {
             const difference = chessStudy.paired_comparisons[`trained_minus_${key}`].accuracy;
@@ -97,7 +97,7 @@ export function ChessStudyDetails() {
             ['Deterministic chess-rules oracle', chessStudy.baselines.rules_oracle],
           ].map(([name, value]) => <div key={name}><dt className="text-xs leading-5 text-muted">{name}</dt><dd className="mt-2 text-2xl font-semibold tabular-nums">{chessPercent(Number(value))}</dd></div>)}
         </dl>
-        <p className="mt-5 text-xs leading-6 text-muted">Chess software already solves every position in this task. The experiment asks whether specialization improves JevK5 on a new domain. No model was deployed or promoted.</p>
+        <p className="mt-5 text-xs leading-6 text-muted">Chess software already solves every position in this task. The experiment asks whether specialization improves Zils on a new domain. No model was deployed or promoted.</p>
       </section>
 
       <details className="rounded-md border border-edge">
@@ -113,6 +113,7 @@ export function ChessStudyDetails() {
           <div className="mt-7 space-y-5 text-sm leading-7 text-muted">
             <p><strong className="font-medium text-ink">Inputs and answers.</strong> The opponent’s setup move was applied first. Models received the resulting board, side to move, and candidate moves with piece/from/to descriptions. Solutions, checkmate notation, ratings, and puzzle or game identifiers stayed out of model requests. A rules engine independently verified every mating alternative and executed all 1,536 selected moves for the final audit.</p>
             <p><strong className="font-medium text-ink">Data selection.</strong> The first 200,000 records of the pinned Lichess archive supplied the pool; this is not a uniform sample of the full database. Positions with fewer than two or more than sixteen checking moves, or where every candidate mated, were excluded. Source-game separation and exact/mirror deduplication still allow related tactical patterns and possible overlap with public pretraining data.</p>
+            <p><strong className="font-medium text-ink">Model foundation.</strong> Shared Zils uses the published JevK5 4B weights; chess-trained Zils adds the adapter trained for this study.</p>
             <p><strong className="font-medium text-ink">Training.</strong> One fresh rank-16 adapter, one epoch, seed 557, and 512 optimizer steps. The final saved checkpoint was used without test-directed tuning. Training and saving took {(chessStudy.training.training_seconds / 60).toFixed(2)} minutes on an RTX 4090, excluding loading and input preparation. Peak training tensor allocation was {(chessStudy.training.peak_gpu_allocated_bytes / 2 ** 30).toFixed(2)} GiB. Both smoke and full adapters passed independent fresh-process reload checks. Native temperatures were retained; calibration data was unused.</p>
             <p><strong className="font-medium text-ink">API reliability.</strong> Jev returned valid answers on the first attempt for 506/512 positions. Six rejected responses were retained and recovered within the three-attempt limit: five probability-sum failures and one inconsistent choice. The reported scores use validated responses after retries. All three model runs completed; no failed or missing positions were dropped.</p>
             <p><strong className="font-medium text-ink">Additional measures.</strong> First-listed move accuracy was {chessPercent(chessStudy.baselines.first_option)}. A confident choice assigns at least 90% probability to the selected move. The table’s mating probability is the total probability assigned to all correct moves. NLL is the negative log of that total, with a floor for zero probability.</p>

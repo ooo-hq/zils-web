@@ -107,7 +107,7 @@ export default function ModelPage() {
 
         <Section id="overview" eyebrow="Earlier research · Kev 0.8B" title="Previous experiments, preserved.">
           <div className="grid gap-6 md:grid-cols-[1.2fr_1fr]">
-            <p className="max-w-[58ch] text-[15px] leading-7 text-muted">The comparison below preserves the earlier Kev 0.8B public benchmark. It used different models, tasks, and scoring rules from the JevK5 support and flight studies. Their percentages should not be combined into a single improvement claim.</p>
+            <p className="max-w-[58ch] text-[15px] leading-7 text-muted">The comparison below preserves the earlier Kev 0.8B public benchmark. It used different models, tasks, and scoring rules from the Zils support and flight studies. Their percentages should not be combined into a single improvement claim.</p>
             <div className={`${CARD} p-5`}>
               <p className="font-mono text-[10px] tracking-[0.12em] text-subtle">PUBLIC BENCHMARK CANDIDATE</p>
               <code className="mt-3 block break-all font-mono text-xs leading-6 text-ink">{fez.checkpoint_sha256}</code>

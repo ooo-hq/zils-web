@@ -4,9 +4,9 @@ import protocol from '@/public/model/chess-001-protocol.json';
 export const chessStudy = study;
 export const chessProtocol = protocol;
 export const chessComparisons = [
-  { key: 'trained', name: 'Chess-trained JevK5', note: 'Fresh adapter · 2,048 training positions', adapted: true },
+  { key: 'trained', name: 'Chess-trained Zils', note: 'Fresh adapter · 2,048 training positions', adapted: true },
   { key: 'jev', name: 'TypeSafe Jev 1.13.0', note: 'Regular Jev · same test inputs', adapted: false },
-  { key: 'shared', name: 'Shared JevK5', note: 'No chess-specific adapter', adapted: false },
+  { key: 'shared', name: 'Shared Zils', note: 'No chess-specific adapter', adapted: false },
 ].map(row => ({
   ...row,
   metrics: study.results[row.key as keyof typeof study.results],
