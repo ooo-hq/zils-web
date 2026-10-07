@@ -3,6 +3,7 @@ import { ZilsWordmark } from '@/components/zils-wordmark';
 import { discordUrl, docsUrl } from '@/lib/shared';
 import { ThemeToggle } from '@/components/theme';
 import { XProfileLink } from '@/components/x-profile-link';
+import { AccountMenu } from '@/components/account-menu';
 
 /**
  * The one header every page wears — same links in the same order, so no
@@ -13,7 +14,6 @@ const LINKS = [
   { href: '/model', label: 'research', id: 'model' },
   { href: '/bittensor', label: 'bittensor' },
   { href: '/playground', label: 'playground' },
-  { href: '/train', label: 'login', id: 'train' },
 ] as const;
 
 /** Everything else lives in the footer (components/site-footer.tsx). */
@@ -33,12 +33,12 @@ export const FOOTER_LINKS = [
 
 export function SiteHeader({ current, tone = 'dark' }: { current?: string; tone?: 'light' | 'dark' }) {
   return (
-    <header className="flex flex-col items-start gap-5 py-6 text-xs sm:flex-row sm:items-center sm:justify-between sm:py-8">
+    <header className="grid grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-4 py-6 text-xs sm:py-8">
       <a href="#main-content" className="sr-only z-50 bg-black px-4 py-3 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to content</a>
-      <Link href="/" aria-label="Zils home" className={`shrink-0 leading-none ${tone === 'light' ? 'text-ink' : 'text-white'}`}>
+      <Link href="/" aria-label="Zils home" className={`col-start-1 row-start-1 shrink-0 leading-none ${tone === 'light' ? 'text-ink' : 'text-white'}`}>
         <ZilsWordmark className="text-[42px]" />
       </Link>
-      <div className="flex w-full flex-wrap items-center gap-x-2 gap-y-3 sm:w-auto sm:gap-x-3">
+      <div className="col-span-3 row-start-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-3 sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:justify-end sm:gap-x-3">
         <nav aria-label="Main navigation" className="flex flex-wrap items-center gap-x-4 gap-y-3 sm:gap-x-5">
           {LINKS.map((l) => (
             <Link
@@ -46,14 +46,12 @@ export function SiteHeader({ current, tone = 'dark' }: { current?: string; tone?
               href={l.href}
               aria-current={current === ('id' in l ? l.id : l.label) ? 'page' : undefined}
               className={
-                l.href === '/train' && tone === 'light'
-                  ? 'inline-flex min-h-10 items-center justify-center rounded-md bg-action px-4 font-medium text-on-action transition-colors hover:bg-action-hover'
-                  : current === ('id' in l ? l.id : l.label)
+                current === ('id' in l ? l.id : l.label)
                   ? (tone === 'light' ? 'text-ink' : 'text-white')
                   : (tone === 'light' ? 'text-muted transition-colors hover:text-ink' : 'text-neutral-400 transition-colors hover:text-white')
               }
             >
-              {current === ('id' in l ? l.id : l.label) && !(l.href === '/train' && tone === 'light') && <span aria-hidden="true" className="text-[#FF6A00]">&gt;</span>}
+              {current === ('id' in l ? l.id : l.label) && <span aria-hidden="true" className="text-[#FF6A00]">&gt;</span>}
               {l.label}
             </Link>
           ))}
@@ -73,8 +71,8 @@ export function SiteHeader({ current, tone = 'dark' }: { current?: string; tone?
             </svg>
           </a>
         </div>
-        {tone === 'light' && <ThemeToggle />}
       </div>
+      <div className="col-start-3 row-start-1 flex items-center gap-2 justify-self-end">{tone === 'light' && <ThemeToggle />}<AccountMenu tone={tone} /></div>
     </header>
   );
 }

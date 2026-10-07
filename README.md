@@ -190,6 +190,16 @@ for sender verification, Reply-To, and idempotency behavior. Tests use a local
 request double; they do not send email. Provider acceptance does not guarantee
 inbox placement.
 
+## Account navigation
+
+The shared header shows **Sign in** when signed out and an **Account** button
+when signed in. The account panel displays the email address, a workspace link,
+and **Sign out** on every page, including mobile. Sign-in uses the existing email
+link flow at `/train`. Sign-out clears the current device's session; the header
+and workspace share one Supabase client so both update immediately. The panel
+supports keyboard navigation, Escape, and outside-click dismissal. It reports
+when the device session was cleared but server revocation could not be confirmed.
+
 ## Customer API keys
 
 Signed-in customers can open **API keys** beside **Train a model** to create a
