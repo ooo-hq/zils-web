@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/site-header';
+import { HeroBackdrop } from '@/components/hero-backdrop';
 import { SiteFooter } from '@/components/site-footer';
 import testnet from '@/public/model/testnet-round-001.json';
 
@@ -50,7 +51,8 @@ function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string
 export default function BittensorPage() {
   return (
     <div className="min-h-screen bg-page font-sans text-ink antialiased selection:bg-[#4942c7] selection:text-white">
-      <div className="relative overflow-hidden bg-surface">
+      <div className="relative overflow-hidden">
+        <HeroBackdrop variant="bittensor" />
         <div className="relative mx-auto max-w-6xl px-6 sm:px-8"><SiteHeader tone="light" current="bittensor" /></div>
         <header className="relative mx-auto max-w-5xl px-6 pb-16 pt-10 sm:px-8 sm:pt-16">
           <p className="flex items-center gap-2 text-[12px] font-medium"><span aria-hidden="true" className="text-base">✳</span> Bittensor · Recorded testnet research</p>

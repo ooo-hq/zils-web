@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
+import { HeroBackdrop } from '@/components/hero-backdrop';
 import jevbench from '@/public/model/jevbench-public-001.json';
 import round from '@/public/model/testnet-round-001.json';
 import { DecisionInstrument, RoundReplay, type ReplayTab } from './live';
@@ -99,6 +100,7 @@ export default function HomePage() {
       <ResearchStatus />
 
       <div className="relative overflow-hidden">
+        <HeroBackdrop variant="home" />
         <div className="relative mx-auto max-w-6xl px-6 sm:px-8">
           <SiteHeader tone="light" />
         </div>
