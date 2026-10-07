@@ -28,6 +28,21 @@ pages, including training panels. A first visit follows the device's color
 setting; a manual choice is saved in browser storage and shared across tabs.
 If browser storage is unavailable, switching still works for the current visit.
 
+## Website analytics
+
+The official `@plausible-analytics/tracker` package initializes once in
+`instrumentation-client.ts`. It records page views (including client-side
+navigation) and engagement for the Plausible site `zils.ai`. Add that exact domain
+to a Plausible account and verify installation there; no API key or separate
+tracking snippet is needed. Do not install another snippet alongside this one.
+
+Only production builds running on `zils.ai` or `www.zils.ai` initialize tracking.
+Local development and Vercel preview domains do not send analytics. `/admin`,
+`/pricing-lab`, and `/a` routes and their descendants are excluded. Event URLs
+contain only the origin and path; referrers contain only the origin. Query
+parameters (including campaign parameters) and fragments are removed. No form,
+download, outbound-click, or custom-property tracking is enabled.
+
 ## Chess study
 
 `/model/chess-study` publishes the completed `chess-001` mate-in-one comparison,
@@ -174,6 +189,16 @@ See [Resend's send-email contract](https://resend.com/docs/api-reference/emails/
 for sender verification, Reply-To, and idempotency behavior. Tests use a local
 request double; they do not send email. Provider acceptance does not guarantee
 inbox placement.
+
+## Account navigation
+
+The shared header shows **Sign in** when signed out and an **Account** button
+when signed in. The account panel displays the email address, a workspace link,
+and **Sign out** on every page, including mobile. Sign-in uses the existing email
+link flow at `/train`. Sign-out clears the current device's session; the header
+and workspace share one Supabase client so both update immediately. The panel
+supports keyboard navigation, Escape, and outside-click dismissal. It reports
+when the device session was cleared but server revocation could not be confirmed.
 
 ## Customer API keys
 

@@ -47,7 +47,7 @@ export function FlightStudySummary() {
             Training improved flight-risk predictions.
           </h2>
           <p className="mt-5 max-w-[45ch] text-[15px] leading-7 text-muted">
-            We trained a JevK5 adapter on real flight outcomes, then tested it on later flights held out of adapter training.
+            We trained a Zils adapter on real flight outcomes, then tested it on later flights held out of adapter training.
             Its probability error was <strong className="font-semibold text-ink">{flightImprovement}% lower than the base model’s</strong>.
           </p>
           <p className="mt-5 text-sm text-muted">
@@ -71,8 +71,8 @@ export function FlightStudySummary() {
 export function FlightStudyDetails() {
   const improvement = flightStudy.adapter_brier_improvement;
   const rawRows = [
-    ['Base JevK5, raw', flightStudy.metrics.base_raw],
-    ['JevK5 + flight adapter, raw', flightStudy.metrics.adapter_raw],
+    ['Shared Zils, raw', flightStudy.metrics.base_raw],
+    ['Flight-trained Zils, raw', flightStudy.metrics.adapter_raw],
   ] as const;
 
   return (
@@ -82,7 +82,7 @@ export function FlightStudyDetails() {
         A base model. A flight adapter. A measurable improvement.
       </h2>
       <p className="mt-5 max-w-[68ch] text-[15px] leading-7 text-muted">
-        Could training on past flights improve JevK5’s estimates of arrival delays?
+        Could training on past flights improve Zils’ estimates of arrival delays?
         On {number(flightSplits.test.count)} held-out flights, the trained adapter reduced probability error by {flightImprovement}% versus the base.
         A simple historical-rate baseline still had the best measured score.
       </p>

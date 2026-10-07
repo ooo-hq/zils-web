@@ -1,26 +1,20 @@
 'use client';
 
-import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
+import { type Session, type SupabaseClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { trainingAuthStorageKey } from '@/lib/training-auth';
+import { useAuthSession } from '@/components/auth-session';
 import { workspaceAccess, type AuthConfig, type AccessVerdict } from '@/lib/early-access';
 import styles from '@/app/(home)/train/train.module.css';
 
 export function AccessSession({ config, children }: { config: AuthConfig; children: (client: SupabaseClient, session: Session) => ReactNode }) {
-  const [client] = useState(() => createClient(config.url, config.key, { auth: { storageKey: trainingAuthStorageKey(), persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }));
-  const [session, setSession] = useState<Session | null | undefined>();
+  const { client, session, error: sessionError } = useAuthSession(config);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    let active = true;
-    const { data } = client.auth.onAuthStateChange((_event, next) => { if (active) setSession(next); });
-    client.auth.getSession().then(({ data, error }) => { if (active) { setSession(data.session); if (error) setError(error.message); } }).catch(() => { if (active) { setSession(null); setError('Sign-in could not be loaded. Refresh to try again.'); } });
-    return () => { active = false; data.subscription.unsubscribe(); };
-  }, [client]);
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); const email = String(new FormData(event.currentTarget).get('email') || '').trim(); setBusy(true); setError('');
+    if (!client) { setError('Sign-in is unavailable. Please refresh and try again.'); setBusy(false); return; }
     try {
       const { error } = await client.auth.signInWithOtp({ email, options: { emailRedirectTo: `${window.location.origin}/admin/access` } });
       if (error) throw error;
@@ -30,8 +24,8 @@ export function AccessSession({ config, children }: { config: AuthConfig; childr
   }
   if (session === undefined) return <p role="status">Checking your session…</p>;
   return <>
-    {error && <p role="alert" className={styles.error}>{error}</p>}
-    {session ? <><div key={session.user.id}>{children(client, session)}</div><div className={styles.account}><span>Signed in as {session.user.email}</span><button className={styles.textButton} onClick={async () => { const { error } = await client.auth.signOut({ scope: 'local' }); if (error) setError('Sign-out failed. Please try again.'); }}>Sign out</button></div></> : <section className={`${styles.panel} ${styles.signIn}`}><h2>Administrator sign-in</h2><p>Use your designated admin email to review applications.</p><form onSubmit={signIn}><label htmlFor="admin-email">Email address</label><input id="admin-email" name="email" type="email" autoComplete="email" required disabled={busy} /><button className={styles.button} disabled={busy}>{busy ? 'Sending…' : 'Email me a sign-in link'}</button></form>{notice && <p role="status" className={styles.notice}>{notice}</p>}</section>}
+    {(error || sessionError) && <p role="alert" className={styles.error}>{error || sessionError}</p>}
+    {session && client ? <div key={session.user.id}>{children(client, session)}</div> : <section className={`${styles.panel} ${styles.signIn}`}><h2>Administrator sign-in</h2><p>Use your designated admin email to review applications.</p><form onSubmit={signIn}><label htmlFor="admin-email">Email address</label><input id="admin-email" name="email" type="email" autoComplete="email" required disabled={busy} /><button className={styles.button} disabled={busy}>{busy ? 'Sending…' : 'Email me a sign-in link'}</button></form>{notice && <p role="status" className={styles.notice}>{notice}</p>}</section>}
   </>;
 }
 

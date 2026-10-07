@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { FOOTER_LINKS } from '@/components/site-header';
 import { ZilsWordmark } from '@/components/zils-wordmark';
+import { XProfileLink } from '@/components/x-profile-link';
 import s from '@/components/light.module.css';
 
 /** Shared Zils resources and policy links for every page. */
@@ -8,7 +9,10 @@ export function SiteFooter({ tone = 'light', showSmallWordmark = true }: { tone?
   if (tone === 'dark') {
     return (
       <footer className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-5 border-t border-neutral-900 px-6 py-8 font-mono text-xs text-neutral-500 sm:px-8">
-        <Link href="/" aria-label="Zils home" className="leading-none text-neutral-300"><ZilsWordmark className="text-[36px]" /></Link>
+        <div className="flex items-center gap-3">
+          <Link href="/" aria-label="Zils home" className="leading-none text-neutral-300"><ZilsWordmark className="text-[36px]" /></Link>
+          <XProfileLink tone="dark" />
+        </div>
         <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-2">
           {FOOTER_LINKS.map((l) => <Link key={l.href + l.label} href={l.href} className="hover:text-neutral-200">{l.label}</Link>)}
         </nav>
@@ -21,6 +25,7 @@ export function SiteFooter({ tone = 'light', showSmallWordmark = true }: { tone?
         <div>
           {showSmallWordmark && <Link href="/" aria-label="Zils home" className="inline-block leading-none"><ZilsWordmark className="text-[42px]" /></Link>}
           <p className={`${showSmallWordmark ? 'mt-3' : ''} text-sm text-muted`}>Specialized models.<br />Decisions that are yours.</p>
+          <div className="-ml-3 mt-3"><XProfileLink /></div>
         </div>
         <nav aria-label="Footer" className="grid grid-cols-2 gap-x-12 gap-y-1.5 text-sm sm:grid-cols-3">
           {FOOTER_LINKS.map((l) => <Link key={l.href + l.label} href={l.href} className="hover:text-[var(--zils-accent,#3455dc)]">{l.label}</Link>)}

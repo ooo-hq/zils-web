@@ -1,6 +1,6 @@
 'use client';
 
-import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
+import { type SupabaseClient } from '@supabase/supabase-js';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { canDownload, downloadFiles, SPLITS, submissionSchema, terminal, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
 import Link from 'next/link';
@@ -11,7 +11,7 @@ import { ApiKeysPanel } from '@/components/api-keys-panel';
 import { Plus, ChevronDown } from 'lucide-react';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { TrainingRunStatus } from '@/components/training-run-status';
-import { trainingAuthStorageKey } from '@/lib/training-auth';
+import { useAuthSession } from '@/components/auth-session';
 import { currentTrainingJob, trainingProgress } from '@/lib/training-status';
 import styles from '@/app/(home)/train/train.module.css';
 
@@ -20,20 +20,14 @@ const message = (error: unknown) => error instanceof Error ? error.message : 'So
 const metric = (value: number | undefined, percent = false) => value === undefined ? '—' : percent ? `${(value * 100).toFixed(2)}%` : value.toFixed(4);
 
 export function TrainingDashboard({ config }: { config: Config }) {
-  const [client] = useState(() => createClient(config.url, config.key, { auth: { storageKey: trainingAuthStorageKey(), persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }));
-  const [session, setSession] = useState<Session | null | undefined>(undefined);
+  const { client, session, error: sessionError } = useAuthSession(config);
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    let active = true;
-    const { data } = client.auth.onAuthStateChange((_event, next) => { if (active) { setSession(next); setNotice(''); } });
-    client.auth.getSession().then(({ data, error }) => { if (active) { setSession(data.session); if (error) setError(error.message); } }).catch(error => { if (active) { setError(message(error)); setSession(null); } });
-    return () => { active = false; data.subscription.unsubscribe(); };
-  }, [client]);
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(''); setNotice('');
+    if (!client) { setError('Sign-in is unavailable. Please refresh and try again.'); setBusy(false); return; }
     try {
       const { error } = await client.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false, emailRedirectTo: `${window.location.origin}/train` } });
       if (error) throw error;
@@ -41,19 +35,19 @@ export function TrainingDashboard({ config }: { config: Config }) {
     } catch (error) { setError(message(error)); } finally { setBusy(false); }
   }
   const signOut = useCallback(async () => {
+    if (!client) return;
     setError('');
     const { error } = await client.auth.signOut({ scope: 'local' });
     if (error) setError(error.message);
   }, [client]);
   if (session === undefined) return <div className={styles.workspaceHeading}><h1>Training</h1><p role="status">Checking your session…</p></div>;
   return <>
-    {error && <p role="alert" className={styles.error}>{error}</p>}
-    {session ? <div id="training-workspace">
+    {(error || sessionError) && <p role="alert" className={styles.error}>{error || sessionError}</p>}
+    {session && client ? <div id="training-workspace">
       <TrainingAccessGate key={session.user.id} owner={session.user.id} token={session.access_token}><SignedInDashboard key={session.user.id} client={client} config={config} onExpired={signOut} /></TrainingAccessGate>
-      <div className={styles.account}><span>Signed in as <strong>{session.user.email || 'your account'}</strong></span><button className={styles.textButton} onClick={signOut}>Sign out</button></div>
     </div> : <>
       <div className={styles.workspaceHeading}><h1>Training</h1><p>Teach Zils a decision using examples your team has reviewed.</p></div>
-      <section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}><h2>Log in to your workspace.</h2><p>Sign in with the email address on your invitation.</p><form onSubmit={signIn}><label htmlFor="training-email">Email address</label><input id="training-email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" disabled={busy} /><button className={styles.button} disabled={busy}>{busy ? 'Sending link…' : 'Email me a sign-in link'}</button></form>{notice && <p role="status" className={styles.notice}>{notice}</p>}</section>
+      <section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}><h2>Sign in to Zils</h2><p>Sign in with the email address on your invitation.</p><form onSubmit={signIn}><label htmlFor="training-email">Email address</label><input id="training-email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" disabled={busy} /><button className={styles.button} disabled={busy}>{busy ? 'Sending link…' : 'Email me a sign-in link'}</button></form>{notice && <p role="status" className={styles.notice}>{notice}</p>}</section>
       <p className={styles.account}>Need an invitation? <Link href="/early-access">Request early access</Link>.</p><details className={styles.signInGuide}><summary>What examples should I bring?</summary><TrainingGuide /></details>
     </>}
   </>;
