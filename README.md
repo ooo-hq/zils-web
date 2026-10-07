@@ -28,6 +28,21 @@ pages, including training panels. A first visit follows the device's color
 setting; a manual choice is saved in browser storage and shared across tabs.
 If browser storage is unavailable, switching still works for the current visit.
 
+## Website analytics
+
+The official `@plausible-analytics/tracker` package initializes once in
+`instrumentation-client.ts`. It records page views (including client-side
+navigation) and engagement for the Plausible site `zils.ai`. Add that exact domain
+to a Plausible account and verify installation there; no API key or separate
+tracking snippet is needed. Do not install another snippet alongside this one.
+
+Only production builds running on `zils.ai` or `www.zils.ai` initialize tracking.
+Local development and Vercel preview domains do not send analytics. `/admin`,
+`/pricing-lab`, and `/a` routes and their descendants are excluded. Event URLs
+contain only the origin and path; referrers contain only the origin. Query
+parameters (including campaign parameters) and fragments are removed. No form,
+download, outbound-click, or custom-property tracking is enabled.
+
 ## Chess study
 
 `/model/chess-study` publishes the completed `chess-001` mate-in-one comparison,

@@ -12,7 +12,7 @@ const link = 'underline decoration-edge-strong underline-offset-4 hover:text-acc
 
 export default function PrivacyPage() {
   return (
-    <PolicyPage title="Privacy policy.">
+    <PolicyPage title="Privacy policy." updated="7 October 2026">
       <p>This notice describes information handled by the Zils website and its decision-model services, including sign-in, training, model requests, and support.</p>
 
       <PolicySection title="Accounts and browser storage">
@@ -32,6 +32,11 @@ export default function PrivacyPage() {
 
       <PolicySection title="Model requests">
         <p>Running the playground or calling the model API sends your supplied context and questions to the model service to produce predictions. These requests are processed on servers, rather than only in your browser. Use information you are authorized to send, and avoid sensitive data in public examples.</p>
+      </PolicySection>
+
+      <PolicySection title="Website analytics">
+        <p>We use Plausible Analytics to understand page visits, referral sites, engagement, browser and device types, and approximate locations. Plausible does not use analytics cookies or store raw IP addresses. See <a href="https://plausible.io/data-policy" className={link}>Plausible’s data policy</a> for details.</p>
+        <p>We remove URL query parameters and fragments before sending analytics events and send only the referring site’s origin. We do not send form contents, account identifiers, API keys, training files, or model inputs to Plausible. Internal administration pages, the pricing lab, and individual shared artifacts are excluded.</p>
       </PolicySection>
 
       <PolicySection title="Contact messages and service providers">
