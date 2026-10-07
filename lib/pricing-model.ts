@@ -4,9 +4,11 @@ export const MODEL_FIELDS = {
   requests: { label: 'Requests per customer / month', min: 0, max: 1_000_000_000, step: 1 },
   tokens: { label: 'Input tokens per request', min: 0, max: 1_000_000, step: 1 },
   runs: { label: 'Extra training runs per customer / month', min: 0, max: 10_000, step: 'any' },
-  inference: { label: 'Serving cost per million input tokens ($)', min: 0, max: 100, step: 'any' },
-  training: { label: 'Training + evaluation cost per run ($)', min: 0, max: 10_000, step: 'any' },
-  fixed: { label: 'Fixed overhead per month ($)', min: 0, max: 10_000_000, step: 'any' },
+  inference: { label: 'Zils serving cost per million input tokens ($)', min: 0, max: 100, step: 'any' },
+  training: { label: 'Zils coordination + evaluation per job ($)', min: 0, max: 10_000, step: 'any' },
+  minerPayment: { label: 'Direct payment from Zils to miners per job ($)', min: 0, max: 10_000, step: 'any' },
+  minerCompute: { label: 'Miner GPU cost per customer job ($)', min: 0, max: 100_000, step: 'any' },
+  fixed: { label: 'Zils fixed overhead per month ($)', min: 0, max: 10_000_000, step: 'any' },
   topup: { label: 'Average top-up ($)', min: BETA_PRICING.startingCredit, max: 100_000, step: 'any' },
   newCustomers: { label: 'Customers using their first free run (%)', min: 0, max: 100, step: 'any' },
 } as const;
@@ -22,9 +24,9 @@ export const WORKLOADS = {
 } as const;
 
 export const DELIVERY_COSTS = {
-  lean: { label: 'Lean', inference: '0.005', training: '0.25' },
-  base: { label: 'Base', inference: '0.02', training: '1' },
-  stress: { label: 'Stress', inference: '0.06', training: '3' },
+  lean: { label: 'Lean', inference: '0.005', training: '0.05' },
+  base: { label: 'Base', inference: '0.02', training: '0.10' },
+  stress: { label: 'Stress', inference: '0.06', training: '0.50' },
 } as const;
 
 export const DEFAULT_MODEL_INPUTS: ModelInputs = {
@@ -33,6 +35,8 @@ export const DEFAULT_MODEL_INPUTS: ModelInputs = {
   runs: WORKLOADS.regular.runs,
   inference: DELIVERY_COSTS.base.inference,
   training: DELIVERY_COSTS.base.training,
+  minerPayment: '0',
+  minerCompute: '1',
   fixed: '500',
   topup: '5',
   newCustomers: '0',
@@ -54,8 +58,12 @@ export function modelPricing(assumptions: ModelAssumptions, customers: number) {
   const millionTokens = assumptions.requests * assumptions.tokens / 1_000_000;
   const revenuePerCustomer = millionTokens * BETA_PRICING.millionInputTokens
     + assumptions.runs * BETA_PRICING.trainingRun;
-  const deliveryPerCustomer = millionTokens * assumptions.inference
-    + (assumptions.runs + assumptions.newCustomers / 100) * assumptions.training;
+  const jobsPerCustomer = assumptions.runs + assumptions.newCustomers / 100;
+  const servingPerCustomer = millionTokens * assumptions.inference;
+  const trainingPerCustomer = jobsPerCustomer * assumptions.training;
+  const minerPaymentsPerCustomer = jobsPerCustomer * assumptions.minerPayment;
+  // Miner-funded GPU work is a separate network expense, not a Zils deduction.
+  const deliveryPerCustomer = servingPerCustomer + trainingPerCustomer + minerPaymentsPerCustomer;
   // Allocate transaction fees across consumed credit, rather than modeling cash timing.
   const feeRate = 0.029 + 0.30 / assumptions.topup;
   const feesPerCustomer = revenuePerCustomer * feeRate;
@@ -65,6 +73,11 @@ export function modelPricing(assumptions: ModelAssumptions, customers: number) {
   const fees = customers * feesPerCustomer;
   return {
     customers, revenue, delivery, fees, revenuePerCustomer, contributionPerCustomer, feeRate,
+    serving: customers * servingPerCustomer,
+    training: customers * trainingPerCustomer,
+    minerPayments: customers * minerPaymentsPerCustomer,
+    trainingJobs: customers * jobsPerCustomer,
+    minerCompute: customers * jobsPerCustomer * assumptions.minerCompute,
     surplus: revenue - delivery - fees - assumptions.fixed,
     breakEvenCustomers: contributionPerCustomer > 0
       ? Math.ceil(assumptions.fixed / contributionPerCustomer)

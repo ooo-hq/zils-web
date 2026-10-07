@@ -7,7 +7,7 @@ import s from './pricing-lab.module.css';
 
 export const metadata: Metadata = {
   title: 'Pricing lab — Zils',
-  description: 'Explore Zils usage and delivery-cost scenarios.',
+  description: 'Explore Zils revenue and operating costs, with miner-funded training costs shown separately.',
   robots: { index: false, follow: false, noarchive: true, googleBot: { index: false, follow: false } },
 };
 
@@ -20,7 +20,7 @@ export default function PricingLabPage() {
           <header className={s.hero}>
             <div>
               <h1>Pricing lab.</h1>
-              <p>What happens at 100, 1,000, or 2,000 paying customers?<br />Change the workload. See what it leaves.</p>
+              <p>What happens at 100, 1,000, or 2,000 paying customers?<br />Model Zils costs and miner-funded training separately.</p>
             </div>
             <Link href="/pricing" className={s.link}>View the pricing plan</Link>
           </header>

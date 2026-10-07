@@ -14,7 +14,7 @@ const usd = (value: number, decimals = 0) => new Intl.NumberFormat('en-US', {
 const count = (value: number) => new Intl.NumberFormat('en-US').format(value);
 const customerCounts = [100, 1_000, 2_000];
 const workloadFields: ModelField[] = ['requests', 'tokens', 'runs'];
-const costFields: ModelField[] = ['inference', 'training', 'fixed', 'topup', 'newCustomers'];
+const costFields: ModelField[] = ['inference', 'training', 'minerPayment', 'fixed', 'topup', 'newCustomers'];
 
 export function PricingLab() {
   const [inputs, setInputs] = useState<ModelInputs>(DEFAULT_MODEL_INPUTS);
@@ -58,25 +58,31 @@ export function PricingLab() {
         </div>
         <div className={s.fields}>{workloadFields.map(field)}</div>
         <label className={s.field} htmlFor="model-cost-preset">
-          Hypothetical delivery costs
+          Hypothetical Zils costs
           <select id="model-cost-preset" value={costPreset} onChange={event => {
             const preset = DELIVERY_COSTS[event.target.value as keyof typeof DELIVERY_COSTS];
             if (preset) setInputs(previous => ({ ...previous, inference: preset.inference, training: preset.training }));
           }}>
-            {Object.entries(DELIVERY_COSTS).map(([key, preset]) => <option key={key} value={key}>{preset.label} — ${preset.inference}/M tokens, ${preset.training}/run</option>)}
+            {Object.entries(DELIVERY_COSTS).map(([key, preset]) => <option key={key} value={key}>{preset.label} — ${preset.inference}/M tokens, ${preset.training}/job</option>)}
             <option value="custom" disabled>Custom costs</option>
           </select>
         </label>
+        <p className={s.hint}>These presets cover Zils serving and coordination/evaluation only. All amounts are editable placeholders, not measured costs.</p>
         <details className={s.details}>
-          <summary>Adjust costs &amp; first free runs</summary>
+          <summary>Adjust Zils costs &amp; first free runs</summary>
           <div className={s.fields}>{costFields.map(field)}</div>
-          <p className={s.hint}>Include idle capacity and internal processing in serving cost. Include evaluation and retries in training cost.</p>
+          <p className={s.hint}>Enter only costs Zils pays. Include any Zils-funded idle serving capacity, evaluation and retries. Use fixed overhead for shared costs such as storage and support; do not also count them per job. Direct miner payments default to $0.</p>
+        </details>
+        <details className={s.details}>
+          <summary>Miner GPU costs — separate</summary>
+          <div className={s.fields}>{field('minerCompute')}</div>
+          <p className={s.hint}>Estimate total GPU expense across all miner attempts for one customer job. This is shown separately and never deducted from Zils revenue. It does not include miner rewards or establish miner profitability.</p>
         </details>
       </section>
 
       <section className={s.results} aria-labelledby="results-heading">
         <div className={s.resultHeading}>
-          <h2 id="results-heading">Monthly economics</h2>
+          <h2 id="results-heading">Zils monthly economics</h2>
           <span>USD</span>
         </div>
         <div className={s.rateStrip}>
@@ -84,6 +90,7 @@ export function PricingLab() {
           <span>${BETA_PRICING.trainingRun} / extra run</span>
           <span>${BETA_PRICING.startingCredit} prepaid credit</span>
         </div>
+        <p className={s.costNotice}>Miners fund adapter training. Zils surplus deducts only the Zils costs entered here, payment fees, and fixed overhead.</p>
         {!results || !unit ? (
           <p id="model-error" role="alert" className={s.error}>Enter a valid amount in each field. Requests and tokens must be whole numbers; top-ups start at ${BETA_PRICING.startingCredit} and the first-free-run share is 0–100%.</p>
         ) : (
@@ -95,7 +102,7 @@ export function PricingLab() {
             <div className={s.tableWrap} role="region" aria-label="Monthly scenario comparison" tabIndex={0}>
               <table className={s.table}>
                 <caption className="sr-only">Estimated monthly economics at 100, 1,000, and 2,000 paying customers</caption>
-                <thead><tr><th scope="col">Customers</th><th scope="col">Usage revenue</th><th scope="col">Delivery costs</th><th scope="col">Payment fees</th><th scope="col">Surplus</th></tr></thead>
+                <thead><tr><th scope="col">Customers</th><th scope="col">Usage revenue</th><th scope="col">Zils variable costs</th><th scope="col">Payment fees</th><th scope="col">Zils surplus</th></tr></thead>
                 <tbody>{results.map(row => (
                   <tr key={row.customers}>
                     <th scope="row">{count(row.customers)}</th>
@@ -115,11 +122,33 @@ export function PricingLab() {
                   : <><strong>{count(unit.breakEvenCustomers)} paying customers</strong> to cover the modeled costs.</>}
             </p>
             <p className={s.hint}>Surplus includes {usd(assumptions!.fixed)} in monthly fixed overhead. Before payroll, marketing, and taxes. Table amounts are rounded to whole dollars.</p>
+            <details className={s.details}>
+              <summary>See Zils cost breakdown</summary>
+              <div className={s.tableWrap} role="region" aria-label="Zils variable cost breakdown" tabIndex={0}>
+                <table className={s.table}>
+                  <caption className="sr-only">Monthly costs deducted from Zils revenue</caption>
+                  <thead><tr><th scope="col">Customers</th><th scope="col">Serving</th><th scope="col">Coordination &amp; evaluation</th><th scope="col">Direct miner payments</th></tr></thead>
+                  <tbody>{results.map(row => <tr key={row.customers}><th scope="row">{count(row.customers)}</th><td>{usd(row.serving)}</td><td>{usd(row.training)}</td><td>{usd(row.minerPayments)}</td></tr>)}</tbody>
+                </table>
+              </div>
+            </details>
+            <section className={s.minerCosts} aria-labelledby="miner-costs-heading">
+              <h3 id="miner-costs-heading">Miner compute · not deducted</h3>
+              <p className={s.hint}>Separate network expense across paid jobs and first free jobs. Multiple miner attempts belong to one customer job.</p>
+              <div className={s.tableWrap} role="region" aria-label="Miner compute cost scenarios" tabIndex={0}>
+                <table className={s.table}>
+                  <caption className="sr-only">Illustrative miner GPU costs, excluded from Zils surplus</caption>
+                  <thead><tr><th scope="col">Customers</th><th scope="col">Training jobs</th><th scope="col">Miner GPU costs</th></tr></thead>
+                  <tbody>{results.map(row => <tr key={row.customers}><th scope="row">{count(row.customers)}</th><td>{count(row.trainingJobs)}</td><td>{usd(row.minerCompute)}</td></tr>)}</tbody>
+                </table>
+              </div>
+            </section>
           </div>
         )}
         <div className={s.notes}>
           <h3>Read the numbers correctly.</h3>
-          <p>Delivery costs are assumptions, not measured Zils costs. These scenarios compare paying customers with the same average usage; they are not demand or capacity forecasts.</p>
+          <p>Zils and miner costs are assumptions, not measurements. The default $0.10/job for Zils coordination/evaluation and $1/job for miner compute are independent placeholders. Replace them with your own costs. These scenarios are not demand or capacity forecasts.</p>
+          <p>Subnet emissions are not counted as customer revenue or a Zils cash expense. Any payment Zils makes directly to miners belongs in direct miner payments and is deducted once. Miner compute is shown separately; without rewards and capacity data, this page does not estimate miner profit or network sustainability.</p>
           <p>The ${BETA_PRICING.startingCredit} top-up is prepaid usage, not an extra monthly fee. Revenue here represents consumed usage. Unspent credit is excluded.</p>
           <p>Payment fees use <a href="https://stripe.com/pricing" target="_blank" rel="noreferrer">US domestic card rates</a> of 2.9% + $0.30 per top-up, spread over consumed credit. Cash timing and transaction rounding will differ. New-customer free training is included only when you set its share above zero.</p>
         </div>

@@ -94,10 +94,17 @@ customer training and serving workflows. Early-access links use `/contact`.
 
 `/pricing-lab` is an unlisted scenario calculator for 100, 1,000, and 2,000
 paying active customers. It shares the public page's rates and allows changes to
-usage, delivery costs, fixed overhead, top-up size, and the share of customers
-using their first included training run. Cost presets are hypothetical; payment
-fees are amortized over consumed credit. Surplus excludes payroll, marketing,
-and taxes. Inputs stay in tab memory and reset on refresh.
+usage, Zils serving and coordination/evaluation costs, direct miner payments,
+fixed overhead, top-up size, and the share using their first included training
+run. Miner-funded GPU costs are shown separately and never deducted from Zils
+revenue. Only direct payments made by Zils to miners are deducted. One customer
+job can include multiple miner attempts; enter their combined compute expense.
+First free jobs incur both modeled Zils and miner costs without adding revenue.
+Cost presets are hypothetical: the default $0.10/job Zils cost and $1/job miner
+cost are independent placeholders, not measured costs or a split of the old
+estimate. Subnet emissions are excluded; miner profitability and capacity are
+not modeled. Payment fees are amortized over consumed credit. Surplus excludes
+payroll, marketing, and taxes. Inputs stay in tab memory and reset on refresh.
 
 The lab has no navigation links pointing to it and requests `noindex, nofollow`.
 It is not access-controlled: anyone with its URL can open it. Keep it out of any
