@@ -8,6 +8,7 @@ import { TrainingIntake } from '@/components/training-intake';
 import { ApiKeysPanel } from '@/components/api-keys-panel';
 import { Plus, ChevronDown } from 'lucide-react';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
+import { TrainingComparison } from '@/components/training-comparison';
 import { TrainingRunStatus } from '@/components/training-run-status';
 import { useAuthSession } from '@/components/auth-session';
 import { currentTrainingJob, trainingProgress } from '@/lib/training-status';
@@ -200,6 +201,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
         <button className={styles.secondary} disabled={busy} onClick={() => resumeUploads(job)}>Resume missing uploads</button>
         <button className={styles.textButton} disabled={busy} onClick={() => cancelJob(job)}>Cancel this run</button>
       </div>}
+      <TrainingComparison key={job.id} job={job} api={api} />
       {canDownload(job) && <div className={styles.modelDownloads}>
         {job.workflow?.state === 'ready' && job.workflow.model_id && <>
           <p><strong>API model ID</strong></p>
@@ -218,7 +220,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
         {job.status === 'completed' && !job.result && <p>Result details are not available yet. Refresh to try again.</p>}
         {job.result && <>
           <p className={styles.help}>Measured on examples held aside from training. Results are not a guarantee on future inputs.</p>
-          <div className={styles.metrics}><div><span>Base model accuracy</span><strong>{metric(job.result.baseline.accuracy, true)}</strong></div><div><span>Base model Brier loss</span><strong>{metric(job.result.baseline.brier)}</strong></div></div>
+          <div className={styles.metrics}><div><span>{job.selection?.previous ? 'Previous model accuracy' : 'Starting model accuracy'}</span><strong>{metric(job.result.baseline.accuracy, true)}</strong></div><div><span>{job.selection?.previous ? 'Previous model Brier loss' : 'Starting model Brier loss'}</span><strong>{metric(job.result.baseline.brier)}</strong></div></div>
           <p className={styles.help}>Required: {metric(job.result.delivery.acceptance.min_accuracy, true)} accuracy; {metric(job.result.delivery.acceptance.min_brier_improvement)} absolute Brier improvement.</p>
           <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Candidate evaluations"><table><thead><tr><th>Candidate</th><th>Status</th><th>Accuracy</th><th>Brier loss</th></tr></thead><tbody>{job.result.miners.map(miner => <tr key={miner.uid}><th>{miner.uid}{job.result?.delivery.uid === miner.uid ? ' · selected' : ''}</th><td>{miner.status}</td><td>{metric(miner.accuracy, true)}</td><td>{metric(miner.brier)}</td></tr>)}</tbody></table></div>
           {job.result.delivery.sha256 && <p className={styles.hash}>Checkpoint SHA-256<br /><code>{job.result.delivery.sha256}</code></p>}

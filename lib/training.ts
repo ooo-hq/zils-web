@@ -11,16 +11,18 @@ export const submissionSchema = z.object({
 });
 export type Submission = z.infer<typeof submissionSchema>;
 export const STATUSES = ['uploading', 'validating', 'awaiting_approval', 'queued', 'running', 'evaluating', 'completed', 'failed'] as const;
-const metrics = z.object({ accuracy: z.number().min(0).max(1), brier: z.number().min(0).max(2), skill: z.number().min(0).max(1) });
+const metrics = z.object({ cases: z.number().int().positive().optional(), accuracy: z.number().min(0).max(1), brier: z.number().min(0).max(2), skill: z.number().min(0).max(1) });
 const modelSchema = z.object({ id: z.enum(['kev-0.8b-v1', 'jevk5-4b-v0.3']), name: z.string(), base: z.string(), base_revision: z.string().regex(/^[a-f0-9]{40}$/) });
 export const jobSchema = z.object({
   id: z.string().uuid(), name: z.string(), status: z.enum(STATUSES), created_at: z.string().optional(), error: z.string().nullable().optional(),
   model: modelSchema.nullable().optional(),
+  dataset_counts: z.object({ train: z.number().int().nonnegative(), calibration: z.number().int().nonnegative(), test: z.number().int().positive() }).nullable().optional(),
+  selection: z.object({ previous: z.object({ job_id: z.string(), model_id: z.string(), sha256: z.string() }).passthrough().nullable() }).passthrough().nullable().optional(),
   workflow: z.object({ state: z.string(), message: z.string().optional(), model_id: z.string().optional(), fingerprint: z.string().optional() }).nullable().optional(),
   result: z.object({
     delivery: z.object({ status: z.enum(['accepted', 'no_qualifying_model']), uid: z.number().optional(), sha256: z.string().optional(), brier_improvement: z.number().optional(), acceptance: acceptanceSchema }),
     baseline: metrics,
-    miners: z.array(z.object({ uid: z.number(), status: z.string(), accuracy: z.number().optional(), brier: z.number().optional(), skill: z.number().optional() })),
+    miners: z.array(z.object({ uid: z.number(), status: z.string(), cases: z.number().int().positive().optional(), accuracy: z.number().optional(), brier: z.number().optional(), skill: z.number().optional() })),
     weights: z.record(z.string(), z.number()),
   }).nullable().optional(),
 });
@@ -107,6 +109,20 @@ export async function validateDatasets(files: Record<Split, Blob>, signal?: Abor
 const uploadSchema = z.object({ url: z.string().url(), method: z.literal('PUT'), headers: z.object({ 'Content-Type': z.literal('application/octet-stream'), 'x-upsert': z.literal('false') }).strict() });
 const uploadSlot = z.union([uploadSchema, z.object({ uploaded: z.literal(true) })]);
 const uploadsSchema = z.object({ train: uploadSlot, calibration: uploadSlot, test: uploadSlot });
+export const COMPARISON_CONSENT = 'typesafe-evaluation-v1';
+export const MAX_COMPARISON_BYTES = 5 * 1024 * 1024;
+const comparisonScore = z.object({ correct: z.number().int().nonnegative(), accuracy: z.number().min(0).max(1), brier: z.number().min(0).max(2) });
+export const comparisonSchema = z.object({
+  status: z.enum(['uploading', 'queued', 'running', 'completed', 'failed']),
+  created_at: z.string(), finished_at: z.string().nullable(), model_id: z.string(), checkpoint_sha256: z.string(), jev_model: z.literal('jev-1.13.0'), input_sha256: z.string().nullable(), error: z.string().nullable(),
+  result: z.object({
+    cases: z.number().int().positive(), groups: z.number().int().positive(), verdict: z.enum(['more_accurate', 'less_accurate', 'no_clear_difference']),
+    trained: comparisonScore, jev: comparisonScore, accuracy_difference: z.number().min(-1).max(1), accuracy_difference_95_ci: z.tuple([z.number().min(-1).max(1), z.number().min(-1).max(1)]),
+    wins: z.number().int().nonnegative(), losses: z.number().int().nonnegative(), method: z.string(),
+    rows: z.array(z.object({ id: z.string(), expected: z.string(), trained: z.string(), jev: z.string(), trained_correct: z.boolean(), jev_correct: z.boolean() })),
+  }).nullable(),
+});
+export type Comparison = z.infer<typeof comparisonSchema>;
 export class TrainingApiError extends Error { constructor(message: string, public status: number) { super(message); } }
 
 export function trainingApi(baseUrl: string, storageUrl: string, token: () => Promise<string>, request: typeof fetch = fetch) {
@@ -144,6 +160,9 @@ export function trainingApi(baseUrl: string, storageUrl: string, token: () => Pr
     resume: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/uploads`, z.object({ job: jobSchema, uploads: uploadsSchema }), {}, signal),
     cancel: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/cancel`, z.object({ job: jobSchema }), {}, signal),
     submit: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/submit`, z.object({ job: jobSchema }), {}, signal),
+    comparison: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/comparison`, z.object({ available: z.boolean(), comparison: comparisonSchema.nullable() }), undefined, signal),
+    createComparison: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/comparison`, z.object({ comparison: comparisonSchema, upload: uploadSlot.optional() }), { consent_version: COMPARISON_CONSENT, allow_typesafe_export: true, unseen_examples: true }, signal),
+    submitComparison: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/comparison/submit`, z.object({ comparison: comparisonSchema }), {}, signal),
     downloads: async (job: Job, signal?: AbortSignal) => {
       if (!canDownload(job)) throw new Error('Downloads require a completed, accepted model.');
       const schema = z.object({ downloads: z.record(z.string(), z.object({ url: z.string() })) });
@@ -152,9 +171,10 @@ export function trainingApi(baseUrl: string, storageUrl: string, token: () => Pr
       if (Object.keys(data.downloads).length !== files.length || files.some(name => !data.downloads[name])) throw new Error('The model download does not match this job’s model version.');
       return files.map(name => ({ name, url: signedUrl(data.downloads[name].url) }));
     },
-    upload: async (split: Split, descriptor: z.infer<typeof uploadSchema>, file: Blob, signal?: AbortSignal) => {
+    upload: async (split: Split | 'comparison', descriptor: z.infer<typeof uploadSchema>, file: Blob, signal?: AbortSignal) => {
       const valid = uploadSchema.parse(descriptor);
-      if (!file.size || file.size > MAX_DATASET_BYTES) throw new Error(`${split}: file must be nonempty and at most 128 MiB.`);
+      const limit = split === 'comparison' ? MAX_COMPARISON_BYTES : MAX_DATASET_BYTES;
+      if (!file.size || file.size > limit) throw new Error(`${split}: file must be nonempty and at most ${limit / 1024 / 1024} MiB.`);
       try {
         const response = await request(signedUrl(valid.url), { method: valid.method, headers: valid.headers, body: file, credentials: 'omit', redirect: 'error', signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(600_000)]) : AbortSignal.timeout(600_000) });
         if (!response.ok) throw new Error('Upload rejected.');
