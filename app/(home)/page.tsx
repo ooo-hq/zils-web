@@ -7,6 +7,7 @@ import round from '@/public/model/testnet-round-001.json';
 import { DecisionInstrument, RoundReplay, type ReplayTab } from './live';
 import { ZilsWordmark } from '@/components/zils-wordmark';
 import { SupportStudySummary } from '@/components/support-study';
+import { jevMetrics, jevTrained, jevErrorReduction } from '@/lib/jev-comparison';
 import s from './home.module.css';
 
 const TITLE = 'Your data. Your decision model.';
@@ -242,13 +243,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Earlier measurements remain visible alongside the latest study. */}
+      {/* Latest comparison and earlier studies share one research record. */}
       <section aria-labelledby="evidence" className="mx-auto max-w-5xl px-6 pb-20 sm:px-8">
         <div className="grid gap-6 border-t border-edge pt-8 md:grid-cols-[1fr_1.4fr]">
-          <h2 id="evidence" className="max-w-[19ch] text-2xl font-semibold leading-tight tracking-[-0.035em]">Earlier results stay on the record.</h2>
+          <h2 id="evidence" className="max-w-[19ch] text-2xl font-semibold leading-tight tracking-[-0.035em]">Latest results. Full research record.</h2>
           <div>
-            <p className="text-sm leading-7 text-muted">The earlier flight adapter improved probability estimates over its base model, while simple historical rates remained stronger. In an earlier Kev 0.8B experiment, Zils and the published baseline both answered {fez.n_correct} of {fez.n_attempted} public JevBench items correctly, while confidence quality regressed. These are separate tasks from the support study above.</p>
+            <p className="text-sm leading-7 text-muted">On {jevMetrics.n} held-out ABCD support conversations, trained JevK5 reached <strong className="font-semibold text-ink">{(jevTrained.accuracy * 100).toFixed(1)}% accuracy versus {(jevMetrics.accuracy * 100).toFixed(1)}% for TypeSafe Jev</strong>—{jevErrorReduction}% fewer mistakes. The full comparison includes every prediction, confidence tradeoffs, and the test method.</p>
+            <p className="mt-4 text-sm leading-7 text-muted">Earlier studies remain available. The flight adapter improved over its base model but trailed simple historical rates. The Kev 0.8B experiment tied the published baseline at {fez.n_correct} of {fez.n_attempted} correct answers, with worse probability estimates. Each study measures a different task.</p>
             <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3 text-sm">
+              <Link href="/model#jev-comparison" className="underline decoration-edge-strong underline-offset-4 hover:text-[var(--zils-accent)]">Read the latest Jev comparison</Link>
               <Link href="/model#flight-study" className="underline decoration-edge-strong underline-offset-4 hover:text-[var(--zils-accent)]">Read the flight study</Link>
               <Link href="/model#quality" className="underline decoration-edge-strong underline-offset-4 hover:text-[var(--zils-accent)]">Read the JevBench comparison</Link>
               <Link href="/bittensor#testnet" className="underline decoration-edge-strong underline-offset-4 hover:text-[var(--zils-accent)]">Inspect the recorded testnet round</Link>
