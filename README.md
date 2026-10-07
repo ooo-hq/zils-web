@@ -309,3 +309,10 @@ confidence coverage, and the documented probability-format corrections under
 `public/model/abcd-002-jev*`. Evidence tests recompute accuracy, F1, Brier, and
 confidence coverage from those predictions. They do not call TypeSafe or train a
 model. Keep the earlier training study and its frozen artifacts unchanged.
+
+## Early access
+
+`/early-access` collects applications; `/admin/access` is the private approval
+page. Approved accounts can use the training workspace and API. The admission
+migration and backend enforcement must be deployed together. See
+[early-access setup](docs/early-access.md) for configuration and rollout.

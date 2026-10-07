@@ -3,6 +3,8 @@
 import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { canDownload, downloadFiles, SPLITS, submissionSchema, terminal, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
+import Link from 'next/link';
+import { TrainingAccessGate } from '@/components/access-session';
 import { TrainingGuide } from '@/components/training-guide';
 import { TrainingIntake } from '@/components/training-intake';
 import { ApiKeysPanel } from '@/components/api-keys-panel';
@@ -33,7 +35,7 @@ export function TrainingDashboard({ config }: { config: Config }) {
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(''); setNotice('');
     try {
-      const { error } = await client.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: `${window.location.origin}/train` } });
+      const { error } = await client.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false, emailRedirectTo: `${window.location.origin}/train` } });
       if (error) throw error;
       setNotice('Check your email for a sign-in link. Open it to return to your training workspace.');
     } catch (error) { setError(message(error)); } finally { setBusy(false); }
@@ -47,12 +49,12 @@ export function TrainingDashboard({ config }: { config: Config }) {
   return <>
     {error && <p role="alert" className={styles.error}>{error}</p>}
     {session ? <div id="training-workspace">
-      <SignedInDashboard key={session.user.id} client={client} config={config} onExpired={signOut} />
+      <TrainingAccessGate key={session.user.id} owner={session.user.id} token={session.access_token}><SignedInDashboard key={session.user.id} client={client} config={config} onExpired={signOut} /></TrainingAccessGate>
       <div className={styles.account}><span>Signed in as <strong>{session.user.email || 'your account'}</strong></span><button className={styles.textButton} onClick={signOut}>Sign out</button></div>
     </div> : <>
       <div className={styles.workspaceHeading}><h1>Training</h1><p>Teach Zils a decision using examples your team has reviewed.</p></div>
-      <section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}><h2>Log in to your workspace.</h2><p>Start a training run or check the progress of your existing runs.</p><form onSubmit={signIn}><label htmlFor="training-email">Email address</label><input id="training-email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" disabled={busy} /><button className={styles.button} disabled={busy}>{busy ? 'Sending link…' : 'Email me a sign-in link'}</button></form>{notice && <p role="status" className={styles.notice}>{notice}</p>}</section>
-      <details className={styles.signInGuide}><summary>What examples should I bring?</summary><TrainingGuide /></details>
+      <section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}><h2>Log in to your workspace.</h2><p>Sign in with the email address on your invitation.</p><form onSubmit={signIn}><label htmlFor="training-email">Email address</label><input id="training-email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" disabled={busy} /><button className={styles.button} disabled={busy}>{busy ? 'Sending link…' : 'Email me a sign-in link'}</button></form>{notice && <p role="status" className={styles.notice}>{notice}</p>}</section>
+      <p className={styles.account}>Need an invitation? <Link href="/early-access">Request early access</Link>.</p><details className={styles.signInGuide}><summary>What examples should I bring?</summary><TrainingGuide /></details>
     </>}
   </>;
 }
