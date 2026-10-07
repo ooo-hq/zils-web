@@ -7,6 +7,7 @@ import { TrainingGuide } from '@/components/training-guide';
 import { TrainingIntake } from '@/components/training-intake';
 import { ApiKeysPanel } from '@/components/api-keys-panel';
 import { TrainedModelQuickstart } from '@/components/trained-model-quickstart';
+import { TrainedModelLibrary } from '@/components/trained-model-library';
 import { Plus, ChevronDown } from 'lucide-react';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { TrainingRunStatus } from '@/components/training-run-status';
@@ -54,7 +55,9 @@ export function TrainingDashboard({ config }: { config: Config }) {
 
 function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClient; config: Config; onExpired: () => Promise<void> }) {
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [availableModels, setAvailableModels] = useState<Job[]>([]);
   const [selectedId, setSelectedId] = useState('');
+  const [modelToUse, setModelToUse] = useState('');
   const [panelOpen, setPanelOpen] = useState(false);
   const [downloadJobId, setDownloadJobId] = useState('');
   const focusSubmitted = useRef(false);
@@ -74,6 +77,19 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
   const life = useRef<AbortController | null>(null);
   const operation = useRef<AbortController | null>(null);
   const selected = currentTrainingJob(jobs);
+  const history = [...jobs, ...availableModels.filter(model => !jobs.some(job => job.id === model.id))];
+  useEffect(() => {
+    if (!modelToUse) return;
+    const target = document.getElementById(`use-model-${modelToUse}`);
+    if (target) { target.scrollIntoView({ block: 'start' }); target.focus({ preventScroll: true }); }
+  }, [modelToUse, selectedId]);
+  function useModel(job: Job) {
+    if (job.id !== selected?.id) setSelectedId(job.id);
+    setModelToUse(job.id);
+    // Repeated clicks still return to the example when it is already open.
+    const target = document.getElementById(`use-model-${job.id}`);
+    if (target) { target.scrollIntoView({ block: 'start' }); target.focus({ preventScroll: true }); }
+  }
   const api = useMemo(() => trainingApi(config.apiUrl, config.url, async () => {
     const { data, error } = await client.auth.getSession();
     if (error) throw error;
@@ -91,9 +107,9 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
     let timer: ReturnType<typeof setTimeout>;
     async function poll() {
       try {
-        const { jobs } = await api.list(controller.signal);
+        const { jobs, models } = await api.list(controller.signal);
         if (controller.signal.aborted) return;
-        setJobs(jobs); setLoading(false); setCheckedAt(Date.now()); setRefreshError(false);
+        setJobs(jobs); setAvailableModels(models ?? jobs); setLoading(false); setCheckedAt(Date.now()); setRefreshError(false);
         setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading')?.id || jobs.find(job => job.status === 'uploading')?.id || '');
         timer = setTimeout(poll, jobs.some(job => !terminal(job)) ? 10_000 : 30_000);
       } catch (error) { if (!controller.signal.aborted) { if (error instanceof TrainingApiError && error.status === 401) errorHandler.current(error); setLoading(false); setRefreshError(true); timer = setTimeout(poll, 30_000); } }
@@ -105,9 +121,9 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
   const refresh = async () => {
     setError(''); setRefreshing(true);
     try {
-      const { jobs } = await api.list(life.current?.signal);
+      const { jobs, models } = await api.list(life.current?.signal);
       if (!life.current?.signal.aborted) {
-        setJobs(jobs); setCheckedAt(Date.now()); setRefreshError(false);
+        setJobs(jobs); setAvailableModels(models ?? jobs); setCheckedAt(Date.now()); setRefreshError(false);
         setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading')?.id || jobs.find(job => job.status === 'uploading')?.id || '');
       }
     } catch (error) { if (!life.current?.signal.aborted) { if (error instanceof TrainingApiError && error.status === 401) handleError(error); setRefreshError(true); } }
@@ -201,12 +217,13 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
         <button className={styles.secondary} disabled={busy} onClick={() => resumeUploads(job)}>Resume missing uploads</button>
         <button className={styles.textButton} disabled={busy} onClick={() => cancelJob(job)}>Cancel this run</button>
       </div>}
-      {canDownload(job) && job.workflow?.state === 'ready' && job.workflow.model_id && <TrainedModelQuickstart
+      {canDownload(job) && job.workflow?.state === 'ready' && job.workflow.model_id && <div id={`use-model-${job.id}`} tabIndex={-1}><TrainedModelQuickstart
         key={job.workflow.model_id}
         modelId={job.workflow.model_id}
+        modelName={job.workflow.model_name}
         apiUrl={config.decisionApiUrl}
         apiKeys={<ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={onExpired} />}
-      />}
+      /></div>}
       {canDownload(job) && <details className={styles.details}>
         <summary>Model files (optional)</summary>
         <p className={styles.help}>Optional: download a private copy of the accepted adapter.</p>
@@ -216,6 +233,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
       <details className={styles.details}>
         <summary>{job.result ? 'Evaluation and technical details' : 'Technical details'}</summary>
         <p className={styles.id}>Run ID: {job.id}</p>
+        {job.workflow?.state === 'ready' && job.workflow.model_id && <p className={styles.hash}>Full API model ID<br /><code>{job.workflow.model_id}</code></p>}
         {job.created_at && <p>Submitted {new Date(job.created_at).toLocaleString()}</p>}
         {job.model && <p>Starting model: <strong>{job.model.name}</strong></p>}
         {job.status === 'completed' && !job.result && <p>Result details are not available yet. Refresh to try again.</p>}
@@ -251,6 +269,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
     {error && <p className={styles.error} role="alert">{error}</p>}
     {progress && <p role="status" className={styles.notice}>{progress}</p>}
     {busy && cancellable && <button type="button" className={styles.secondary} onClick={() => operation.current?.abort()}>Stop upload</button>}
+    {!loading && <TrainedModelLibrary jobs={availableModels} onUse={useModel} />}
     <div className={styles.workspace}>
       {loading ? <p role="status" className={styles.empty}>Loading your training runs…</p> : !selected ? <section className={styles.emptyWorkspace}>
         <h2>{refreshError ? 'Your runs could not be loaded.' : 'Train your first model.'}</h2>
@@ -265,7 +284,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
         </section>
       </div>}
       {runRows(jobs.filter(job => job.id !== selected?.id && !terminal(job)), 'Other active runs')}
-      {runRows(jobs.filter(job => job.id !== selected?.id && terminal(job)), 'Past runs')}
+      {runRows(history.filter(job => job.id !== selected?.id && terminal(job)), 'Past runs')}
     </div>
     <TrainingIntake key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={error} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
       if (focusSubmitted.current) { event.preventDefault(); focusSubmitted.current = false; statusMessage.current?.focus(); }
