@@ -3,13 +3,14 @@ import {
   supportStudy, supportBase, supportAdapter, supportGain, supportErrorReduction,
   supportComparisons, supportSource, supportMethod,
 } from '@/lib/support-study';
+import { jevComparisons, jevGain, jevErrorReduction, jevTrained, jevMetrics } from '@/lib/jev-comparison';
 
 const percent = (value: number) => `${(value * 100).toFixed(1)}%`;
 const number = (value: number) => value.toLocaleString('en-US');
 const link = 'underline decoration-edge-strong underline-offset-4 hover:text-accent hover:decoration-accent';
 const cell = 'border-t border-edge px-4 py-4 text-right tabular-nums';
 
-function AccuracyComparison() {
+export function AccuracyComparison({ includeJev = false }: { includeJev?: boolean }) {
   return (
     <figure aria-label="Accuracy on 500 untouched support conversations" className="min-w-0 rounded-md bg-surface p-6 sm:p-8">
       <figcaption className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
@@ -17,7 +18,7 @@ function AccuracyComparison() {
         <span className="text-xs text-muted">Same 500 test conversations</span>
       </figcaption>
       <dl className="mt-8 space-y-8">
-        {supportComparisons.map(({ name, note, metrics, trained }) => (
+        {(includeJev ? jevComparisons : supportComparisons).map(({ name, note, metrics, trained }) => (
           <div key={name}>
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
               <dt className={`text-sm ${trained ? 'font-semibold text-accent' : 'text-ink'}`}>{name}</dt>
@@ -34,9 +35,10 @@ function AccuracyComparison() {
       </dl>
       <div aria-hidden="true" className="mt-5 flex justify-between text-[11px] tabular-nums text-subtle"><span>0%</span><span>100%</span></div>
       <p className="mt-6 border-t border-edge pt-5 text-sm leading-6">
-        <strong className="font-semibold text-accent">+{supportGain} percentage points</strong>
-        <span className="text-muted"> · {supportAdapter.correct - supportBase.correct} more correct decisions</span>
+        <strong className="font-semibold text-accent">+{includeJev ? jevGain : supportGain} percentage points</strong>
+        <span className="text-muted"> vs {includeJev ? 'TypeSafe Jev' : 'unchanged JevK5'}</span>
       </p>
+      {includeJev && <p className="mt-2 text-xs leading-5 text-muted">Jev was tested live; JevK5 scores reuse verified predictions from the same frozen test set.</p>}
     </figure>
   );
 }
@@ -46,18 +48,18 @@ export function SupportStudySummary() {
     <section id="support-evidence" aria-labelledby="support-evidence-heading" className="mx-auto max-w-5xl scroll-mt-8 border-t border-edge px-6 py-20 sm:px-8">
       <div className="grid gap-10 md:grid-cols-2 md:items-center">
         <div>
-          <p className="text-xs text-muted">ABCD support-workflow study · October 2026</p>
-          <h2 id="support-evidence-heading" className="mt-4 max-w-[18ch] text-[clamp(2rem,4.4vw,3.25rem)] font-semibold leading-[1.04] tracking-[-0.055em]">Training improved support decisions.</h2>
+          <p className="text-xs text-muted">ABCD support decisions · Compared with TypeSafe Jev</p>
+          <h2 id="support-evidence-heading" className="mt-4 max-w-[18ch] text-[clamp(2rem,4.4vw,3.25rem)] font-semibold leading-[1.04] tracking-[-0.055em]">Custom training, tested against Jev.</h2>
           <p className="mt-5 max-w-[45ch] text-[15px] leading-7 text-muted">
-            We trained JevK5 to choose the next support tool from {supportStudy.splits.action_choices} options.
-            On {supportBase.count} untouched conversations, the trained adapter made <strong className="font-semibold text-ink">{supportErrorReduction}% fewer mistakes</strong> than the unchanged model.
+            On {supportBase.count} held-out support conversations, our trained JevK5 reached {percent(jevTrained.accuracy)} accuracy against TypeSafe Jev’s {percent(jevMetrics.accuracy)}.
+            That is <strong className="font-semibold text-ink">{jevErrorReduction}% fewer mistakes</strong> on the same next-action task.
           </p>
           <p className="mt-5 text-sm text-muted">{number(supportStudy.splits.training_conversations)} training conversations. Separate development and test sets.</p>
-          <Link href="/model#support-study" className="mt-7 inline-flex min-h-11 items-center rounded-md bg-action px-5 py-3 text-[13px] font-medium text-on-action hover:bg-action-hover">See the comparison</Link>
+          <Link href="/model#jev-comparison" className="mt-7 inline-flex min-h-11 items-center rounded-md bg-action px-5 py-3 text-[13px] font-medium text-on-action hover:bg-action-hover">See the Jev comparison</Link>
         </div>
-        <AccuracyComparison />
+        <AccuracyComparison includeJev />
       </div>
-      <p className="mt-7 max-w-[80ch] text-xs leading-6 text-muted">Measured agreement with recorded actions in public role-play conversations. This is a task-specific research result; confidence remains imperfect.</p>
+      <p className="mt-7 max-w-[80ch] text-xs leading-6 text-muted">One public support-workflow benchmark. Jev had higher accuracy among its smaller set of high-probability answers; our model’s confidence still needs calibration.</p>
     </section>
   );
 }

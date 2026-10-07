@@ -253,3 +253,12 @@ redirect to their matching Fez pages without publishing duplicate page content.
 `public/model/` contains recorded public benchmark and testnet snapshots from
 the model repository. Keep their original identifiers, timestamps, metrics, and
 hashes. Experimental results are not a released model or a live network feed.
+
+The homepage and `/model#jev-comparison` feature the recorded TypeSafe Jev 1.13.0
+comparison against the ABCD-trained JevK5 adapter. The Jev API was evaluated on the
+same 500 frozen test inputs; JevK5 predictions were reused and verified against the
+original study. The comparison includes all paired predictions, source hashes,
+confidence coverage, and the documented probability-format corrections under
+`public/model/abcd-002-jev*`. Evidence tests recompute accuracy, F1, Brier, and
+confidence coverage from those predictions. They do not call TypeSafe or train a
+model. Keep the earlier training study and its frozen artifacts unchanged.

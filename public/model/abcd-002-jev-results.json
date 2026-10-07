@@ -1,0 +1,895 @@
+{
+  "experiment": "jev-vs-abcd-002-20261006",
+  "all_500_responses_received": true,
+  "http_failures": 0,
+  "api_attempts": 500,
+  "pinned_jev_model": "jev-1.13.0",
+  "raw_validation_flags": 48,
+  "validation_resolution": "All flagged answers are complete; normalize bounded probability-sum deviations for secondary probability scores. Preserve returned choices, including one ranking mismatch, and original returned-choice probability thresholds. Report canonical argmax accuracy as sensitivity.",
+  "jev_api_cost_usd": 0.067028598,
+  "metrics": {
+    "jev": {
+      "n": 500,
+      "correct": 353,
+      "accuracy": 0.706,
+      "macro_f1": 0.6107575060796364,
+      "multiclass_brier": 0.40353605411692683,
+      "raw_brier_before_normalization": 0.40348860000000003,
+      "nll_clipped_1e15": 1.3068122594803144,
+      "mean_top_probability": 0.75468,
+      "ece_10_bins": 0.051119999999999985,
+      "distributions_normalized": 47,
+      "probability_sum_range": [
+        0.99,
+        1.0000000000000002
+      ],
+      "exact_top_probability_ties": 5,
+      "returned_choice_not_maximal": 1,
+      "canonical_argmax_correct": 354,
+      "coverage": [
+        {
+          "threshold": 0.5,
+          "automated": 433,
+          "coverage": 0.866,
+          "wrong": 105,
+          "accuracy_among_automated": 0.7575057736720554
+        },
+        {
+          "threshold": 0.7,
+          "automated": 317,
+          "coverage": 0.634,
+          "wrong": 45,
+          "accuracy_among_automated": 0.8580441640378549
+        },
+        {
+          "threshold": 0.8,
+          "automated": 262,
+          "coverage": 0.524,
+          "wrong": 24,
+          "accuracy_among_automated": 0.9083969465648855
+        },
+        {
+          "threshold": 0.9,
+          "automated": 176,
+          "coverage": 0.352,
+          "wrong": 8,
+          "accuracy_among_automated": 0.9545454545454546
+        },
+        {
+          "threshold": 0.95,
+          "automated": 116,
+          "coverage": 0.232,
+          "wrong": 4,
+          "accuracy_among_automated": 0.9655172413793104
+        },
+        {
+          "threshold": 0.99,
+          "automated": 32,
+          "coverage": 0.064,
+          "wrong": 0,
+          "accuracy_among_automated": 1.0
+        }
+      ],
+      "per_action": [
+        {
+          "action": "ask-the-oracle",
+          "support": 22,
+          "correct": 10,
+          "predicted": 11,
+          "f1": 0.6060606060606061
+        },
+        {
+          "action": "enter-details",
+          "support": 27,
+          "correct": 13,
+          "predicted": 22,
+          "f1": 0.5306122448979592
+        },
+        {
+          "action": "instructions",
+          "support": 8,
+          "correct": 4,
+          "predicted": 6,
+          "f1": 0.5714285714285714
+        },
+        {
+          "action": "log-out-in",
+          "support": 20,
+          "correct": 14,
+          "predicted": 15,
+          "f1": 0.8
+        },
+        {
+          "action": "make-password",
+          "support": 7,
+          "correct": 1,
+          "predicted": 2,
+          "f1": 0.2222222222222222
+        },
+        {
+          "action": "make-purchase",
+          "support": 8,
+          "correct": 7,
+          "predicted": 13,
+          "f1": 0.6666666666666666
+        },
+        {
+          "action": "membership",
+          "support": 16,
+          "correct": 3,
+          "predicted": 4,
+          "f1": 0.3
+        },
+        {
+          "action": "notify-team",
+          "support": 11,
+          "correct": 9,
+          "predicted": 12,
+          "f1": 0.782608695652174
+        },
+        {
+          "action": "offer-refund",
+          "support": 6,
+          "correct": 5,
+          "predicted": 10,
+          "f1": 0.625
+        },
+        {
+          "action": "promo-code",
+          "support": 9,
+          "correct": 8,
+          "predicted": 13,
+          "f1": 0.7272727272727273
+        },
+        {
+          "action": "pull-up-account",
+          "support": 99,
+          "correct": 96,
+          "predicted": 110,
+          "f1": 0.9186602870813397
+        },
+        {
+          "action": "record-reason",
+          "support": 23,
+          "correct": 10,
+          "predicted": 20,
+          "f1": 0.46511627906976744
+        },
+        {
+          "action": "search-boots",
+          "support": 1,
+          "correct": 0,
+          "predicted": 3,
+          "f1": 0.0
+        },
+        {
+          "action": "search-faq",
+          "support": 33,
+          "correct": 2,
+          "predicted": 2,
+          "f1": 0.11428571428571428
+        },
+        {
+          "action": "search-jacket",
+          "support": 7,
+          "correct": 6,
+          "predicted": 8,
+          "f1": 0.8
+        },
+        {
+          "action": "search-jeans",
+          "support": 3,
+          "correct": 3,
+          "predicted": 7,
+          "f1": 0.6
+        },
+        {
+          "action": "search-membership",
+          "support": 7,
+          "correct": 6,
+          "predicted": 11,
+          "f1": 0.6666666666666666
+        },
+        {
+          "action": "search-policy",
+          "support": 12,
+          "correct": 7,
+          "predicted": 7,
+          "f1": 0.7368421052631579
+        },
+        {
+          "action": "search-pricing",
+          "support": 7,
+          "correct": 4,
+          "predicted": 7,
+          "f1": 0.5714285714285714
+        },
+        {
+          "action": "search-shirt",
+          "support": 8,
+          "correct": 7,
+          "predicted": 17,
+          "f1": 0.56
+        },
+        {
+          "action": "search-timing",
+          "support": 5,
+          "correct": 5,
+          "predicted": 11,
+          "f1": 0.625
+        },
+        {
+          "action": "select-faq",
+          "support": 30,
+          "correct": 30,
+          "predicted": 40,
+          "f1": 0.8571428571428571
+        },
+        {
+          "action": "send-link",
+          "support": 6,
+          "correct": 6,
+          "predicted": 6,
+          "f1": 1.0
+        },
+        {
+          "action": "shipping-status",
+          "support": 9,
+          "correct": 5,
+          "predicted": 7,
+          "f1": 0.625
+        },
+        {
+          "action": "subscription-status",
+          "support": 4,
+          "correct": 4,
+          "predicted": 8,
+          "f1": 0.6666666666666666
+        },
+        {
+          "action": "try-again",
+          "support": 12,
+          "correct": 5,
+          "predicted": 11,
+          "f1": 0.43478260869565216
+        },
+        {
+          "action": "update-account",
+          "support": 8,
+          "correct": 5,
+          "predicted": 9,
+          "f1": 0.5882352941176471
+        },
+        {
+          "action": "update-order",
+          "support": 17,
+          "correct": 12,
+          "predicted": 19,
+          "f1": 0.6666666666666666
+        },
+        {
+          "action": "validate-purchase",
+          "support": 25,
+          "correct": 22,
+          "predicted": 32,
+          "f1": 0.7719298245614035
+        },
+        {
+          "action": "verify-identity",
+          "support": 50,
+          "correct": 44,
+          "predicted": 57,
+          "f1": 0.822429906542056
+        }
+      ],
+      "latency_median_seconds": 0.31784439549664967,
+      "latency_p95_seconds": 0.7131867916148621,
+      "total_input_tokens": 1595919
+    },
+    "trained_jevk5": {
+      "n": 500,
+      "correct": 396,
+      "accuracy": 0.792,
+      "macro_f1": 0.7583245392546261,
+      "multiclass_brier": 0.33754536386605183,
+      "raw_brier_before_normalization": 0.33754536386605183,
+      "nll_clipped_1e15": 0.9160290729773535,
+      "mean_top_probability": 0.8887458870369801,
+      "ece_10_bins": 0.09674588703698009,
+      "distributions_normalized": 0,
+      "probability_sum_range": [
+        0.9999999999999996,
+        1.0000000000000002
+      ],
+      "exact_top_probability_ties": 2,
+      "returned_choice_not_maximal": 0,
+      "canonical_argmax_correct": 396,
+      "coverage": [
+        {
+          "threshold": 0.5,
+          "automated": 480,
+          "coverage": 0.96,
+          "wrong": 88,
+          "accuracy_among_automated": 0.8166666666666667
+        },
+        {
+          "threshold": 0.7,
+          "automated": 457,
+          "coverage": 0.914,
+          "wrong": 74,
+          "accuracy_among_automated": 0.838074398249453
+        },
+        {
+          "threshold": 0.8,
+          "automated": 441,
+          "coverage": 0.882,
+          "wrong": 68,
+          "accuracy_among_automated": 0.8458049886621315
+        },
+        {
+          "threshold": 0.9,
+          "automated": 381,
+          "coverage": 0.762,
+          "wrong": 44,
+          "accuracy_among_automated": 0.8845144356955381
+        },
+        {
+          "threshold": 0.95,
+          "automated": 125,
+          "coverage": 0.25,
+          "wrong": 4,
+          "accuracy_among_automated": 0.968
+        },
+        {
+          "threshold": 0.99,
+          "automated": 0,
+          "coverage": 0.0,
+          "wrong": 0,
+          "accuracy_among_automated": null
+        }
+      ],
+      "per_action": [
+        {
+          "action": "ask-the-oracle",
+          "support": 22,
+          "correct": 15,
+          "predicted": 18,
+          "f1": 0.75
+        },
+        {
+          "action": "enter-details",
+          "support": 27,
+          "correct": 13,
+          "predicted": 17,
+          "f1": 0.5909090909090909
+        },
+        {
+          "action": "instructions",
+          "support": 8,
+          "correct": 6,
+          "predicted": 14,
+          "f1": 0.5454545454545454
+        },
+        {
+          "action": "log-out-in",
+          "support": 20,
+          "correct": 13,
+          "predicted": 13,
+          "f1": 0.7878787878787878
+        },
+        {
+          "action": "make-password",
+          "support": 7,
+          "correct": 3,
+          "predicted": 4,
+          "f1": 0.5454545454545454
+        },
+        {
+          "action": "make-purchase",
+          "support": 8,
+          "correct": 5,
+          "predicted": 6,
+          "f1": 0.7142857142857143
+        },
+        {
+          "action": "membership",
+          "support": 16,
+          "correct": 12,
+          "predicted": 18,
+          "f1": 0.7058823529411765
+        },
+        {
+          "action": "notify-team",
+          "support": 11,
+          "correct": 10,
+          "predicted": 12,
+          "f1": 0.8695652173913043
+        },
+        {
+          "action": "offer-refund",
+          "support": 6,
+          "correct": 3,
+          "predicted": 5,
+          "f1": 0.5454545454545454
+        },
+        {
+          "action": "promo-code",
+          "support": 9,
+          "correct": 9,
+          "predicted": 10,
+          "f1": 0.9473684210526315
+        },
+        {
+          "action": "pull-up-account",
+          "support": 99,
+          "correct": 97,
+          "predicted": 109,
+          "f1": 0.9326923076923077
+        },
+        {
+          "action": "record-reason",
+          "support": 23,
+          "correct": 13,
+          "predicted": 15,
+          "f1": 0.6842105263157895
+        },
+        {
+          "action": "search-boots",
+          "support": 1,
+          "correct": 1,
+          "predicted": 1,
+          "f1": 1.0
+        },
+        {
+          "action": "search-faq",
+          "support": 33,
+          "correct": 24,
+          "predicted": 30,
+          "f1": 0.7619047619047619
+        },
+        {
+          "action": "search-jacket",
+          "support": 7,
+          "correct": 6,
+          "predicted": 6,
+          "f1": 0.9230769230769231
+        },
+        {
+          "action": "search-jeans",
+          "support": 3,
+          "correct": 3,
+          "predicted": 3,
+          "f1": 1.0
+        },
+        {
+          "action": "search-membership",
+          "support": 7,
+          "correct": 5,
+          "predicted": 6,
+          "f1": 0.7692307692307693
+        },
+        {
+          "action": "search-policy",
+          "support": 12,
+          "correct": 6,
+          "predicted": 6,
+          "f1": 0.6666666666666666
+        },
+        {
+          "action": "search-pricing",
+          "support": 7,
+          "correct": 3,
+          "predicted": 3,
+          "f1": 0.6
+        },
+        {
+          "action": "search-shirt",
+          "support": 8,
+          "correct": 7,
+          "predicted": 9,
+          "f1": 0.8235294117647058
+        },
+        {
+          "action": "search-timing",
+          "support": 5,
+          "correct": 5,
+          "predicted": 7,
+          "f1": 0.8333333333333334
+        },
+        {
+          "action": "select-faq",
+          "support": 30,
+          "correct": 30,
+          "predicted": 39,
+          "f1": 0.8695652173913043
+        },
+        {
+          "action": "send-link",
+          "support": 6,
+          "correct": 6,
+          "predicted": 7,
+          "f1": 0.9230769230769231
+        },
+        {
+          "action": "shipping-status",
+          "support": 9,
+          "correct": 9,
+          "predicted": 12,
+          "f1": 0.8571428571428571
+        },
+        {
+          "action": "subscription-status",
+          "support": 4,
+          "correct": 4,
+          "predicted": 8,
+          "f1": 0.6666666666666666
+        },
+        {
+          "action": "try-again",
+          "support": 12,
+          "correct": 6,
+          "predicted": 10,
+          "f1": 0.5454545454545454
+        },
+        {
+          "action": "update-account",
+          "support": 8,
+          "correct": 6,
+          "predicted": 13,
+          "f1": 0.5714285714285714
+        },
+        {
+          "action": "update-order",
+          "support": 17,
+          "correct": 12,
+          "predicted": 21,
+          "f1": 0.631578947368421
+        },
+        {
+          "action": "validate-purchase",
+          "support": 25,
+          "correct": 23,
+          "predicted": 28,
+          "f1": 0.8679245283018868
+        },
+        {
+          "action": "verify-identity",
+          "support": 50,
+          "correct": 41,
+          "predicted": 50,
+          "f1": 0.82
+        }
+      ],
+      "latency_median_seconds": 0.873066412499611,
+      "latency_p95_seconds": 1.0209821118489344,
+      "total_input_tokens": 3176942
+    },
+    "shared_jevk5": {
+      "n": 500,
+      "correct": 289,
+      "accuracy": 0.578,
+      "macro_f1": 0.49643748291373646,
+      "multiclass_brier": 0.6169341384932315,
+      "raw_brier_before_normalization": 0.6169341384932315,
+      "nll_clipped_1e15": 1.5107449360579095,
+      "mean_top_probability": 0.6744458796737537,
+      "ece_10_bins": 0.10175795422630485,
+      "distributions_normalized": 0,
+      "probability_sum_range": [
+        0.9999999999999996,
+        1.0000000000000002
+      ],
+      "exact_top_probability_ties": 9,
+      "returned_choice_not_maximal": 0,
+      "canonical_argmax_correct": 289,
+      "coverage": [
+        {
+          "threshold": 0.5,
+          "automated": 383,
+          "coverage": 0.766,
+          "wrong": 140,
+          "accuracy_among_automated": 0.6344647519582245
+        },
+        {
+          "threshold": 0.7,
+          "automated": 244,
+          "coverage": 0.488,
+          "wrong": 70,
+          "accuracy_among_automated": 0.7131147540983607
+        },
+        {
+          "threshold": 0.8,
+          "automated": 165,
+          "coverage": 0.33,
+          "wrong": 44,
+          "accuracy_among_automated": 0.7333333333333334
+        },
+        {
+          "threshold": 0.9,
+          "automated": 65,
+          "coverage": 0.13,
+          "wrong": 16,
+          "accuracy_among_automated": 0.7538461538461538
+        },
+        {
+          "threshold": 0.95,
+          "automated": 22,
+          "coverage": 0.044,
+          "wrong": 5,
+          "accuracy_among_automated": 0.7727272727272727
+        },
+        {
+          "threshold": 0.99,
+          "automated": 0,
+          "coverage": 0.0,
+          "wrong": 0,
+          "accuracy_among_automated": null
+        }
+      ],
+      "per_action": [
+        {
+          "action": "ask-the-oracle",
+          "support": 22,
+          "correct": 16,
+          "predicted": 27,
+          "f1": 0.6530612244897959
+        },
+        {
+          "action": "enter-details",
+          "support": 27,
+          "correct": 6,
+          "predicted": 12,
+          "f1": 0.3076923076923077
+        },
+        {
+          "action": "instructions",
+          "support": 8,
+          "correct": 3,
+          "predicted": 4,
+          "f1": 0.5
+        },
+        {
+          "action": "log-out-in",
+          "support": 20,
+          "correct": 14,
+          "predicted": 15,
+          "f1": 0.8
+        },
+        {
+          "action": "make-password",
+          "support": 7,
+          "correct": 6,
+          "predicted": 7,
+          "f1": 0.8571428571428571
+        },
+        {
+          "action": "make-purchase",
+          "support": 8,
+          "correct": 5,
+          "predicted": 7,
+          "f1": 0.6666666666666666
+        },
+        {
+          "action": "membership",
+          "support": 16,
+          "correct": 0,
+          "predicted": 0,
+          "f1": 0.0
+        },
+        {
+          "action": "notify-team",
+          "support": 11,
+          "correct": 10,
+          "predicted": 11,
+          "f1": 0.9090909090909091
+        },
+        {
+          "action": "offer-refund",
+          "support": 6,
+          "correct": 5,
+          "predicted": 13,
+          "f1": 0.5263157894736842
+        },
+        {
+          "action": "promo-code",
+          "support": 9,
+          "correct": 6,
+          "predicted": 11,
+          "f1": 0.6
+        },
+        {
+          "action": "pull-up-account",
+          "support": 99,
+          "correct": 90,
+          "predicted": 105,
+          "f1": 0.8823529411764706
+        },
+        {
+          "action": "record-reason",
+          "support": 23,
+          "correct": 2,
+          "predicted": 4,
+          "f1": 0.14814814814814814
+        },
+        {
+          "action": "search-boots",
+          "support": 1,
+          "correct": 1,
+          "predicted": 7,
+          "f1": 0.25
+        },
+        {
+          "action": "search-faq",
+          "support": 33,
+          "correct": 0,
+          "predicted": 4,
+          "f1": 0.0
+        },
+        {
+          "action": "search-jacket",
+          "support": 7,
+          "correct": 6,
+          "predicted": 14,
+          "f1": 0.5714285714285714
+        },
+        {
+          "action": "search-jeans",
+          "support": 3,
+          "correct": 3,
+          "predicted": 13,
+          "f1": 0.375
+        },
+        {
+          "action": "search-membership",
+          "support": 7,
+          "correct": 5,
+          "predicted": 13,
+          "f1": 0.5
+        },
+        {
+          "action": "search-policy",
+          "support": 12,
+          "correct": 6,
+          "predicted": 8,
+          "f1": 0.6
+        },
+        {
+          "action": "search-pricing",
+          "support": 7,
+          "correct": 4,
+          "predicted": 11,
+          "f1": 0.4444444444444444
+        },
+        {
+          "action": "search-shirt",
+          "support": 8,
+          "correct": 7,
+          "predicted": 23,
+          "f1": 0.45161290322580644
+        },
+        {
+          "action": "search-timing",
+          "support": 5,
+          "correct": 5,
+          "predicted": 16,
+          "f1": 0.47619047619047616
+        },
+        {
+          "action": "select-faq",
+          "support": 30,
+          "correct": 3,
+          "predicted": 4,
+          "f1": 0.17647058823529413
+        },
+        {
+          "action": "send-link",
+          "support": 6,
+          "correct": 6,
+          "predicted": 10,
+          "f1": 0.75
+        },
+        {
+          "action": "shipping-status",
+          "support": 9,
+          "correct": 2,
+          "predicted": 4,
+          "f1": 0.3076923076923077
+        },
+        {
+          "action": "subscription-status",
+          "support": 4,
+          "correct": 4,
+          "predicted": 20,
+          "f1": 0.3333333333333333
+        },
+        {
+          "action": "try-again",
+          "support": 12,
+          "correct": 8,
+          "predicted": 16,
+          "f1": 0.5714285714285714
+        },
+        {
+          "action": "update-account",
+          "support": 8,
+          "correct": 7,
+          "predicted": 24,
+          "f1": 0.4375
+        },
+        {
+          "action": "update-order",
+          "support": 17,
+          "correct": 9,
+          "predicted": 27,
+          "f1": 0.4090909090909091
+        },
+        {
+          "action": "validate-purchase",
+          "support": 25,
+          "correct": 24,
+          "predicted": 40,
+          "f1": 0.7384615384615385
+        },
+        {
+          "action": "verify-identity",
+          "support": 50,
+          "correct": 26,
+          "predicted": 30,
+          "f1": 0.65
+        }
+      ],
+      "latency_median_seconds": 0.7662553700029093,
+      "latency_p95_seconds": 0.899243401798958,
+      "total_input_tokens": 3178609
+    }
+  },
+  "comparisons": {
+    "trained_vs_jev": {
+      "accuracy_gain_percentage_points": 8.6,
+      "accuracy_gain_95_ci_percentage_points": [
+        4.8,
+        12.2
+      ],
+      "brier_improvement": 0.06599069025087502,
+      "brier_improvement_95_ci": [
+        0.015399874212914205,
+        0.11475712522423882
+      ],
+      "trained_correct_other_wrong": 72,
+      "other_correct_trained_wrong": 29,
+      "both_correct": 324,
+      "both_wrong": 75
+    },
+    "trained_vs_shared_jevk5": {
+      "accuracy_gain_percentage_points": 21.4,
+      "accuracy_gain_95_ci_percentage_points": [
+        16.8,
+        25.8
+      ],
+      "brier_improvement": 0.27938877462717987,
+      "brier_improvement_95_ci": [
+        0.2213867081272137,
+        0.33584692554146667
+      ],
+      "trained_correct_other_wrong": 128,
+      "other_correct_trained_wrong": 21,
+      "both_correct": 268,
+      "both_wrong": 83
+    }
+  },
+  "limitations": [
+    "Same prompt and full candidate set; no separate provider prompt optimization.",
+    "Frozen test already evaluated for abcd-002; no tuning or model selection in this new comparison.",
+    "Agreement with recorded action is not full conversation success or guaranteed policy compliance.",
+    "Public-data overlap with either models pretraining cannot be excluded.",
+    "One training seed; no across-seed uncertainty measured.",
+    "Jev elapsed time includes API network transport; historical JevK5 timing is local GPU inference. Not an apples-to-apples speed benchmark."
+  ],
+  "evidence": {
+    "protocol.json": "e475f2f29764700bed7eff54958a9ce357deb51f0e8ab147bed7fffbd6d37e7e",
+    "response-format-amendment.json": "72217cbaa1b6e836087fdadedbb2e9a432a0d3b1d5aa9fa0cbcc4a991bd8079d",
+    "run_jev.py": "86841e0969e21ee1ba04afa466c289c5b4d6aeae6c3354b39714b5ecf77f0104",
+    "jev-responses.jsonl": "84019aebe79e011def498b2f21aad0028e836a4ee2e795f728d0c685e3f8e3aa",
+    "analyze.py": "b3c530f0fbc10bf78817facb54f7d72f3e8689e4cb4195d9f6fcbcdaabdce5a1"
+  }
+}

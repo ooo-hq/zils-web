@@ -4,14 +4,15 @@ import Link from 'next/link';
 import { SiteFooter } from '@/components/site-footer';
 import { FlightStudyDetails } from '@/components/flight-study';
 import { SupportStudyDetails } from '@/components/support-study';
-import { supportMethod, supportSource } from '@/lib/support-study';
+import { JevComparisonDetails } from '@/components/jev-comparison';
+import { jevMethod, jevSource } from '@/lib/jev-comparison';
 import { SiteHeader } from '@/components/site-header';
 import s from '@/components/light.module.css';
 import { benchmark, readComparison, percent, decimal, milliseconds, comparisonHeadline } from '@/lib/model-benchmark';
 
 export const metadata: Metadata = {
   title: 'zils — decision model research',
-  description: 'Trained JevK5 reached 79.2% accuracy versus 57.8% unchanged on 500 untouched ABCD support conversations. Explore the comparison, methodology, and earlier studies.',
+  description: 'ABCD-trained JevK5 reached 79.2% accuracy versus TypeSafe Jev’s 70.6% on the same 500 test conversations. Explore the comparison, confidence tradeoffs, and evidence.',
   alternates: { canonical: 'https://zils.ai/model' },
 };
 
@@ -23,6 +24,7 @@ const CELL = 'border-t border-edge px-3 py-3 text-right tabular-nums sm:px-5';
 const HEAD = 'border-t border-edge px-3 py-3 text-left font-normal text-ink sm:px-5';
 const CARD = 'rounded-2xl bg-page ring-1 ring-edge';
 const SECTIONS = [
+  { id: 'jev-comparison', title: 'TypeSafe Jev comparison' },
   { id: 'support-study', title: 'Support decisions' },
   { id: 'flight-study', title: 'Flight adapter study' },
   { id: 'overview', title: 'Earlier research' },
@@ -30,8 +32,8 @@ const SECTIONS = [
 ] as const;
 const RESOURCES = [
   { href: REPO, title: 'Research code', description: 'Explore training and evaluation.', bg: 'bg-page' },
-  { href: supportMethod, title: 'Support study report', description: 'Read the method and measured limits.', bg: 'bg-page' },
-  { href: supportSource, title: 'Recorded results', description: 'Inspect the support study’s scores and evidence.', bg: 'bg-page' },
+  { href: jevMethod, title: 'Jev comparison report', description: 'Read the method and measured limits.', bg: 'bg-page' },
+  { href: jevSource, title: 'Recorded results', description: 'Inspect the Jev comparison’s scores and evidence.', bg: 'bg-page' },
 ] as const;
 
 function time(value: string) {
@@ -74,9 +76,9 @@ export default function ModelPage() {
         <header className="relative mx-auto max-w-5xl px-6 pb-16 pt-10 sm:px-8 sm:pt-16">
           <p className="flex items-center gap-2 text-[12px] font-medium"><span aria-hidden="true" className="text-base">✳</span> Research · Open about the evidence</p>
           <h1 className="mt-5 max-w-[16ch] text-[clamp(2.7rem,6.5vw,4.8rem)] font-semibold leading-[0.98] tracking-[-0.06em]">Decision model research.</h1>
-          <p className="mt-6 max-w-[58ch] text-lg leading-8 text-muted">Can training make a decision model better at a specific task? We test that question against unchanged models and simple alternatives, then publish what improved and what did not.</p>
+          <p className="mt-6 max-w-[58ch] text-lg leading-8 text-muted">Can training make a decision model better at a specific task? We compare with TypeSafe Jev, unchanged models, and simple alternatives, then publish what improved and what did not.</p>
           <p className="mt-4 flex w-fit items-center gap-2 rounded-full bg-page/70 px-3 py-1 text-xs text-muted ring-1 ring-edge"><span className="size-1.5 shrink-0 rounded-full bg-[#FF6A00]" />Recorded experiments. Evidence and limitations published together.</p>
-          <a href="#support-study" className="mt-8 inline-flex min-h-11 items-center rounded-md bg-action px-5 py-3 text-sm font-medium text-on-action hover:bg-action-hover">Compare trained and unchanged JevK5</a>
+          <a href="#jev-comparison" className="mt-8 inline-flex min-h-11 items-center rounded-md bg-action px-5 py-3 text-sm font-medium text-on-action hover:bg-action-hover">Compare trained JevK5 with TypeSafe Jev</a>
           <nav aria-label="Project resources" className="mt-4 grid gap-3 sm:grid-cols-3">
             {RESOURCES.map(r => (
               <a key={r.href} href={r.href} className={`group rounded-md border border-edge p-5 transition-colors hover:border-accent ${r.bg}`}>
@@ -92,6 +94,8 @@ export default function ModelPage() {
         <nav aria-label="On this page" className="sticky top-0 z-10 -mx-2 flex gap-1.5 overflow-x-auto bg-page/85 px-2 py-3 backdrop-blur">
           {SECTIONS.map(section => <a key={section.id} href={`#${section.id}`} className="shrink-0 rounded-full bg-page px-4 py-1.5 text-xs text-muted ring-1 ring-edge hover:text-ink">{section.title}</a>)}
         </nav>
+
+        <JevComparisonDetails />
 
         <SupportStudyDetails />
 
