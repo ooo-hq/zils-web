@@ -28,6 +28,15 @@ pages, including training panels. A first visit follows the device's color
 setting; a manual choice is saved in browser storage and shared across tabs.
 If browser storage is unavailable, switching still works for the current visit.
 
+## Chess study
+
+`/model/chess-study` publishes the completed `chess-001` mate-in-one comparison,
+linked from `/model`. Scores and paired intervals come from the immutable public
+record in `public/model/chess-001.json`; the frozen protocol, preparation checks,
+data manifest, and report are available beside it. The publication preserves the
+100% deterministic rules baseline, restricted candidate scope, retry accounting,
+and single-seed limitation. It does not deploy or change a model.
+
 ## Service settings
 
 Copy `.env.example` to `.env.local` and supply the settings for your own services.

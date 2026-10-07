@@ -1,0 +1,483 @@
+{
+  "experiment": "chess-001",
+  "status": "complete; no deployment",
+  "completed_at": "2026-10-07T05:12:56.619117+00:00",
+  "protocol_sha256": "8efb12e7b98411504350b5585e45dbcb0c42c44c5a304eb1a95126528a33bb43",
+  "data_manifest_sha256": "35965cc859caf0dd43748e041270cc2c880a8b6ac819da16a7d6cadbed4d2505",
+  "models": {
+    "shared": {
+      "backend": "shared",
+      "model": "alibiserikbay/JevK5",
+      "revision": "c4f7fdb3aeab5582336406e78d3bef11bf98833d",
+      "base_sha256": {
+        "model.safetensors": "13824e47f2e40fe052f06943976cf742cb366ba305741a111e75a8ebae907a9c",
+        "config.json": "63f47812d0f11118e4d252d2b3ad488707eb9287a11589f4fd382a1d31182724",
+        "chat_template.jinja": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715",
+        "tokenizer.json": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+        "tokenizer_config.json": "9cf04fffe3d8c3b85e439fb35c7acad0761ab51c422a8c4256d9f887c3a0be7d",
+        "jevk5_config.json": "0d689fd13d15dc962265e2ae10b56359706ab5d05ad24e00e6334e4c19cf83d2"
+      }
+    },
+    "trained": {
+      "backend": "trained",
+      "model": "alibiserikbay/JevK5",
+      "revision": "c4f7fdb3aeab5582336406e78d3bef11bf98833d",
+      "base_sha256": {
+        "model.safetensors": "13824e47f2e40fe052f06943976cf742cb366ba305741a111e75a8ebae907a9c",
+        "config.json": "63f47812d0f11118e4d252d2b3ad488707eb9287a11589f4fd382a1d31182724",
+        "chat_template.jinja": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715",
+        "tokenizer.json": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+        "tokenizer_config.json": "9cf04fffe3d8c3b85e439fb35c7acad0761ab51c422a8c4256d9f887c3a0be7d",
+        "jevk5_config.json": "0d689fd13d15dc962265e2ae10b56359706ab5d05ad24e00e6334e4c19cf83d2"
+      },
+      "adapter_sha256": "84a6b393b2fa60ae3d9c726fc862319621b88b381c43c00b32477b839ac6c084",
+      "data_manifest_sha256": "35965cc859caf0dd43748e041270cc2c880a8b6ac819da16a7d6cadbed4d2505"
+    },
+    "jev": {
+      "backend": "jev",
+      "model": "jev-1.13.0"
+    }
+  },
+  "results": {
+    "shared": {
+      "examples": 512,
+      "games": 512,
+      "coverage": 1.0,
+      "accuracy": 0.4296875,
+      "mating_probability_mass": 0.3607635528569517,
+      "marginal_nll": 1.1640581923355493,
+      "high_probability_predictions": 0,
+      "high_probability_errors": 0,
+      "rejected_attempts": 0,
+      "latency_median_seconds": 0.06035469550261041,
+      "latency_p95_seconds": 0.08421809900028165
+    },
+    "trained": {
+      "examples": 512,
+      "games": 512,
+      "coverage": 1.0,
+      "accuracy": 0.5078125,
+      "mating_probability_mass": 0.43245349761855323,
+      "marginal_nll": 1.0588443201866955,
+      "high_probability_predictions": 18,
+      "high_probability_errors": 2,
+      "rejected_attempts": 0,
+      "latency_median_seconds": 0.07271867099916562,
+      "latency_p95_seconds": 0.08029351299046539
+    },
+    "jev": {
+      "examples": 512,
+      "games": 512,
+      "coverage": 1.0,
+      "accuracy": 0.435546875,
+      "mating_probability_mass": 0.38697265625,
+      "marginal_nll": 1.2943155749430766,
+      "high_probability_predictions": 11,
+      "high_probability_errors": 3,
+      "rejected_attempts": 6,
+      "latency_median_seconds": 0.172108645492699,
+      "latency_p95_seconds": 0.23014329199213535
+    }
+  },
+  "baselines": {
+    "uniform_expected_accuracy": 0.3392911396329365,
+    "first_option": 0.34765625,
+    "capture_material": 0.365234375,
+    "rules_oracle": 1
+  },
+  "paired_comparisons": {
+    "trained_minus_shared": {
+      "accuracy": {
+        "right_minus_left": 0.078125,
+        "paired_game_bootstrap_95pct": [
+          0.033203125,
+          0.12109375
+        ]
+      },
+      "mating_probability_mass": {
+        "right_minus_left": 0.07168994476160151,
+        "paired_game_bootstrap_95pct": [
+          0.05741014723389526,
+          0.08633169378663297
+        ]
+      },
+      "marginal_nll": {
+        "right_minus_left": -0.10521387214885379,
+        "paired_game_bootstrap_95pct": [
+          -0.14322713976961388,
+          -0.06726291036860119
+        ]
+      }
+    },
+    "trained_minus_jev": {
+      "accuracy": {
+        "right_minus_left": 0.072265625,
+        "paired_game_bootstrap_95pct": [
+          0.021484375,
+          0.123046875
+        ]
+      },
+      "mating_probability_mass": {
+        "right_minus_left": 0.04548084136855323,
+        "paired_game_bootstrap_95pct": [
+          0.027890502322843527,
+          0.0630940132534306
+        ]
+      },
+      "marginal_nll": {
+        "right_minus_left": -0.2354712547563811,
+        "paired_game_bootstrap_95pct": [
+          -0.44478194052800685,
+          -0.09365588087100858
+        ]
+      }
+    }
+  },
+  "training": {
+    "protocol": {
+      "experiment": "chess-001",
+      "status": "preparation; no model-quality results",
+      "seed": 557,
+      "dataset": {
+        "url": "https://database.lichess.org/lichess_db_puzzle.csv.zst",
+        "headers": {
+          "Content-Length": "307234795",
+          "Last-Modified": "Fri, 02 Oct 2026 08:51:45 GMT",
+          "ETag": "\"6abf70a1-125007eb\""
+        },
+        "bytes": 307234795,
+        "sha256": "76335bfa7d7c4a7f93c1366d81549e53951ebb79dd43d34904cab8f22d962f8d",
+        "license": "CC0",
+        "source_page": "https://database.lichess.org/#puzzles",
+        "source_rows": 200000,
+        "selection": "First 200000 records of the pinned archive; mateIn1-tagged, independently rule-verified. Not a uniform sample of the full database."
+      },
+      "splits": {
+        "train": 2048,
+        "calibration": 512,
+        "test": 512
+      },
+      "task": {
+        "candidate_rule": "Every legal checking move; retain positions with 2\u201316 candidates and at least one nonmating candidate. No solution-aware candidate sampling.",
+        "setup": "Apply the first recorded move to the source FEN; evaluate the resulting side to move.",
+        "labels": "Every legal move that immediately produces checkmate; recorded solution must be in that set.",
+        "order": "Sort options by seeded hash of normalized solver FEN and UCI move, independent of labels.",
+        "split": "Deduplicate exact and color-swapped vertical-mirror positions globally, retain one deterministically selected case per source game, seeded shuffle of games, then fixed split counts.",
+        "inputs": "Normalized solver FEN with clocks 0/1, board rows, side to move, and UCI candidates with piece/from/to descriptions. No SAN, checks/mates annotations, rating, puzzle/game ID, themes, or solution in model inputs."
+      },
+      "models": {
+        "jev": "jev-1.13.0",
+        "jev_endpoint": "https://api.typesafe.ai/v1/systemone",
+        "jevk5": "alibiserikbay/JevK5",
+        "jevk5_revision": "c4f7fdb3aeab5582336406e78d3bef11bf98833d",
+        "jevk5_source": "f26426d16f59e8bbe1470e5b162cc89329e29b29",
+        "jevk5_weights_sha256": "13824e47f2e40fe052f06943976cf742cb366ba305741a111e75a8ebae907a9c",
+        "temperature": 1.22
+      },
+      "max_tokens": 3072,
+      "prompt_sha256": "322d69ba6abea83602f27b7a5aa0d3e6ab00847fd03ddccd35a28ae5b23acc1a",
+      "training": {
+        "epochs": 1,
+        "rank": 16,
+        "alpha": 32,
+        "dropout": 0.05,
+        "learning_rate": 1e-05,
+        "gradient_accumulation": 4,
+        "gradient_clip": 1.0,
+        "label_smoothing": 0.05,
+        "initialization": "fresh rank-16 LoRA on shared JevK5; no NetHack or support adapter",
+        "selection": "one fixed recipe, final checkpoint only; no test-directed tuning",
+        "loss": "0.95 * negative log total mating-move probability + 0.05 * uniform cross entropy over listed candidates"
+      },
+      "evaluation": {
+        "primary": "Fraction of held-out positions where selected move produces immediate checkmate; all mating alternatives accepted.",
+        "secondary": [
+          "total probability assigned to mating moves",
+          "set-valued negative log likelihood",
+          "high-confidence errors",
+          "coverage and API validation retries"
+        ],
+        "baselines": [
+          "uniform expected success",
+          "first listed move",
+          "highest captured material with promotion bonus",
+          "deterministic rules oracle (100% sanity ceiling)"
+        ],
+        "bootstrap": "2000 paired whole-game resamples, seed 557; one puzzle per game",
+        "calibration": "Reserved unused; native temperatures and final checkpoint only",
+        "invalid_responses": "Exactly matching candidate keys, finite probabilities summing to 1 within 1e-5, chosen option consistent with maximum probability. Jev up to three attempts with rejected responses retained; fail incomplete runs."
+      },
+      "limitations": [
+        "Ranking legal checking moves, not unrestricted chess or full-game play.",
+        "Rules software already solves mate-in-one exactly; this is a specialization experiment, not a claim that AI improves chess software.",
+        "Public puzzle/pretraining overlap and related tactical patterns remain possible despite exact/mirror deduplication.",
+        "One fixed training seed and recipe; no checkpoint or test-directed selection."
+      ],
+      "promotion": "none; preserve all gains, failures and regressions; preparation does not start training"
+    },
+    "smoke": false,
+    "adapter_sha256": "84a6b393b2fa60ae3d9c726fc862319621b88b381c43c00b32477b839ac6c084",
+    "data_manifest_sha256": "35965cc859caf0dd43748e041270cc2c880a8b6ac819da16a7d6cadbed4d2505",
+    "training_examples": 2048,
+    "training_seconds": 1361.387602695002,
+    "step_zero_parity": true,
+    "finite_nonzero_gradients": true,
+    "serialized_tensors_match": true,
+    "optimizer_steps": 512,
+    "peak_gpu_allocated_bytes": 9152645120,
+    "probe_max_probability_change": 0.3123859763145447,
+    "serialized_adapter_probe_changed": true
+  },
+  "training_environment": {
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "free_mib_before": 12695,
+    "process_memory_fraction": 0.5,
+    "packages": {
+      "torch": "2.8.0",
+      "transformers": "5.17.0",
+      "peft": "0.21.0",
+      "jevk5": "0.3.3",
+      "chess": "1.11.2",
+      "safetensors": "0.8.0",
+      "tokenizers": "0.23.2",
+      "zstandard": "0.25.0"
+    },
+    "train_sha256": "7afcc1d8d0ed10bbd47c5ff4966b39f7219b80ae0eab79f38d0577c64e20036a",
+    "training_export_files": [
+      "manifest.json",
+      "train.jsonl"
+    ]
+  },
+  "fresh_process_reload": {
+    "passed": true,
+    "fresh_process": true,
+    "max_probability_difference": 0.0,
+    "adapter_sha256": "84a6b393b2fa60ae3d9c726fc862319621b88b381c43c00b32477b839ac6c084"
+  },
+  "smoke": {
+    "training_examples": 8,
+    "training_seconds": 7.235845356000937,
+    "optimizer_steps": 2,
+    "peak_gpu_allocated_bytes": 9022786048,
+    "step_zero_parity": true,
+    "finite_nonzero_gradients": true,
+    "serialized_tensors_match": true,
+    "probe_max_probability_change": 0.014011010527610779
+  },
+  "smoke_reload": {
+    "passed": true,
+    "fresh_process": true,
+    "max_probability_difference": 0.0,
+    "adapter_sha256": "67356aac28822775f25b4c4366aef0b9296e3d6cf568ef04fd8d79ab778f86d1"
+  },
+  "api_reliability_and_usage": {
+    "complete": true,
+    "positions": 512,
+    "first_attempt_valid": 506,
+    "rejected_attempts": 6,
+    "reasons": {
+      "Probabilities do not sum to one": 5,
+      "Jev returned an inconsistent choice": 1
+    },
+    "usage_on_valid_responses": {
+      "input_tokens": 326343,
+      "output_tokens": 29720
+    },
+    "valid_response_latency_seconds": 97.6575055847643,
+    "median_latency_seconds": 0.172108645492699,
+    "usage_excludes_rejected_attempts": true,
+    "total_attempts": 518,
+    "rejected_attempts_with_usage": 6,
+    "usage_on_all_recorded_responses": {
+      "input_tokens": 330437,
+      "output_tokens": 30176
+    }
+  },
+  "independent_audit": {
+    "positions_per_model": 512,
+    "models": {
+      "jev": {
+        "correct": 223,
+        "total": 512,
+        "accuracy": 0.435546875,
+        "first_attempt_valid_positions": 506,
+        "rejection_reasons": {
+          "Probabilities do not sum to one": 5,
+          "Jev returned an inconsistent choice": 1
+        },
+        "probability_checks_passed": true,
+        "selected_moves_independently_executed": 512,
+        "predictions_sha256": "acefb026b3a7f510617c3b4a65a2f8b4647919f75cae5137a85121b3a8ea8d58",
+        "exploratory_by_candidate_count": {
+          "2": {
+            "positions": 176,
+            "correct": 103
+          },
+          "3": {
+            "positions": 117,
+            "correct": 58
+          },
+          "4": {
+            "positions": 81,
+            "correct": 30
+          },
+          "5": {
+            "positions": 52,
+            "correct": 13
+          },
+          "6": {
+            "positions": 34,
+            "correct": 10
+          },
+          "7": {
+            "positions": 25,
+            "correct": 4
+          },
+          "8": {
+            "positions": 18,
+            "correct": 4
+          },
+          "9": {
+            "positions": 4,
+            "correct": 1
+          },
+          "10": {
+            "positions": 5,
+            "correct": 0
+          }
+        }
+      },
+      "shared": {
+        "correct": 220,
+        "total": 512,
+        "accuracy": 0.4296875,
+        "first_attempt_valid_positions": 512,
+        "rejection_reasons": {},
+        "probability_checks_passed": true,
+        "selected_moves_independently_executed": 512,
+        "predictions_sha256": "5d1e4215fcb90c2eedb99fbb0efe3cb9cfc208efb9d0f08599d72de02685312a",
+        "exploratory_by_candidate_count": {
+          "2": {
+            "positions": 176,
+            "correct": 106
+          },
+          "3": {
+            "positions": 117,
+            "correct": 43
+          },
+          "4": {
+            "positions": 81,
+            "correct": 36
+          },
+          "5": {
+            "positions": 52,
+            "correct": 18
+          },
+          "6": {
+            "positions": 34,
+            "correct": 6
+          },
+          "7": {
+            "positions": 25,
+            "correct": 8
+          },
+          "8": {
+            "positions": 18,
+            "correct": 3
+          },
+          "9": {
+            "positions": 4,
+            "correct": 0
+          },
+          "10": {
+            "positions": 5,
+            "correct": 0
+          }
+        }
+      },
+      "trained": {
+        "correct": 260,
+        "total": 512,
+        "accuracy": 0.5078125,
+        "first_attempt_valid_positions": 512,
+        "rejection_reasons": {},
+        "probability_checks_passed": true,
+        "selected_moves_independently_executed": 512,
+        "predictions_sha256": "8067da9adaf6ff1885fbbdf7f9e0d07a348ce6fd283d94a09a89f0bb99651b84",
+        "exploratory_by_candidate_count": {
+          "2": {
+            "positions": 176,
+            "correct": 120
+          },
+          "3": {
+            "positions": 117,
+            "correct": 62
+          },
+          "4": {
+            "positions": 81,
+            "correct": 34
+          },
+          "5": {
+            "positions": 52,
+            "correct": 25
+          },
+          "6": {
+            "positions": 34,
+            "correct": 8
+          },
+          "7": {
+            "positions": 25,
+            "correct": 8
+          },
+          "8": {
+            "positions": 18,
+            "correct": 3
+          },
+          "9": {
+            "positions": 4,
+            "correct": 0
+          },
+          "10": {
+            "positions": 5,
+            "correct": 0
+          }
+        }
+      }
+    },
+    "frozen_sources_match": true,
+    "held_out_labels_staged": false,
+    "all_1536_predictions_verified": true,
+    "adapter_sha256": "84a6b393b2fa60ae3d9c726fc862319621b88b381c43c00b32477b839ac6c084",
+    "adapter_config_sha256": "3dd06694103d92b0a1200a37b0f27a7c71e3857aa29163d6eccb054fcdf8174d",
+    "adapter_config_matches_recipe": true
+  },
+  "integrity": {
+    "shared_service_and_base_unchanged": true,
+    "base_sha256": "13824e47f2e40fe052f06943976cf742cb366ba305741a111e75a8ebae907a9c",
+    "all_experiment_units_inactive": true
+  },
+  "verification": {
+    "local_chess_tests_passed": 15,
+    "worker_chess_tests_passed": 15,
+    "source_files_match_staged_and_executed_bytes": true
+  },
+  "source_sha256": {
+    "analyze.py": "5484879c35b93346bb1a7df80ba8db718601b45c976c0236ae7f72b759e28e83",
+    "common.py": "f26d7963c4975fbdb4da6fe63e4785235df181b90e31f11e35c08fe08a52c0ba",
+    "download.py": "d61b9044b315ac2ac3bc2bb674d8495d9c5bdef941c8200c09341940553e91bf",
+    "loss.py": "fc6d424e44f1d8f3e33487368dea7197e2435af9d89be5c521edf23ebd8aa7bd",
+    "models.py": "133c97fabcf7e1c58067d216affecd9cf5f3633d3375dcd9351e4239825680c9",
+    "preflight.py": "440c59bc9040de0beb2ddefb4b9435cf5f894d1381aacb66a6fe0e4c66e1310d",
+    "prepare.py": "76f6609aa8d2fe8672598fc0c05f4e3257309d059713e19d2e1a09f68b36ae81",
+    "run.py": "c1bdcec4c4087bd3df486cc5e202cd5da9a023fbd0886425423e346db7ce4766",
+    "test_chess.py": "c7a3efc8bb659ca390c6a8d410d735730296976df7bdb5f40021c0af4be92c72",
+    "test_loss.py": "caa5664d47f1e94ee47c1baefb794bb42203d843bd523491f82d2a25ab3168ad",
+    "test_models.py": "ea854dd28b85d37c00261d55b7ab218c3b06e0336c374a2680d3905b1945e82d"
+  },
+  "limitations": [
+    "Ranking legal checking moves, not unrestricted chess or full-game play.",
+    "Rules software already solves mate-in-one exactly; this is a specialization experiment, not a claim that AI improves chess software.",
+    "Public puzzle/pretraining overlap and related tactical patterns remain possible despite exact/mirror deduplication.",
+    "One fixed training seed and recipe; no checkpoint or test-directed selection."
+  ]
+}
