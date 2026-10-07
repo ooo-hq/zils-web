@@ -13,7 +13,7 @@ import { benchmark, readComparison, percent, decimal, milliseconds, comparisonHe
 
 export const metadata: Metadata = {
   title: 'zils — decision model research',
-  description: 'ABCD-trained JevK5 reached 79.2% accuracy versus TypeSafe Jev’s 70.6% on the same 500 test conversations. Explore the comparison, confidence tradeoffs, and evidence.',
+  description: 'ABCD-trained Zils reached 79.2% accuracy versus TypeSafe Jev’s 70.6% on the same 500 test conversations. Explore the comparison, confidence tradeoffs, and evidence.',
   alternates: { canonical: 'https://zils.ai/model' },
 };
 
@@ -80,7 +80,7 @@ export default function ModelPage() {
           <h1 className="mt-5 max-w-[16ch] text-[clamp(2.7rem,6.5vw,4.8rem)] font-semibold leading-[0.98] tracking-[-0.06em]">Decision model research.</h1>
           <p className="mt-6 max-w-[58ch] text-lg leading-8 text-muted">Can training make a decision model better at a specific task? We compare results before and after training, alongside TypeSafe Jev and simple alternatives, then publish what improved and what did not.</p>
           <p className="mt-4 flex w-fit items-center gap-2 rounded-full bg-page/70 px-3 py-1 text-xs text-muted ring-1 ring-edge"><span className="size-1.5 shrink-0 rounded-full bg-[#FF6A00]" />Recorded experiments. Evidence and limitations published together.</p>
-          <a href="#jev-comparison" className="mt-8 inline-flex min-h-11 items-center rounded-md bg-action px-5 py-3 text-sm font-medium text-on-action hover:bg-action-hover">Compare trained JevK5 with TypeSafe Jev</a>
+          <a href="#jev-comparison" className="mt-8 inline-flex min-h-11 items-center rounded-md bg-action px-5 py-3 text-sm font-medium text-on-action hover:bg-action-hover">Compare trained Zils with TypeSafe Jev</a>
           <nav aria-label="Project resources" className="mt-4 grid gap-3 sm:grid-cols-3">
             {RESOURCES.map(r => (
               <a key={r.href} href={r.href} className={`group rounded-md border border-edge p-5 transition-colors hover:border-accent ${r.bg}`}>

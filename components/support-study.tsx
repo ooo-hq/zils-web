@@ -36,9 +36,9 @@ export function AccuracyComparison({ includeJev = false }: { includeJev?: boolea
       <div aria-hidden="true" className="mt-5 flex justify-between text-[11px] tabular-nums text-subtle"><span>0%</span><span>100%</span></div>
       <p className="mt-6 border-t border-edge pt-5 text-sm leading-6">
         <strong className="font-semibold text-accent">+{includeJev ? jevGain : supportGain} percentage points</strong>
-        <span className="text-muted"> vs {includeJev ? 'TypeSafe Jev' : 'unchanged JevK5'}</span>
+        <span className="text-muted"> vs {includeJev ? 'TypeSafe Jev' : 'shared Zils'}</span>
       </p>
-      {includeJev && <p className="mt-2 text-xs leading-5 text-muted">Jev was tested live; JevK5 scores reuse verified predictions from the same frozen test set.</p>}
+      {includeJev && <p className="mt-2 text-xs leading-5 text-muted">Jev was tested live; Zils scores reuse verified predictions from the same frozen test set.</p>}
     </figure>
   );
 }
@@ -51,7 +51,7 @@ export function SupportStudySummary() {
           <p className="text-xs text-muted">ABCD support decisions · Compared with TypeSafe Jev</p>
           <h2 id="support-evidence-heading" className="mt-4 max-w-[18ch] text-[clamp(2rem,4.4vw,3.25rem)] font-semibold leading-[1.04] tracking-[-0.055em]">Custom training, tested against Jev.</h2>
           <p className="mt-5 max-w-[45ch] text-[15px] leading-7 text-muted">
-            On {supportBase.count} held-out support conversations, our trained JevK5 reached {percent(jevTrained.accuracy)} accuracy against TypeSafe Jev’s {percent(jevMetrics.accuracy)}.
+            On {supportBase.count} held-out support conversations, our trained Zils model reached {percent(jevTrained.accuracy)} accuracy against TypeSafe Jev’s {percent(jevMetrics.accuracy)}.
             That is <strong className="font-semibold text-ink">{jevErrorReduction}% fewer mistakes</strong> on the same next-action task.
           </p>
           <p className="mt-5 text-sm text-muted">{number(supportStudy.splits.training_conversations)} training conversations. Separate development and test sets.</p>
@@ -77,7 +77,7 @@ export function SupportStudyDetails() {
     <section id="support-study" aria-labelledby="support-study-heading" className="scroll-mt-20 border-t border-edge py-16 sm:py-20">
       <p className="text-xs text-muted">Completed experiment · 6 October 2026 · ABCD support conversations</p>
       <h2 id="support-study-heading" className="mt-4 max-w-[24ch] text-[clamp(2.1rem,4.4vw,3.3rem)] font-semibold leading-[1.04] tracking-[-0.055em]">Better at choosing the next support action.</h2>
-      <p className="mt-5 max-w-[68ch] text-[15px] leading-7 text-muted">After training on {number(supportStudy.splits.training_conversations)} separate conversations, JevK5’s accuracy rose from {percent(supportBase.accuracy)} to {percent(supportAdapter.accuracy)} on the untouched test set. The task was to choose the next recorded support action from all {supportStudy.splits.action_choices} tool choices.</p>
+      <p className="mt-5 max-w-[68ch] text-[15px] leading-7 text-muted">After training on {number(supportStudy.splits.training_conversations)} separate conversations, Zils’ accuracy rose from {percent(supportBase.accuracy)} to {percent(supportAdapter.accuracy)} on the untouched test set. The task was to choose the next recorded support action from all {supportStudy.splits.action_choices} tool choices.</p>
 
       <div className="mt-10 grid gap-10 md:grid-cols-2 md:items-center">
         <div>

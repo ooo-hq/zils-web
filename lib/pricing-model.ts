@@ -12,6 +12,10 @@ export const MODEL_FIELDS = {
   fixed: { label: 'Zils fixed overhead per month ($)', min: 0, max: 10_000_000, step: 'any' },
   topup: { label: 'Average top-up ($)', min: BETA_PRICING.startingCredit, max: 100_000, step: 'any' },
   newCustomers: { label: 'Customers redeeming their first free run (%)', min: 0, max: 100, step: 'any' },
+  buybackPercent: { label: 'Available surplus for buybacks (%)', min: 0, max: 100, step: 'any' },
+  cashReserve: { label: 'Additional cash reserved each month ($)', min: 0, max: 10_000_000, step: 'any' },
+  alphaPrice: { label: 'Average alpha execution price ($)', min: 0.000000001, max: 1_000_000, step: 'any' },
+  buybackFeePercent: { label: 'Buyback trading costs (%)', min: 0, max: 100, step: 'any' },
 } as const;
 
 export type ModelField = keyof typeof MODEL_FIELDS;
@@ -42,6 +46,10 @@ export const DEFAULT_MODEL_INPUTS: ModelInputs = {
   fixed: '500',
   topup: '5',
   newCustomers: '0',
+  buybackPercent: '0',
+  cashReserve: '0',
+  alphaPrice: '1',
+  buybackFeePercent: '1',
 };
 
 export function parseModelInputs(inputs: ModelInputs): ModelAssumptions | null {
@@ -79,6 +87,14 @@ export function modelPricing(assumptions: ModelAssumptions, customers: number) {
   const revenue = customers * revenuePerCustomer;
   const delivery = customers * deliveryPerCustomer;
   const fees = customers * feesPerCustomer;
+  const surplus = revenue - delivery - fees - assumptions.fixed;
+  // A reserve is retained cash, not another expense. Buybacks cannot use losses
+  // or reserved funds; trading costs are included in the allocated spend.
+  const reserveHeld = Math.min(Math.max(0, surplus), assumptions.cashReserve);
+  const buybackAvailable = Math.max(0, surplus - reserveHeld);
+  const buybackSpend = buybackAvailable * assumptions.buybackPercent / 100;
+  const buybackFees = buybackSpend * assumptions.buybackFeePercent / 100;
+  const alphaPurchasedUsd = buybackSpend - buybackFees;
   return {
     customers, revenue, delivery, fees, revenuePerCustomer, contributionPerCustomer, feeRate,
     zils: customers * assumptions.zils,
@@ -91,7 +107,9 @@ export function modelPricing(assumptions: ModelAssumptions, customers: number) {
     minerPayments: customers * minerPaymentsPerCustomer,
     trainingJobs: customers * jobsPerCustomer,
     minerCompute: customers * jobsPerCustomer * assumptions.minerCompute,
-    surplus: revenue - delivery - fees - assumptions.fixed,
+    surplus, reserveHeld, buybackAvailable, buybackSpend, buybackFees, alphaPurchasedUsd,
+    alphaBurned: alphaPurchasedUsd / assumptions.alphaPrice,
+    retainedCash: surplus - buybackSpend,
     breakEvenCustomers: contributionPerCustomer > 0
       ? Math.ceil(assumptions.fixed / contributionPerCustomer)
       : contributionPerCustomer === 0 && assumptions.fixed === 0 ? 0 : null,

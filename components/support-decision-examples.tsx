@@ -37,7 +37,7 @@ export function SupportDecisionExamples() {
       <details className="mt-6 rounded-md bg-surface px-5 py-4 sm:px-6">
         <summary className="cursor-pointer text-sm font-medium marker:text-accent hover:text-accent">A mistake training introduced</summary>
         <p className="mt-4 max-w-[68ch] text-sm leading-7 text-muted">{regression.context_summary}</p>
-        <p className="mt-3 text-sm leading-7 text-muted">Before training, JevK5 chose <strong className="font-medium text-ink">{action(regression.unchanged.choice).toLowerCase()}</strong>, matching the recorded action. After training, it chose <strong className="font-medium text-ink">{action(regression.trained.choice).toLowerCase()}</strong>. This was one of the 21 new mistakes it introduced, alongside 128 corrected mistakes.</p>
+        <p className="mt-3 text-sm leading-7 text-muted">Before training, Zils chose <strong className="font-medium text-ink">{action(regression.unchanged.choice).toLowerCase()}</strong>, matching the recorded action. After training, it chose <strong className="font-medium text-ink">{action(regression.trained.choice).toLowerCase()}</strong>. This was one of the 21 new mistakes it introduced, alongside 128 corrected mistakes.</p>
       </details>
       <p className="mt-5 text-xs leading-6 text-muted">Examples selected to explain the decisions. The 79.2% result above includes all 500 test cases. This measures action selection, not tool execution or a complete customer conversation.</p>
       <a href="/model/abcd-002-examples.json" className="mt-4 inline-block text-sm underline decoration-edge-strong underline-offset-4 hover:text-accent hover:decoration-accent">Recorded example predictions (JSON)</a>

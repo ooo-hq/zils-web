@@ -248,7 +248,7 @@ export default function HomePage() {
         <div className="grid gap-6 border-t border-edge pt-8 md:grid-cols-[1fr_1.4fr]">
           <h2 id="evidence" className="max-w-[19ch] text-2xl font-semibold leading-tight tracking-[-0.035em]">Latest results. Full research record.</h2>
           <div>
-            <p className="text-sm leading-7 text-muted">On {jevMetrics.n} held-out ABCD support conversations, trained JevK5 reached <strong className="font-semibold text-ink">{(jevTrained.accuracy * 100).toFixed(1)}% accuracy versus {(jevMetrics.accuracy * 100).toFixed(1)}% for TypeSafe Jev</strong>—{jevErrorReduction}% fewer mistakes. The full comparison includes every prediction, confidence tradeoffs, and the test method.</p>
+            <p className="text-sm leading-7 text-muted">On {jevMetrics.n} held-out ABCD support conversations, trained Zils reached <strong className="font-semibold text-ink">{(jevTrained.accuracy * 100).toFixed(1)}% accuracy versus {(jevMetrics.accuracy * 100).toFixed(1)}% for TypeSafe Jev</strong>—{jevErrorReduction}% fewer mistakes. The full comparison includes every prediction, confidence tradeoffs, and the test method.</p>
             <p className="mt-4 text-sm leading-7 text-muted">Earlier studies remain available. The flight adapter improved over its base model but trailed simple historical rates. The Kev 0.8B experiment tied the published baseline at {fez.n_correct} of {fez.n_attempted} correct answers, with worse probability estimates. Each study measures a different task.</p>
             <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3 text-sm">
               <Link href="/model#jev-comparison" className="underline decoration-edge-strong underline-offset-4 hover:text-[var(--zils-accent)]">Read the latest Jev comparison</Link>
@@ -290,7 +290,7 @@ function ResearchStatus() {
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-6 py-2.5 sm:px-8">
         <span>Research preview</span>
         <Link href="/model#jev-comparison" className="hover:text-[var(--zils-accent)]">
-          Trained JevK5 vs TypeSafe Jev <span aria-hidden="true">↗</span>
+          Trained Zils vs TypeSafe Jev <span aria-hidden="true">↗</span>
         </Link>
       </div>
     </div>

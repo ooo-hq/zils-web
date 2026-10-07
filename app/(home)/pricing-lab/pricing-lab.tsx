@@ -15,6 +15,7 @@ const count = (value: number) => new Intl.NumberFormat('en-US').format(value);
 const customerCounts = [100, 1_000, 2_000];
 const workloadFields: ModelField[] = ['zils', 'requests', 'tokens', 'runs', 'newCustomers'];
 const costFields: ModelField[] = ['inference', 'training', 'minerPayment', 'fixed', 'topup'];
+const buybackFields: ModelField[] = ['buybackPercent', 'cashReserve', 'alphaPrice', 'buybackFeePercent'];
 
 export function PricingLab() {
   const [inputs, setInputs] = useState<ModelInputs>(DEFAULT_MODEL_INPUTS);
@@ -80,6 +81,18 @@ export function PricingLab() {
           <div className={s.fields}>{field('minerCompute')}</div>
           <p className={s.hint}>Estimate total GPU expense across all miner attempts for one customer job. This is shown separately and never deducted from Zils revenue. It does not include miner rewards or establish miner profitability.</p>
         </details>
+        <section className={s.buybackInputs} aria-labelledby="buyback-inputs-heading">
+          <h3 id="buyback-inputs-heading">Buyback &amp; burn</h3>
+          <p className={s.hint}>Choose how much positive surplus to spend after setting cash aside. All alpha bought is assumed burned. The default 0% leaves allocation undecided.</p>
+          <div className={s.presets} role="group" aria-label="Buyback allocation examples">
+            {[0, 25, 50, 100].map(percent => <button key={percent} type="button"
+              aria-pressed={inputs.buybackPercent.trim() !== '' && Number(inputs.buybackPercent) === percent}
+              onClick={() => setInputs(previous => ({ ...previous, buybackPercent: String(percent) }))}>{percent}%</button>)}
+          </div>
+          <div className={s.fields}>{buybackFields.map(field)}</div>
+          <p className={s.hint}>The $1 alpha price and 1% trading costs are examples, not live quotes. Use the average price you expect to pay, including price impact. Trading costs cover conversion, swap, and network fees within the buyback budget.</p>
+          <p className={s.hint}>The monthly reserve stays with Zils and is held back once per scenario. Include payroll, marketing, and taxes in your costs or reserve before treating surplus as spendable.</p>
+        </section>
       </section>
 
       <section className={s.results} aria-labelledby="results-heading">
@@ -92,9 +105,9 @@ export function PricingLab() {
           <span>${BETA_PRICING.trainingRun} / extra run</span>
           <span>${BETA_PRICING.startingCredit} prepaid credit</span>
         </div>
-        <p className={s.costNotice}>Miners fund adapter training. Zils surplus deducts only the Zils costs entered here, payment fees, and fixed overhead.</p>
+        <p className={s.costNotice}>Miners fund adapter training. Zils surplus deducts the Zils costs entered here, payment fees, and fixed overhead. Buybacks are then allocated after the cash reserve.</p>
         {!results || !unit ? (
-          <p id="model-error" role="alert" className={s.error}>Enter a valid amount in each field. Zils, requests, and tokens must be whole numbers; top-ups start at ${BETA_PRICING.startingCredit} and the first-free-run share is 0–100%.</p>
+          <p id="model-error" role="alert" className={s.error}>Enter a valid amount in each field. Zils, requests, and tokens must be whole numbers; top-ups start at ${BETA_PRICING.startingCredit}, percentages are 0–100%, and alpha execution price must be greater than $0.</p>
         ) : (
           <div aria-live="polite" aria-atomic="true">
             <div className={s.unitSpend}>
@@ -109,7 +122,7 @@ export function PricingLab() {
             <div className={s.tableWrap} role="region" aria-label="Monthly scenario comparison" tabIndex={0}>
               <table className={s.table}>
                 <caption className="sr-only">Estimated monthly economics at 100, 1,000, and 2,000 paying customers</caption>
-                <thead><tr><th scope="col">Customers</th><th scope="col">Usage revenue</th><th scope="col">Zils variable costs</th><th scope="col">Payment fees</th><th scope="col">Zils surplus</th></tr></thead>
+                <thead><tr><th scope="col">Customers</th><th scope="col">Usage revenue</th><th scope="col">Zils variable costs</th><th scope="col">Payment fees</th><th scope="col">Surplus before buybacks</th></tr></thead>
                 <tbody>{results.map(row => (
                   <tr key={row.customers}>
                     <th scope="row">{count(row.customers)}<span className={s.rowNote}>{count(row.zils)} Zils</span></th>
@@ -128,7 +141,30 @@ export function PricingLab() {
                   ? 'No fixed overhead to recover at these assumptions.'
                   : <><strong>{count(unit.breakEvenCustomers)} paying customers</strong> to cover the modeled costs.</>}
             </p>
-            <p className={s.hint}>Surplus includes {usd(assumptions!.fixed)} in monthly fixed overhead. Before payroll, marketing, and taxes. Table amounts are rounded to whole dollars.</p>
+            <p className={s.hint}>Surplus includes {usd(assumptions!.fixed)} in monthly fixed overhead. Payroll, marketing, and taxes are excluded unless you include them in costs. Dollar amounts in tables are rounded.</p>
+            <section className={s.buybackResults} aria-labelledby="buyback-results-heading">
+              <div className={s.sectionHeading}>
+                <h3 id="buyback-results-heading">Buyback &amp; burn</h3>
+                <span className={s.scenarioBadge}>Scenario only</span>
+              </div>
+              <p className={s.hint}>Surplus → cash reserve → buyback → burn. Allocate {count(assumptions!.buybackPercent)}% of what remains after reserving up to {usd(assumptions!.cashReserve)} each month.</p>
+              {assumptions!.buybackPercent === 0 && <p className={s.buybackNotice}>Choose a buyback percentage under Assumptions to estimate the burn.</p>}
+              <div className={s.tableWrap} role="region" aria-label="Buyback and burn scenarios" tabIndex={0}>
+                <table className={`${s.table} ${s.buybackTable}`}>
+                  <caption className="sr-only">Monthly buyback spending, estimated alpha burned, and Zils cash retained</caption>
+                  <thead><tr><th scope="col">Customers</th><th scope="col">Available after reserve</th><th scope="col">Buyback spend</th><th scope="col">Est. alpha burned</th><th scope="col">Cash retained</th></tr></thead>
+                  <tbody>{results.map(row => <tr key={row.customers}>
+                    <th scope="row">{count(row.customers)}</th>
+                    <td>{usd(row.buybackAvailable)}</td>
+                    <td>{usd(row.buybackSpend)}<span className={s.rowNote}>{usd(row.buybackFees, 2)} fees included</span></td>
+                    <td className={s.burn}>{count(row.alphaBurned)} α</td>
+                    <td className={row.retainedCash < 0 ? s.loss : s.surplus}>{usd(row.retainedCash)}<span className={s.rowNote}>{usd(row.reserveHeld)} reserve included</span></td>
+                  </tr>)}</tbody>
+                </table>
+              </div>
+              <p className={s.hint}>Estimated alpha burned = buyback spend after trading costs ÷ average alpha execution price. Cash retained includes the reserve; it is not deducted a second time. No positive surplus after the reserve means no buyback.</p>
+              <p className={s.hint}>This models spending and burning all purchased alpha. It executes no trades or burns, and does not predict token price or net supply after emissions.</p>
+            </section>
             <details className={s.details}>
               <summary>See Zils cost breakdown</summary>
               <div className={s.tableWrap} role="region" aria-label="Zils variable cost breakdown" tabIndex={0}>
@@ -159,6 +195,7 @@ export function PricingLab() {
           <p>Zils and miner costs are assumptions, not measurements. The default $0.10/job for Zils coordination/evaluation and $1/job for miner compute are independent placeholders. Replace them with your own costs. These scenarios are not demand or capacity forecasts.</p>
           <p>Subnet emissions are not counted as customer revenue or a Zils cash expense. Any payment Zils makes directly to miners belongs in direct miner payments and is deducted once. Miner compute is shown separately; without rewards and capacity data, this page does not estimate miner profit or network sustainability.</p>
           <p>The ${BETA_PRICING.startingCredit} top-up is prepaid usage, not an extra monthly fee. Revenue here represents consumed usage. Unspent credit is excluded.</p>
+          <p>Buybacks use consumed-usage surplus, never unspent customer credit. Reserves are additional cash set aside for the modeled month, not a starting bank balance. Cash retained is a modeled monthly amount, not a treasury balance or a cash-flow forecast. Alpha price, trading costs, and allocation are editable assumptions, not a buyback commitment.</p>
           <p>Payment fees use <a href="https://stripe.com/pricing" target="_blank" rel="noreferrer">US domestic card rates</a> of 2.9% + $0.30 per top-up, spread over consumed credit. Cash timing and transaction rounding will differ. A first free run reduces billable runs, while all entered runs still incur the modeled Zils and miner costs.</p>
         </div>
       </section>

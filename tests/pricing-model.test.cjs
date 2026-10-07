@@ -179,3 +179,72 @@ test('free runs cannot exceed total runs, including fractional monthly averages'
     near(result.training, result.trainingJobs * 0.1);
   }
 });
+
+test('buybacks allocate surplus after the reserve and include trading costs exactly once', () => {
+  const input = parseModelInputs({ ...DEFAULT_MODEL_INPUTS,
+    buybackPercent: '50', cashReserve: '2000', alphaPrice: '0.5', buybackFeePercent: '2' });
+  const result = modelPricing(input, 1000);
+  near(result.surplus, 17241);
+  near(result.reserveHeld, 2000);
+  near(result.buybackAvailable, 15241);
+  near(result.buybackSpend, 7620.5);
+  near(result.buybackFees, 152.41);
+  near(result.alphaPurchasedUsd, 7468.09);
+  near(result.alphaBurned, 14936.18);
+  near(result.retainedCash, 9620.5);
+  near(result.retainedCash + result.buybackSpend, result.surplus);
+  assert.equal(result.breakEvenCustomers, 29);
+});
+
+test('zero allocation preserves surplus and full allocation still protects the reserve', () => {
+  for (const [percent, spent, retained] of [['0', 0, 3048.2], ['100', 2048.2, 1000]]) {
+    const result = modelPricing(assumptions({ buybackPercent: percent, cashReserve: '1000',
+      alphaPrice: '1', buybackFeePercent: '0' }), 1000);
+    near(result.buybackSpend, spent);
+    near(result.alphaBurned, spent);
+    near(result.retainedCash, retained);
+    near(result.reserveHeld, 1000);
+  }
+});
+
+test('losses, zero surplus, and reserves larger than surplus never fund buybacks', () => {
+  const cases = [
+    [{ zils: '0' }, -500, 0],
+    [{ zils: '0', fixed: '0' }, 0, 0],
+    [{ cashReserve: '5000' }, 3048.2, 3048.2],
+  ];
+  for (const [overrides, surplus, reserve] of cases) {
+    const result = modelPricing(assumptions({ buybackPercent: '100', ...overrides }), 1000);
+    near(result.surplus, surplus);
+    near(result.retainedCash, surplus);
+    near(result.reserveHeld, reserve);
+    for (const field of ['buybackAvailable', 'buybackSpend', 'buybackFees', 'alphaPurchasedUsd', 'alphaBurned']) {
+      near(result[field], 0);
+    }
+  }
+});
+
+test('alpha execution price changes token quantity without creating extra cash or miner rewards', () => {
+  const input = assumptions({ buybackPercent: '50', cashReserve: '1000', alphaPrice: '1', buybackFeePercent: '0' });
+  const cheap = modelPricing(input, 1000);
+  const expensive = modelPricing({ ...input, alphaPrice: 2 }, 1000);
+  near(cheap.alphaBurned, 1024.1);
+  near(expensive.alphaBurned, 512.05);
+  for (const field of ['revenue', 'delivery', 'surplus', 'buybackSpend', 'retainedCash', 'minerPayments', 'minerCompute']) {
+    near(expensive[field], cheap[field]);
+  }
+  const allFees = modelPricing({ ...input, buybackFeePercent: 100 }, 1000);
+  near(allFees.alphaBurned, 0);
+  near(allFees.buybackFees, 1024.1);
+  near(allFees.retainedCash, 2024.1);
+});
+
+test('buyback inputs reject invalid percentages, reserves, and zero or missing execution prices', () => {
+  for (const override of [{ buybackPercent: '' }, { buybackPercent: '-1' }, { buybackPercent: '101' },
+    { cashReserve: '-1' }, { cashReserve: 'Infinity' }, { cashReserve: '10000001' },
+    { alphaPrice: '0' }, { alphaPrice: '-1' }, { alphaPrice: '' }, { alphaPrice: 'NaN' },
+    { buybackFeePercent: '-1' }, { buybackFeePercent: '101' }, { buybackFeePercent: '' }]) {
+    assert.equal(assumptions(override), null, JSON.stringify(override));
+  }
+  assert.notEqual(assumptions({ buybackPercent: '12.5', alphaPrice: '0.000001', buybackFeePercent: '0.05' }), null);
+});

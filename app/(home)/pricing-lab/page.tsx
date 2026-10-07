@@ -7,7 +7,7 @@ import s from './pricing-lab.module.css';
 
 export const metadata: Metadata = {
   title: 'Pricing lab — Zils',
-  description: 'Model multiple Zils per customer, per-Zil training and inference, and Zils operating costs separately from miner-funded compute.',
+  description: 'Model customer usage, Zils and miner costs, buyback spending, estimated alpha burned, and cash retained.',
   robots: { index: false, follow: false, noarchive: true, googleBot: { index: false, follow: false } },
 };
 

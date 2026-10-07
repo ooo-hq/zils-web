@@ -13,15 +13,15 @@ export function JevComparisonDetails() {
   return (
     <section id="jev-comparison" aria-labelledby="jev-comparison-heading" className="scroll-mt-20 border-t border-edge py-16 sm:py-20">
       <p className="text-xs text-muted">Completed comparison · 6 October 2026 · 500 ABCD test conversations</p>
-      <h2 id="jev-comparison-heading" className="mt-4 max-w-[24ch] text-[clamp(2.1rem,4.4vw,3.3rem)] font-semibold leading-[1.04] tracking-[-0.055em]">Trained JevK5 outperformed Jev on this support task.</h2>
-      <p className="mt-5 max-w-[68ch] text-[15px] leading-7 text-muted">Our ABCD-trained JevK5 chose the recorded next action correctly {percent(jevTrained.accuracy)} of the time, compared with {percent(jevMetrics.accuracy)} for TypeSafe Jev 1.13.0. Both received the same conversations, instructions, and all {jevStudy.splits.action_choices} action choices.</p>
+      <h2 id="jev-comparison-heading" className="mt-4 max-w-[24ch] text-[clamp(2.1rem,4.4vw,3.3rem)] font-semibold leading-[1.04] tracking-[-0.055em]">Trained Zils outperformed Jev on this support task.</h2>
+      <p className="mt-5 max-w-[68ch] text-[15px] leading-7 text-muted">Our ABCD-trained Zils model chose the recorded next action correctly {percent(jevTrained.accuracy)} of the time, compared with {percent(jevMetrics.accuracy)} for TypeSafe Jev 1.13.0. Both received the same conversations, instructions, and all {jevStudy.splits.action_choices} action choices.</p>
 
       <div className="mt-10 grid gap-10 md:grid-cols-2 md:items-center">
         <div>
           <h3 className="text-xl font-semibold tracking-[-0.035em]">The same task. A specialized model.</h3>
-          <p className="mt-4 text-sm leading-7 text-muted">The JevK5 adapter trained on {jevStudy.splits.training_conversations.toLocaleString('en-US')} separate conversations and was selected on a different development set. Its weights were frozen before the final test cases were prepared.</p>
-          <p className="mt-4 text-sm leading-7 text-muted">We then called TypeSafe’s hosted Jev API on those same test inputs. The JevK5 scores reuse verified predictions from the completed training study. No test answers were sent to either model, and no model or prompt was tuned during this comparison.</p>
-          <p className="mt-4 text-sm leading-7 text-muted">Trained JevK5 got <strong className="font-medium text-ink">{jevPaired.trained_correct_other_wrong} cases right that Jev missed</strong>. Jev got {jevPaired.other_correct_trained_wrong} right that our trained model missed.</p>
+          <p className="mt-4 text-sm leading-7 text-muted">The Zils adapter trained on {jevStudy.splits.training_conversations.toLocaleString('en-US')} separate conversations and was selected on a different development set. Its weights were frozen before the final test cases were prepared.</p>
+          <p className="mt-4 text-sm leading-7 text-muted">We then called TypeSafe’s hosted Jev API on those same test inputs. The Zils scores reuse verified predictions from the completed training study. No test answers were sent to either model, and no model or prompt was tuned during this comparison.</p>
+          <p className="mt-4 text-sm leading-7 text-muted">Trained Zils got <strong className="font-medium text-ink">{jevPaired.trained_correct_other_wrong} cases right that Jev missed</strong>. Jev got {jevPaired.other_correct_trained_wrong} right that our trained model missed.</p>
         </div>
         <AccuracyComparison includeJev />
       </div>
@@ -42,7 +42,7 @@ export function JevComparisonDetails() {
           <table className="w-full min-w-[540px] border-collapse text-sm">
             <caption className="pb-3 text-left text-xs leading-6 text-muted">Probability of the chosen action ≥90%. TypeSafe’s separate confidence field is not used.</caption>
             <thead><tr><th scope="col" className="px-4 py-3 text-left font-medium">Model</th><th scope="col" className="px-4 py-3 text-right font-medium">Cases / 500</th><th scope="col" className="px-4 py-3 text-right font-medium">Mistakes</th><th scope="col" className="px-4 py-3 text-right font-medium">Accuracy in group</th></tr></thead>
-            <tbody>{jevComparisons.filter(row => row.name !== 'Shared JevK5').map(({ name, metrics }) => {
+            <tbody>{jevComparisons.filter(row => row.name !== 'Shared Zils').map(({ name, metrics }) => {
               const coverage = metrics.coverage.find(row => row.threshold === .9)!;
               return <tr key={name}><th scope="row" className="border-t border-edge px-4 py-4 text-left font-normal">{name}</th><td className={cell}>{coverage.automated}</td><td className={cell}>{coverage.wrong}</td><td className={cell}>{percent(coverage.accuracy_among_automated!)}</td></tr>;
             })}</tbody>
@@ -61,6 +61,7 @@ export function JevComparisonDetails() {
             </table>
           </div>
           <div className="mt-6 space-y-4 text-sm leading-7 text-muted">
+            <p><strong className="font-medium text-ink">Model foundation.</strong> Shared Zils uses the published JevK5 4B weights; trained Zils adds our ABCD-specific adapter.</p>
             <p><strong className="font-medium text-ink">Identical evidence.</strong> Each model received the prior conversation, completed actions and results, compact workflow catalog, and the same ordered choices. Current answers, future turns, and labeled workflow metadata were excluded. Each case comes from a distinct conversation.</p>
             <p><strong className="font-medium text-ink">Preserved API responses.</strong> All 500 Jev calls returned answers. {jevMetrics.distributions_normalized} probability vectors summed to 0.99; they were normalized for Brier scoring. One returned choice differed from its probability ranking. Accuracy uses the returned choice; using the highest-probability option instead gives {percent(jevMetrics.canonical_argmax_correct / jevMetrics.n)}. No cases were dropped or re-queried.</p>
             <p><strong className="font-medium text-ink">Usage and timing.</strong> Jev reported {jevMetrics.total_input_tokens.toLocaleString('en-US')} input tokens, an estimated ${jevStudy.test.jev_api_cost_usd.toFixed(5)} at the provider’s listed rate. API response time includes networking; the earlier JevK5 timings measure local GPU inference. They do not establish a comparable speed advantage.</p>

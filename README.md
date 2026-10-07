@@ -128,6 +128,24 @@ estimate. Subnet emissions are excluded; miner profitability and capacity are
 not modeled. Payment fees are amortized over consumed credit. Surplus excludes
 payroll, marketing, and taxes. Inputs stay in tab memory and reset on refresh.
 
+The buyback-and-burn scenario allocates 0–100% of positive monthly surplus after
+an additional cash reserve. Allocation defaults to 0% (no policy assumed), with
+editable examples for 25%, 50%, and 100%. The reserve defaults to $0 and is held
+back once per customer-count scenario, capped at positive surplus. Losses remain
+visible and never fund a buyback. Cash retained equals surplus minus the total
+buyback spend and includes the reserve; the reserve is not an expense.
+
+All purchased alpha is assumed burned. Estimated burned alpha equals buyback
+spend after trading costs divided by the entered average USD execution price.
+The $1/alpha and 1% trading-cost defaults are hypothetical, not live market data.
+The execution price includes price impact; the trading-cost allowance covers
+conversion, swap, and network fees and is deducted within the budget once.
+The lab neither connects a wallet nor executes trades/burns, forecasts price,
+models net supply after emissions, or sets a buyback policy. It uses consumed
+usage only, excludes unspent prepaid credit, and does not model a starting
+treasury balance or cash timing. Include payroll, marketing, and taxes in costs
+or reserves before using the available-surplus estimate.
+
 The lab has no navigation links pointing to it and requests `noindex, nofollow`.
 It is not access-controlled: anyone with its URL can open it. Keep it out of any
 future sitemap and do not store private business data in its defaults.
