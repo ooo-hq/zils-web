@@ -13,8 +13,8 @@ const usd = (value: number, decimals = 0) => new Intl.NumberFormat('en-US', {
 }).format(value);
 const count = (value: number) => new Intl.NumberFormat('en-US').format(value);
 const customerCounts = [100, 1_000, 2_000];
-const workloadFields: ModelField[] = ['requests', 'tokens', 'runs'];
-const costFields: ModelField[] = ['inference', 'training', 'minerPayment', 'fixed', 'topup', 'newCustomers'];
+const workloadFields: ModelField[] = ['zils', 'requests', 'tokens', 'runs', 'newCustomers'];
+const costFields: ModelField[] = ['inference', 'training', 'minerPayment', 'fixed', 'topup'];
 
 export function PricingLab() {
   const [inputs, setInputs] = useState<ModelInputs>(DEFAULT_MODEL_INPUTS);
@@ -47,16 +47,18 @@ export function PricingLab() {
           <h2 id="assumptions-heading">Assumptions</h2>
           <button type="button" className={s.reset} onClick={() => setInputs({ ...DEFAULT_MODEL_INPUTS })}>Reset</button>
         </div>
-        <p className={s.hint}>Per paying, active customer each month.</p>
-        <div className={s.presets} role="group" aria-label="Usage presets">
+        <p className={s.hint}>One customer can use several specialized Zils. Enter average usage per Zil for the month you want to model.</p>
+        <div className={s.presets} role="group" aria-label="Customer portfolio examples">
           {Object.entries(WORKLOADS).map(([key, preset]) => (
             <button key={key} type="button" aria-pressed={workloadFields.every(field => inputs[field].trim() !== '' && Number(inputs[field]) === Number(preset[field as keyof typeof preset]))}
-              onClick={() => setInputs(previous => ({ ...previous, requests: preset.requests, tokens: preset.tokens, runs: preset.runs }))}>
+              onClick={() => setInputs(previous => ({ ...previous, zils: preset.zils, requests: preset.requests, tokens: preset.tokens, runs: preset.runs, newCustomers: preset.newCustomers }))}>
               {preset.label}
             </button>
           ))}
         </div>
+        <p className={s.presetHint}>One Zil and Five Zils use one training run per Zil in an ongoing month. Setup month uses five Zils with six runs each and one free run per new customer. These are examples, not usage forecasts.</p>
         <div className={s.fields}>{workloadFields.map(field)}</div>
+        <p className={s.hint}>Include all training runs, paid and free. Only one first run is free per customer, across all their Zils; the discount is capped by the total runs entered.</p>
         <label className={s.field} htmlFor="model-cost-preset">
           Hypothetical Zils costs
           <select id="model-cost-preset" value={costPreset} onChange={event => {
@@ -69,7 +71,7 @@ export function PricingLab() {
         </label>
         <p className={s.hint}>These presets cover Zils serving and coordination/evaluation only. All amounts are editable placeholders, not measured costs.</p>
         <details className={s.details}>
-          <summary>Adjust Zils costs &amp; first free runs</summary>
+          <summary>Adjust Zils costs</summary>
           <div className={s.fields}>{costFields.map(field)}</div>
           <p className={s.hint}>Enter only costs Zils pays. Include any Zils-funded idle serving capacity, evaluation and retries. Use fixed overhead for shared costs such as storage and support; do not also count them per job. Direct miner payments default to $0.</p>
         </details>
@@ -92,12 +94,17 @@ export function PricingLab() {
         </div>
         <p className={s.costNotice}>Miners fund adapter training. Zils surplus deducts only the Zils costs entered here, payment fees, and fixed overhead.</p>
         {!results || !unit ? (
-          <p id="model-error" role="alert" className={s.error}>Enter a valid amount in each field. Requests and tokens must be whole numbers; top-ups start at ${BETA_PRICING.startingCredit} and the first-free-run share is 0–100%.</p>
+          <p id="model-error" role="alert" className={s.error}>Enter a valid amount in each field. Zils, requests, and tokens must be whole numbers; top-ups start at ${BETA_PRICING.startingCredit} and the first-free-run share is 0–100%.</p>
         ) : (
           <div aria-live="polite" aria-atomic="true">
             <div className={s.unitSpend}>
-              <span>Monthly usage per customer</span>
+              <span>Revenue per customer · selected month</span>
               <strong>{usd(unit.revenuePerCustomer, 2)}</strong>
+              <span>{usd(unit.inferenceRevenuePerCustomer, 2)} inference + {usd(unit.trainingRevenuePerCustomer, 2)} paid training</span>
+            </div>
+            <div className={s.portfolioSummary}>
+              <p>Requests per customer: <b>{count(unit.requestsPerCustomer)}</b> ({count(assumptions!.zils)} × {count(assumptions!.requests)} per Zil).</p>
+              <p>Training runs per customer: <b>{count(unit.jobsPerCustomer)}</b> ({count(assumptions!.zils)} × {count(assumptions!.runs)} per Zil). {count(unit.freeJobsPerCustomer)} free + {count(unit.paidJobsPerCustomer)} paid on average.</p>
             </div>
             <div className={s.tableWrap} role="region" aria-label="Monthly scenario comparison" tabIndex={0}>
               <table className={s.table}>
@@ -105,7 +112,7 @@ export function PricingLab() {
                 <thead><tr><th scope="col">Customers</th><th scope="col">Usage revenue</th><th scope="col">Zils variable costs</th><th scope="col">Payment fees</th><th scope="col">Zils surplus</th></tr></thead>
                 <tbody>{results.map(row => (
                   <tr key={row.customers}>
-                    <th scope="row">{count(row.customers)}</th>
+                    <th scope="row">{count(row.customers)}<span className={s.rowNote}>{count(row.zils)} Zils</span></th>
                     <td>{usd(row.revenue)}<div className={s.barTrack} aria-hidden="true"><div className={s.bar} style={{ width: row.revenue > 0 ? `${row.customers / 20}%` : '0%' }} /></div></td>
                     <td>{usd(row.delivery)}</td>
                     <td>{usd(row.fees)}</td>
@@ -147,10 +154,12 @@ export function PricingLab() {
         )}
         <div className={s.notes}>
           <h3>Read the numbers correctly.</h3>
+          <p>Customer counts stay at 100, 1,000, and 2,000. Requests and total training runs are multiplied by Zils per customer; owning a Zil adds no subscription or model-slot fee. Every Zil uses the entered average workload. Change those averages to represent different parts of an app.</p>
+          <p>The setup example describes one month of experimentation. It does not assume those six runs per Zil repeat every month. For an established customer, set ongoing retraining separately and set first-free-run redemption to 0%. For a month that includes new Zils, include their setup runs in the average training runs per Zil.</p>
           <p>Zils and miner costs are assumptions, not measurements. The default $0.10/job for Zils coordination/evaluation and $1/job for miner compute are independent placeholders. Replace them with your own costs. These scenarios are not demand or capacity forecasts.</p>
           <p>Subnet emissions are not counted as customer revenue or a Zils cash expense. Any payment Zils makes directly to miners belongs in direct miner payments and is deducted once. Miner compute is shown separately; without rewards and capacity data, this page does not estimate miner profit or network sustainability.</p>
           <p>The ${BETA_PRICING.startingCredit} top-up is prepaid usage, not an extra monthly fee. Revenue here represents consumed usage. Unspent credit is excluded.</p>
-          <p>Payment fees use <a href="https://stripe.com/pricing" target="_blank" rel="noreferrer">US domestic card rates</a> of 2.9% + $0.30 per top-up, spread over consumed credit. Cash timing and transaction rounding will differ. New-customer free training is included only when you set its share above zero.</p>
+          <p>Payment fees use <a href="https://stripe.com/pricing" target="_blank" rel="noreferrer">US domestic card rates</a> of 2.9% + $0.30 per top-up, spread over consumed credit. Cash timing and transaction rounding will differ. A first free run reduces billable runs, while all entered runs still incur the modeled Zils and miner costs.</p>
         </div>
       </section>
     </div>

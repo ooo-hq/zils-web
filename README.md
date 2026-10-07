@@ -93,13 +93,26 @@ shared context once per request, then verify the advertised terms against the
 customer training and serving workflows. Early-access links use `/contact`.
 
 `/pricing-lab` is an unlisted scenario calculator for 100, 1,000, and 2,000
-paying active customers. It shares the public page's rates and allows changes to
-usage, Zils serving and coordination/evaluation costs, direct miner payments,
-fixed overhead, top-up size, and the share using their first included training
-run. Miner-funded GPU costs are shown separately and never deducted from Zils
+paying active customers. Each customer can use multiple Zils. Requests and total
+training runs are entered per Zil and multiplied by the number of Zils per
+customer. Results show the aggregate requests, free/paid training runs, and the
+inference/training revenue split per customer, plus the total number of Zils at
+each customer count. The default is an illustrative five-Zil ongoing month:
+100,000 requests and one training run per Zil. The setup example uses five Zils
+with six runs each and one free run per customer; this is not recurring demand.
+One-Zil usage remains available as a preset. Mixed portfolios use per-Zil averages,
+including setup runs for any new Zils created in the selected month.
+
+It shares the public page's rates and allows changes to Zils serving and
+coordination/evaluation costs, direct miner payments, fixed overhead, top-up
+size, and the share redeeming their first included run. Unlike the original
+calculator, total runs include free runs: at most one run per eligible customer
+is discounted from the entered total, capped by that total. The free run does
+not repeat per Zil or create an additional job. Miner-funded GPU costs are shown
+separately and never deducted from Zils
 revenue. Only direct payments made by Zils to miners are deducted. One customer
 job can include multiple miner attempts; enter their combined compute expense.
-First free jobs incur both modeled Zils and miner costs without adding revenue.
+All entered jobs, including free ones, incur modeled Zils and miner costs.
 Cost presets are hypothetical: the default $0.10/job Zils cost and $1/job miner
 cost are independent placeholders, not measured costs or a split of the old
 estimate. Subnet emissions are excluded; miner profitability and capacity are

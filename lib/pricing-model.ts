@@ -1,16 +1,17 @@
 import { BETA_PRICING } from './pricing';
 
 export const MODEL_FIELDS = {
-  requests: { label: 'Requests per customer / month', min: 0, max: 1_000_000_000, step: 1 },
+  zils: { label: 'Zils per customer', min: 0, max: 10_000, step: 1 },
+  requests: { label: 'Requests per Zil / month', min: 0, max: 1_000_000_000, step: 1 },
   tokens: { label: 'Input tokens per request', min: 0, max: 1_000_000, step: 1 },
-  runs: { label: 'Extra training runs per customer / month', min: 0, max: 10_000, step: 'any' },
+  runs: { label: 'Total training runs per Zil this month', min: 0, max: 10_000, step: 'any' },
   inference: { label: 'Zils serving cost per million input tokens ($)', min: 0, max: 100, step: 'any' },
   training: { label: 'Zils coordination + evaluation per job ($)', min: 0, max: 10_000, step: 'any' },
   minerPayment: { label: 'Direct payment from Zils to miners per job ($)', min: 0, max: 10_000, step: 'any' },
   minerCompute: { label: 'Miner GPU cost per customer job ($)', min: 0, max: 100_000, step: 'any' },
   fixed: { label: 'Zils fixed overhead per month ($)', min: 0, max: 10_000_000, step: 'any' },
   topup: { label: 'Average top-up ($)', min: BETA_PRICING.startingCredit, max: 100_000, step: 'any' },
-  newCustomers: { label: 'Customers using their first free run (%)', min: 0, max: 100, step: 'any' },
+  newCustomers: { label: 'Customers redeeming their first free run (%)', min: 0, max: 100, step: 'any' },
 } as const;
 
 export type ModelField = keyof typeof MODEL_FIELDS;
@@ -18,9 +19,9 @@ export type ModelInputs = Record<ModelField, string>;
 export type ModelAssumptions = Record<ModelField, number>;
 
 export const WORKLOADS = {
-  light: { label: 'Light', requests: '10000', tokens: '1000', runs: '0' },
-  regular: { label: 'Regular', requests: '100000', tokens: '1000', runs: '1' },
-  heavy: { label: 'Heavy', requests: '1000000', tokens: '1000', runs: '2' },
+  single: { label: 'One Zil', zils: '1', requests: '100000', tokens: '1000', runs: '1', newCustomers: '0' },
+  multiple: { label: 'Five Zils', zils: '5', requests: '100000', tokens: '1000', runs: '1', newCustomers: '0' },
+  setup: { label: 'Setup month', zils: '5', requests: '100000', tokens: '1000', runs: '6', newCustomers: '100' },
 } as const;
 
 export const DELIVERY_COSTS = {
@@ -30,9 +31,10 @@ export const DELIVERY_COSTS = {
 } as const;
 
 export const DEFAULT_MODEL_INPUTS: ModelInputs = {
-  requests: WORKLOADS.regular.requests,
-  tokens: WORKLOADS.regular.tokens,
-  runs: WORKLOADS.regular.runs,
+  zils: WORKLOADS.multiple.zils,
+  requests: WORKLOADS.multiple.requests,
+  tokens: WORKLOADS.multiple.tokens,
+  runs: WORKLOADS.multiple.runs,
   inference: DELIVERY_COSTS.base.inference,
   training: DELIVERY_COSTS.base.training,
   minerPayment: '0',
@@ -55,10 +57,16 @@ export function parseModelInputs(inputs: ModelInputs): ModelAssumptions | null {
 }
 
 export function modelPricing(assumptions: ModelAssumptions, customers: number) {
-  const millionTokens = assumptions.requests * assumptions.tokens / 1_000_000;
-  const revenuePerCustomer = millionTokens * BETA_PRICING.millionInputTokens
-    + assumptions.runs * BETA_PRICING.trainingRun;
-  const jobsPerCustomer = assumptions.runs + assumptions.newCustomers / 100;
+  const requestsPerCustomer = assumptions.zils * assumptions.requests;
+  const millionTokens = requestsPerCustomer * assumptions.tokens / 1_000_000;
+  const jobsPerCustomer = assumptions.zils * assumptions.runs;
+  // One first-run credit per customer across their entire portfolio. It discounts
+  // an entered job; it never creates an extra job or repeats for every Zil.
+  const freeJobsPerCustomer = Math.min(jobsPerCustomer, assumptions.newCustomers / 100);
+  const paidJobsPerCustomer = jobsPerCustomer - freeJobsPerCustomer;
+  const inferenceRevenuePerCustomer = millionTokens * BETA_PRICING.millionInputTokens;
+  const trainingRevenuePerCustomer = paidJobsPerCustomer * BETA_PRICING.trainingRun;
+  const revenuePerCustomer = inferenceRevenuePerCustomer + trainingRevenuePerCustomer;
   const servingPerCustomer = millionTokens * assumptions.inference;
   const trainingPerCustomer = jobsPerCustomer * assumptions.training;
   const minerPaymentsPerCustomer = jobsPerCustomer * assumptions.minerPayment;
@@ -73,6 +81,11 @@ export function modelPricing(assumptions: ModelAssumptions, customers: number) {
   const fees = customers * feesPerCustomer;
   return {
     customers, revenue, delivery, fees, revenuePerCustomer, contributionPerCustomer, feeRate,
+    zils: customers * assumptions.zils,
+    requestsPerCustomer, jobsPerCustomer, freeJobsPerCustomer, paidJobsPerCustomer,
+    inferenceRevenuePerCustomer, trainingRevenuePerCustomer,
+    freeTrainingJobs: customers * freeJobsPerCustomer,
+    paidTrainingJobs: customers * paidJobsPerCustomer,
     serving: customers * servingPerCustomer,
     training: customers * trainingPerCustomer,
     minerPayments: customers * minerPaymentsPerCustomer,
