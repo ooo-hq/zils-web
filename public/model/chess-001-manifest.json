@@ -1,0 +1,90 @@
+{
+  "experiment": "chess-001",
+  "protocol_sha256": "8efb12e7b98411504350b5585e45dbcb0c42c44c5a304eb1a95126528a33bb43",
+  "source_sha256": {
+    "prepare.py": "76f6609aa8d2fe8672598fc0c05f4e3257309d059713e19d2e1a09f68b36ae81",
+    "common.py": "f26d7963c4975fbdb4da6fe63e4785235df181b90e31f11e35c08fe08a52c0ba"
+  },
+  "dataset_sha256": "76335bfa7d7c4a7f93c1366d81549e53951ebb79dd43d34904cab8f22d962f8d",
+  "sampling_counts": {
+    "source_rows": 200000,
+    "mate_in_one_tag": 29425,
+    "outside_candidate_scope_or_all_candidates_mate": 9862,
+    "eligible_cases_before_deduplication": 19563
+  },
+  "splits": {
+    "train": {
+      "examples": 2048,
+      "source_games": 2048,
+      "multiple_correct_moves": 76,
+      "candidate_count_histogram": {
+        "5": 202,
+        "3": 471,
+        "6": 158,
+        "2": 754,
+        "4": 293,
+        "7": 81,
+        "8": 46,
+        "10": 13,
+        "9": 23,
+        "11": 2,
+        "12": 3,
+        "13": 2
+      },
+      "side_to_move": {
+        "white": 1085,
+        "black": 963
+      }
+    },
+    "calibration": {
+      "examples": 512,
+      "source_games": 512,
+      "multiple_correct_moves": 12,
+      "candidate_count_histogram": {
+        "2": 196,
+        "3": 100,
+        "4": 89,
+        "5": 59,
+        "11": 1,
+        "6": 32,
+        "8": 11,
+        "9": 5,
+        "10": 4,
+        "7": 15
+      },
+      "side_to_move": {
+        "white": 281,
+        "black": 231
+      }
+    },
+    "test": {
+      "examples": 512,
+      "source_games": 512,
+      "multiple_correct_moves": 15,
+      "candidate_count_histogram": {
+        "5": 52,
+        "8": 18,
+        "4": 81,
+        "3": 117,
+        "2": 176,
+        "7": 25,
+        "6": 34,
+        "10": 5,
+        "9": 4
+      },
+      "side_to_move": {
+        "white": 260,
+        "black": 252
+      }
+    }
+  },
+  "files_sha256": {
+    "train-inputs.jsonl": "f90af6488cbc71c321363289cfe397659696ce193bb263488928931533f0bf27",
+    "train-labels.jsonl": "df09e35a93586cbbbd56c230a5781aa5a78e3a12bbff3b3a2fae3116690a8887",
+    "train.jsonl": "7afcc1d8d0ed10bbd47c5ff4966b39f7219b80ae0eab79f38d0577c64e20036a",
+    "calibration-inputs.jsonl": "b5cf802500afb9272caa9ae251ef4a9a3ba4162ed31830e28307c3aa27e1ce9f",
+    "calibration-labels.jsonl": "0812aa15168f4380a2619d02a03d7f22328d910a0e085fc0ba5ce16c86829b37",
+    "test-inputs.jsonl": "dbd6f0ec62856b3f04823e9d3b5c5343b79184aa5ef91b85c611d21f635369ae",
+    "test-labels.jsonl": "529511ae004327ec19bbd0ec48d64e69552f215c2a9a9ca8098f8b320eb54750"
+  }
+}

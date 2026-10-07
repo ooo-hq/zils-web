@@ -1,0 +1,81 @@
+{
+  "experiment": "chess-001",
+  "status": "preparation; no model-quality results",
+  "seed": 557,
+  "dataset": {
+    "url": "https://database.lichess.org/lichess_db_puzzle.csv.zst",
+    "headers": {
+      "Content-Length": "307234795",
+      "Last-Modified": "Fri, 02 Oct 2026 08:51:45 GMT",
+      "ETag": "\"6abf70a1-125007eb\""
+    },
+    "bytes": 307234795,
+    "sha256": "76335bfa7d7c4a7f93c1366d81549e53951ebb79dd43d34904cab8f22d962f8d",
+    "license": "CC0",
+    "source_page": "https://database.lichess.org/#puzzles",
+    "source_rows": 200000,
+    "selection": "First 200000 records of the pinned archive; mateIn1-tagged, independently rule-verified. Not a uniform sample of the full database."
+  },
+  "splits": {
+    "train": 2048,
+    "calibration": 512,
+    "test": 512
+  },
+  "task": {
+    "candidate_rule": "Every legal checking move; retain positions with 2\u201316 candidates and at least one nonmating candidate. No solution-aware candidate sampling.",
+    "setup": "Apply the first recorded move to the source FEN; evaluate the resulting side to move.",
+    "labels": "Every legal move that immediately produces checkmate; recorded solution must be in that set.",
+    "order": "Sort options by seeded hash of normalized solver FEN and UCI move, independent of labels.",
+    "split": "Deduplicate exact and color-swapped vertical-mirror positions globally, retain one deterministically selected case per source game, seeded shuffle of games, then fixed split counts.",
+    "inputs": "Normalized solver FEN with clocks 0/1, board rows, side to move, and UCI candidates with piece/from/to descriptions. No SAN, checks/mates annotations, rating, puzzle/game ID, themes, or solution in model inputs."
+  },
+  "models": {
+    "jev": "jev-1.13.0",
+    "jev_endpoint": "https://api.typesafe.ai/v1/systemone",
+    "jevk5": "alibiserikbay/JevK5",
+    "jevk5_revision": "c4f7fdb3aeab5582336406e78d3bef11bf98833d",
+    "jevk5_source": "f26426d16f59e8bbe1470e5b162cc89329e29b29",
+    "jevk5_weights_sha256": "13824e47f2e40fe052f06943976cf742cb366ba305741a111e75a8ebae907a9c",
+    "temperature": 1.22
+  },
+  "max_tokens": 3072,
+  "prompt_sha256": "322d69ba6abea83602f27b7a5aa0d3e6ab00847fd03ddccd35a28ae5b23acc1a",
+  "training": {
+    "epochs": 1,
+    "rank": 16,
+    "alpha": 32,
+    "dropout": 0.05,
+    "learning_rate": 1e-05,
+    "gradient_accumulation": 4,
+    "gradient_clip": 1.0,
+    "label_smoothing": 0.05,
+    "initialization": "fresh rank-16 LoRA on shared JevK5; no NetHack or support adapter",
+    "selection": "one fixed recipe, final checkpoint only; no test-directed tuning",
+    "loss": "0.95 * negative log total mating-move probability + 0.05 * uniform cross entropy over listed candidates"
+  },
+  "evaluation": {
+    "primary": "Fraction of held-out positions where selected move produces immediate checkmate; all mating alternatives accepted.",
+    "secondary": [
+      "total probability assigned to mating moves",
+      "set-valued negative log likelihood",
+      "high-confidence errors",
+      "coverage and API validation retries"
+    ],
+    "baselines": [
+      "uniform expected success",
+      "first listed move",
+      "highest captured material with promotion bonus",
+      "deterministic rules oracle (100% sanity ceiling)"
+    ],
+    "bootstrap": "2000 paired whole-game resamples, seed 557; one puzzle per game",
+    "calibration": "Reserved unused; native temperatures and final checkpoint only",
+    "invalid_responses": "Exactly matching candidate keys, finite probabilities summing to 1 within 1e-5, chosen option consistent with maximum probability. Jev up to three attempts with rejected responses retained; fail incomplete runs."
+  },
+  "limitations": [
+    "Ranking legal checking moves, not unrestricted chess or full-game play.",
+    "Rules software already solves mate-in-one exactly; this is a specialization experiment, not a claim that AI improves chess software.",
+    "Public puzzle/pretraining overlap and related tactical patterns remain possible despite exact/mirror deduplication.",
+    "One fixed training seed and recipe; no checkpoint or test-directed selection."
+  ],
+  "promotion": "none; preserve all gains, failures and regressions; preparation does not start training"
+}

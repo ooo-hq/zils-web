@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { SiteFooter } from '@/components/site-footer';
 import { FlightStudyDetails } from '@/components/flight-study';
+import { ChessStudySummary } from '@/components/chess-study';
 import { SupportStudyDetails } from '@/components/support-study';
 import { JevComparisonDetails } from '@/components/jev-comparison';
 import { jevMethod, jevSource } from '@/lib/jev-comparison';
@@ -24,6 +25,7 @@ const CELL = 'border-t border-edge px-3 py-3 text-right tabular-nums sm:px-5';
 const HEAD = 'border-t border-edge px-3 py-3 text-left font-normal text-ink sm:px-5';
 const CARD = 'rounded-2xl bg-page ring-1 ring-edge';
 const SECTIONS = [
+  { id: 'chess-study', title: 'Chess decisions' },
   { id: 'jev-comparison', title: 'TypeSafe Jev comparison' },
   { id: 'support-study', title: 'Support decisions' },
   { id: 'flight-study', title: 'Flight adapter study' },
@@ -94,6 +96,8 @@ export default function ModelPage() {
         <nav aria-label="On this page" className="sticky top-0 z-10 -mx-2 flex gap-1.5 overflow-x-auto bg-page/85 px-2 py-3 backdrop-blur">
           {SECTIONS.map(section => <a key={section.id} href={`#${section.id}`} className="shrink-0 rounded-full bg-page px-4 py-1.5 text-xs text-muted ring-1 ring-edge hover:text-ink">{section.title}</a>)}
         </nav>
+
+        <ChessStudySummary />
 
         <JevComparisonDetails />
 

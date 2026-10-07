@@ -1,0 +1,175 @@
+{
+  "experiment": "chess-001",
+  "status": "prepared; no model training or evaluation performed",
+  "prepared_at": "2026-10-07T04:25:01.995980+00:00",
+  "data_manifest_sha256": "35965cc859caf0dd43748e041270cc2c880a8b6ac819da16a7d6cadbed4d2505",
+  "manifest": {
+    "experiment": "chess-001",
+    "protocol_sha256": "8efb12e7b98411504350b5585e45dbcb0c42c44c5a304eb1a95126528a33bb43",
+    "source_sha256": {
+      "prepare.py": "76f6609aa8d2fe8672598fc0c05f4e3257309d059713e19d2e1a09f68b36ae81",
+      "common.py": "f26d7963c4975fbdb4da6fe63e4785235df181b90e31f11e35c08fe08a52c0ba"
+    },
+    "dataset_sha256": "76335bfa7d7c4a7f93c1366d81549e53951ebb79dd43d34904cab8f22d962f8d",
+    "sampling_counts": {
+      "source_rows": 200000,
+      "mate_in_one_tag": 29425,
+      "outside_candidate_scope_or_all_candidates_mate": 9862,
+      "eligible_cases_before_deduplication": 19563
+    },
+    "splits": {
+      "train": {
+        "examples": 2048,
+        "source_games": 2048,
+        "multiple_correct_moves": 76,
+        "candidate_count_histogram": {
+          "5": 202,
+          "3": 471,
+          "6": 158,
+          "2": 754,
+          "4": 293,
+          "7": 81,
+          "8": 46,
+          "10": 13,
+          "9": 23,
+          "11": 2,
+          "12": 3,
+          "13": 2
+        },
+        "side_to_move": {
+          "white": 1085,
+          "black": 963
+        }
+      },
+      "calibration": {
+        "examples": 512,
+        "source_games": 512,
+        "multiple_correct_moves": 12,
+        "candidate_count_histogram": {
+          "2": 196,
+          "3": 100,
+          "4": 89,
+          "5": 59,
+          "11": 1,
+          "6": 32,
+          "8": 11,
+          "9": 5,
+          "10": 4,
+          "7": 15
+        },
+        "side_to_move": {
+          "white": 281,
+          "black": 231
+        }
+      },
+      "test": {
+        "examples": 512,
+        "source_games": 512,
+        "multiple_correct_moves": 15,
+        "candidate_count_histogram": {
+          "5": 52,
+          "8": 18,
+          "4": 81,
+          "3": 117,
+          "2": 176,
+          "7": 25,
+          "6": 34,
+          "10": 5,
+          "9": 4
+        },
+        "side_to_move": {
+          "white": 260,
+          "black": 252
+        }
+      }
+    },
+    "files_sha256": {
+      "train-inputs.jsonl": "f90af6488cbc71c321363289cfe397659696ce193bb263488928931533f0bf27",
+      "train-labels.jsonl": "df09e35a93586cbbbd56c230a5781aa5a78e3a12bbff3b3a2fae3116690a8887",
+      "train.jsonl": "7afcc1d8d0ed10bbd47c5ff4966b39f7219b80ae0eab79f38d0577c64e20036a",
+      "calibration-inputs.jsonl": "b5cf802500afb9272caa9ae251ef4a9a3ba4162ed31830e28307c3aa27e1ce9f",
+      "calibration-labels.jsonl": "0812aa15168f4380a2619d02a03d7f22328d910a0e085fc0ba5ce16c86829b37",
+      "test-inputs.jsonl": "dbd6f0ec62856b3f04823e9d3b5c5343b79184aa5ef91b85c611d21f635369ae",
+      "test-labels.jsonl": "529511ae004327ec19bbd0ec48d64e69552f215c2a9a9ca8098f8b320eb54750"
+    }
+  },
+  "preflight": {
+    "passed": true,
+    "data_manifest_sha256": "35965cc859caf0dd43748e041270cc2c880a8b6ac819da16a7d6cadbed4d2505",
+    "tokenizer_sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+    "prompt_sha256": "322d69ba6abea83602f27b7a5aa0d3e6ab00847fd03ddccd35a28ae5b23acc1a",
+    "rule_verified_positions": 3072,
+    "duplicate_games": 0,
+    "duplicate_positions_including_color_mirrors": 0,
+    "duplicate_model_inputs": 0,
+    "training_export_verified": true,
+    "splits": {
+      "train": {
+        "examples": 2048,
+        "source_games": 2048,
+        "min_tokens": 342,
+        "max_tokens": 657,
+        "over_budget": 0
+      },
+      "calibration": {
+        "examples": 512,
+        "source_games": 512,
+        "min_tokens": 343,
+        "max_tokens": 586,
+        "over_budget": 0
+      },
+      "test": {
+        "examples": 512,
+        "source_games": 512,
+        "min_tokens": 344,
+        "max_tokens": 578,
+        "over_budget": 0
+      }
+    }
+  },
+  "transformers_template_parity": {
+    "positions": 3072,
+    "rendered_prompt_matches_pinned_transformers_template": true,
+    "token_ids_identical": true
+  },
+  "test_baselines": {
+    "uniform_expected_accuracy": 0.3392911396329365,
+    "first_option": 0.34765625,
+    "capture_material": 0.365234375,
+    "rules_oracle": 1
+  },
+  "verification": {
+    "chess_tests_passed": 15,
+    "repository_tests_passed": 18,
+    "ruff_lint_and_format_passed": true,
+    "repository_test_note": "Initial sandbox run could not bind temporary localhost servers; unrestricted rerun passed all 18 tests.",
+    "train_export_files": [
+      "manifest.json",
+      "train.jsonl"
+    ],
+    "inference_export_files": [
+      "manifest.json",
+      "test-inputs.jsonl"
+    ],
+    "exports_match_frozen_hashes": true,
+    "gpu_smoke": "not run",
+    "model_quality_results": "not measured"
+  },
+  "source_sha256": {
+    "README.md": "ae182ef78d6fced75c62d4cbdce428492ffae092433a283d38a932ed139e3b93",
+    "analyze.py": "5484879c35b93346bb1a7df80ba8db718601b45c976c0236ae7f72b759e28e83",
+    "common.py": "f26d7963c4975fbdb4da6fe63e4785235df181b90e31f11e35c08fe08a52c0ba",
+    "download.py": "d61b9044b315ac2ac3bc2bb674d8495d9c5bdef941c8200c09341940553e91bf",
+    "loss.py": "fc6d424e44f1d8f3e33487368dea7197e2435af9d89be5c521edf23ebd8aa7bd",
+    "models.py": "133c97fabcf7e1c58067d216affecd9cf5f3633d3375dcd9351e4239825680c9",
+    "preflight.py": "440c59bc9040de0beb2ddefb4b9435cf5f894d1381aacb66a6fe0e4c66e1310d",
+    "prepare.py": "76f6609aa8d2fe8672598fc0c05f4e3257309d059713e19d2e1a09f68b36ae81",
+    "protocol.json": "8efb12e7b98411504350b5585e45dbcb0c42c44c5a304eb1a95126528a33bb43",
+    "requirements-data.txt": "9f43d61fcfe7f11aa131f9bbcc05116165bb234371ae80b27b46ae15faacee64",
+    "requirements-model.txt": "e2f9b9f1ceed1de4de5d96f7188b04d29e2580a188c41935023ccfc6dd50c4a2",
+    "run.py": "c1bdcec4c4087bd3df486cc5e202cd5da9a023fbd0886425423e346db7ce4766",
+    "test_chess.py": "c7a3efc8bb659ca390c6a8d410d735730296976df7bdb5f40021c0af4be92c72",
+    "test_loss.py": "caa5664d47f1e94ee47c1baefb794bb42203d843bd523491f82d2a25ab3168ad",
+    "test_models.py": "ea854dd28b85d37c00261d55b7ab218c3b06e0336c374a2680d3905b1945e82d"
+  }
+}
