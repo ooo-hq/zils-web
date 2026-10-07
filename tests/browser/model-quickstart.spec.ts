@@ -1,0 +1,77 @@
+import { test, expect, type Page } from '@playwright/test';
+
+const id = '10000000-0000-4000-8000-000000000001';
+const modelId = `zils-adapter-${id}-${'a'.repeat(64)}`;
+async function workspace(page: Page, state = 'ready') {
+  const user = { id: '10000000-0000-4000-8000-000000000002', email: 'fixture@example.invalid', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
+  const expires = Math.floor(Date.now() / 1000) + 3600;
+  const token = `${Buffer.from(JSON.stringify({ alg: 'HS256' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: user.id, exp: expires })).toString('base64url')}.browser-test`;
+  await page.addInitScript(({ user, token, expires }) => {
+    localStorage.setItem('zils-training-auth', JSON.stringify({ user, access_token: token, refresh_token: 'fixture', token_type: 'bearer', expires_in: 3600, expires_at: expires }));
+  }, { user, token, expires });
+  const job = { id, name: 'support-actions', status: 'completed', workflow: { state, model_id: modelId }, result: { delivery: { status: 'accepted', uid: 1, acceptance: { min_accuracy: .8, min_brier_improvement: .01 } }, baseline: { accuracy: .8125, brier: .314, skill: .3 }, miners: [{ uid: 1, status: 'evaluated', accuracy: .9375, brier: .210 }], weights: {} } };
+  const writes: string[] = [];
+  await page.route('**/*', async route => {
+    const req = route.request(), url = new URL(req.url());
+    if (url.origin === 'http://127.0.0.1:3107') return route.continue();
+    if (!['http://127.0.0.1:8998', 'http://127.0.0.1:8999'].includes(url.origin)) return route.abort();
+    const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS' };
+    if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
+    if (req.method() !== 'GET') writes.push(url.pathname);
+    if (url.pathname.startsWith('/auth/v1/')) return route.fulfill({ json: user, headers });
+    if (url.pathname === '/v1/jobs') return route.fulfill({ json: { jobs: [job] }, headers });
+    if (url.pathname === '/v1/keys') return route.fulfill({ json: { keys: [] }, headers });
+    return route.fulfill({ status: 404, json: { error: 'Unexpected fixture request' }, headers });
+  });
+  await page.goto('/train');
+  return writes;
+}
+
+test('ready model has copyable ID, runnable examples, download, and direct API key access', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const writes = await workspace(page);
+  const quickstart = page.getByRole('region', { name: 'Use your model' });
+  await quickstart.getByRole('button', { name: 'Copy model ID' }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(modelId);
+  await expect(quickstart.getByText('API model ID copied.')).toBeVisible();
+  await quickstart.getByRole('button', { name: 'Copy code', exact: true }).click();
+  const python = await page.evaluate(() => navigator.clipboard.readText());
+  expect(python).toContain(modelId);
+  expect(python).toContain('http://127.0.0.1:8999/v1/systemone');
+  expect(python).toContain('from urllib.request import Request, urlopen');
+  await page.getByRole('region', { name: 'Use your model' }).screenshot({ path: '.private/model-quickstart-desktop.png' });
+  await quickstart.getByRole('button', { name: 'JavaScript', exact: true }).click();
+  await expect(quickstart.getByRole('button', { name: 'Copy code', exact: true })).toBeVisible();
+  await expect(quickstart.getByLabel('Example code')).toContainText('const response = await fetch');
+  await expect(quickstart.getByLabel('Run command')).toContainText('node use-model.mjs');
+  const downloadPromise = page.waitForEvent('download');
+  await quickstart.getByRole('button', { name: 'Download use-model.mjs' }).click();
+  expect((await downloadPromise).suggestedFilename()).toBe('use-model.mjs');
+  await quickstart.getByRole('button', { name: 'API keys', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'API keys', exact: true })).toBeVisible();
+  expect(writes).toEqual([]);
+});
+
+test('blocked clipboard selects the full ID for manual copying', async ({ page }) => {
+  await page.addInitScript(() => { Object.defineProperty(navigator, 'clipboard', { value: { writeText: async () => { throw new Error('blocked'); } } }); });
+  await workspace(page);
+  await page.getByRole('button', { name: 'Copy model ID' }).click();
+  await expect(page.getByText('Copy was blocked.', { exact: false })).toBeVisible();
+  expect(await page.getByLabel('API model ID').evaluate((node: HTMLTextAreaElement) => node.value.slice(node.selectionStart, node.selectionEnd))).toBe(modelId);
+});
+
+test('model usage fits a small screen and optional downloads stay collapsed', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await workspace(page);
+  await expect(page.getByRole('button', { name: 'Copy model ID' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await expect(page.getByRole('button', { name: 'Get model files' })).not.toBeVisible();
+  await page.screenshot({ path: '.private/model-quickstart-mobile.png', fullPage: true });
+});
+
+test('activation in progress does not offer a usable model prematurely', async ({ page }) => {
+  await workspace(page, 'activating');
+  await expect(page.getByRole('heading', { name: 'Training passed. Preparing API access.' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Use your model' })).toHaveCount(0);
+});

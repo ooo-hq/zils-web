@@ -6,6 +6,7 @@ import { canDownload, downloadFiles, SPLITS, submissionSchema, terminal, trainin
 import { TrainingGuide } from '@/components/training-guide';
 import { TrainingIntake } from '@/components/training-intake';
 import { ApiKeysPanel } from '@/components/api-keys-panel';
+import { TrainedModelQuickstart } from '@/components/trained-model-quickstart';
 import { Plus, ChevronDown } from 'lucide-react';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { TrainingRunStatus } from '@/components/training-run-status';
@@ -200,16 +201,18 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
         <button className={styles.secondary} disabled={busy} onClick={() => resumeUploads(job)}>Resume missing uploads</button>
         <button className={styles.textButton} disabled={busy} onClick={() => cancelJob(job)}>Cancel this run</button>
       </div>}
-      {canDownload(job) && <div className={styles.modelDownloads}>
-        {job.workflow?.state === 'ready' && job.workflow.model_id && <>
-          <p><strong>API model ID</strong></p>
-          <p className={styles.hash}><code>{job.workflow.model_id}</code></p>
-          <p className={styles.help}>Set your request’s model to this ID. Your existing API key gives access to models owned by your account.</p>
-        </>}
-        <button disabled={busy} className={styles.button} onClick={() => getDownloads(job)}>Get model files</button>
+      {canDownload(job) && job.workflow?.state === 'ready' && job.workflow.model_id && <TrainedModelQuickstart
+        key={job.workflow.model_id}
+        modelId={job.workflow.model_id}
+        apiUrl={config.decisionApiUrl}
+        apiKeys={<ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={onExpired} />}
+      />}
+      {canDownload(job) && <details className={styles.details}>
+        <summary>Model files (optional)</summary>
         <p className={styles.help}>Optional: download a private copy of the accepted adapter.</p>
+        <button disabled={busy} className={styles.secondary} onClick={() => getDownloads(job)}>Get model files</button>
         {downloadJobId === job.id && downloads.length > 0 && <ul className={styles.downloads}>{downloads.map(file => <li key={file.name}><a href={file.url} target="_blank" rel="noreferrer">{file.name}</a></li>)}</ul>}
-      </div>}
+      </details>}
       <details className={styles.details}>
         <summary>{job.result ? 'Evaluation and technical details' : 'Technical details'}</summary>
         <p className={styles.id}>Run ID: {job.id}</p>
