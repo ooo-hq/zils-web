@@ -37,7 +37,7 @@ export function AccountMenu({ tone }: { tone: 'light' | 'dark' }) {
       setOpen(false);
     } catch {
       const current = await client.auth.getSession().catch(() => null);
-      setError(current?.data.session ? 'Sign-out failed. Please try again.' : 'Signed out on this device. Server sign-out could not be confirmed.');
+      setError(!current || current.error ? 'Sign-out could not be confirmed. Please refresh and try again.' : current.data.session ? 'Sign-out failed. Please try again.' : 'Signed out on this device. Server sign-out could not be confirmed.');
     }
     finally { setBusy(false); }
   }
