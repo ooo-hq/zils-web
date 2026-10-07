@@ -1,0 +1,22 @@
+.quickstart { margin:28px 0; min-width:0; }
+.quickstart h3 { margin:0 0 10px; }
+.quickstart .intro { color:var(--zils-muted); font-size:14px; max-width:68ch; margin:0 0 20px; }
+.copyField { min-width:0; }
+.fieldHeading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+.quickstart .fieldHeading label { margin:0; font-size:13px; font-weight:500; }
+.fieldHeading button { min-height:36px; padding:7px 12px; flex-shrink:0; }
+.quickstart .field { display:block; width:100%; min-width:0; padding:14px 16px; border:1px solid var(--zils-edge); border-radius:5px; background:var(--zils-surface); color:var(--zils-ink); font-family:var(--font-plex-mono),monospace; font-size:12px; line-height:1.7; resize:vertical; overflow-wrap:anywhere; }
+.code { white-space:pre; overflow:auto; }
+.copyStatus { display:block; min-height:22px; margin-top:4px; color:var(--zils-muted); font-size:12px; }
+.steps { list-style:decimal; padding-left:24px; margin:6px 0 0; }
+.steps>li { padding-left:8px; margin:26px 0 0; min-width:0; }
+.steps>li::marker { color:var(--zils-accent); font-weight:500; }
+.steps h4 { font-size:16px; font-weight:500; margin:0; }
+.steps p { font-size:13px; color:var(--zils-muted); max-width:76ch; }
+.steps code { font-size:12px; color:var(--zils-ink); overflow-wrap:anywhere; }
+.steps>li>button { display:inline-flex; align-items:center; gap:7px; }
+.languages { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 0; margin-top:16px; border-top:1px solid var(--zils-edge); }
+.languages button { min-height:36px; border:1px solid transparent; border-radius:4px; padding:6px 12px; background:none; color:var(--zils-muted); font-size:12px; cursor:pointer; }
+.languages button[aria-pressed=true] { background:var(--zils-soft); color:var(--zils-accent); border-color:var(--zils-edge); }
+.languages span { margin-left:auto; color:var(--zils-muted); font-size:11px; }
+@media(max-width:650px) { .steps { padding-left:18px; }.steps>li { padding-left:4px; }.languages span { width:100%; margin:2px 0 6px; }.quickstart .field { padding:12px; }.quickstart>.copyField .field { min-height:154px; }.fieldHeading { gap:8px; } }
