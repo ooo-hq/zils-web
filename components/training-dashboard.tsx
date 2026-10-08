@@ -13,6 +13,9 @@ import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { TrainingRunStatus } from '@/components/training-run-status';
 import { useAuthSession } from '@/components/auth-session';
 import { currentTrainingJob, trainingProgress } from '@/lib/training-status';
+import { ImageDecisionPanel } from '@/components/image-decision-panel';
+import { imageApi } from '@/lib/images';
+import imageStyles from '@/components/image-decision-panel.module.css';
 import styles from '@/app/(home)/train/train.module.css';
 
 type Config = { url: string; key: string; apiUrl: string; decisionApiUrl: string | null };
@@ -44,7 +47,7 @@ export function TrainingDashboard({ config }: { config: Config }) {
   return <>
     {(error || sessionError) && <p role="alert" className={styles.error}>{error || sessionError}</p>}
     {session && client ? <div id="training-workspace">
-      <TrainingAccessGate key={session.user.id} owner={session.user.id} token={session.access_token}><SignedInDashboard key={session.user.id} client={client} config={config} onExpired={signOut} /></TrainingAccessGate>
+      <TrainingAccessGate key={session.user.id} owner={session.user.id} token={session.access_token}><SignedInDashboard key={session.user.id} owner={session.user.id} client={client} config={config} onExpired={signOut} /></TrainingAccessGate>
     </div> : <>
       <div className={styles.workspaceHeading}><h1>Training</h1><p>Teach Zils a decision using examples your team has reviewed.</p></div>
       <section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}><h2>Sign in to Zils</h2><p>Sign in with the email address on your invitation.</p><form onSubmit={signIn}><label htmlFor="training-email">Email address</label><input id="training-email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" disabled={busy} /><button className={styles.button} disabled={busy}>{busy ? 'Sending link…' : 'Email me a sign-in link'}</button></form>{notice && <p role="status" className={styles.notice}>{notice}</p>}</section>
@@ -53,7 +56,22 @@ export function TrainingDashboard({ config }: { config: Config }) {
   </>;
 }
 
-function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClient; config: Config; onExpired: () => Promise<void> }) {
+function SignedInDashboard({ owner, client, config, onExpired }: { owner: string; client: SupabaseClient; config: Config; onExpired: () => Promise<void> }) {
+  const [vertical, setVertical] = useState<'text' | 'images'>('text');
+  const [imagesAvailable, setImagesAvailable] = useState(false);
+  const imageToken = useCallback(async () => {
+    const { data, error } = await client.auth.getSession();
+    if (error) throw error;
+    return data.session?.user.id === owner ? data.session.access_token : '';
+  }, [client, owner]);
+  useEffect(() => {
+    if (!config.decisionApiUrl) return;
+    const controller = new AbortController();
+    imageApi(config.decisionApiUrl, config.url, imageToken).models(controller.signal)
+      .then(data => { if (!controller.signal.aborted) setImagesAvailable(data.models.some(model => model.stock)); })
+      .catch(() => { if (!controller.signal.aborted) setImagesAvailable(false); });
+    return () => controller.abort();
+  }, [config.decisionApiUrl, config.url, imageToken]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedId, setSelectedId] = useState('');
   const [panelOpen, setPanelOpen] = useState(false);
@@ -244,9 +262,15 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
       <div><h1>Training</h1><p>Follow your runs and train a new model.</p></div>
       <div className={styles.workspaceActions}>
         <ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={onExpired} />
-        <SheetTrigger asChild><button className={styles.button} disabled={busy}><Plus size={16} aria-hidden="true" />Train a model</button></SheetTrigger>
+        {vertical === 'text' && <SheetTrigger asChild><button className={styles.button} disabled={busy}><Plus size={16} aria-hidden="true" />Train a model</button></SheetTrigger>}
       </div>
     </div>
+    {imagesAvailable && <div role="tablist" aria-label="Decision capability" className={imageStyles.tabs}>
+      <button role="tab" aria-selected={vertical === 'text'} aria-controls="text-workspace" onClick={() => setVertical('text')}>Text</button>
+      <button role="tab" aria-selected={vertical === 'images'} aria-controls="image-workspace" onClick={() => setVertical('images')}>Images</button>
+    </div>}
+    {vertical === 'images' && config.decisionApiUrl && <div id="image-workspace" role="tabpanel"><ImageDecisionPanel owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storageUrl={config.url} /></div>}
+    <div id="text-workspace" role="tabpanel" hidden={vertical !== 'text'}>
     {error && <p className={styles.error} role="alert">{error}</p>}
     {progress && <p role="status" className={styles.notice}>{progress}</p>}
     {busy && cancellable && <button type="button" className={styles.secondary} onClick={() => operation.current?.abort()}>Stop upload</button>}
@@ -265,6 +289,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
       </div>}
       {runRows(jobs.filter(job => job.id !== selected?.id && !terminal(job)), 'Other active runs')}
       {runRows(jobs.filter(job => job.id !== selected?.id && terminal(job)), 'Past runs')}
+    </div>
     </div>
     <TrainingIntake key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={error} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
       if (focusSubmitted.current) { event.preventDefault(); focusSubmitted.current = false; statusMessage.current?.focus(); }

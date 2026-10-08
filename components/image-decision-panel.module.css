@@ -1,0 +1,26 @@
+.panel { border:1px solid var(--zils-edge); border-radius:8px; padding:28px; margin:20px 0; background:var(--zils-surface); }
+.heading>span,.result>span { display:block; font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--zils-muted); }
+.heading h2 { font-size:27px; font-weight:500; margin:10px 0; letter-spacing:-.03em; }
+.heading p { color:var(--zils-muted); font-size:14px; max-width:55ch; }
+.form { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:32px; margin-top:26px; }
+.form>div { min-width:0; }
+.form label { display:block; font-size:13px; font-weight:500; margin:16px 0 8px; }
+.form label:first-child { margin-top:0; }
+.form textarea { width:100%; min-width:0; padding:12px; border:1px solid var(--zils-edge-strong); border-radius:5px; background:var(--zils-page); color:var(--zils-ink); font:inherit; font-size:14px; resize:vertical; }
+.photo input { display:block; width:100%; max-width:100%; padding:12px; border:1px dashed var(--zils-edge-strong); border-radius:5px; font-size:12px; }
+.photo figure { margin:18px 0; }
+.photo img { display:block; width:100%; max-height:360px; object-fit:contain; border-radius:5px; background:var(--zils-page); }
+.photo figcaption { overflow-wrap:anywhere; font-size:12px; margin-top:8px; color:var(--zils-muted); }
+.hint { font-size:12px; line-height:1.5; color:var(--zils-muted); margin:8px 0 18px; }
+.fields summary { cursor:pointer; font-size:12px; color:var(--zils-muted); margin:12px 0; }
+.fields button { display:block; min-height:44px; padding:10px 20px; background:var(--zils-ink); color:var(--zils-page); border:0; border-radius:5px; margin-top:22px; font-size:13px; cursor:pointer; }
+.fields button:disabled { opacity:.5; cursor:default; }
+.fields p[role=status],.error { font-size:13px; margin-top:14px; }
+.error { color:var(--zils-danger,#ba4437); }
+.result { border-top:1px solid var(--zils-edge); margin-top:28px; padding-top:22px; }
+.result strong { display:block; font-size:26px; font-weight:500; margin:8px 0; }
+.result p { font-size:13px; color:var(--zils-muted); max-width:65ch; }
+.tabs { display:flex; gap:4px; margin:18px 0; border-bottom:1px solid var(--zils-edge); }
+.tabs button { min-height:44px; padding:10px 20px; background:none; border:0; border-bottom:2px solid transparent; color:var(--zils-muted); cursor:pointer; }
+.tabs button[aria-selected=true] { border-color:var(--zils-accent); color:var(--zils-ink); }
+@media(max-width:650px) { .panel { padding:20px; }.form { grid-template-columns:minmax(0,1fr); gap:20px; }.heading h2 { font-size:24px; } }
