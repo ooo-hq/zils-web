@@ -73,6 +73,17 @@ test('only a verified checkout_paid conflict exposes a terminal checkout code', 
   }
 });
 
+test('legacy API-key authentication at the billing endpoint is a service error, not an expired session', async () => {
+  const api = billingApi('https://api.example', async () => 'valid-user-session', async () => response({
+    error: { code: 'invalid_credentials', message: 'API key is invalid or revoked.' },
+  }, 401));
+  await assert.rejects(api.summary(), error => error instanceof BillingError && error.code === 'billing_unavailable' && !/sign in/i.test(error.message));
+  const expired = billingApi('https://api.example', async () => 'expired-user-session', async () => response({
+    error: { code: 'service_unavailable', message: 'Your session has expired; sign in again.' },
+  }, 401));
+  await assert.rejects(expired.summary(), error => error.status === 401 && error.code === undefined && /sign in/i.test(error.message));
+});
+
 test('credit formatting preserves nano-dollar usage and values beyond safe Number precision', () => {
   assert.equal(formatCredit('5000000000'), '$5.00');
   assert.equal(formatCredit('4999999958'), '$4.999999958');
