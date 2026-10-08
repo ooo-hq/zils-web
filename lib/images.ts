@@ -25,7 +25,7 @@ export type ImageAnswer = z.infer<typeof answerSchema>;
 const assetSchema = z.object({ id: z.string().uuid(), state: z.enum(['uploading', 'verifying', 'ready', 'failed', 'expired', 'deleted']), sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(), width: z.number().int().positive().optional(), height: z.number().int().positive().optional(), expires_at: z.string().datetime({ offset: true }) });
 export type ImageAsset = z.infer<typeof assetSchema>;
 const uploadSchema = z.object({ url: z.string().url(), method: z.literal('PUT'), headers: z.object({ 'x-upsert': z.literal('false'), 'Content-Type': z.literal('application/octet-stream') }).strict() });
-const modelsSchema = z.object({ models: z.array(z.object({ name: z.string(), stock: z.boolean(), capabilities: z.object({ modalities: z.array(z.string()) }), question: imageQuestionSchema.optional() })), training_enabled: z.boolean() });
+const modelsSchema = z.object({ models: z.array(z.object({ name: z.string(), stock: z.boolean(), capabilities: z.object({ modalities: z.array(z.string()) }), question: imageQuestionSchema.optional() })), training_enabled: z.boolean(), training_profile: z.object({ model: z.literal('imajev-4b-v1'), max_train: z.number().int().positive(), max_calibration: z.number().int().positive(), max_test: z.number().int().positive(), max_source_bytes: z.number().int().positive(), max_pixels: z.number().int().positive(), max_edge: z.number().int().positive() }).optional() });
 export type ImageModels = z.infer<typeof modelsSchema>;
 export type ImageAssetInput = { purpose: 'prediction' | 'training'; job_id?: string; filename: string; source_bytes: number; source_sha256: string };
 export class ImageApiError extends Error {
@@ -67,6 +67,7 @@ export function imageApi(baseUrl: string, storageUrl: string, token: () => Promi
     models: (signal?: AbortSignal) => send('/v1/image-models', modelsSchema, undefined, signal),
     createAsset: (input: ImageAssetInput, signal?: AbortSignal) => send('/v1/image-assets', z.object({ asset: assetSchema, upload: uploadSchema }), input, signal),
     completeAsset: (id: string, signal?: AbortSignal) => send(`${idPath(id)}/complete`, assetSchema, {}, signal),
+    resumeAsset: (id: string, signal?: AbortSignal) => send(`${idPath(id)}/resume`, z.object({ asset: assetSchema, uploaded: z.boolean(), upload: uploadSchema.optional() }), {}, signal),
     deleteAsset: (id: string, signal?: AbortSignal) => send(idPath(id), z.object({}), undefined, signal, 'DELETE'),
     upload: async (descriptor: z.infer<typeof uploadSchema>, file: Blob, signal?: AbortSignal) => {
       const slot = uploadSchema.parse(descriptor), url = new URL(slot.url);

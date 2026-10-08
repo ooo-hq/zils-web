@@ -63,7 +63,7 @@ async function digest(value: string) {
 }
 
 type Example = { id: string; group_id: string; family: string; state: { decision: string; information: Record<string, string> }; question: { type: 'choice'; criteria: Record<string, string> }; label: string };
-type Group = { id: string; rows: Example[]; labels: Set<string> };
+type Group<T = Example> = { id: string; rows: T[]; labels: Set<string> };
 
 // Match Python's json.dumps defaults for its 128 KiB per-case limit, including
 // non-ASCII text. UTF-8 byte length alone can underestimate that representation.
@@ -74,7 +74,7 @@ function coordinatorJson(value: unknown): string {
 }
 
 /** Whole source groups stay together. Coverage is required; ratios are approximate. */
-function splitGroups(groups: Group[], outcomes: string[]): Record<Split, Example[]> {
+export function splitGroups<T extends { id: string; label: string }>(groups: Group<T>[], outcomes: string[]): Record<Split, T[]> {
   const frequency = new Map(outcomes.map(outcome => [outcome, groups.filter(group => group.labels.has(outcome)).length]));
   for (const outcome of outcomes) if (frequency.get(outcome)! < 3) throw new Error(`“${outcome}” needs examples from at least 3 independent source groups so it can appear in learning, confidence checks, and final evaluation. Add more reviewed examples or use independently prepared JSONL files.`);
   const rareFirst = [...outcomes].sort((a, b) => frequency.get(a)! - frequency.get(b)! || a.localeCompare(b));
@@ -82,7 +82,7 @@ function splitGroups(groups: Group[], outcomes: string[]): Record<Split, Example
   // A few stable orderings handle groups that contain more than one outcome.
   for (let attempt = 0; attempt < 24; attempt++) {
     const remaining = new Set(ordered);
-    const assigned: Record<Split, Group[]> = { train: [], calibration: [], test: [] };
+    const assigned: Record<Split, Group<T>[]> = { train: [], calibration: [], test: [] };
     const coverage: Record<Split, Set<string>> = { train: new Set(), calibration: new Set(), test: new Set() };
     let possible = true;
     for (const outcome of rareFirst) for (const split of SPLITS) {
@@ -101,7 +101,7 @@ function splitGroups(groups: Group[], outcomes: string[]): Record<Split, Example
       const split = [...SPLITS].sort((a, b) => (sizes[a] / (total * target[a])) - (sizes[b] / (total * target[b])))[0];
       assigned[split].push(group); sizes[split] += group.rows.length;
     }
-    return Object.fromEntries(SPLITS.map(split => [split, assigned[split].flatMap(group => group.rows).sort((a, b) => a.id.localeCompare(b.id))])) as Record<Split, Example[]>;
+    return Object.fromEntries(SPLITS.map(split => [split, assigned[split].flatMap(group => group.rows).sort((a, b) => a.id.localeCompare(b.id))])) as Record<Split, T[]>;
   }
   throw new Error('These source groups could not be separated while keeping every answer in all three sets. Add independent examples, or use advanced upload with your own reviewed splits.');
 }

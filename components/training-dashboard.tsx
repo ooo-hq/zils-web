@@ -14,7 +14,8 @@ import { TrainingRunStatus } from '@/components/training-run-status';
 import { useAuthSession } from '@/components/auth-session';
 import { currentTrainingJob, trainingProgress } from '@/lib/training-status';
 import { ImageDecisionPanel } from '@/components/image-decision-panel';
-import { imageApi } from '@/lib/images';
+import { imageApi, type ImageModels } from '@/lib/images';
+import { ImageTrainingIntake } from '@/components/image-training-intake';
 import imageStyles from '@/components/image-decision-panel.module.css';
 import styles from '@/app/(home)/train/train.module.css';
 
@@ -59,6 +60,7 @@ export function TrainingDashboard({ config }: { config: Config }) {
 function SignedInDashboard({ owner, client, config, onExpired }: { owner: string; client: SupabaseClient; config: Config; onExpired: () => Promise<void> }) {
   const [vertical, setVertical] = useState<'text' | 'images'>('text');
   const [imagesAvailable, setImagesAvailable] = useState(false);
+  const [imageProfile, setImageProfile] = useState<ImageModels['training_profile']>();
   const imageToken = useCallback(async () => {
     const { data, error } = await client.auth.getSession();
     if (error) throw error;
@@ -68,7 +70,7 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
     if (!config.decisionApiUrl) return;
     const controller = new AbortController();
     imageApi(config.decisionApiUrl, config.url, imageToken).models(controller.signal)
-      .then(data => { if (!controller.signal.aborted) setImagesAvailable(data.models.some(model => model.stock)); })
+      .then(data => { if (!controller.signal.aborted) { setImagesAvailable(data.models.some(model => model.stock)); setImageProfile(data.training_enabled ? data.training_profile : undefined); } })
       .catch(() => { if (!controller.signal.aborted) setImagesAvailable(false); });
     return () => controller.abort();
   }, [config.decisionApiUrl, config.url, imageToken]);
@@ -92,12 +94,9 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
   const statusMessage = useRef<HTMLHeadingElement>(null);
   const life = useRef<AbortController | null>(null);
   const operation = useRef<AbortController | null>(null);
-  const selected = currentTrainingJob(jobs);
-  const api = useMemo(() => trainingApi(config.apiUrl, config.url, async () => {
-    const { data, error } = await client.auth.getSession();
-    if (error) throw error;
-    return data.session?.access_token || '';
-  }), [config.apiUrl, config.url, client]);
+  const selected = currentTrainingJob(jobs.filter(job => job.model?.id !== 'imajev-4b-v1'));
+  const imageService = useMemo(() => config.decisionApiUrl ? imageApi(config.decisionApiUrl, config.url, imageToken) : null, [config.decisionApiUrl, config.url, imageToken]);
+  const api = useMemo(() => trainingApi(config.apiUrl, config.url, imageToken), [config.apiUrl, config.url, imageToken]);
   const handleError = useCallback((error: unknown) => {
     if (error instanceof TrainingApiError && error.status === 401) { void onExpired(); return; }
     setError(message(error));
@@ -113,7 +112,7 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
         const { jobs } = await api.list(controller.signal);
         if (controller.signal.aborted) return;
         setJobs(jobs); setLoading(false); setCheckedAt(Date.now()); setRefreshError(false);
-        setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading')?.id || jobs.find(job => job.status === 'uploading')?.id || '');
+        setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || jobs.find(job => job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || '');
         timer = setTimeout(poll, jobs.some(job => !terminal(job)) ? 10_000 : 30_000);
       } catch (error) { if (!controller.signal.aborted) { if (error instanceof TrainingApiError && error.status === 401) errorHandler.current(error); setLoading(false); setRefreshError(true); timer = setTimeout(poll, 30_000); } }
     }
@@ -127,7 +126,7 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
       const { jobs } = await api.list(life.current?.signal);
       if (!life.current?.signal.aborted) {
         setJobs(jobs); setCheckedAt(Date.now()); setRefreshError(false);
-        setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading')?.id || jobs.find(job => job.status === 'uploading')?.id || '');
+        setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || jobs.find(job => job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || '');
       }
     } catch (error) { if (!life.current?.signal.aborted) { if (error instanceof TrainingApiError && error.status === 401) handleError(error); setRefreshError(true); } }
     finally { setRefreshing(false); }
@@ -215,7 +214,7 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
     return <>
       <TrainingRunStatus job={job} />
       {job.error && <p role="alert" className={styles.error}>{job.error}</p>}
-      {job.status === 'uploading' && <div className={styles.actions}>
+      {job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1' && <div className={styles.actions}>
         <button className={styles.secondary} disabled={busy} onClick={() => retrySubmit(job)}>Retry submission</button>
         <button className={styles.secondary} disabled={busy} onClick={() => resumeUploads(job)}>Resume missing uploads</button>
         <button className={styles.textButton} disabled={busy} onClick={() => cancelJob(job)}>Cancel this run</button>
@@ -269,7 +268,10 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
       <button role="tab" aria-selected={vertical === 'text'} aria-controls="text-workspace" onClick={() => setVertical('text')}>Text</button>
       <button role="tab" aria-selected={vertical === 'images'} aria-controls="image-workspace" onClick={() => setVertical('images')}>Images</button>
     </div>}
-    {vertical === 'images' && config.decisionApiUrl && <div id="image-workspace" role="tabpanel"><ImageDecisionPanel owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storageUrl={config.url} /></div>}
+    {vertical === 'images' && config.decisionApiUrl && <div id="image-workspace" role="tabpanel"><ImageDecisionPanel owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storageUrl={config.url} />
+      {imageProfile && imageService && <ImageTrainingIntake owner={owner} token={imageToken} trainingApi={api} imageApi={imageService} profile={imageProfile} resumeJob={jobs.find(job => job.model?.id === 'imajev-4b-v1' && job.status === 'uploading')} onSubmitted={replaceJob} />}
+      {runRows(jobs.filter(job => job.model?.id === 'imajev-4b-v1'), 'Image runs')}
+    </div>}
     <div id="text-workspace" role="tabpanel" hidden={vertical !== 'text'}>
     {error && <p className={styles.error} role="alert">{error}</p>}
     {progress && <p role="status" className={styles.notice}>{progress}</p>}
@@ -287,8 +289,8 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
           <p className={styles.statusFreshness} data-stale={refreshError}>{refreshError ? 'Connection interrupted. Showing the last known status; we’ll retry automatically.' : <>Last checked {checkedAt ? new Date(checkedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'just now'}. {!terminal(selected) && 'Updates automatically.'}</>}</p>
         </section>
       </div>}
-      {runRows(jobs.filter(job => job.id !== selected?.id && !terminal(job)), 'Other active runs')}
-      {runRows(jobs.filter(job => job.id !== selected?.id && terminal(job)), 'Past runs')}
+      {runRows(jobs.filter(job => job.model?.id !== 'imajev-4b-v1' && job.id !== selected?.id && !terminal(job)), 'Other active runs')}
+      {runRows(jobs.filter(job => job.model?.id !== 'imajev-4b-v1' && job.id !== selected?.id && terminal(job)), 'Past runs')}
     </div>
     </div>
     <TrainingIntake key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={error} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
