@@ -54,6 +54,6 @@ export function PrivateImageTest({ job, owner, token, apiUrl, storageUrl }: { jo
     <button className={styles.button} disabled={busy} onClick={() => void open()}>{busy ? 'Checking model…' : 'Try your model'}</button>
     {error && <p role="alert">{error}</p>}
     {question && <ImageDecisionPanel owner={owner} token={token} apiUrl={apiUrl} storageUrl={storageUrl} modelId={job.workflow!.model_id} question={question} />}
-    <details><summary>Use from your application</summary><p>Upload and finalize a private photo through /v1/image-assets, then send its asset ID with your existing API key.</p><pre className={styles.hash}>{JSON.stringify({ endpoint: `${apiUrl}/v1/systemone`, method: 'POST', model: job.workflow!.model_id, state: {}, questions: question ? { inspection: question } : 'Use the saved question from your owned model listing.', images: [{ asset_id: 'YOUR_FINALIZED_ASSET_ID' }] }, null, 2)}</pre></details>
+    {question && <details><summary>Use from your application</summary><p>Upload and finalize a private photo through /v1/image-assets, then send its asset ID with your existing API key.</p><pre className={styles.hash}>{`POST ${apiUrl}/v1/systemone\nAuthorization: Bearer YOUR_API_KEY\nContent-Type: application/json\n\n${JSON.stringify({ model: job.workflow!.model_id, state: {}, questions: { inspection: question }, images: [{ asset_id: 'YOUR_FINALIZED_ASSET_ID' }] }, null, 2)}`}</pre></details>}
   </div>;
 }
