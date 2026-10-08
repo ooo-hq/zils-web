@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ArrowUpRight, FlaskConical, RefreshCw } from 'lucide-react';
 import { useAuthSession } from '@/components/auth-session';
+import { BillingUsage } from '@/components/billing-usage';
 import { billingApi, BillingError, TOPUP_AMOUNTS_CENTS, formatCredit, checkoutIntent, pendingCheckout, attachCheckout, settleCheckout, clearCheckout, type BillingSummary, type CheckoutIntent } from '@/lib/billing';
 import styles from '@/app/(home)/billing/billing.module.css';
 
@@ -103,6 +104,7 @@ function AccountBilling({ config, client, owner, testPreview, checkoutReturn }: 
     {notice && <p className={styles.returnNotice} role="status">{notice}</p>}
     <div className={styles.refreshRow}><span>{refreshing ? 'Updating billing…' : stale ? 'Billing details could not be refreshed.' : 'All amounts in USD.'}</span><button type="button" className={styles.textButton} onClick={refresh} disabled={refreshing || busy}><RefreshCw size={14} aria-hidden="true" />{refreshing ? 'Refreshing…' : 'Refresh'}</button></div>
     {!summary || expired ? <p className={styles.loading} role="status">{expired ? 'Sign in again to view your account.' : refreshing ? 'Loading your billing details…' : 'Your billing details are unavailable. Refresh to try again.'}</p> : <>
+      <BillingUsage usage={summary.usage} />
       <div className={styles.overview}>
         <section className={styles.credit} aria-labelledby="credit-heading">
           <h2 id="credit-heading">Available credit</h2>

@@ -313,6 +313,7 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
     <div className={styles.workspaceHeading}>
       <div><h1>Training</h1><p>Follow your runs and train a new model.</p></div>
       <div className={styles.workspaceActions}>
+        <Link href="/billing#usage" className={styles.secondary}>Usage & billing</Link>
         <ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={onExpired} />
         {vertical === 'text' && <SheetTrigger asChild><button className={styles.button} disabled={busy}><Plus size={16} aria-hidden="true" />Train a model</button></SheetTrigger>}
       </div>
