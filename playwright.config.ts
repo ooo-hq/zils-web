@@ -8,7 +8,9 @@ export default defineConfig({
   use: { baseURL: 'http://127.0.0.1:3107', trace: 'retain-on-failure' },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: 'npm run dev -- --hostname 127.0.0.1 --port 3107',
+    command: process.env.CI
+      ? 'npm run build && npm run start -- --hostname 127.0.0.1 --port 3107'
+      : 'npm run dev -- --hostname 127.0.0.1 --port 3107',
     url: 'http://127.0.0.1:3107/train',
     timeout: 120_000,
     reuseExistingServer: false,
