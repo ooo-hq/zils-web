@@ -21,7 +21,7 @@ function CopyField({ label, value, multiline = false }: { label: string; value: 
       <label htmlFor={id}>{label}</label>
       <button type="button" className={training.secondary} onClick={copy}>
         {copied ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
-        {copied ? 'Copied' : `Copy ${label === 'API model ID' ? 'model ID' : label === 'Example code' ? 'code' : 'command'}`}
+        {copied ? 'Copied' : `Copy ${label === 'API model name' ? 'model name' : label === 'API model ID' ? 'model ID' : label === 'Example code' ? 'code' : 'command'}`}
       </button>
     </div>
     <textarea id={id} ref={field} readOnly spellCheck={false} value={value} rows={multiline ? 14 : 3} wrap={multiline ? 'off' : 'soft'} className={`${styles.field} ${multiline ? styles.code : ''}`} onClick={() => { if (!multiline) field.current?.select(); }} />
@@ -29,9 +29,10 @@ function CopyField({ label, value, multiline = false }: { label: string; value: 
   </div>;
 }
 
-export function TrainedModelQuickstart({ modelId, apiUrl, apiKeys }: { modelId: string; apiUrl: string | null; apiKeys: ReactNode }) {
+export function TrainedModelQuickstart({ modelId, modelName, apiUrl, apiKeys }: { modelId: string; modelName?: string; apiUrl: string | null; apiKeys: ReactNode }) {
   const [language, setLanguage] = useState<ExampleLanguage>('Python');
-  const example = apiUrl ? modelQuickstart(modelId, apiUrl, language) : null;
+  const requestModel = modelName || modelId;
+  const example = apiUrl ? modelQuickstart(requestModel, apiUrl, language) : null;
   function download() {
     if (!example) return;
     const url = URL.createObjectURL(new Blob([`${example.code}\n`], { type: 'text/plain;charset=utf-8' }));
@@ -40,8 +41,9 @@ export function TrainedModelQuickstart({ modelId, apiUrl, apiKeys }: { modelId: 
   }
   return <section className={styles.quickstart} aria-label="Use your model">
     <h3>Use your model</h3>
-    <p className={styles.intro}>Your model is hosted by Zils. Copy its ID into your app, or make your first request with the example below.</p>
-    <CopyField key={modelId} label="API model ID" value={modelId} />
+    <p className={styles.intro}>Your model is hosted by Zils. Copy its {modelName ? 'name' : 'ID'} into your app, or make your first request with the example below.</p>
+    <CopyField key={requestModel} label={modelName ? 'API model name' : 'API model ID'} value={requestModel} />
+    {modelName && <p className={styles.intro}>Use this name in your request’s <code>model</code> field. The full model ID still works and is saved in technical details.</p>}
     {example ? <ol className={styles.steps}>
       <li>
         <h4>Get your API key</h4>
@@ -55,7 +57,7 @@ export function TrainedModelQuickstart({ modelId, apiUrl, apiKeys }: { modelId: 
           {(['Python', 'JavaScript'] as const).map(item => <button type="button" key={item} aria-pressed={language === item} onClick={() => setLanguage(item)}>{item}</button>)}
           <span>{language === 'Python' ? 'Python 3 · No packages to install' : 'Node.js 20+ · Run on your server'}</span>
         </div>
-        <CopyField key={`${modelId}-${apiUrl}-${language}`} label="Example code" value={example.code} multiline />
+        <CopyField key={`${requestModel}-${apiUrl}-${language}`} label="Example code" value={example.code} multiline />
         <button type="button" className={training.textButton} onClick={download}><Download size={14} aria-hidden="true" />Download {example.filename}</button>
         <p>The code sends one example’s input and question to your model. Its expected answer stays in your file.</p>
       </li>

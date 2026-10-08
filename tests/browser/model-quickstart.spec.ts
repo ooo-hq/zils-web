@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 
 const id = '10000000-0000-4000-8000-000000000001';
 const modelId = `zils-adapter-${id}-${'a'.repeat(64)}`;
-async function workspace(page: Page, state = 'ready') {
+async function workspace(page: Page, state = 'ready', withModels = false) {
   const user = { id: '10000000-0000-4000-8000-000000000002', email: 'fixture@example.invalid', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
   const expires = Math.floor(Date.now() / 1000) + 3600;
   const token = `${Buffer.from(JSON.stringify({ alg: 'HS256' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: user.id, exp: expires })).toString('base64url')}.browser-test`;
@@ -10,6 +10,11 @@ async function workspace(page: Page, state = 'ready') {
     localStorage.setItem('zils-training-auth', JSON.stringify({ user, access_token: token, refresh_token: 'fixture', token_type: 'bearer', expires_in: 3600, expires_at: expires }));
   }, { user, token, expires });
   const job = { id, name: 'support-actions', status: 'completed', workflow: { state, model_id: modelId }, result: { delivery: { status: 'accepted', uid: 1, acceptance: { min_accuracy: .8, min_brier_improvement: .01 } }, baseline: { accuracy: .8125, brier: .314, skill: .3 }, miners: [{ uid: 1, status: 'evaluated', accuracy: .9375, brier: .210 }], weights: {} } };
+  const modelJobs = [
+    { ...job, workflow: { ...job.workflow, model_name: 'support-actions-10000000' } },
+    { ...job, id: '20000000-0000-4000-8000-000000000001', name: 'invoice-checking', workflow: { state: 'ready', model_id: 'invoice-immutable-id', model_name: 'invoice-checking-20000000' } },
+    { ...job, id: '30000000-0000-4000-8000-000000000001', name: 'still-activating', workflow: { state: 'activating', model_id: 'pending-model' } },
+  ];
   const writes: string[] = [];
   await page.route('**/*', async route => {
     const req = route.request(), url = new URL(req.url());
@@ -19,7 +24,7 @@ async function workspace(page: Page, state = 'ready') {
     if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
     if (req.method() !== 'GET') writes.push(url.pathname);
     if (url.pathname.startsWith('/auth/v1/')) return route.fulfill({ json: user, headers });
-    if (url.pathname === '/v1/jobs') return route.fulfill({ json: { jobs: [job] }, headers });
+    if (url.pathname === '/v1/jobs') return route.fulfill({ json: withModels ? { jobs: [modelJobs[0], modelJobs[2]], models: modelJobs.slice(0, 2) } : { jobs: [job] }, headers });
     if (url.pathname === '/v1/keys') return route.fulfill({ json: { keys: [] }, headers });
     return route.fulfill({ status: 404, json: { error: 'Unexpected fixture request' }, headers });
   });
@@ -74,4 +79,34 @@ test('activation in progress does not offer a usable model prematurely', async (
   await workspace(page, 'activating');
   await expect(page.getByRole('heading', { name: 'Training passed. Preparing API access.' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Use your model' })).toHaveCount(0);
+});
+
+
+test('available models list keeps different tasks separate and opens the chosen example', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const writes = await workspace(page, 'ready', true);
+  const library = page.getByRole('region', { name: 'Your models' });
+  await expect(library.getByRole('listitem')).toHaveCount(2);
+  await expect(library.getByText('still-activating')).toHaveCount(0);
+  const invoice = library.getByRole('listitem').filter({ hasText: 'invoice-checking' });
+  await invoice.getByRole('button', { name: 'Copy name' }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('invoice-checking-20000000');
+  await invoice.getByRole('button', { name: 'Use model' }).click();
+  const example = page.locator('#use-model-20000000-0000-4000-8000-000000000001');
+  await expect(example).toBeFocused();
+  await expect(example.getByLabel('API model name')).toHaveValue('invoice-checking-20000000');
+  await expect(example.getByLabel('Example code')).toContainText('invoice-checking-20000000');
+  expect(writes).toEqual([]);
+  await library.screenshot({ path: '.private/model-library-desktop.png' });
+});
+
+test('multiple named models fit on mobile and preserve full IDs in technical details', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await workspace(page, 'ready', true);
+  const library = page.getByRole('region', { name: 'Your models' });
+  await expect(library.getByRole('button', { name: 'Use model' })).toHaveCount(2);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.getByText('Evaluation and technical details', { exact: true }).click();
+  await expect(page.getByText(modelId, { exact: true })).toBeVisible();
+  await library.screenshot({ path: '.private/model-library-mobile.png' });
 });
