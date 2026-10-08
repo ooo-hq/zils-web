@@ -62,7 +62,8 @@ Set the same values in the appropriate Vercel environment before building.
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public browser key; never a service-role key |
 | `NEXT_PUBLIC_ZILS_TRAINING_API_URL` | Reachable HTTPS training coordinator |
-| `NEXT_PUBLIC_ZILS_API_URL` | Optional decision API base URL for key management; defaults to the training coordinator URL followed by `/decision` |
+| `NEXT_PUBLIC_ZILS_API_URL` | Optional decision API base URL for key management and billing; defaults to the training coordinator URL followed by `/decision` |
+| `NEXT_PUBLIC_ZILS_BILLING_PREVIEW` | Set to `test` only on an isolated billing test deployment; leaves live checkout disabled |
 | `ZILS_DECISION_API_URL` | Complete server-side inference endpoint URL |
 | `ZILS_DECISION_API_KEY` | Server-only inference bearer credential |
 | `ZILS_DECISION_MODEL` | Exact model identifier expected by the inference server |
@@ -112,9 +113,9 @@ must be agreed before starting. Larger jobs require an upfront estimate.
 The page includes a local usage estimator and a link from the shared footer.
 It does not initiate training, collect payments, or change the API meter.
 Paid access and spending caps are explicitly planned.
-Before enabling checkout, implement credit accounting and billing that counts
-shared context once per request, then verify the advertised terms against the
-customer training and serving workflows. Early-access links use `/contact`.
+The separate billing test preview connects to prepaid credit accounting in the
+Python API. Verify the advertised terms against the deployed customer training
+and serving workflows before enabling paid access. Early-access links use `/contact`.
 
 `/pricing-lab` is an unlisted scenario calculator for 100, 1,000, and 2,000
 paying active customers. Each customer can use multiple Zils. Requests and total
@@ -214,6 +215,34 @@ authorize prediction requests to models available to the account; they do not
 create or train a model. See the
 [decision API documentation](https://github.com/ooo-hq/zils/blob/main/docs/decision-api.md)
 for model selection and server-side requests.
+
+## Billing test preview
+
+`/billing` uses the existing Supabase session and decision API to show account
+credit, reservations, training allowance, payments, receipts, and credit activity.
+All API keys share the account balance. Checkout offers $5, $20, $50, and $100
+top-ups; the first confirmed payment includes one standard training run without
+deducting purchased credit. Further standard runs cost $2.
+
+Use an isolated Supabase project, decision API, training service, and runtime.
+Follow the backend's [prepaid billing setup](https://github.com/ooo-hq/zils/blob/main/docs/billing.md)
+and point the public service settings above at those test services. Set
+`NEXT_PUBLIC_ZILS_BILLING_PREVIEW=test` before building to expose Billing in the
+account menu and pricing page. Checkout also requires the API to report `test`;
+the flag cannot enable live payments. Leave it unset in production. No Stripe
+secret belongs in the website or a `NEXT_PUBLIC_` variable.
+
+Checkout opens on Stripe. Its return URL never credits an account; refresh the
+page to observe the signed webhook's confirmed balance. A pending checkout is
+saved per account, API, and billing mode so reloads and uncertain responses can
+retry the same purchase. A verified paid or expired purchase clears that intent.
+Missing service configuration renders an unavailable state.
+
+The unit and browser suites use synthetic accounts and intercepted service
+responses. They verify account boundaries, exact amounts, safe Checkout URLs,
+and retry recovery; they do not establish a working Stripe account connection.
+Complete a real Stripe test-mode payment, webhook replay, and refund against
+the isolated environment before opening paid access.
 
 ## Customer training setup
 

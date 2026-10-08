@@ -48,6 +48,7 @@ export function AccountMenu({ tone }: { tone: 'light' | 'dark' }) {
     {open && <div id={panelId} role="group" aria-label="Your account" className="absolute right-0 top-full z-50 mt-2 w-64 max-w-[calc(100vw-3rem)] rounded-lg border border-edge bg-page p-2 text-sm text-ink shadow-lg">
       <div className="border-b border-edge px-3 py-3"><p className="text-xs text-muted">Signed in as</p><p className="mt-1 break-all font-medium">{session.user.email || 'Your account'}</p></div>
       <Link href="/train" className="mt-1 flex min-h-11 items-center rounded-md px-3 hover:bg-surface" onClick={() => setOpen(false)}>Your workspace</Link>
+      {process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && <Link href="/billing" className="flex min-h-11 items-center rounded-md px-3 hover:bg-surface" onClick={() => setOpen(false)}>Billing</Link>}
       <button type="button" className="flex min-h-11 w-full items-center gap-2 rounded-md px-3 text-left hover:bg-surface disabled:opacity-60" disabled={busy} onClick={signOut}><LogOut size={16} aria-hidden="true" />{busy ? 'Signing out…' : 'Sign out'}</button>
       {error && <p role="alert" className="px-3 py-2 text-danger">{error}</p>}
     </div>}

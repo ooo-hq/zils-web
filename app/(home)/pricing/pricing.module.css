@@ -21,6 +21,7 @@
 .button:hover { background: var(--zils-action-hover); }
 .start .button { margin-top: 26px; }
 .start .availability { margin-top: 12px; font-size: 12px; }
+.previewLink { color:var(--zils-accent); text-decoration:underline; text-underline-offset:3px; }
 .rates { padding: 14px 34px 22px; }
 .rates dl { margin: 0; }
 .rate { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 22px 0; border-bottom: 1px solid var(--zils-edge); }
