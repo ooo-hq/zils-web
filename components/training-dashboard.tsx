@@ -57,7 +57,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
   const [jobs, setJobs] = useState<Job[]>([]);
   const [availableModels, setAvailableModels] = useState<Job[]>([]);
   const [selectedId, setSelectedId] = useState('');
-  const [modelToUse, setModelToUse] = useState('');
+  const [modelToUse, setModelToUse] = useState<{ id: string } | null>(null);
   const [collapsedRun, setCollapsedRun] = useState('');
   const [panelOpen, setPanelOpen] = useState(false);
   const [downloadJobId, setDownloadJobId] = useState('');
@@ -80,17 +80,15 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
   const selected = currentTrainingJob(jobs);
   const history = [...jobs, ...availableModels.filter(model => !jobs.some(job => job.id === model.id))];
   useEffect(() => {
-    if (!modelToUse || modelToUse === collapsedRun) return;
-    const target = document.getElementById(`use-model-${modelToUse}`);
+    if (!modelToUse) return;
+    const target = document.getElementById(`use-model-${modelToUse.id}`);
     if (target) { target.scrollIntoView({ block: 'start' }); target.focus({ preventScroll: true }); }
-  }, [modelToUse, selectedId, collapsedRun]);
+  }, [modelToUse]);
   function useModel(job: Job) {
     if (job.id === selected?.id) setCollapsedRun('');
     if (job.id !== selected?.id) setSelectedId(job.id);
-    setModelToUse(job.id);
-    // Repeated clicks still return to the example when it is already open.
-    const target = document.getElementById(`use-model-${job.id}`);
-    if (target && collapsedRun !== job.id) { target.scrollIntoView({ block: 'start' }); target.focus({ preventScroll: true }); }
+    // Each click focuses the example after its containing run has opened.
+    setModelToUse({ id: job.id });
   }
   const api = useMemo(() => trainingApi(config.apiUrl, config.url, async () => {
     const { data, error } = await client.auth.getSession();

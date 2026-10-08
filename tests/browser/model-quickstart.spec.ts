@@ -126,6 +126,9 @@ test('latest run collapses by keyboard and Use model reopens its example', async
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator(`#use-model-${id}`)).toBeFocused();
   await expect(page.getByLabel('Example code')).toBeVisible();
+  await toggle.focus(); await page.keyboard.press('Enter'); await page.keyboard.press('Enter');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(toggle).toBeFocused();
   expect(writes).toEqual([]);
 });
 
