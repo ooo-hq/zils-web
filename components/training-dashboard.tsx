@@ -1,10 +1,10 @@
 'use client';
 
 import { type SupabaseClient } from '@supabase/supabase-js';
-import Link from 'next/link';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { canDownload, downloadFiles, SPLITS, submissionSchema, terminal, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
+import Link from 'next/link';
 import { TrainingGuide } from '@/components/training-guide';
 import { TrainingIntake } from '@/components/training-intake';
 import { ApiKeysPanel } from '@/components/api-keys-panel';
@@ -16,6 +16,11 @@ import { TrainingRunStatus } from '@/components/training-run-status';
 import { useAuthSession } from '@/components/auth-session';
 import { signInWithGoogle } from '@/lib/training-auth';
 import { currentTrainingJob, trainingProgress } from '@/lib/training-status';
+import { ImageDecisionPanel } from '@/components/image-decision-panel';
+import { imageApi, type ImageModels } from '@/lib/images';
+import { ImageTrainingResults, PrivateImageTest } from '@/components/image-training-results';
+import { ImageTrainingIntake } from '@/components/image-training-intake';
+import imageStyles from '@/components/image-decision-panel.module.css';
 import styles from '@/app/(home)/train/train.module.css';
 
 type Config = { url: string; key: string; apiUrl: string; decisionApiUrl: string | null };
@@ -59,7 +64,7 @@ export function TrainingDashboard({ config }: { config: Config }) {
   return <>
     {(error || sessionError) && <p role="alert" className={styles.error}>{error || sessionError}</p>}
     {session && client ? <div id="training-workspace">
-      <SignedInDashboard key={session.user.id} client={client} config={config} onExpired={signOut} />
+      <SignedInDashboard key={session.user.id} owner={session.user.id} client={client} config={config} onExpired={signOut} />
     </div> : <>
       <div className={styles.workspaceHeading}><h1>Training</h1><p>Teach Zils a decision using examples your team has reviewed.</p></div>
       <section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}>
@@ -79,7 +84,23 @@ export function TrainingDashboard({ config }: { config: Config }) {
   </>;
 }
 
-function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClient; config: Config; onExpired: () => Promise<void> }) {
+function SignedInDashboard({ owner, client, config, onExpired }: { owner: string; client: SupabaseClient; config: Config; onExpired: () => Promise<void> }) {
+  const [vertical, setVertical] = useState<'text' | 'images'>('text');
+  const [imagesAvailable, setImagesAvailable] = useState(false);
+  const [imageProfile, setImageProfile] = useState<ImageModels['training_profile']>();
+  const imageToken = useCallback(async () => {
+    const { data, error } = await client.auth.getSession();
+    if (error) throw error;
+    return data.session?.user.id === owner ? data.session.access_token : '';
+  }, [client, owner]);
+  useEffect(() => {
+    if (!config.decisionApiUrl) return;
+    const controller = new AbortController();
+    imageApi(config.decisionApiUrl, config.url, imageToken).models(controller.signal)
+      .then(data => { if (!controller.signal.aborted) { setImagesAvailable(data.models.some(model => model.stock)); setImageProfile(data.training_enabled ? data.training_profile : undefined); } })
+      .catch(() => { if (!controller.signal.aborted) setImagesAvailable(false); });
+    return () => controller.abort();
+  }, [config.decisionApiUrl, config.url, imageToken]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [availableModels, setAvailableModels] = useState<Job[]>([]);
   const [selectedId, setSelectedId] = useState('');
@@ -104,7 +125,9 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
   const statusMessage = useRef<HTMLHeadingElement>(null);
   const life = useRef<AbortController | null>(null);
   const operation = useRef<AbortController | null>(null);
-  const selected = currentTrainingJob(jobs);
+  const selected = currentTrainingJob(jobs.filter(job => job.model?.id !== 'imajev-4b-v1'));
+  const imageService = useMemo(() => config.decisionApiUrl ? imageApi(config.decisionApiUrl, config.url, imageToken) : null, [config.decisionApiUrl, config.url, imageToken]);
+  const api = useMemo(() => trainingApi(config.apiUrl, config.url, imageToken), [config.apiUrl, config.url, imageToken]);
   const history = [...jobs, ...availableModels.filter(model => !jobs.some(job => job.id === model.id))];
   useEffect(() => {
     if (!modelToUse) return;
@@ -117,11 +140,6 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
     // Each click focuses the example after its containing run has opened.
     setModelToUse({ id: job.id });
   }
-  const api = useMemo(() => trainingApi(config.apiUrl, config.url, async () => {
-    const { data, error } = await client.auth.getSession();
-    if (error) throw error;
-    return data.session?.access_token || '';
-  }), [config.apiUrl, config.url, client]);
   const handleError = useCallback((error: unknown) => {
     if (error instanceof TrainingApiError && error.status === 401) { void onExpired(); return; }
     setNeedsCredit(error instanceof TrainingApiError && error.status === 402);
@@ -138,7 +156,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
         const { jobs, models } = await api.list(controller.signal);
         if (controller.signal.aborted) return;
         setJobs(jobs); setAvailableModels(models ?? jobs); setLoading(false); setCheckedAt(Date.now()); setRefreshError(false);
-        setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading')?.id || jobs.find(job => job.status === 'uploading')?.id || '');
+        setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || jobs.find(job => job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || '');
         timer = setTimeout(poll, jobs.some(job => !terminal(job)) ? 10_000 : 30_000);
       } catch (error) { if (!controller.signal.aborted) { if (error instanceof TrainingApiError && error.status === 401) errorHandler.current(error); setLoading(false); setRefreshError(true); timer = setTimeout(poll, 30_000); } }
     }
@@ -152,7 +170,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
       const { jobs, models } = await api.list(life.current?.signal);
       if (!life.current?.signal.aborted) {
         setJobs(jobs); setAvailableModels(models ?? jobs); setCheckedAt(Date.now()); setRefreshError(false);
-        setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading')?.id || jobs.find(job => job.status === 'uploading')?.id || '');
+        setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || jobs.find(job => job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || '');
       }
     } catch (error) { if (!life.current?.signal.aborted) { if (error instanceof TrainingApiError && error.status === 401) handleError(error); setRefreshError(true); } }
     finally { setRefreshing(false); }
@@ -239,13 +257,18 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
   function runDetails(job: Job) {
     return <>
       <TrainingRunStatus job={job} />
+      {job.model?.id === 'imajev-4b-v1' && <>
+        {job.data_expires_at && <p>Training photos expire {new Date(job.data_expires_at).toLocaleString()}. Saved evaluation results remain available.</p>}
+        <ImageTrainingResults job={job} />
+        {config.decisionApiUrl && <PrivateImageTest key={`${owner}:${job.id}`} job={job} owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storageUrl={config.url} />}
+      </>}
       {job.error && <p role="alert" className={styles.error}>{job.error}</p>}
-      {job.status === 'uploading' && <div className={styles.actions}>
+      {job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1' && <div className={styles.actions}>
         <button className={styles.secondary} disabled={busy} onClick={() => retrySubmit(job)}>Retry submission</button>
         <button className={styles.secondary} disabled={busy} onClick={() => resumeUploads(job)}>Resume missing uploads</button>
         <button className={styles.textButton} disabled={busy} onClick={() => cancelJob(job)}>Cancel this run</button>
       </div>}
-      {canDownload(job) && job.workflow?.state === 'ready' && job.workflow.model_id && <div id={`use-model-${job.id}`} tabIndex={-1}><TrainedModelQuickstart
+      {job.model?.id !== 'imajev-4b-v1' && canDownload(job) && job.workflow?.state === 'ready' && job.workflow.model_id && <div id={`use-model-${job.id}`} tabIndex={-1}><TrainedModelQuickstart
         key={job.workflow.model_id}
         modelId={job.workflow.model_id}
         modelName={job.workflow.model_name}
@@ -265,7 +288,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
         {job.created_at && <p>Submitted {new Date(job.created_at).toLocaleString()}</p>}
         {job.model && <p>Starting model: <strong>{job.model.name}</strong></p>}
         {job.status === 'completed' && !job.result && <p>Result details are not available yet. Refresh to try again.</p>}
-        {job.result && <>
+        {job.result && job.model?.id !== 'imajev-4b-v1' && <>
           <p className={styles.help}>Measured on examples held aside from training. Results are not a guarantee on future inputs.</p>
           <div className={styles.metrics}><div><span>Base model accuracy</span><strong>{metric(job.result.baseline.accuracy, true)}</strong></div><div><span>Base model Brier loss</span><strong>{metric(job.result.baseline.brier)}</strong></div></div>
           <p className={styles.help}>Required: {metric(job.result.delivery.acceptance.min_accuracy, true)} accuracy; {metric(job.result.delivery.acceptance.min_brier_improvement)} absolute Brier improvement.</p>
@@ -291,14 +314,24 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
       <div><h1>Training</h1><p>Follow your runs and train a new model.</p></div>
       <div className={styles.workspaceActions}>
         <ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={onExpired} />
-        <SheetTrigger asChild><button className={styles.button} disabled={busy}><Plus size={16} aria-hidden="true" />Train a model</button></SheetTrigger>
+        {vertical === 'text' && <SheetTrigger asChild><button className={styles.button} disabled={busy}><Plus size={16} aria-hidden="true" />Train a model</button></SheetTrigger>}
       </div>
     </div>
     {process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && <p className={styles.notice}>Billing test preview. Submitting a standard run reserves one included run or $2 in test credit. <Link href="/billing" className={styles.textButton}>View credit and billing</Link>.</p>}
     {error && <p className={styles.error} role="alert">{error}{needsCredit && <> <Link href="/billing" className={styles.textButton}>Add credit</Link>.</>}</p>}
+    {imagesAvailable && <div role="tablist" aria-label="Decision capability" className={imageStyles.tabs}>
+      <button role="tab" aria-selected={vertical === 'text'} aria-controls="text-workspace" onClick={() => setVertical('text')}>Text</button>
+      <button role="tab" aria-selected={vertical === 'images'} aria-controls="image-workspace" onClick={() => setVertical('images')}>Images</button>
+    </div>}
+    {vertical === 'images' && config.decisionApiUrl && <div id="image-workspace" role="tabpanel">
+      {imageProfile && imageService && <ImageTrainingIntake owner={owner} token={imageToken} trainingApi={api} imageApi={imageService} profile={imageProfile} resumeJob={jobs.find(job => job.model?.id === 'imajev-4b-v1' && job.status === 'uploading')} onSubmitted={replaceJob} />}
+      {runRows(history.filter(job => job.model?.id === 'imajev-4b-v1'), 'Image runs')}
+      <details className={imageStyles.stockTest} open={!imageProfile}><summary>Test images with the starting model</summary><p>Try a batch or a single photo. To use a trained model, open its completed run above.</p><ImageDecisionPanel owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storageUrl={config.url} /></details>
+    </div>}
+    <div id="text-workspace" role="tabpanel" hidden={vertical !== 'text'}>
     {progress && <p role="status" className={styles.notice}>{progress}</p>}
     {busy && cancellable && <button type="button" className={styles.secondary} onClick={() => operation.current?.abort()}>Stop upload</button>}
-    {!loading && <TrainedModelLibrary jobs={availableModels} onUse={useModel} />}
+    {!loading && <TrainedModelLibrary jobs={availableModels.filter(job => job.model?.id !== 'imajev-4b-v1')} onUse={useModel} />}
     <div className={styles.workspace}>
       {loading ? <p role="status" className={styles.empty}>Loading your training runs…</p> : !selected ? <section className={styles.emptyWorkspace}>
         <h2>{refreshError ? 'Your runs could not be loaded.' : 'Train your first model.'}</h2>
@@ -314,8 +347,9 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
           </div>
         </section>
       </div>}
-      {runRows(jobs.filter(job => job.id !== selected?.id && !terminal(job)), 'Other active runs')}
-      {runRows(history.filter(job => job.id !== selected?.id && terminal(job)), 'Past runs')}
+      {runRows(jobs.filter(job => job.model?.id !== 'imajev-4b-v1' && job.id !== selected?.id && !terminal(job)), 'Other active runs')}
+      {runRows(history.filter(job => job.model?.id !== 'imajev-4b-v1' && job.id !== selected?.id && terminal(job)), 'Past runs')}
+    </div>
     </div>
     <TrainingIntake key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={error} needsCredit={needsCredit} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
       if (focusSubmitted.current) { event.preventDefault(); focusSubmitted.current = false; statusMessage.current?.focus(); }

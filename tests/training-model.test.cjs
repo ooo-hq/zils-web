@@ -20,3 +20,24 @@ test('only downloads the expected files for the job model', async () => {
   names = downloadFiles(job);
   await assert.rejects(api.downloads(current), /does not match/);
 });
+
+const imageModel = { ...model, id: 'imajev-4b-v1', name: 'Imajev 4B' };
+const imagePolicy = { min_accuracy: .8, min_brier_improvement: .01, positive_class: 'damaged', min_positive_recall: .9, max_false_positive_rate: .1 };
+const imageMetrics = { accuracy: .84, brier: .2, skill: .6, count: 100, cases: 100, nll: .4, unknown_rate: .02, unknown_count: 2, outcome_order: ['normal','damaged'], confusion: { normal:{ normal:40, damaged:8, __unknown__:2 }, damaged:{ normal:6,damaged:44,__unknown__:0 } }, per_class: { damaged: { support:50, true_positives:44, false_negatives:6, false_positives:8, negatives:50, recall:.88, false_positive_rate:.16 } } };
+test('image results retain versioned aggregate metrics and frozen acceptance across activation states', () => {
+  for (const state of ['activating','activation_failed','ready','needs_review']) {
+    const parsed = jobSchema.parse({ ...job, model:imageModel, acceptance:imagePolicy, workflow:{state,model_id:'owned-image'}, result:{ ...job.result, image_metrics_version:'zils-image-metrics/v1', baseline:imageMetrics, miners:[{uid:1,status:'evaluated',...imageMetrics}], delivery:{status:'accepted',acceptance:imagePolicy} } });
+    assert.deepEqual(parsed.acceptance, imagePolicy);
+    assert.equal(parsed.result.image_metrics_version,'zils-image-metrics/v1');
+    assert.equal(parsed.result.miners[0].per_class.damaged.support,50);
+    assert.equal(parsed.result.baseline.count,100);
+    assert.equal(parsed.result.delivery.acceptance.min_positive_recall,.9);
+  }
+  const negative=jobSchema.parse({...job,model:imageModel,result:{...job.result,delivery:{status:'no_qualifying_model',acceptance:imagePolicy}}});
+  assert.equal(negative.result.delivery.status,'no_qualifying_model');
+});
+test('image downloads reject text artifact lists', async () => {
+  const imageJob={...job,model:imageModel};
+  const api=trainingApi('https://training.example','https://storage.example',async()=> 'token',async()=>new Response(JSON.stringify({downloads:Object.fromEntries(downloadFiles({...job,model}).map(n=>[n,{url:`https://storage.example/storage/v1/object/sign/models/${n}`}]))})));
+  await assert.rejects(api.downloads(imageJob),/does not match/);
+});

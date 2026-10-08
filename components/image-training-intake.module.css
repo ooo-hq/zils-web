@@ -1,0 +1,22 @@
+.intake{margin:1.5rem 0}.body{margin-top:1.25rem;padding:1.5rem;border:1px solid var(--line,#d9d9d3);border-radius:1rem}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;border:0;padding:0;margin:1.5rem 0}.fields label{display:grid;gap:.5rem;font-size:.9rem}.fields input,.fields textarea,.fields select{width:100%;min-width:0;padding:.7rem;background:transparent;border:1px solid var(--line,#d9d9d3);border-radius:.5rem;font:inherit;color:inherit}.check{display:flex;gap:.65rem;align-items:flex-start;margin:1rem 0}.check input{margin-top:.3rem}.ready{border-top:1px solid var(--line,#d9d9d3);margin-top:1.5rem;padding-top:1rem}.body th span{display:block;overflow-wrap:anywhere}.body td input,.body td select{min-height:44px;max-width:220px}.body button{min-height:44px;margin-right:.6rem}.body img{object-fit:contain;border-radius:.3rem}@media(max-width:600px){.body{padding:1rem}.fields{grid-template-columns:1fr}}
+
+.reviewTable{min-width:620px}.reviewTable th:first-child{min-width:150px}
+.intake { margin:28px 0 40px; }
+.intro h2 { font-size:32px; line-height:1.2; letter-spacing:-.035em; font-weight:500; margin:0 0 12px; }
+.intro>p { color:var(--zils-muted); max-width:65ch; line-height:1.6; }
+.body { margin:0; padding:0; border:0; border-radius:0; }
+.body h3 { font-size:20px; font-weight:500; letter-spacing:-.02em; margin:28px 0 8px; }
+.body p { line-height:1.6; }
+.uploadChoices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; padding:0; margin:20px 0 12px; border:0; }
+.uploadChoices label { min-width:0; padding:20px; border:1px dashed var(--zils-edge-strong); border-radius:8px; background:var(--zils-surface); font-size:15px; font-weight:500; }
+.uploadChoices label span,.csv>span { display:block; font-size:12px; color:var(--zils-muted); line-height:1.5; margin:8px 0 16px; font-weight:400; }
+.uploadChoices input,.csv input { display:block; width:100%; min-width:0; font-size:12px; }
+.uploadChoices input::file-selector-button,.csv input::file-selector-button { background:var(--zils-ink); color:var(--zils-page); border:0; border-radius:5px; min-height:40px; padding:8px 16px; margin-right:12px; cursor:pointer; }
+.hint { font-size:12px; color:var(--zils-muted); }
+.csv { display:block; margin:22px 0 14px; font-size:13px; font-weight:500; }
+.csv>span { margin:6px 0 12px; }
+.labelHelp { font-size:13px; color:var(--zils-muted); margin:16px 0 28px; }
+.labelHelp summary { cursor:pointer; min-height:32px; }
+.labelHelp p { max-width:75ch; }
+.labelHelp pre { overflow:auto; padding:12px; border:1px solid var(--zils-edge); }
+@media(max-width:650px) { .intro h2 { font-size:27px; }.uploadChoices { grid-template-columns:1fr; }.uploadChoices label { padding:16px; } }
