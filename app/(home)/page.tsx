@@ -119,8 +119,8 @@ export default function HomePage() {
             </h1>
             <p className="mx-auto mt-6 max-w-lg text-[18px] leading-7 text-muted">{DESCRIPTION}</p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
-              <Link href="/contact" className="inline-flex items-center rounded-md bg-action px-5 py-3 text-[13px] font-medium text-on-action transition-colors hover:bg-action-hover">
-                Contact us
+              <Link href="/early-access" className="inline-flex items-center rounded-md bg-action px-5 py-3 text-[13px] font-medium text-on-action transition-colors hover:bg-action-hover">
+                Request early access
               </Link>
               <a href="#workflow" className="text-[13px] hover:text-[var(--zils-accent)]">
                 See how it works ↓
@@ -274,8 +274,8 @@ export default function HomePage() {
             <p className="mx-auto mt-5 max-w-md text-sm leading-6 text-neutral-400">
               Where do repeated decisions add up in your AI stack? Tell us about the calls, your labeled examples, and the quality bar a smaller model would need to meet.
             </p>
-            <Link href="/contact" className="mt-8 inline-flex items-center rounded-md bg-[#fff] px-5 py-3 text-[13px] font-medium text-black transition-colors hover:bg-[#eceafa]">
-              Contact us
+            <Link href="/early-access" className="mt-8 inline-flex items-center rounded-md bg-[#fff] px-5 py-3 text-[13px] font-medium text-black transition-colors hover:bg-[#eceafa]">
+              Request early access
             </Link>
           </div>
         </div>

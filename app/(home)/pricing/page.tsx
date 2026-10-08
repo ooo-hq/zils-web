@@ -40,7 +40,7 @@ export default function PricingPage() {
               <h2 id="plan-heading">One plan. Start with ${PRICING.startingCredit}.</h2>
               <p className={s.startAmount}>${PRICING.startingCredit}<span>prepaid credit</span></p>
               <p>Your first standard training run is included with your first top-up. The full ${PRICING.startingCredit} stays available for usage.</p>
-              <Link href="/contact" className={s.button}>Ask about early access</Link>
+              <Link href="/early-access" className={s.button}>Request early access</Link>
               <p className={s.availability}>Paid access is coming. Top-ups are not available yet.</p>
               <p className={s.availability}><Link href="/billing" className={s.previewLink}>View account billing</Link>{process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && '. Test payments only.'}</p>
             </div>
@@ -101,14 +101,14 @@ export default function PricingPage() {
               </details>
               <details>
                 <summary>Can I pay and start today?</summary>
-                <p>These are planned beta launch prices. Checkout and usage billing are not open yet. <Link href="/contact">Contact us about early access</Link>, or <Link href="/train">open the experimental training workspace</Link>.</p>
+                <p>These are planned beta launch prices. Checkout and usage billing are not open yet. <Link href="/early-access">Request early access</Link>, or <Link href="/train">open the experimental training workspace</Link>.</p>
               </details>
             </div>
           </section>
 
           <section className={s.closing} aria-labelledby="closing-heading">
             <div><h2 id="closing-heading">Bring a decision to improve.</h2><p>Tell us what you want your model to learn.</p></div>
-            <Link href="/contact" className={s.button}>Ask about early access</Link>
+            <Link href="/early-access" className={s.button}>Request early access</Link>
           </section>
         </main>
       </div>
