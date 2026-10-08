@@ -16,7 +16,7 @@ test('Google sign-in uses the existing auth project and returns to this website'
 
 test('a cancelled OAuth callback explains the failure and leaves both sign-in options available', async ({ page }) => {
   await page.goto('/train#error=access_denied&error_description=The%20user%20denied%20access');
-  await expect(page.getByRole('alert')).toContainText("Sign-in wasn't completed");
+  await expect(page.getByRole('main').getByRole('alert')).toContainText("Sign-in wasn't completed");
   await expect(page.getByRole('button', { name: 'Sign in with Google', exact: true })).toBeEnabled();
   await expect(page.getByRole('button', { name: 'Email me a sign-in link', exact: true })).toBeEnabled();
   await expect(page.getByRole('textbox', { name: 'Email address' })).toBeEnabled();
