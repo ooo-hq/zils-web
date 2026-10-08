@@ -15,6 +15,11 @@ export default defineConfig({
     timeout: 120_000,
     reuseExistingServer: false,
     env: {
+      ZILS_SETUP_API_URL: 'http://127.0.0.1:8997/v1/chat/completions',
+      ZILS_SETUP_API_KEY: 'browser-test-only',
+      ZILS_SETUP_MODEL: 'browser-test-model',
+      ZILS_DECISION_API_URL: 'http://127.0.0.1:8997/v1/systemone',
+      ZILS_DECISION_API_KEY: 'browser-test-only',
       NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:8998',
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'publishable-browser-test-key',
       NEXT_PUBLIC_ZILS_TRAINING_API_URL: 'http://127.0.0.1:8999',

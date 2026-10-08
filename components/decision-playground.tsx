@@ -38,10 +38,10 @@ function AnswerCard({ id, question, answer }: { id: string; question: DecisionRe
   </article>;
 }
 
-export function DecisionPlayground({ configured, models }: { configured: boolean; models: ModelOption[] }) {
-  const [preset, setPreset] = useState(0);
-  const [state, setState] = useState(asText(PRESETS[0].state));
-  const [questions, setQuestions] = useState(asText(PRESETS[0].questions));
+export function DecisionPlayground({ configured, models, initialRequest }: { configured: boolean; models: ModelOption[]; initialRequest?: DecisionRequest }) {
+  const [preset, setPreset] = useState(initialRequest ? -1 : 0);
+  const [state, setState] = useState(asText(initialRequest?.state ?? PRESETS[0].state));
+  const [questions, setQuestions] = useState(asText(initialRequest?.questions ?? PRESETS[0].questions));
   const [model, setModel] = useState(models[0].id);
   const [run, setRun] = useState<Run | null>(null);
   const [view, setView] = useState<'Answers' | 'JSON' | 'API'>('Answers');
