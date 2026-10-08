@@ -17,7 +17,7 @@ export default function PrivacyPage() {
 
       <PolicySection title="Accounts and browser storage">
         <p>Zils uses Supabase for sign-in. Your email address, account identifier, and authentication records are used to manage access to your workspace. Training jobs and API-key records are associated with your account.</p>
-        <p>Your browser stores your sign-in session and light or dark theme preference. You can sign out or clear browser storage to remove local information; this does not delete your account or uploaded data.</p>
+        <p>Your browser stores your sign-in session and light or dark theme preference. Choosing Save setup in the playground also stores your question setup on that browser, without its example text or conversation. Signing out removes the sign-in session; clearing browser storage also removes saved setups and preferences. Neither action deletes your account or uploaded data.</p>
       </PolicySection>
 
       <PolicySection title="Files you prepare and submit">
@@ -32,6 +32,8 @@ export default function PrivacyPage() {
 
       <PolicySection title="Model requests">
         <p>Running the playground or calling the model API sends your supplied context and questions to the model service to produce predictions. These requests are processed on servers, rather than only in your browser. Use information you are authorized to send, and avoid sensitive data in public examples.</p>
+        <p>When the setup assistant is connected, requesting suggestions sends your description, follow-up conversation, and any question draft being revised to its configured AI provider. This is separate from running a prediction or submitting training data. Choosing and editing a built-in starter does not call the assistant.</p>
+        <p>Optional voice entry uses your browser’s speech recognition service, which may process audio remotely. It starts only when you choose Speak your goal. The transcript appears for you to review before requesting suggestions.</p>
       </PolicySection>
 
       <PolicySection title="Website analytics">

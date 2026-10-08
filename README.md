@@ -249,8 +249,9 @@ deducting purchased credit. Further standard runs cost $2.
 Use an isolated Supabase project, decision API, training service, and runtime.
 Follow the backend's [prepaid billing setup](https://github.com/ooo-hq/zils/blob/main/docs/billing.md)
 and point the public service settings above at those test services. Set
-`NEXT_PUBLIC_ZILS_BILLING_PREVIEW=test` before building to expose Billing in the
-account menu and pricing page. Checkout also requires the API to report `test`;
+`NEXT_PUBLIC_ZILS_BILLING_PREVIEW=test` before building to enable test Checkout.
+Billing is always linked from the account menu and pricing page; viewing it does
+not enable payments. Checkout also requires the API to report `test`;
 the flag cannot enable live payments. Leave it unset in production. No Stripe
 secret belongs in the website or a `NEXT_PUBLIC_` variable.
 
@@ -265,6 +266,47 @@ responses. They verify account boundaries, exact amounts, safe Checkout URLs,
 and retry recovery; they do not establish a working Stripe account connection.
 Complete a real Stripe test-mode payment, webhook replay, and refund against
 the isolated environment before opening paid access.
+
+## Guided playground
+
+`/playground` opens a three-step setup: Describe, Review questions, and Try an
+example. Built-in templates cover support routing, a yes/no condition, and an
+ordered scale. Customers can edit every question, answer, and answer definition
+without writing JSON. Duplicate answers and incomplete questions block the next
+step. The live summary reflects edits immediately.
+
+Set `ZILS_SETUP_API_URL` (the complete chat-completions URL),
+`ZILS_SETUP_API_KEY`, and `ZILS_SETUP_MODEL` on the server to enable the language
+assistant. It expects the [OpenAI-compatible chat completion contract](https://developers.openai.com/api/reference/resources/chat):
+JSON-object response format, `max_completion_tokens`, and a JSON string in
+`choices[0].message.content`. Select a model supporting those options. The
+assistant can ask one clarification or propose editable questions. Revisions
+preserve the existing draft on failure. All input and output are validated;
+credentials and provider error bodies are never returned to the browser.
+Before exposing a configured assistant publicly, apply a platform rate limit
+to `POST /api/setup`; origin checking alone does not limit direct API clients.
+
+Without these settings, templates and manual editing remain available and the
+assistant is explicitly disconnected. Prediction requests separately use the
+existing `ZILS_DECISION_*` settings. Neither missing service returns simulated
+suggestions or answers. Local UI testing needs no external credentials.
+
+Voice entry is available when the browser supports
+[SpeechRecognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition).
+Recording starts only after a click. The browser may use its own remote speech
+service; that is disclosed next to the microphone. Permission failures leave
+typing available. Review the transcript before requesting suggestions.
+
+**Save setup** writes only the question draft to this browser's local storage.
+It does not save the example, conversation, or generated predictions. **Open
+saved setup** restores it for reuse. Storage failures show an error. Advanced
+editor opens with a copy of the guided questions; edits in that editor do not
+modify the guided draft. Opening Advanced again replaces its previous copy.
+This feature does not create training jobs or publish a model.
+
+Browser tests intercept both services and assert requests, edits, clarification,
+validation, saving, mobile layout, and failure recovery. These fixtures test
+the workflow; they are not evidence of model quality.
 
 ## Customer training setup
 
