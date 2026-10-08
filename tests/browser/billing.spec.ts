@@ -1,14 +1,25 @@
 import { test, expect, type Page } from '@playwright/test';
 
 const purchase = '91f22b36-83bd-5da1-90f8-a4b5dc8a6e52';
+const usage = {
+  since: '2026-09-08T12:00:00Z', until: '2026-10-08T12:00:00Z',
+  calls: '1200', failed_calls: '3', active_calls: '2', input_tokens: '1000000',
+  training_runs: '3', failed_training_runs: '1', active_training_runs: '1',
+  inference_spend_nanos: '42000000', training_spend_nanos: '4000000000',
+  models: [
+    { model_id: 'support-v1', model_name: 'support-routing', calls: '1100', failed_calls: '3', active_calls: '2', input_tokens: '900000', spend_nanos: '37800000' },
+    { model_id: null, model_name: null, calls: '100', failed_calls: '0', active_calls: '0', input_tokens: '100000', spend_nanos: '4200000' },
+  ],
+};
 const summary = {
   mode: 'test', currency: 'usd', balance_nanos: '1500000000', reserved_nanos: '500000000', available_nanos: '1000000000',
   free_training_runs: 1, topup_amounts_cents: [500, 2000, 5000, 10000],
   transactions: [{ id: 'ledger-1', kind: 'inference', amount_nanos: '-42', created_at: '2026-10-08T12:00:00Z', reference: 'request-1' }],
   payments: [{ id: purchase, amount_cents: 500, status: 'paid', created_at: '2026-10-08T12:00:00Z', receipt_url: 'https://pay.stripe.com/receipts/payment/test' }],
+  usage,
 };
 
-async function billing(page: Page, options: { signedIn?: boolean; mode?: string; billingAuth?: 'legacy' | 'expired'; checkout?: 'fail' | 'unsafe' | 'expired' | 'paid' | 'conflict' | 'success'; training402?: boolean } = {}) {
+async function billing(page: Page, options: { signedIn?: boolean; mode?: string; billingAuth?: 'legacy' | 'expired'; checkout?: 'fail' | 'unsafe' | 'expired' | 'paid' | 'conflict' | 'success'; training402?: boolean; usageMissing?: boolean; usageEmpty?: boolean } = {}) {
   const user = { id: '10000000-0000-4000-8000-000000000002', email: 'client@example.com', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
   const expires = Math.floor(Date.now() / 1000) + 3600;
   const token = `${Buffer.from(JSON.stringify({ alg: 'HS256' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: user.id, exp: expires })).toString('base64url')}.browser-test`;
@@ -35,7 +46,7 @@ async function billing(page: Page, options: { signedIn?: boolean; mode?: string;
         code: options.billingAuth === 'legacy' ? 'invalid_credentials' : 'service_unavailable',
         message: options.billingAuth === 'legacy' ? 'API key is invalid or revoked.' : 'Your session has expired; sign in again.',
       } }, headers });
-      return route.fulfill({ json: { ...summary, mode: options.mode || 'test' }, headers });
+      return route.fulfill({ json: { ...summary, mode: options.mode || 'test', usage: options.usageMissing ? undefined : options.usageEmpty ? { ...usage, calls: '0', failed_calls: '0', active_calls: '0', input_tokens: '0', training_runs: '0', failed_training_runs: '0', active_training_runs: '0', inference_spend_nanos: '0', training_spend_nanos: '0', models: [] } : usage }, headers });
     }
     if (url.pathname === '/v1/billing/checkout') {
       checkouts.push(route.request().postDataJSON());
@@ -58,6 +69,44 @@ test('signed-out billing offers existing sign-in and never requests private bala
   await expect(page.getByRole('heading', { name: 'Sign in to view billing' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Add $5', exact: true })).toHaveCount(0);
   expect(requests).not.toContain('/v1/billing');
+});
+
+test('account usage is independent of transaction history and models keep unknown history visible', async ({ page }) => {
+  const { errors } = await billing(page);
+  await page.goto('/billing');
+  const report = page.getByRole('region', { name: 'Account usage', exact: true });
+  await expect(report.getByText('1,200', { exact: true })).toBeVisible();
+  await expect(report.getByText('1,000,000', { exact: true })).toBeVisible();
+  await expect(report.getByText('$4.042', { exact: true })).toBeVisible();
+  const row = report.getByRole('row').filter({ hasText: 'support-routing' });
+  await expect(row).toContainText('1,100');
+  await expect(row).toContainText('$0.0378');
+  await expect(report.getByRole('rowheader', { name: /Model not recorded/ })).toBeVisible();
+  await report.getByText('About this report', { exact: true }).click();
+  await expect(report.getByText(/One batch item counts as one API call/)).toBeVisible();
+  await page.screenshot({ path: '.private/usage-report-desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await report.screenshot({ path: '.private/usage-report-mobile.png' });
+  await page.goto('/train');
+  await page.getByRole('link', { name: 'Usage & billing', exact: true }).click();
+  await expect(page).toHaveURL(/\/billing#usage$/);
+  expect(errors).toEqual([]);
+});
+
+test('missing usage does not invent zero totals or hide billing', async ({ page }) => {
+  await billing(page, { usageMissing: true });
+  await page.goto('/billing');
+  await expect(page.getByText(/Usage reporting is not available yet/)).toBeVisible();
+  await expect(page.getByText('Completed API calls', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Available credit', { exact: true })).toBeVisible();
+});
+
+test('empty usage reports actual zero totals and explains how models appear', async ({ page }) => {
+  await billing(page, { usageEmpty: true });
+  await page.goto('/billing');
+  await expect(page.getByText(/No recorded API usage in this period/)).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Account usage', exact: true }).getByRole('definition').filter({ hasText: /^0$/ })).toHaveCount(3);
 });
 
 test('unavailable billing keeps the valid workspace session and never asks for another sign-in', async ({ page }) => {

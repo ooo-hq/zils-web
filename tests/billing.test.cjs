@@ -114,3 +114,13 @@ test('blocked browser storage prevents starting an unrepeatable checkout', () =>
   const storage = { getItem: () => null, setItem: () => { throw new Error('blocked'); }, removeItem: () => {} };
   assert.throws(() => checkoutIntent(storage, 'scope', 500, () => id), /browser storage/i);
 });
+
+test('usage totals preserve large counts and tiny charges, reject malformed values, and remain optional', async () => {
+  const usage = { since: '2026-09-08T12:00:00Z', until: '2026-10-08T12:00:00Z', calls: '9007199254740993', failed_calls: '0', active_calls: '0', input_tokens: '90071992547409930', training_runs: '1', failed_training_runs: '0', active_training_runs: '0', inference_spend_nanos: '42', training_spend_nanos: '0', models: [] };
+  const api = value => billingApi('https://api.example', async () => 'session', async () => response({ ...summary, usage: value }));
+  assert.deepEqual((await api(usage).summary()).usage, usage);
+  assert.equal((await api(undefined).summary()).usage, undefined);
+  for (const patch of [{ calls: -1 }, { calls: '-1' }, { input_tokens: '1.2' }, { inference_spend_nanos: '-42' }, { since: 'yesterday' }]) {
+    await assert.rejects(api({ ...usage, ...patch }).summary(), /unexpected response/);
+  }
+});

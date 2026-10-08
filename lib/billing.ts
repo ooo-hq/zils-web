@@ -5,6 +5,18 @@ export const TOPUP_AMOUNTS_CENTS = [500, 2000, 5000, 10000] as const;
 const amount = z.number().int().refine(value => TOPUP_AMOUNTS_CENTS.some(allowed => allowed === value));
 const nanos = z.string().max(40).regex(/^-?(0|[1-9]\d*)$/);
 const timestamp = z.string().datetime({ offset: true });
+const count = z.string().max(40).regex(/^(0|[1-9]\d*)$/);
+const usageSchema = z.object({
+  since: timestamp, until: timestamp,
+  calls: count, failed_calls: count, active_calls: count, input_tokens: count,
+  training_runs: count, failed_training_runs: count, active_training_runs: count,
+  inference_spend_nanos: count, training_spend_nanos: count,
+  models: z.array(z.object({
+    model_id: z.string().nullable(), model_name: z.string().nullable(),
+    calls: count, failed_calls: count, active_calls: count, input_tokens: count, spend_nanos: count,
+  })),
+});
+export type UsageSummary = z.infer<typeof usageSchema>;
 
 function stripeUrl(value: string, hosts: string[]): boolean {
   try {
@@ -24,6 +36,7 @@ const summarySchema = z.object({
   free_training_runs: z.number().int().nonnegative(), topup_amounts_cents: z.array(amount),
   transactions: z.array(z.object({ id: z.string().min(1), kind: z.enum(['topup', 'inference', 'training', 'refund']), amount_nanos: nanos, created_at: timestamp, reference: z.string() })),
   payments: z.array(payment),
+  usage: usageSchema.optional(),
 }).refine(value => {
   try { return BigInt(value.available_nanos) === BigInt(value.balance_nanos) - BigInt(value.reserved_nanos); }
   catch { return false; }
