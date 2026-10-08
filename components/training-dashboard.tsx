@@ -2,6 +2,7 @@
 
 import { type SupabaseClient } from '@supabase/supabase-js';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { canDownload, downloadFiles, SPLITS, submissionSchema, terminal, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
 import { TrainingGuide } from '@/components/training-guide';
@@ -13,6 +14,7 @@ import { Plus, ChevronDown } from 'lucide-react';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { TrainingRunStatus } from '@/components/training-run-status';
 import { useAuthSession } from '@/components/auth-session';
+import { signInWithGoogle } from '@/lib/training-auth';
 import { currentTrainingJob, trainingProgress } from '@/lib/training-status';
 import styles from '@/app/(home)/train/train.module.css';
 
@@ -25,15 +27,27 @@ export function TrainingDashboard({ config }: { config: Config }) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<'email' | 'google' | null>(null);
   async function signIn(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setError(''); setNotice('');
-    if (!client) { setError('Sign-in is unavailable. Please refresh and try again.'); setBusy(false); return; }
+    event.preventDefault();
+    if (busy) return;
+    setBusy('email'); setError(''); setNotice('');
+    if (!client) { setError('Sign-in is unavailable. Please refresh and try again.'); setBusy(null); return; }
     try {
       const { error } = await client.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: `${window.location.origin}/train` } });
       if (error) throw error;
       setNotice('Check your email for a sign-in link. Open it to return to your training workspace.');
-    } catch (error) { setError(message(error)); } finally { setBusy(false); }
+    } catch (error) { setError(message(error)); } finally { setBusy(null); }
+  }
+  async function googleSignIn() {
+    if (!client || busy) return;
+    setBusy('google'); setError(''); setNotice('');
+    try {
+      const { error } = await signInWithGoogle(client, window.location.origin);
+      if (error) throw error;
+    } catch {
+      setError('Google sign-in could not start. Please try again or use email.');
+    } finally { setBusy(null); }
   }
   const signOut = useCallback(async () => {
     if (!client) return;
@@ -48,7 +62,18 @@ export function TrainingDashboard({ config }: { config: Config }) {
       <SignedInDashboard key={session.user.id} client={client} config={config} onExpired={signOut} />
     </div> : <>
       <div className={styles.workspaceHeading}><h1>Training</h1><p>Teach Zils a decision using examples your team has reviewed.</p></div>
-      <section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}><h2>Sign in to Zils</h2><p>Start a training run or check the progress of your existing runs.</p><form onSubmit={signIn}><label htmlFor="training-email">Email address</label><input id="training-email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" disabled={busy} /><button className={styles.button} disabled={busy}>{busy ? 'Sending link…' : 'Email me a sign-in link'}</button></form>{notice && <p role="status" className={styles.notice}>{notice}</p>}</section>
+      <section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}>
+        <h2>Sign in to Zils</h2><p>Start a training run or check the progress of your existing runs.</p>
+        {process.env.NEXT_PUBLIC_ZILS_GOOGLE_AUTH_ENABLED === 'true' && <>
+          <button type="button" className={styles.googleButton} onClick={googleSignIn} disabled={!client || Boolean(busy)} aria-label="Sign in with Google" aria-busy={busy === 'google'}>
+            <Image src="/google-sign-in.png" alt="" width={180} height={40} unoptimized />
+          </button>
+          <p className={styles.signInDivider}>or use email</p>
+        </>}
+        <form onSubmit={signIn}><label htmlFor="training-email">Email address</label><input id="training-email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" disabled={Boolean(busy)} /><button className={styles.button} disabled={Boolean(busy)}>{busy === 'email' ? 'Sending link…' : 'Email me a sign-in link'}</button></form>
+        {busy === 'google' && <p role="status" className={styles.notice}>Opening Google…</p>}
+        {notice && <p role="status" className={styles.notice}>{notice}</p>}
+      </section>
       <details className={styles.signInGuide}><summary>What examples should I bring?</summary><TrainingGuide /></details>
     </>}
   </>;

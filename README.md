@@ -61,6 +61,7 @@ Set the same values in the appropriate Vercel environment before building.
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public browser key; never a service-role key |
+| `NEXT_PUBLIC_ZILS_GOOGLE_AUTH_ENABLED` | Set to `true` after the Google provider is configured in this environment's Supabase project |
 | `NEXT_PUBLIC_ZILS_TRAINING_API_URL` | Reachable HTTPS training coordinator |
 | `NEXT_PUBLIC_ZILS_API_URL` | Optional decision API base URL for key management and billing; defaults to the training coordinator URL followed by `/decision` |
 | `NEXT_PUBLIC_ZILS_BILLING_PREVIEW` | Set to `test` only on an isolated billing test deployment; leaves live checkout disabled |
@@ -76,6 +77,27 @@ Set the same values in the appropriate Vercel environment before building.
 The corresponding `FEZ_*` names remain fallbacks for existing deployments; a
 present Zils setting takes precedence, including an empty value. Credentials
 remain server-only.
+
+### Google sign-in
+
+Google sign-in uses the existing Supabase account and session system. Email
+sign-in remains available. Follow [Supabase's Google setup guide](https://supabase.com/docs/guides/auth/social-login/auth-google)
+to create a Google OAuth web client and enable the Google provider in each
+Supabase project. Request only the standard `openid`, email, and profile scopes.
+Store the Google client secret in Supabase; never put it in website variables.
+
+In Google, authorize that project's `https://PROJECT_REF.supabase.co/auth/v1/callback`
+URI. In Supabase, allow the exact website return URL, such as
+`https://YOUR_DOMAIN/train` or `http://localhost:3000/train`. The button returns to
+`/train` on the origin where sign-in started; local and preview origins each need
+their own allowed redirect. Configure production and test projects separately.
+Then set `NEXT_PUBLIC_ZILS_GOOGLE_AUTH_ENABLED=true` and rebuild the website.
+Until enabled, visitors see the existing email sign-in option.
+
+The Google button image is an unmodified asset from Google's
+[approved sign-in assets](https://developers.google.com/identity/branding-guidelines).
+
+### Shared playground
 
 The playground defaults to the shared JevK5 4B release `zils-jevk5-v0.3-r1`.
 Connect it to `https://training.zils.ai/decision/v1/systemone` with a server-only

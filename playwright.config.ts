@@ -17,6 +17,7 @@ export default defineConfig({
     env: {
       NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:8998',
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'publishable-browser-test-key',
+      NEXT_PUBLIC_ZILS_GOOGLE_AUTH_ENABLED: 'true',
       NEXT_PUBLIC_ZILS_TRAINING_API_URL: 'http://127.0.0.1:8999',
       NEXT_PUBLIC_ZILS_API_URL: 'http://127.0.0.1:8999',
       NEXT_PUBLIC_ZILS_BILLING_PREVIEW: 'test',
