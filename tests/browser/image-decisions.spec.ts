@@ -15,10 +15,7 @@ async function workspace(page: Page, options: { expired?: boolean; disabled?: bo
   await page.addInitScript(value => localStorage.setItem('zils-training-auth', JSON.stringify(value)), session());
   await page.route('**/*', async route => {
     const req = route.request(), url = new URL(req.url());
-    if (url.origin === 'http://127.0.0.1:3107') {
-      if (url.pathname === '/api/access/session') return route.fulfill({ json: { status: 'active' } });
-      return route.continue();
-    }
+    if (url.origin === 'http://127.0.0.1:3107') return route.continue();
     if (!['http://127.0.0.1:8998', 'http://127.0.0.1:8999'].includes(url.origin)) return route.abort();
     const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS' };
     if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers });

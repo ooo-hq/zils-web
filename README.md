@@ -38,7 +38,7 @@ tracking snippet is needed. Do not install another snippet alongside this one.
 
 Only production builds running on `zils.ai` or `www.zils.ai` initialize tracking.
 Local development and Vercel preview domains do not send analytics. `/admin`,
-`/pricing-lab`, and `/a` routes and their descendants are excluded. Event URLs
+`/pricing-lab`, `/investor-lab`, and `/a` routes and their descendants are excluded. Event URLs
 contain only the origin and path; referrers contain only the origin. Query
 parameters (including campaign parameters) and fragments are removed. No form,
 download, outbound-click, or custom-property tracking is enabled.
@@ -61,8 +61,10 @@ Set the same values in the appropriate Vercel environment before building.
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public browser key; never a service-role key |
+| `NEXT_PUBLIC_ZILS_GOOGLE_AUTH_ENABLED` | Set to `true` after the Google provider is configured in this environment's Supabase project |
 | `NEXT_PUBLIC_ZILS_TRAINING_API_URL` | Reachable HTTPS training coordinator |
-| `NEXT_PUBLIC_ZILS_API_URL` | Optional decision API base URL for key management; defaults to the training coordinator URL followed by `/decision` |
+| `NEXT_PUBLIC_ZILS_API_URL` | Optional decision API base URL for key management and billing; defaults to the training coordinator URL followed by `/decision` |
+| `NEXT_PUBLIC_ZILS_BILLING_PREVIEW` | Set to `test` only for an isolated test deployment; unset allows checkout only when the API reports `live` |
 | `ZILS_DECISION_API_URL` | Complete server-side inference endpoint URL |
 | `ZILS_DECISION_API_KEY` | Server-only inference bearer credential |
 | `ZILS_DECISION_MODEL` | Exact model identifier expected by the inference server |
@@ -75,6 +77,27 @@ Set the same values in the appropriate Vercel environment before building.
 The corresponding `FEZ_*` names remain fallbacks for existing deployments; a
 present Zils setting takes precedence, including an empty value. Credentials
 remain server-only.
+
+### Google sign-in
+
+Google sign-in uses the existing Supabase account and session system. Email
+sign-in remains available. Follow [Supabase's Google setup guide](https://supabase.com/docs/guides/auth/social-login/auth-google)
+to create a Google OAuth web client and enable the Google provider in each
+Supabase project. Request only the standard `openid`, email, and profile scopes.
+Store the Google client secret in Supabase; never put it in website variables.
+
+In Google, authorize that project's `https://PROJECT_REF.supabase.co/auth/v1/callback`
+URI. In Supabase, allow the exact website return URL, such as
+`https://YOUR_DOMAIN/train` or `http://localhost:3000/train`. The button returns to
+`/train` on the origin where sign-in started; local and preview origins each need
+their own allowed redirect. Configure production and test projects separately.
+Then set `NEXT_PUBLIC_ZILS_GOOGLE_AUTH_ENABLED=true` and rebuild the website.
+Until enabled, visitors see the existing email sign-in option.
+
+The Google button image is an unmodified asset from Google's
+[approved sign-in assets](https://developers.google.com/identity/branding-guidelines).
+
+### Shared playground
 
 The playground defaults to the shared JevK5 4B release `zils-jevk5-v0.3-r1`.
 Connect it to `https://training.zils.ai/decision/v1/systemone` with a server-only
@@ -112,9 +135,9 @@ must be agreed before starting. Larger jobs require an upfront estimate.
 The page includes a local usage estimator and a link from the shared footer.
 It does not initiate training, collect payments, or change the API meter.
 Paid access and spending caps are explicitly planned.
-Before enabling checkout, implement credit accounting and billing that counts
-shared context once per request, then verify the advertised terms against the
-customer training and serving workflows. Early-access links use `/contact`.
+The separate billing test preview connects to prepaid credit accounting in the
+Python API. Verify the advertised terms against the deployed customer training
+and serving workflows before enabling paid access. Early-access links use `/contact`.
 
 `/pricing-lab` is an unlisted scenario calculator for 100, 1,000, and 2,000
 paying active customers. Each customer can use multiple Zils. Requests and total
@@ -215,6 +238,79 @@ create or train a model. See the
 [decision API documentation](https://github.com/ooo-hq/zils/blob/main/docs/decision-api.md)
 for model selection and server-side requests.
 
+## Account billing and checkout
+
+`/billing` uses the existing Supabase session and decision API to show account
+credit, reservations, training allowance, payments, receipts, and credit activity.
+All API keys share the account balance. Checkout offers $5, $20, $50, and $100
+top-ups; the first confirmed payment includes one standard training run without
+deducting purchased credit. Further standard runs cost $2.
+
+Use an isolated Supabase project, decision API, training service, and runtime.
+Follow the backend's [prepaid billing setup](https://github.com/ooo-hq/zils/blob/main/docs/billing.md)
+and point the public service settings above at those test services. Set
+`NEXT_PUBLIC_ZILS_BILLING_PREVIEW=test` before building to enable test Checkout.
+Billing is always linked from the account menu and pricing page; viewing it does
+not enable payments. Test checkout requires both that flag and an API reporting
+`test`. Leave the flag unset in production: checkout then requires an API
+reporting `live`. An API reporting `off`, a failed refresh, or an expired session
+keeps checkout disabled. Before enabling live billing, complete the backend
+live Stripe configuration and upgrade all billing workers and runtimes. No Stripe
+secret belongs in the website or a `NEXT_PUBLIC_` variable.
+
+Checkout opens on Stripe. Its return URL never credits an account; refresh the
+page to observe the signed webhook's confirmed balance. A pending checkout is
+saved per account, API, and billing mode so reloads and uncertain responses can
+retry the same purchase. A verified paid or expired purchase clears that intent.
+Missing service configuration renders an unavailable state.
+
+The unit and browser suites use synthetic accounts and intercepted service
+responses. They verify account boundaries, exact amounts, safe Checkout URLs,
+and retry recovery; they do not establish a working Stripe account connection.
+Complete a real Stripe test-mode payment, webhook replay, and refund against
+the isolated environment before opening paid access.
+
+## Guided playground
+
+`/playground` opens a three-step setup: Describe, Review questions, and Try an
+example. Built-in templates cover support routing, a yes/no condition, and an
+ordered scale. Customers can edit every question, answer, and answer definition
+without writing JSON. Duplicate answers and incomplete questions block the next
+step. The live summary reflects edits immediately.
+
+Set `ZILS_SETUP_API_URL` (the complete chat-completions URL),
+`ZILS_SETUP_API_KEY`, and `ZILS_SETUP_MODEL` on the server to enable the language
+assistant. It expects the [OpenAI-compatible chat completion contract](https://developers.openai.com/api/reference/resources/chat):
+JSON-object response format, `max_completion_tokens`, and a JSON string in
+`choices[0].message.content`. Select a model supporting those options. The
+assistant can ask one clarification or propose editable questions. Revisions
+preserve the existing draft on failure. All input and output are validated;
+credentials and provider error bodies are never returned to the browser.
+Before exposing a configured assistant publicly, apply a platform rate limit
+to `POST /api/setup`; origin checking alone does not limit direct API clients.
+
+Without these settings, templates and manual editing remain available and the
+assistant is explicitly disconnected. Prediction requests separately use the
+existing `ZILS_DECISION_*` settings. Neither missing service returns simulated
+suggestions or answers. Local UI testing needs no external credentials.
+
+Voice entry is available when the browser supports
+[SpeechRecognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition).
+Recording starts only after a click. The browser may use its own remote speech
+service; that is disclosed next to the microphone. Permission failures leave
+typing available. Review the transcript before requesting suggestions.
+
+**Save setup** writes only the question draft to this browser's local storage.
+It does not save the example, conversation, or generated predictions. **Open
+saved setup** restores it for reuse. Storage failures show an error. Advanced
+editor opens with a copy of the guided questions; edits in that editor do not
+modify the guided draft. Opening Advanced again replaces its previous copy.
+This feature does not create training jobs or publish a model.
+
+Browser tests intercept both services and assert requests, edits, clarification,
+validation, saving, mobile layout, and failure recovery. These fixtures test
+the workflow; they are not evidence of model quality.
+
 ## Customer training setup
 
 The `/train` workspace prioritizes the current unfinished run and lists past runs
@@ -265,6 +361,25 @@ closes the panel and returns focus to the current run.
 
 Training still requires approved workers. Completion may produce no qualifying
 model; an accepted download does not provision a prediction API.
+
+## Investor lab
+
+`/investor-lab` is an unlisted, noindex investor scenario page. Keep it out of
+public navigation and sitemaps. It is not an access-controlled data room:
+anyone with the URL can view the default assumptions. Inputs remain in React
+state, reset on refresh, and are not sent to a backend or analytics.
+
+The starting scenario uses $10,000/month for the combined CEO/developer role,
+$3,000 for business development, $48 for DigitalOcean, and the dated 8 Oct 2026
+SN27 snapshot (1,296 owner alpha/day, $0.604169/alpha). The 50% share applies to
+the owner's allocation, not all subnet emissions. Deal entitlement and timing
+are conditional. Unpriced costs start at zero and are labeled as incomplete.
+
+`lib/investor-model.ts` models alpha sales separately from token value,
+emissions-only break-even, payroll overhead, hosting growth, delayed payouts,
+customer cash receipts and a twelve-month cash forecast. All model months have
+30 days. Negative balances represent a funding gap, not spendable cash. Print
+styles include all scenario inputs for saving an investor discussion as a PDF.
 
 ## Checks and GitHub deployment
 
@@ -334,10 +449,3 @@ confidence coverage, and the documented probability-format corrections under
 `public/model/abcd-002-jev*`. Evidence tests recompute accuracy, F1, Brier, and
 confidence coverage from those predictions. They do not call TypeSafe or train a
 model. Keep the earlier training study and its frozen artifacts unchanged.
-
-## Early access
-
-`/early-access` collects applications; `/admin/access` is the private approval
-page. Approved accounts can use the training workspace and API. The admission
-migration and backend enforcement must be deployed together. See
-[early-access setup](docs/early-access.md) for configuration and rollout.

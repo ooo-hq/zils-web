@@ -19,7 +19,7 @@ const answerSchema = z.object({
   probabilities: z.record(z.string(), probability).refine(value => Math.abs(Object.values(value).reduce((a, b) => a + b, 0) - 1) <= 1e-6),
   unknown_probability: probability, abstained: z.boolean(),
 });
-const responseSchema = z.object({ model: z.string(), answers: z.record(z.string(), answerSchema), usage: z.object({ input_tokens: z.number().int().min(0).max(4096), output_tokens: z.literal(0) }) });
+const responseSchema = z.object({ model: z.string(), answers: z.record(z.string(), answerSchema), usage: z.object({ input_tokens: z.number().int().min(0).max(4096), output_tokens: z.literal(0), billable_input_tokens: z.number().int().positive().max(2**31).optional() }) });
 export type ImageResponse = z.infer<typeof responseSchema>;
 export type ImageAnswer = z.infer<typeof answerSchema>;
 const assetSchema = z.object({ id: z.string().uuid(), state: z.enum(['uploading', 'verifying', 'ready', 'failed', 'expired', 'deleted']), sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(), width: z.number().int().positive().optional(), height: z.number().int().positive().optional(), expires_at: z.string().datetime({ offset: true }) });
@@ -57,7 +57,7 @@ export function imageApi(baseUrl: string, storageUrl: string, token: () => Promi
     if (!current) throw new ImageApiError('Your session has expired. Please sign in again.', 401);
     const response = await request(base + path, { method, body: method === 'DELETE' || body === undefined ? undefined : JSON.stringify(body), headers: { Authorization: `Bearer ${current}`, ...(method === 'POST' ? { 'Content-Type': 'application/json' } : {}) }, credentials: 'omit', redirect: 'error', cache: 'no-store', signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(60_000)]) : AbortSignal.timeout(60_000) });
     if (!response.ok) {
-      const message = response.status === 401 ? 'Your session has expired. Please sign in again.' : response.status === 429 ? 'Image upload allowance reached. Remove unused photos or try again later.' : response.status === 413 ? 'This image request is too large. Shorten the question or additional context, or use a smaller photo.' : response.status === 422 ? 'This photo or question could not be processed. Use a complete JPEG or PNG, 2–16 answers, and shorter instructions or answer descriptions.' : response.status === 404 ? 'This image or model is no longer available. Try uploading the photo again.' : 'Image service is unavailable. Please try again.';
+      const message = response.status === 401 ? 'Your session has expired. Please sign in again.' : response.status === 402 ? 'Insufficient credit. Add credit in Billing, then retry this image.' : response.status === 429 ? 'Image upload allowance reached. Remove unused photos or try again later.' : response.status === 413 ? 'This image request is too large. Shorten the question or additional context, or use a smaller photo.' : response.status === 422 ? 'This photo or question could not be processed. Use a complete JPEG or PNG, 2–16 answers, and shorter instructions or answer descriptions.' : response.status === 404 ? 'This image or model is no longer available. Try uploading the photo again.' : 'Image service is unavailable. Please try again.';
       throw new ImageApiError(message, response.status);
     }
     return schema.parse(response.status === 204 ? {} : await response.json());

@@ -12,12 +12,12 @@ const link = 'underline decoration-edge-strong underline-offset-4 hover:text-acc
 
 export default function PrivacyPage() {
   return (
-    <PolicyPage title="Privacy policy." updated="7 October 2026">
+    <PolicyPage title="Privacy policy." updated="8 October 2026">
       <p>This notice describes information handled by the Zils website and its decision-model services, including sign-in, training, model requests, and support.</p>
 
       <PolicySection title="Accounts and browser storage">
         <p>Zils uses Supabase for sign-in. Your email address, account identifier, and authentication records are used to manage access to your workspace. Training jobs and API-key records are associated with your account.</p>
-        <p>Your browser stores your sign-in session and light or dark theme preference. You can sign out or clear browser storage to remove local information; this does not delete your account or uploaded data.</p>
+        <p>Your browser stores your sign-in session and light or dark theme preference. Choosing Save setup in the playground also stores your question setup on that browser, without its example text or conversation. Signing out removes the sign-in session; clearing browser storage also removes saved setups and preferences. Neither action deletes your account or uploaded data.</p>
       </PolicySection>
 
       <PolicySection title="Files you prepare and submit">
@@ -32,6 +32,8 @@ export default function PrivacyPage() {
 
       <PolicySection title="Model requests">
         <p>Running the playground or calling the model API sends your supplied context and questions to the model service to produce predictions. These requests are processed on servers, rather than only in your browser. Use information you are authorized to send, and avoid sensitive data in public examples.</p>
+        <p>When the setup assistant is connected, requesting suggestions sends your description, follow-up conversation, and any question draft being revised to its configured AI provider. This is separate from running a prediction or submitting training data. Choosing and editing a built-in starter does not call the assistant.</p>
+        <p>Optional voice entry uses your browser’s speech recognition service, which may process audio remotely. It starts only when you choose Speak your goal. The transcript appears for you to review before requesting suggestions.</p>
       </PolicySection>
 
       <PolicySection title="Website analytics">
@@ -40,6 +42,7 @@ export default function PrivacyPage() {
       </PolicySection>
 
       <PolicySection title="Contact messages and service providers">
+        <p>If you join the early-access email list, we store your email address in Supabase and use it for access updates. Joining the list does not create a workspace account. You can use the contact form to request removal.</p>
         <p>The contact form sends your name, email address, optional company name, and message through Resend to the Zils support inbox so we can respond.</p>
         <p>Vercel hosts the website; Supabase supports authentication, job records, and file storage; Resend delivers contact messages. Hosting, authentication, and delivery infrastructure may process technical records such as request details, IP addresses, and delivery events as part of operating those services.</p>
       </PolicySection>

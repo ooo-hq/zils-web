@@ -1,17 +1,20 @@
 'use client';
 
 import { type SupabaseClient } from '@supabase/supabase-js';
+import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { canDownload, downloadFiles, SPLITS, submissionSchema, terminal, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
 import Link from 'next/link';
-import { TrainingAccessGate } from '@/components/access-session';
 import { TrainingGuide } from '@/components/training-guide';
 import { TrainingIntake } from '@/components/training-intake';
 import { ApiKeysPanel } from '@/components/api-keys-panel';
+import { TrainedModelQuickstart } from '@/components/trained-model-quickstart';
+import { TrainedModelLibrary } from '@/components/trained-model-library';
 import { Plus, ChevronDown } from 'lucide-react';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { TrainingRunStatus } from '@/components/training-run-status';
 import { useAuthSession } from '@/components/auth-session';
+import { signInWithGoogle } from '@/lib/training-auth';
 import { currentTrainingJob, trainingProgress } from '@/lib/training-status';
 import { ImageDecisionPanel } from '@/components/image-decision-panel';
 import { imageApi, type ImageModels } from '@/lib/images';
@@ -29,15 +32,27 @@ export function TrainingDashboard({ config }: { config: Config }) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<'email' | 'google' | null>(null);
   async function signIn(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setError(''); setNotice('');
-    if (!client) { setError('Sign-in is unavailable. Please refresh and try again.'); setBusy(false); return; }
+    event.preventDefault();
+    if (busy) return;
+    setBusy('email'); setError(''); setNotice('');
+    if (!client) { setError('Sign-in is unavailable. Please refresh and try again.'); setBusy(null); return; }
     try {
-      const { error } = await client.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false, emailRedirectTo: `${window.location.origin}/train` } });
+      const { error } = await client.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: `${window.location.origin}/train` } });
       if (error) throw error;
       setNotice('Check your email for a sign-in link. Open it to return to your training workspace.');
-    } catch (error) { setError(message(error)); } finally { setBusy(false); }
+    } catch (error) { setError(message(error)); } finally { setBusy(null); }
+  }
+  async function googleSignIn() {
+    if (!client || busy) return;
+    setBusy('google'); setError(''); setNotice('');
+    try {
+      const { error } = await signInWithGoogle(client, window.location.origin);
+      if (error) throw error;
+    } catch {
+      setError('Google sign-in could not start. Please try again or use email.');
+    } finally { setBusy(null); }
   }
   const signOut = useCallback(async () => {
     if (!client) return;
@@ -49,11 +64,22 @@ export function TrainingDashboard({ config }: { config: Config }) {
   return <>
     {(error || sessionError) && <p role="alert" className={styles.error}>{error || sessionError}</p>}
     {session && client ? <div id="training-workspace">
-      <TrainingAccessGate key={session.user.id} owner={session.user.id} token={session.access_token}><SignedInDashboard key={session.user.id} owner={session.user.id} client={client} config={config} onExpired={signOut} /></TrainingAccessGate>
+      <SignedInDashboard key={session.user.id} owner={session.user.id} client={client} config={config} onExpired={signOut} />
     </div> : <>
       <div className={styles.workspaceHeading}><h1>Training</h1><p>Teach Zils a decision using examples your team has reviewed.</p></div>
-      <section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}><h2>Sign in to Zils</h2><p>Sign in with the email address on your invitation.</p><form onSubmit={signIn}><label htmlFor="training-email">Email address</label><input id="training-email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" disabled={busy} /><button className={styles.button} disabled={busy}>{busy ? 'Sending link…' : 'Email me a sign-in link'}</button></form>{notice && <p role="status" className={styles.notice}>{notice}</p>}</section>
-      <p className={styles.account}>Need an invitation? <Link href="/early-access">Request early access</Link>.</p><details className={styles.signInGuide}><summary>What examples should I bring?</summary><TrainingGuide /></details>
+      <section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}>
+        <h2>Sign in to Zils</h2><p>Start a training run or check the progress of your existing runs.</p>
+        {process.env.NEXT_PUBLIC_ZILS_GOOGLE_AUTH_ENABLED === 'true' && <>
+          <button type="button" className={styles.googleButton} onClick={googleSignIn} disabled={!client || Boolean(busy)} aria-label="Sign in with Google" aria-busy={busy === 'google'}>
+            <Image src="/google-sign-in.png" alt="" width={180} height={40} unoptimized />
+          </button>
+          <p className={styles.signInDivider}>or use email</p>
+        </>}
+        <form onSubmit={signIn}><label htmlFor="training-email">Email address</label><input id="training-email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" disabled={Boolean(busy)} /><button className={styles.button} disabled={Boolean(busy)}>{busy === 'email' ? 'Sending link…' : 'Email me a sign-in link'}</button></form>
+        {busy === 'google' && <p role="status" className={styles.notice}>Opening Google…</p>}
+        {notice && <p role="status" className={styles.notice}>{notice}</p>}
+      </section>
+      <details className={styles.signInGuide}><summary>What examples should I bring?</summary><TrainingGuide /></details>
     </>}
   </>;
 }
@@ -76,7 +102,10 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
     return () => controller.abort();
   }, [config.decisionApiUrl, config.url, imageToken]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [availableModels, setAvailableModels] = useState<Job[]>([]);
   const [selectedId, setSelectedId] = useState('');
+  const [modelToUse, setModelToUse] = useState<{ id: string } | null>(null);
+  const [collapsedRun, setCollapsedRun] = useState('');
   const [panelOpen, setPanelOpen] = useState(false);
   const [downloadJobId, setDownloadJobId] = useState('');
   const focusSubmitted = useRef(false);
@@ -87,6 +116,7 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
+  const [needsCredit, setNeedsCredit] = useState(false);
   const [cancellable, setCancellable] = useState(false);
   const [files, setFiles] = useState<Partial<Record<Split, File>>>({});
   const [downloads, setDownloads] = useState<{ name: string; url: string }[]>([]);
@@ -98,8 +128,21 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
   const selected = currentTrainingJob(jobs.filter(job => job.model?.id !== 'imajev-4b-v1'));
   const imageService = useMemo(() => config.decisionApiUrl ? imageApi(config.decisionApiUrl, config.url, imageToken) : null, [config.decisionApiUrl, config.url, imageToken]);
   const api = useMemo(() => trainingApi(config.apiUrl, config.url, imageToken), [config.apiUrl, config.url, imageToken]);
+  const history = [...jobs, ...availableModels.filter(model => !jobs.some(job => job.id === model.id))];
+  useEffect(() => {
+    if (!modelToUse) return;
+    const target = document.getElementById(`use-model-${modelToUse.id}`);
+    if (target) { target.scrollIntoView({ block: 'start' }); target.focus({ preventScroll: true }); }
+  }, [modelToUse]);
+  function useModel(job: Job) {
+    if (job.id === selected?.id) setCollapsedRun('');
+    if (job.id !== selected?.id) setSelectedId(job.id);
+    // Each click focuses the example after its containing run has opened.
+    setModelToUse({ id: job.id });
+  }
   const handleError = useCallback((error: unknown) => {
     if (error instanceof TrainingApiError && error.status === 401) { void onExpired(); return; }
+    setNeedsCredit(error instanceof TrainingApiError && error.status === 402);
     setError(message(error));
   }, [onExpired]);
   // A ref avoids restarting polling whenever the auth wrapper rerenders.
@@ -110,9 +153,9 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
     let timer: ReturnType<typeof setTimeout>;
     async function poll() {
       try {
-        const { jobs } = await api.list(controller.signal);
+        const { jobs, models } = await api.list(controller.signal);
         if (controller.signal.aborted) return;
-        setJobs(jobs); setLoading(false); setCheckedAt(Date.now()); setRefreshError(false);
+        setJobs(jobs); setAvailableModels(models ?? jobs); setLoading(false); setCheckedAt(Date.now()); setRefreshError(false);
         setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || jobs.find(job => job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || '');
         timer = setTimeout(poll, jobs.some(job => !terminal(job)) ? 10_000 : 30_000);
       } catch (error) { if (!controller.signal.aborted) { if (error instanceof TrainingApiError && error.status === 401) errorHandler.current(error); setLoading(false); setRefreshError(true); timer = setTimeout(poll, 30_000); } }
@@ -124,9 +167,9 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
   const refresh = async () => {
     setError(''); setRefreshing(true);
     try {
-      const { jobs } = await api.list(life.current?.signal);
+      const { jobs, models } = await api.list(life.current?.signal);
       if (!life.current?.signal.aborted) {
-        setJobs(jobs); setCheckedAt(Date.now()); setRefreshError(false);
+        setJobs(jobs); setAvailableModels(models ?? jobs); setCheckedAt(Date.now()); setRefreshError(false);
         setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || jobs.find(job => job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || '');
       }
     } catch (error) { if (!life.current?.signal.aborted) { if (error instanceof TrainingApiError && error.status === 401) handleError(error); setRefreshError(true); } }
@@ -225,19 +268,23 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
         <button className={styles.secondary} disabled={busy} onClick={() => resumeUploads(job)}>Resume missing uploads</button>
         <button className={styles.textButton} disabled={busy} onClick={() => cancelJob(job)}>Cancel this run</button>
       </div>}
-      {canDownload(job) && <div className={styles.modelDownloads}>
-        {job.workflow?.state === 'ready' && job.workflow.model_id && <>
-          <p><strong>API model ID</strong></p>
-          <p className={styles.hash}><code>{job.workflow.model_id}</code></p>
-          <p className={styles.help}>Set your request’s model to this ID. Your existing API key gives access to models owned by your account.</p>
-        </>}
-        <button disabled={busy} className={styles.button} onClick={() => getDownloads(job)}>Get model files</button>
+      {job.model?.id !== 'imajev-4b-v1' && canDownload(job) && job.workflow?.state === 'ready' && job.workflow.model_id && <div id={`use-model-${job.id}`} tabIndex={-1}><TrainedModelQuickstart
+        key={job.workflow.model_id}
+        modelId={job.workflow.model_id}
+        modelName={job.workflow.model_name}
+        apiUrl={config.decisionApiUrl}
+        apiKeys={<ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={onExpired} />}
+      /></div>}
+      {canDownload(job) && <details className={styles.details}>
+        <summary>Model files (optional)</summary>
         <p className={styles.help}>Optional: download a private copy of the accepted adapter.</p>
+        <button disabled={busy} className={styles.secondary} onClick={() => getDownloads(job)}>Get model files</button>
         {downloadJobId === job.id && downloads.length > 0 && <ul className={styles.downloads}>{downloads.map(file => <li key={file.name}><a href={file.url} target="_blank" rel="noreferrer">{file.name}</a></li>)}</ul>}
-      </div>}
+      </details>}
       <details className={styles.details}>
         <summary>{job.result ? 'Evaluation and technical details' : 'Technical details'}</summary>
         <p className={styles.id}>Run ID: {job.id}</p>
+        {job.workflow?.state === 'ready' && job.workflow.model_id && <p className={styles.hash}>Full API model ID<br /><code>{job.workflow.model_id}</code></p>}
         {job.created_at && <p>Submitted {new Date(job.created_at).toLocaleString()}</p>}
         {job.model && <p>Starting model: <strong>{job.model.name}</strong></p>}
         {job.status === 'completed' && !job.result && <p>Result details are not available yet. Refresh to try again.</p>}
@@ -270,37 +317,41 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
         {vertical === 'text' && <SheetTrigger asChild><button className={styles.button} disabled={busy}><Plus size={16} aria-hidden="true" />Train a model</button></SheetTrigger>}
       </div>
     </div>
+    {process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && <p className={styles.notice}>Billing test preview. Submitting a standard run reserves one included run or $2 in test credit. <Link href="/billing" className={styles.textButton}>View credit and billing</Link>.</p>}
+    {error && <p className={styles.error} role="alert">{error}{needsCredit && <> <Link href="/billing" className={styles.textButton}>Add credit</Link>.</>}</p>}
     {imagesAvailable && <div role="tablist" aria-label="Decision capability" className={imageStyles.tabs}>
       <button role="tab" aria-selected={vertical === 'text'} aria-controls="text-workspace" onClick={() => setVertical('text')}>Text</button>
       <button role="tab" aria-selected={vertical === 'images'} aria-controls="image-workspace" onClick={() => setVertical('images')}>Images</button>
     </div>}
     {vertical === 'images' && config.decisionApiUrl && <div id="image-workspace" role="tabpanel">
       {imageProfile && imageService && <ImageTrainingIntake owner={owner} token={imageToken} trainingApi={api} imageApi={imageService} profile={imageProfile} resumeJob={jobs.find(job => job.model?.id === 'imajev-4b-v1' && job.status === 'uploading')} onSubmitted={replaceJob} />}
-      {runRows(jobs.filter(job => job.model?.id === 'imajev-4b-v1'), 'Image runs')}
+      {runRows(history.filter(job => job.model?.id === 'imajev-4b-v1'), 'Image runs')}
       <details className={imageStyles.stockTest} open={!imageProfile}><summary>Test images with the starting model</summary><p>Try a batch or a single photo. To use a trained model, open its completed run above.</p><ImageDecisionPanel owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storageUrl={config.url} /></details>
     </div>}
     <div id="text-workspace" role="tabpanel" hidden={vertical !== 'text'}>
-    {error && <p className={styles.error} role="alert">{error}</p>}
     {progress && <p role="status" className={styles.notice}>{progress}</p>}
     {busy && cancellable && <button type="button" className={styles.secondary} onClick={() => operation.current?.abort()}>Stop upload</button>}
+    {!loading && <TrainedModelLibrary jobs={availableModels.filter(job => job.model?.id !== 'imajev-4b-v1')} onUse={useModel} />}
     <div className={styles.workspace}>
       {loading ? <p role="status" className={styles.empty}>Loading your training runs…</p> : !selected ? <section className={styles.emptyWorkspace}>
         <h2>{refreshError ? 'Your runs could not be loaded.' : 'Train your first model.'}</h2>
         <p>{refreshError ? 'Try checking again in a moment.' : 'Bring a decision and a few reviewed examples. Zils will guide you through the rest.'}</p>
         {refreshError ? <button className={styles.secondary} onClick={refresh} disabled={refreshing}>Try again</button> : <SheetTrigger asChild><button className={styles.secondary}>Get started</button></SheetTrigger>}
       </section> : <div>
-        <div className={styles.currentLabel}><span>{terminal(selected) ? 'Latest run' : 'Current run'}</span><button className={styles.textButton} onClick={refresh} disabled={busy || refreshing}>{refreshing ? 'Checking…' : 'Refresh status'}</button></div>
-        <section className={`${styles.panel} ${styles.currentRun}`} aria-labelledby="current-run-title">
+        <div className={styles.currentLabel}><button type="button" className={styles.runToggle} aria-expanded={collapsedRun !== selected.id} aria-controls="current-run-details" onClick={() => setCollapsedRun(previous => previous === selected.id ? '' : selected.id)}><ChevronDown size={16} aria-hidden="true" />{terminal(selected) ? 'Latest run' : 'Current run'}</button><button className={styles.textButton} onClick={refresh} disabled={busy || refreshing}>{refreshing ? 'Checking…' : 'Refresh status'}</button></div>
+        <section className={`${styles.panel} ${styles.currentRun}`} aria-labelledby="current-run-title" data-collapsed={collapsedRun === selected.id}>
           <div className={styles.currentRunHeader}><h2 id="current-run-title" ref={statusMessage} tabIndex={-1}>{selected.name}</h2><span className={styles.runBadge} data-tone={trainingProgress(selected).tone}>{trainingProgress(selected).label}</span></div>
+          <div id="current-run-details" hidden={collapsedRun === selected.id}>
           {runDetails(selected)}
           <p className={styles.statusFreshness} data-stale={refreshError}>{refreshError ? 'Connection interrupted. Showing the last known status; we’ll retry automatically.' : <>Last checked {checkedAt ? new Date(checkedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'just now'}. {!terminal(selected) && 'Updates automatically.'}</>}</p>
+          </div>
         </section>
       </div>}
       {runRows(jobs.filter(job => job.model?.id !== 'imajev-4b-v1' && job.id !== selected?.id && !terminal(job)), 'Other active runs')}
-      {runRows(jobs.filter(job => job.model?.id !== 'imajev-4b-v1' && job.id !== selected?.id && terminal(job)), 'Past runs')}
+      {runRows(history.filter(job => job.model?.id !== 'imajev-4b-v1' && job.id !== selected?.id && terminal(job)), 'Past runs')}
     </div>
     </div>
-    <TrainingIntake key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={error} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
+    <TrainingIntake key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={error} needsCredit={needsCredit} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
       if (focusSubmitted.current) { event.preventDefault(); focusSubmitted.current = false; statusMessage.current?.focus(); }
     }} />
   </Sheet>;

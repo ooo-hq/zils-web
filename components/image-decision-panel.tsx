@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import Image from 'next/image';
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import { imageApi, imageAnswerLabel, imageDigest, imageQuestion, ImageApiError, type ImageQuestion, type ImageResponse } from '@/lib/images';
@@ -31,6 +33,7 @@ function ImagePanel({ token, apiUrl, storageUrl, modelId, question }: Props) {
   const [state, setState] = useState('');
   const [progress, setProgress] = useState('');
   const [error, setError] = useState('');
+  const [needsCredit, setNeedsCredit] = useState(false);
   const [result, setResult] = useState<ImageResponse | null>(null);
   const [busy, setBusy] = useState(false);
   const operation = useRef<AbortController | null>(null);
@@ -95,7 +98,7 @@ function ImagePanel({ token, apiUrl, storageUrl, modelId, question }: Props) {
     } catch (error) {
       if (!controller.signal.aborted) {
         if (error instanceof ImageApiError && [404, 422].includes(error.status) && draft.current) { void api.deleteAsset(draft.current.id).catch(() => {}); draft.current = null; }
-        setError(error instanceof Error ? error.message : 'Image could not be analyzed. Please retry.'); setProgress('');
+        setNeedsCredit(error instanceof ImageApiError && error.status === 402); setError(error instanceof Error ? error.message : 'Image could not be analyzed. Please retry.'); setProgress('');
       }
     } finally { if (!controller.signal.aborted) setBusy(false); }
   }
@@ -113,7 +116,7 @@ function ImagePanel({ token, apiUrl, storageUrl, modelId, question }: Props) {
         <label htmlFor={`${panelId}-answers`}>Possible answers</label><textarea id={`${panelId}-answers`} rows={3} value={answers} readOnly={Boolean(question)} onChange={event => setAnswers(event.target.value)} required disabled={busy} /><p className={styles.hint}>One answer per line. Use 2–16 answers.</p>
         <details><summary>Additional information</summary><label htmlFor={`${panelId}-state`}>Structured context (optional JSON)</label><textarea id={`${panelId}-state`} rows={3} value={state} onChange={event => setState(event.target.value)} placeholder={'{"product": "headphones"}'} disabled={busy} /></details>
         <button type="submit" disabled={!file || !model || busy}>{busy ? 'Working…' : 'Analyze image'}</button>
-        {progress && <p role="status">{progress}</p>}{error && <p role="alert" className={styles.error}>{error}</p>}
+        {progress && <p role="status">{progress}</p>}{error && <p role="alert" className={styles.error}>{error}{needsCredit && <> <Link href="/billing" target="_blank" rel="noopener noreferrer">Add credit</Link>.</>}</p>}
       </div>
     </form>
     {answer && <div role="status" className={styles.result} data-review={answer.abstained}><span>Result</span><strong data-testid="image-answer">{imageAnswerLabel(answer)}</strong><p>{answer.abstained ? 'The model could not choose an answer reliably. Send this image for a person to review.' : 'Check important decisions against your own review process.'}</p></div>}

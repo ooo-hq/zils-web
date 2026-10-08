@@ -8,6 +8,7 @@ import { SupportStudyDetails } from '@/components/support-study';
 import { JevComparisonDetails } from '@/components/jev-comparison';
 import { jevMethod, jevSource } from '@/lib/jev-comparison';
 import { SiteHeader } from '@/components/site-header';
+import { HeroBackdrop } from '@/components/hero-backdrop';
 import s from '@/components/light.module.css';
 import { benchmark, readComparison, percent, decimal, milliseconds, comparisonHeadline } from '@/lib/model-benchmark';
 
@@ -73,7 +74,8 @@ export default function ModelPage() {
 
   return (
     <div className="min-h-screen bg-page font-sans text-ink antialiased selection:bg-[#4942c7] selection:text-white">
-      <div className="relative overflow-hidden bg-surface">
+      <div className="relative overflow-hidden">
+        <HeroBackdrop variant="research" />
         <div className="relative mx-auto max-w-6xl px-6 sm:px-8"><SiteHeader tone="light" current="model" /></div>
         <header className="relative mx-auto max-w-5xl px-6 pb-16 pt-10 sm:px-8 sm:pt-16">
           <p className="flex items-center gap-2 text-[12px] font-medium"><span aria-hidden="true" className="text-base">✳</span> Research · Open about the evidence</p>

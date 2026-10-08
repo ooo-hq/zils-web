@@ -12,6 +12,8 @@ test('research links to the complete chess comparison and its downloadable evide
   await summary.getByRole('link', { name: 'Read the chess study' }).click();
   await expect(page).toHaveURL(/\/model\/chess-study$/);
   await expect(page.getByRole('heading', { name: 'Mate-in-one chess study.', exact: true })).toBeVisible();
+  // Streamed metadata can briefly overlap the previous route during navigation.
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://zils.ai/model/chess-study');
   for (const score of ['50.78%', '43.55%', '42.97%']) {
     await expect(page.locator('figure').getByText(score, { exact: true })).toBeVisible();

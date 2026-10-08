@@ -17,16 +17,14 @@ async function workspace(page: Page, options: { expired?: boolean; disabled?: bo
     const req = route.request(), url = new URL(req.url());
     const bearer = (req.headers().authorization || "").split(" ")[1];
     const requestOwner = bearer ? JSON.parse(Buffer.from(bearer.split(".")[1], "base64url").toString()).sub : owner;
-    if (url.origin === 'http://127.0.0.1:3107') {
-      if (url.pathname === '/api/access/session') return route.fulfill({ json: { status: 'active' } });
-      return route.continue();
-    }
+    if (url.origin === 'http://127.0.0.1:3107') return route.continue();
     if (!['http://127.0.0.1:8998', 'http://127.0.0.1:8999'].includes(url.origin)) return route.abort();
     const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS' };
     if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
     if (url.pathname.startsWith('/auth/v1/')) return route.fulfill({ json: session().user, headers });
     if (req.method() !== 'GET') mutations.push(req.method() + ' ' + url.pathname);
     if (url.pathname === '/v1/jobs') return route.fulfill({ json: { jobs: requestOwner === owner ? options.jobs || [] : [] }, headers });
+    if (url.pathname.startsWith('/v1/jobs/')) { const job = (options.jobs || []).find(item => (item as {id:string}).id === url.pathname.split('/').at(-1)); if (requestOwner === owner && job) return route.fulfill({json:{job},headers}); }
     if (url.pathname === '/v1/image-models') return route.fulfill({ status: options.disabled ? 503 : 200, json: { models: [{ name: 'image-stock', stock: true, capabilities: { modalities: ['image', 'text'] } }, ...(requestOwner === owner ? [{ name:'private-image-fixture',stock:false,capabilities:{modalities:['image','text']},task:{question:{type:'choice',instructions:'Inspect the connector.',criteria:{Normal:null,Damaged:null}},outcome_order:['Normal','Damaged']}}] : [])], training_enabled: false }, headers });
     if (url.pathname === '/v1/image-assets') return route.fulfill({ status: 201, headers, json: { asset: { id: asset, state: 'uploading', expires_at: '2099-01-01T00:00:00Z' }, upload: { url: `http://127.0.0.1:8998/storage/v1/object/upload/sign/zils-images/${owner}/${asset}/source?token=fixture`, method: 'PUT', headers: { 'x-upsert': 'false', 'Content-Type': 'application/octet-stream' } } } });
     if (req.method() === 'PUT') {
@@ -71,7 +69,7 @@ for(const mobile of [false,true]) test(`ready private prediction and account iso
  if(mobile)await page.setViewportSize({width:390,height:844});
  await workspace(page,{jobs:[imageJob(true)]});await openRun(page);
  await page.getByRole('button',{name:'Use your model'}).click();
- await page.getByRole('button',{name:'One image',exact:true}).first().click();
+ await page.getByRole('region',{name:'Image runs',exact:true}).getByRole('button',{name:'One image',exact:true}).click();
  const panel=page.getByRole('region',{name:'Try your image model.'});
  await expect(panel.getByLabel('Image decision',{exact:true})).toHaveValue('Inspect the connector.');
  await panel.getByLabel('Photo',{exact:true}).setInputFiles({name:'private-photo.png',mimeType:'image/png',buffer:png});
@@ -89,7 +87,7 @@ for(const mobile of [false,true]) test(`ready private prediction and account iso
 test('changing accounts during a private-model upload cancels the pending prediction',async({page})=>{
  const control=await workspace(page,{jobs:[imageJob(true)],holdUpload:true});await openRun(page);
  await page.getByRole('button',{name:'Use your model'}).click();
- await page.getByRole('button',{name:'One image',exact:true}).first().click();
+ await page.getByRole('region',{name:'Image runs',exact:true}).getByRole('button',{name:'One image',exact:true}).click();
  const panel=page.getByRole('region',{name:'Try your image model.'});
  await panel.getByLabel('Photo',{exact:true}).setInputFiles({name:'pending-private.png',mimeType:'image/png',buffer:png});
  await panel.getByRole('button',{name:'Analyze image'}).click();

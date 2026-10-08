@@ -9,7 +9,7 @@
     "types:check": "next typegen && tsc --noEmit",
     "lint": "eslint",
     "test:browser": "playwright test",
-    "test": "tsc --ignoreConfig --types node --module commonjs --target es2022 --esModuleInterop --skipLibCheck --outDir .private/test-build types/saxen.d.ts lib/training-csv.ts lib/training-spreadsheet.ts lib/training-review.ts lib/training-status.ts lib/api-keys.ts lib/contact.ts lib/training-auth.ts lib/playground-server.ts lib/pricing-model.ts lib/early-access-server.ts lib/early-access.ts lib/images.ts lib/image-training.ts lib/image-batch.ts && node --test tests/*.test.cjs"
+    "test": "tsc --ignoreConfig --types node --module commonjs --target es2022 --esModuleInterop --skipLibCheck --outDir .private/test-build types/saxen.d.ts lib/training-csv.ts lib/training-spreadsheet.ts lib/training-review.ts lib/training-status.ts lib/model-quickstart.ts lib/api-keys.ts lib/billing.ts lib/contact.ts lib/training-auth.ts lib/playground-server.ts lib/decision-setup-server.ts lib/pricing-model.ts lib/investor-model.ts lib/images.ts lib/image-training.ts lib/image-batch.ts && node --test tests/*.test.cjs"
   },
   "dependencies": {
     "@fezchat/artifact-viewers": "^0.1.0",
@@ -23,6 +23,7 @@
     "motion": "^13.1.0",
     "next": "16.3.0",
     "nostr-tools": "^2.25.0",
+    "prismjs": "1.30.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "read-excel-file": "9.3.10",
@@ -33,6 +34,7 @@
     "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.2.0",
+    "@types/prismjs": "1.26.6",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "eslint": "^9.39.4",

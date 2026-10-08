@@ -34,7 +34,7 @@ export async function runImageBatch(rows: ImageBatchRow[], options: BatchOptions
       signal.throwIfAborted();
       onResult({ ...row, error: error instanceof Error ? error.message : 'This image could not be analyzed.' });
       // A shared authentication or quota failure needs attention before more uploads.
-      if (error instanceof ImageApiError && [401, 403, 429].includes(error.status)) throw error;
+      if (error instanceof ImageApiError && [401, 402, 403, 429].includes(error.status)) throw error;
     } finally {
       if (assetId) await api.deleteAsset(assetId).catch(() => {});
     }

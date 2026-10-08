@@ -1,0 +1,81 @@
+'use client';
+
+import { useId, useRef, useState, type ReactNode } from 'react';
+import { Check, Copy, Download } from 'lucide-react';
+import { modelQuickstart, type ExampleLanguage } from '@/lib/model-quickstart';
+import { HighlightedCode, type CodeLanguage } from '@/components/highlighted-code';
+import training from '@/app/(home)/train/train.module.css';
+import styles from './trained-model-quickstart.module.css';
+
+function CopyField({ label, value, language }: { label: string; value: string; language?: CodeLanguage }) {
+  const id = useId();
+  const field = useRef<HTMLElement>(null);
+  const [copied, setCopied] = useState(false);
+  const [failed, setFailed] = useState(false);
+  function selectText() {
+    if (!field.current) return;
+    field.current.focus();
+    const range = document.createRange(); range.selectNodeContents(field.current);
+    const selection = window.getSelection(); selection?.removeAllRanges(); selection?.addRange(range);
+  }
+  async function copy() {
+    setCopied(false); setFailed(false);
+    try { await navigator.clipboard.writeText(value); setCopied(true); }
+    catch { setFailed(true); selectText(); }
+  }
+  return <div className={`${styles.copyField} ${language ? '' : styles.compact}`}>
+    <div className={styles.fieldHeading}>
+      <span id={id}>{label}</span>
+      <button type="button" className={training.secondary} onClick={copy}>
+        {copied ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
+        {copied ? 'Copied' : `Copy ${label === 'API model name' ? 'model name' : label === 'API model ID' ? 'model ID' : label === 'Example code' ? 'code' : 'command'}`}
+      </button>
+    </div>
+    {language
+      ? <pre tabIndex={0} aria-labelledby={id} className={`${styles.field} ${styles.code}`}><code ref={field} tabIndex={-1}><HighlightedCode code={value} language={language} /></code></pre>
+      : <code ref={field} tabIndex={0} aria-labelledby={id} className={styles.modelName} onClick={selectText}>{value}</code>}
+    <span className={styles.copyStatus} role="status">{failed ? 'Copy was blocked. The text is selected: press ⌘C on Mac or Ctrl+C on Windows.' : copied ? `${label} copied.` : ''}</span>
+  </div>;
+}
+
+export function TrainedModelQuickstart({ modelId, modelName, apiUrl, apiKeys }: { modelId: string; modelName?: string; apiUrl: string | null; apiKeys: ReactNode }) {
+  const [language, setLanguage] = useState<ExampleLanguage>('Python');
+  const requestModel = modelName || modelId;
+  const example = apiUrl ? modelQuickstart(requestModel, apiUrl, language) : null;
+  function download() {
+    if (!example) return;
+    const url = URL.createObjectURL(new Blob([`${example.code}\n`], { type: 'text/plain;charset=utf-8' }));
+    const link = document.createElement('a'); link.href = url; link.download = example.filename; link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  return <section className={styles.quickstart} aria-label="Use your model">
+    <h3>Use your model</h3>
+    <p className={styles.intro}>Your model is hosted by Zils. Copy its {modelName ? 'name' : 'ID'} into your app, or make your first request with the example below.</p>
+    <CopyField key={requestModel} label={modelName ? 'API model name' : 'API model ID'} value={requestModel} />
+    {modelName && <p className={styles.intro}>Use this name in your request’s <code>model</code> field. The full model ID still works and is saved in technical details.</p>}
+    {example ? <ol className={styles.steps}>
+      <li>
+        <h4>Get your API key</h4>
+        <p>Use an existing key from this account, or create one here.</p>
+        {apiKeys}
+      </li>
+      <li>
+        <h4>Try one of your examples</h4>
+        <p>Save a prepared JSONL file from this run as <code>train.jsonl</code>. Save this code in the same folder as <code>{example.filename}</code>.</p>
+        <div className={styles.languages} role="group" aria-label="Code language">
+          {(['Python', 'JavaScript'] as const).map(item => <button type="button" key={item} aria-pressed={language === item} onClick={() => setLanguage(item)}>{item}</button>)}
+          <span>{language === 'Python' ? 'Python 3 · No packages to install' : 'Node.js 20+ · Run on your server'}</span>
+        </div>
+        <CopyField key={`${requestModel}-${apiUrl}-${language}`} label="Example code" value={example.code} language={language === 'Python' ? 'python' : 'javascript'} />
+        <button type="button" className={training.textButton} onClick={download}><Download size={14} aria-hidden="true" />Download {example.filename}</button>
+        <p>The code sends one example’s input and question to your model. Its expected answer stays in your file.</p>
+      </li>
+      <li>
+        <h4>Run your first request</h4>
+        <p>In a Mac or Linux terminal, open that folder. Replace <code>YOUR_API_KEY</code> below with your key, then run the command.</p>
+        <CopyField key={language} label="Run command" value={example.command} language="bash" />
+        <p>A successful call prints a JSON response with your model ID and decision probabilities. To use new inputs, replace <code>{language === 'Python' ? 'example["state"]' : 'example.state'}</code> in the code and keep your question.</p>
+      </li>
+    </ol> : <p className={styles.intro}>The API address is not configured on this website. You can still copy your model ID; contact Zils for connection details.</p>}
+  </section>;
+}

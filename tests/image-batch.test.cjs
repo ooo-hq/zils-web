@@ -77,3 +77,11 @@ test('CSV keeps review and failure states, escapes filenames and neutralizes spr
   assert.match(csv, /"Failed"/);
   assert.match(csv, /"Upload interrupted"/);
 });
+
+test('insufficient credit pauses image batches before more uploads', async () => {
+  const calls = [], results = [];
+  const api = images.imageApi('https://api.example', 'https://storage.example', async () => 'session', async url => { calls.push(url); return new Response('{}', { status: 402 }); });
+  await assert.rejects(batch().runImageBatch(rows(), { api, model: 'private-image', question, signal: new AbortController().signal, onResult: row => results.push(row) }), error => error.status === 402);
+  assert.equal(calls.length, 1);
+  assert.equal(results.length, 1);
+});

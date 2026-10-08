@@ -1,9 +1,10 @@
 'use client';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { mapImageExamples, prepareImageTraining, uploadImageTraining, type ImageExample, type ImageDraft, type PreparedImageTraining } from '@/lib/image-training';
-import { imageQuestion, type imageApi, type ImageModels } from '@/lib/images';
-import { type trainingApi, type Job } from '@/lib/training';
+import { ImageApiError, imageQuestion, type imageApi, type ImageModels } from '@/lib/images';
+import { TrainingApiError, type trainingApi, type Job } from '@/lib/training';
 import styles from '@/app/(home)/train/train.module.css';
 import photoStyles from './image-training-intake.module.css';
 
@@ -15,6 +16,7 @@ function Intake({trainingApi:training,imageApi:images,profile,resumeJob,onSubmit
   const [question,setQuestion]=useState(''),[answers,setAnswers]=useState('Normal\nDamaged'),[name,setName]=useState('inspection');
   const [reviewed,setReviewed]=useState(false),[consent,setConsent]=useState(false),[prepared,setPrepared]=useState<PreparedImageTraining|null>(null);
   const [positive,setPositive]=useState(''),[recall,setRecall]=useState('95'),[alarms,setAlarms]=useState('20'),[accuracy,setAccuracy]=useState('80'),[improvement,setImprovement]=useState('0.01');
+  const [needsCredit,setNeedsCredit]=useState(false);
   const [savedJob,setSavedJob]=useState<Job>();
   const [busy,setBusy]=useState(false),[frozen,setFrozen]=useState(false),[error,setError]=useState(''),[progress,setProgress]=useState(''),[submitted,setSubmitted]=useState(false);
   const draft=useRef<ImageDraft>({assets:{}}),operation=useRef<AbortController|null>(null),urls=useRef<string[]>([]),life=useRef({active:true});
@@ -61,7 +63,7 @@ function Intake({trainingApi:training,imageApi:images,profile,resumeJob,onSubmit
     }catch(error){setError(error instanceof Error?error.message:'Check the photos and answers.');}
   }
   async function submit(){
-    if(!prepared||busy)return;setError('');setSubmitted(false);
+    if(!prepared||busy)return;setError('');setNeedsCredit(false);setSubmitted(false);
     if(!consent){setError('Confirm permission to share the training photos.');return;}
     if(!/^[a-z0-9][a-z0-9-]{0,63}$/.test(name)){setError('Use a run name with 1–64 lowercase letters, numbers or hyphens.');return;}
     if([accuracy,improvement,...(outcomes.length===2?[recall,alarms]:[])].some(value=>!value.trim())){setError('Enter each required quality target.');return;}
@@ -74,7 +76,7 @@ function Intake({trainingApi:training,imageApi:images,profile,resumeJob,onSubmit
     try{
       const job=await uploadImageTraining(prepared,decision,{name,acceptance,allow_training_data_export:true},training,images,draft.current,controller.signal,text=>{if(!controller.signal.aborted){setProgress(text);setFrozen(Boolean(draft.current.job));setSavedJob(draft.current.job);}});
       if(!controller.signal.aborted){onSubmitted(job);setSubmitted(true);setProgress('');setFrozen(true);}
-    }catch(error){if(!controller.signal.aborted)setError(error instanceof Error?error.message:'Upload interrupted. Retry to resume missing photos.');}
+    }catch(error){if(!controller.signal.aborted){setNeedsCredit((error instanceof TrainingApiError || error instanceof ImageApiError) && error.status===402);setError(error instanceof Error?error.message:'Upload interrupted. Retry to resume missing photos.');}}
     finally{if(life.current.active){setBusy(false);setFrozen(Boolean(draft.current.job));setSavedJob(draft.current.job);}operation.current=null;}
   }
   async function reset(){
@@ -82,7 +84,7 @@ function Intake({trainingApi:training,imageApi:images,profile,resumeJob,onSubmit
   }
   return <section className={photoStyles.intake} aria-label="Train your image model">
     <div className={photoStyles.intro}>
-      <h2>Train your image model</h2><p>Bring a dataset of labelled images. Teach Zils the decision your team needs to make.</p>
+      <h2>Train your image model</h2><p>Starting model: Imajev 4B.</p><p>Bring a dataset of labelled images. Teach Zils the decision your team needs to make.</p>
     </div>
     <div className={photoStyles.body}>
       {resumeJob&&!savedJob&&<p>A saved image draft is available. Choose its original photos, labels and settings to resume it.</p>}
@@ -111,12 +113,13 @@ function Intake({trainingApi:training,imageApi:images,profile,resumeJob,onSubmit
           <label>Minimum accuracy (%)<input type="number" min="0" max="100" value={accuracy} onChange={e=>setAccuracy(e.target.value)}/></label><label>Minimum Brier improvement<input type="number" min="0" max="2" step="0.01" value={improvement} onChange={e=>setImprovement(e.target.value)}/></label></fieldset>
         <p>Only training photos go to approved workers. Calibration and evaluation photos stay private to evaluation. Draft uploads expire after 24 hours; submitted photos are retained until 30 days after the run finishes.</p>
         {(savedJob?.data_expires_at||resumeJob?.data_expires_at)&&<p>Current draft expires: {new Date((savedJob?.data_expires_at||resumeJob?.data_expires_at)!).toLocaleString()}.</p>}
+        <p>Each standard image run uses one included training run or $2 from your credit balance. Completed runs are charged even if no model meets your targets. <Link href="/billing" target="_blank" rel="noopener noreferrer">View billing</Link>.</p>
         <label className={photoStyles.check}><input type="checkbox" checked={consent} disabled={busy||submitted} onChange={e=>setConsent(e.target.checked)}/>I have permission to share training images with approved workers</label>
         {!submitted&&<button className={styles.button} disabled={busy||!consent} onClick={()=>void submit()}>{busy?'Uploading…':frozen?'Resume missing image uploads':'Start image training'}</button>}
       </div>}
       {busy&&<button className={styles.secondary} onClick={()=>{operation.current?.abort();setProgress('Upload stopped. Completed photos remain saved.');}}>Stop image upload</button>}
       {(frozen||resumeJob?.status==='uploading')&&<button className={styles.secondary} disabled={busy} onClick={()=>void reset()}>Start a new run</button>}
-      {progress&&<p role="status">{progress}</p>}{error&&<p role="alert" className={styles.error}>{error}</p>}{submitted&&<p role="status">Image run submitted for validation.</p>}
+      {progress&&<p role="status">{progress}</p>}{error&&<p role="alert" className={styles.error}>{error}{needsCredit&&<> <Link href="/billing" target="_blank" rel="noopener noreferrer">Add credit</Link>. Your uploaded photos are saved; return here to retry.</>}</p>}{submitted&&<p role="status">Image run submitted for validation.</p>}
     </div>
   </section>;
 }

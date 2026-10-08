@@ -30,7 +30,7 @@ export const jobSchema = z.object({
   image_intake: imageIntakeSchema.nullable().optional(),
   selection: z.object({ version: z.literal('zils-version-selection/v1'), root_job_id: z.string().uuid(), previous: z.object({ job_id: z.string().uuid(), model_id: z.string().min(1), sha256: z.string().regex(/^[a-f0-9]{64}$/) }).nullable() }).nullable().optional(),
   data_expires_at: z.string().nullable().optional(),
-  workflow: z.object({ state: z.string(), message: z.string().optional(), model_id: z.string().optional(), model_alias: z.string().optional(), fingerprint: z.string().optional() }).nullable().optional(),
+  workflow: z.object({ state: z.string(), message: z.string().optional(), model_id: z.string().optional(), model_alias: z.string().optional(), model_name: z.string().min(1).max(128).optional(), fingerprint: z.string().optional() }).nullable().optional(),
   result: z.object({
     delivery: z.object({ status: z.enum(['accepted', 'no_qualifying_model']), uid: z.number().optional(), sha256: z.string().optional(), brier_improvement: z.number().optional(), acceptance: imageAcceptanceSchema }),
     image_metrics_version: z.literal('zils-image-metrics/v1').optional(),
@@ -154,7 +154,7 @@ export function trainingApi(baseUrl: string, storageUrl: string, token: () => Pr
   }
   const idPath = (id: string) => `/${z.string().uuid().parse(id)}`;
   return {
-    list: (signal?: AbortSignal) => call('', z.object({ jobs: z.array(jobSchema) }), undefined, signal),
+    list: (signal?: AbortSignal) => call('', z.object({ jobs: z.array(jobSchema), models: z.array(jobSchema).optional() }), undefined, signal),
     get: (id: string, signal?: AbortSignal) => call(idPath(id), z.object({ job: jobSchema }), undefined, signal),
     create: (input: Submission, signal?: AbortSignal) => call('', z.object({ job: jobSchema, uploads: uploadsSchema }), submissionSchema.parse(input), signal),
     createImage: (input: ImageSubmission, signal?: AbortSignal) => call('', z.object({ job: jobSchema, uploads: uploadsSchema }), imageSubmissionSchema.parse(input), signal),

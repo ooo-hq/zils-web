@@ -42,6 +42,7 @@ export default function PricingPage() {
               <p>Your first standard training run is included with your first top-up. The full ${PRICING.startingCredit} stays available for usage.</p>
               <Link href="/early-access" className={s.button}>Request early access</Link>
               <p className={s.availability}>Paid access is coming. Top-ups are not available yet.</p>
+              <p className={s.availability}><Link href="/billing" className={s.previewLink}>View account billing</Link>{process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && '. Test payments only.'}</p>
             </div>
             <div className={s.rates}>
               <dl>

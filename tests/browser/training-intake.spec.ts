@@ -20,10 +20,7 @@ async function workspace(page: Page) {
   await page.route('**/*', async route => {
     const request = route.request();
     const url = new URL(request.url());
-    if (url.origin === 'http://127.0.0.1:3107') {
-      if (url.pathname === '/api/access/session') return route.fulfill({ json: { status: 'active' } });
-      return route.continue();
-    }
+    if (url.origin === 'http://127.0.0.1:3107') return route.continue();
     if (!['http://127.0.0.1:8998', 'http://127.0.0.1:8999'].includes(url.origin)) return route.abort();
     const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, PUT, OPTIONS' };
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers });

@@ -1,7 +1,9 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
-import { imageApi, imageAnswerLabel, imageQuestion, type ImageQuestion } from '@/lib/images';
+import { ImageApiError, imageApi, imageAnswerLabel, imageQuestion, type ImageQuestion } from '@/lib/images';
 import { imageBatchCsv, MAX_IMAGE_BATCH, runImageBatch, type ImageBatchRow } from '@/lib/image-batch';
 import styles from './image-decision-panel.module.css';
 
@@ -14,6 +16,7 @@ export function ImageBatchPanel({ token, apiUrl, storageUrl, modelId, question }
   const [instructions, setInstructions] = useState(typeof question?.instructions === 'string' ? question.instructions : '');
   const [answers, setAnswers] = useState(question ? Object.keys(question.criteria).join('\n') : 'Normal\nDamaged');
   const [busy, setBusy] = useState(false), [checking, setChecking] = useState(false), [started, setStarted] = useState(false);
+  const [needsCredit, setNeedsCredit] = useState(false);
   const [progress, setProgress] = useState(''), [error, setError] = useState(''), [page, setPage] = useState(0);
   const operation = useRef<AbortController | null>(null), generation = useRef({ value: 0 });
   const alive = useRef(false);
@@ -64,7 +67,7 @@ export function ImageBatchPanel({ token, apiUrl, storageUrl, modelId, question }
       if (!String(decision.instructions || '').trim()) throw new Error('Describe the decision you want to make.');
     } catch (error) { setError(error instanceof Error ? error.message : 'Check the decision and possible answers.'); return; }
     const controller = new AbortController(); operation.current = controller;
-    setBusy(true); setStarted(true); setError('');
+    setBusy(true); setStarted(true); setError(''); setNeedsCredit(false);
     try {
       await runImageBatch(rows, { api, model, question: decision, signal: controller.signal,
         onProgress: (filename, done, total) => { if (!controller.signal.aborted) setProgress(`Processing ${done + 1} of ${total}: ${filename}`); },
@@ -74,7 +77,7 @@ export function ImageBatchPanel({ token, apiUrl, storageUrl, modelId, question }
     } catch (error) {
       if (alive.current) {
         setProgress(controller.signal.aborted ? 'Stopped. Completed results are saved here. Resume to process the remaining images.' : 'Batch paused. Completed results are saved here.');
-        if (!controller.signal.aborted) setError(error instanceof Error ? error.message : 'The batch could not finish.');
+        if (!controller.signal.aborted) { setNeedsCredit(error instanceof ImageApiError && error.status === 402); setError(error instanceof Error ? error.message : 'The batch could not finish.'); }
       }
     } finally { if (alive.current) setBusy(false); operation.current = null; }
   }
@@ -95,7 +98,7 @@ export function ImageBatchPanel({ token, apiUrl, storageUrl, modelId, question }
         <p className={styles.hint}>{question ? 'Uses the decision and answers saved with your model.' : started ? 'Choose a new set of images to change the decision. Resuming keeps the same question.' : 'One answer per line. Use 2–16 answers.'}</p>
         <button type="submit" disabled={!rows.length || !model || !remaining || busy || checking}>{busy ? 'Processing images…' : started ? remaining ? `Resume ${remaining} remaining` : 'Batch complete' : `Analyze ${rows.length || ''} images`}</button>
         {busy && <button type="button" className={styles.secondaryButton} onClick={() => operation.current?.abort()}>Stop batch</button>}
-        {progress && <p role="status">{progress}</p>}{error && <p role="alert" className={styles.error}>{error}</p>}
+        {progress && <p role="status">{progress}</p>}{error && <p role="alert" className={styles.error}>{error}{needsCredit && <> <Link href="/billing" target="_blank" rel="noopener noreferrer">Add credit</Link>.</>}</p>}
       </div>
     </form>
     {rows.length > 0 && <div className={styles.batchResults}>

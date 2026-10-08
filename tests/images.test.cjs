@@ -59,3 +59,10 @@ test('native input limits explain how to correct the request', async () => {
     await assert.rejects(api.predict(body), error => error instanceof ImageApiError && error.status === status && message.test(error.message));
   }
 });
+
+test('image payments preserve the billable meter and direct insufficient credit to billing', async () => {
+  const { parseImageResponse, imageApi, ImageApiError } = moduleUnderTest();
+  assert.equal(parseImageResponse({ ...result, usage: { ...result.usage, billable_input_tokens: 173 } }, body).usage.billable_input_tokens, 173);
+  const api = imageApi('https://api.example', 'https://storage.example', async () => 'session', async () => new Response('{}', { status: 402 }));
+  await assert.rejects(api.predict(body), error => error instanceof ImageApiError && error.status === 402 && /credit/i.test(error.message));
+});

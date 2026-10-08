@@ -15,7 +15,6 @@ async function account(page: Page, signedIn = true, failSignOut = false) {
   page.on('pageerror', error => errors.push(error.message));
   await page.route('**/*', async route => {
     const url = new URL(route.request().url());
-    if (url.origin === 'http://127.0.0.1:3107' && url.pathname === '/api/access/session') return route.fulfill({ json: { status: 'active' } });
     if (url.origin === 'http://127.0.0.1:3107') return route.continue();
     if (!['http://127.0.0.1:8998', 'http://127.0.0.1:8999'].includes(url.origin)) return route.abort();
     const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS' };

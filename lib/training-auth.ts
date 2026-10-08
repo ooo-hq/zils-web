@@ -1,4 +1,13 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 type AuthStorage = Pick<Storage, 'length' | 'key' | 'getItem'>;
+
+export function signInWithGoogle(client: SupabaseClient, origin: string) {
+  return client.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: new URL('/train', origin).href },
+  });
+}
 
 /** Preserve active sessions and PKCE flows; use the Zils key for new sessions. */
 export function trainingAuthStorageKey(storage?: AuthStorage): string {
