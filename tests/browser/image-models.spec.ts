@@ -65,12 +65,13 @@ test('equal accuracy shows different recall and false alarms without offering a 
  await expect(results.getByText('72% (36/50)',{exact:true})).toBeVisible();
  await expect(results.getByText('28% (14/50)',{exact:true})).toBeVisible();
  await expect(results.getByText('4% (2/50)',{exact:true})).toBeVisible();
- await expect(page.getByRole('button',{name:'Try your model'})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Use your model'})).toHaveCount(0);
 });
 for(const mobile of [false,true]) test(`ready private prediction and account isolation (${mobile?'mobile':'desktop'})`,async({page})=>{
  if(mobile)await page.setViewportSize({width:390,height:844});
  await workspace(page,{jobs:[imageJob(true)]});await openRun(page);
- await page.getByRole('button',{name:'Try your model'}).click();
+ await page.getByRole('button',{name:'Use your model'}).click();
+ await page.getByRole('button',{name:'One image',exact:true}).first().click();
  const panel=page.getByRole('region',{name:'Try your image model.'});
  await expect(panel.getByLabel('Image decision',{exact:true})).toHaveValue('Inspect the connector.');
  await panel.getByLabel('Photo',{exact:true}).setInputFiles({name:'private-photo.png',mimeType:'image/png',buffer:png});
@@ -87,7 +88,8 @@ for(const mobile of [false,true]) test(`ready private prediction and account iso
 
 test('changing accounts during a private-model upload cancels the pending prediction',async({page})=>{
  const control=await workspace(page,{jobs:[imageJob(true)],holdUpload:true});await openRun(page);
- await page.getByRole('button',{name:'Try your model'}).click();
+ await page.getByRole('button',{name:'Use your model'}).click();
+ await page.getByRole('button',{name:'One image',exact:true}).first().click();
  const panel=page.getByRole('region',{name:'Try your image model.'});
  await panel.getByLabel('Photo',{exact:true}).setInputFiles({name:'pending-private.png',mimeType:'image/png',buffer:png});
  await panel.getByRole('button',{name:'Analyze image'}).click();

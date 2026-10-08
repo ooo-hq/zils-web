@@ -10,7 +10,7 @@ import photoStyles from './image-training-intake.module.css';
 type Props={owner:string;token:()=>Promise<string>;trainingApi:ReturnType<typeof trainingApi>;imageApi:ReturnType<typeof imageApi>;profile:NonNullable<ImageModels['training_profile']>;resumeJob?:Job;onSubmitted:(job:Job)=>void};
 export function ImageTrainingIntake(props:Props){return <Intake key={props.owner} {...props}/>;}
 function Intake({trainingApi:training,imageApi:images,profile,resumeJob,onSubmitted}:Props){
-  const [open,setOpen]=useState(false),[rows,setRows]=useState<ImageExample[]>([]),[excluded,setExcluded]=useState<Record<string,boolean>>({});
+  const [rows,setRows]=useState<ImageExample[]>([]),[excluded,setExcluded]=useState<Record<string,boolean>>({});
   const [previews,setPreviews]=useState<Record<string,string>>({}),[problems,setProblems]=useState<Record<string,string>>({}),[page,setPage]=useState(0);
   const [question,setQuestion]=useState(''),[answers,setAnswers]=useState('Normal\nDamaged'),[name,setName]=useState('inspection');
   const [reviewed,setReviewed]=useState(false),[consent,setConsent]=useState(false),[prepared,setPrepared]=useState<PreparedImageTraining|null>(null);
@@ -26,8 +26,10 @@ function Intake({trainingApi:training,imageApi:images,profile,resumeJob,onSubmit
     if(!files||locked)return;changed();setBusy(true);setPage(0);setRows([]);setExcluded({});
     urls.current.splice(0).forEach(url=>URL.revokeObjectURL(url));setPreviews({});setProblems({});
     try{
-      if(files.length>profile.max_train+profile.max_calibration+profile.max_test)throw new Error('Choose fewer photos for this run.');
-      const next=mapImageExamples(Array.from(files)),bad:Record<string,string>={},thumbs:Record<string,string>={};
+      const photos=Array.from(files).filter(file=>!file.webkitRelativePath||/\.(jpe?g|png)$/i.test(file.name));
+      if(!photos.length)throw new Error('Choose a folder containing JPEG or PNG images.');
+      if(photos.length>profile.max_train+profile.max_calibration+profile.max_test)throw new Error('Choose fewer photos for this run.');
+      const next=mapImageExamples(photos),bad:Record<string,string>={},thumbs:Record<string,string>={};
       for(const row of next){
         if(!life.current.active)return;
         if(!['image/jpeg','image/png'].includes(row.file.type)||row.file.size>profile.max_source_bytes){bad[row.id]='Use a JPEG or PNG up to 10 MB.';continue;}
@@ -78,20 +80,26 @@ function Intake({trainingApi:training,imageApi:images,profile,resumeJob,onSubmit
   async function reset(){
     setBusy(true);setError('');try{const job=draft.current.job||resumeJob;if(job?.status==='uploading'){const result=await training.cancel(job.id);onSubmitted(result.job);}draft.current={assets:{}};setSavedJob(undefined);setFrozen(false);setSubmitted(false);setPrepared(null);setReviewed(false);setConsent(false);setProgress('');}catch(error){setError(error instanceof Error?error.message:'Could not cancel the previous draft.');}finally{if(life.current.active)setBusy(false);}
   }
-  return <section className={photoStyles.intake}>
-    <button className={styles.button} onClick={()=>setOpen(value=>!value)} aria-expanded={open}>Train on my images</button>
-    <div hidden={!open} className={photoStyles.body}>
-      <h2>Teach an image decision.</h2><p>Review photos and answers. Related views of one item must use the same item reference.</p>
+  return <section className={photoStyles.intake} aria-label="Train your image model">
+    <div className={photoStyles.intro}>
+      <h2>Train your image model</h2><p>Bring a dataset of labelled images. Teach Zils the decision your team needs to make.</p>
+    </div>
+    <div className={photoStyles.body}>
       {resumeJob&&!savedJob&&<p>A saved image draft is available. Choose its original photos, labels and settings to resume it.</p>}
+      <h3>Your training dataset</h3><p>Select multiple images or a whole folder. Each photo needs a correct answer.</p>
+      <fieldset disabled={locked} className={photoStyles.uploadChoices}>
+        <label>Choose training photos<span>Select multiple JPEG or PNG images.</span><input aria-label="Training photos" type="file" multiple accept="image/jpeg,image/png" onChange={e=>void choose(e.target.files)}/></label>
+        <label>Choose a labelled folder<span>Folders named after answers can supply labels.</span><input aria-label="Labelled folders" type="file" multiple {...{webkitdirectory:''}} onChange={e=>void choose(e.target.files)}/></label>
+      </fieldset>
+      <p className={photoStyles.hint}>Up to {profile.max_train+profile.max_calibration+profile.max_test} photos per run, 10 MB each. Non-image files in folders are skipped.</p>
+      <label className={photoStyles.csv}>Image labels CSV <span>Optional if your folders supply the labels. You can also review and label each image below.</span><input aria-label="Image labels CSV" type="file" accept=".csv,text/csv" disabled={locked||!rows.length} onChange={e=>void labels(e.target.files?.[0])}/></label>
+      <details className={photoStyles.labelHelp}><summary>How to organize images and labels</summary><p>Use folders such as Normal/ and Damaged/, or a CSV with filename, answer, and optional group columns. For multiple views of one item, use the same group so they stay together during evaluation. Folder and file names are never given to the model.</p><pre>filename,answer,group{'\n'}photo-01.jpg,Normal,item-01{'\n'}photo-02.jpg,Damaged,item-02</pre></details>
+      <h3>What should your model decide?</h3>
       <fieldset disabled={locked} className={photoStyles.fields}>
         <label>Run name<input value={name} onChange={e=>{setName(e.target.value);changed();}} pattern="[a-z0-9][a-z0-9-]{0,63}"/></label>
-        <label>Image training decision<textarea aria-label="Image training decision" value={question} onChange={e=>{setQuestion(e.target.value);changed();}} rows={2}/></label>
+        <label>Image training decision<textarea aria-label="Image training decision" value={question} onChange={e=>{setQuestion(e.target.value);changed();}} placeholder="Does this product have a manufacturing defect?" rows={2}/></label>
         <label>Image training answers<textarea aria-label="Image training answers" value={answers} onChange={e=>{setAnswers(e.target.value);changed();}} rows={2}/></label>
-        <label>Training photos<input type="file" multiple accept="image/jpeg,image/png" onChange={e=>void choose(e.target.files)}/></label>
-        <label>Labelled folders<input type="file" multiple {...{webkitdirectory:''}} onChange={e=>void choose(e.target.files)}/></label>
-        <label>Image labels CSV<input type="file" accept=".csv,text/csv" disabled={!rows.length} onChange={e=>void labels(e.target.files?.[0])}/></label>
       </fieldset>
-      <p>CSV columns: filename, answer, and optional group. Folder names can suggest answers. They are never given to the model.</p>
       {rows.length>0&&<><p>{rows.filter(row=>!excluded[row.id]).length} included photos. Each photo is private.</p>
         <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Image label review"><table className={photoStyles.reviewTable}><thead><tr><th>Photo</th><th>Answer</th><th>Item reference</th><th>Include</th></tr></thead><tbody>{rows.slice(page*20,page*20+20).map(row=><tr key={row.id}><th>{previews[row.id]&&<Image src={previews[row.id]} alt="" width={56} height={56} unoptimized/>}<span>{row.filename}</span>{problems[row.id]&&<p>{problems[row.id]}</p>}</th><td><select aria-label={`Answer for ${row.filename}`} value={row.label} disabled={locked} onChange={e=>{setRows(old=>old.map(r=>r.id===row.id?{...r,label:e.target.value}:r));changed();}}><option value="">Choose answer</option>{outcomes.map(value=><option key={value}>{value}</option>)}</select></td><td><input aria-label={`Item reference for ${row.filename}`} value={row.groupId} disabled={locked} onChange={e=>{setRows(old=>old.map(r=>r.id===row.id?{...r,groupId:e.target.value}:r));changed();}}/></td><td><input type="checkbox" aria-label={`Include ${row.filename}`} checked={!excluded[row.id]} disabled={locked} onChange={e=>{setExcluded(old=>({...old,[row.id]:!e.target.checked}));changed();}}/></td></tr>)}</tbody></table></div>
         {rows.length>20&&<div className={styles.actions}><button disabled={page===0} onClick={()=>setPage(p=>p-1)}>Previous photos</button><span>Page {page+1} of {Math.ceil(rows.length/20)}</span><button disabled={(page+1)*20>=rows.length} onClick={()=>setPage(p=>p+1)}>Next photos</button></div>}

@@ -4,9 +4,22 @@ import Image from 'next/image';
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import { imageApi, imageAnswerLabel, imageDigest, imageQuestion, ImageApiError, type ImageQuestion, type ImageResponse } from '@/lib/images';
 import styles from './image-decision-panel.module.css';
+import { ImageBatchPanel } from './image-batch-panel';
 
 type Props = { owner: string; token: () => Promise<string>; apiUrl: string; storageUrl: string; modelId?: string; question?: ImageQuestion };
-export function ImageDecisionPanel(props: Props) { return <ImagePanel key={`${props.owner}:${props.modelId || 'stock'}`} {...props} />; }
+export function ImageDecisionPanel(props: Props) { return <ImageTools key={`${props.owner}:${props.modelId || 'stock'}`} {...props} />; }
+function ImageTools(props: Props) {
+  const [mode, setMode] = useState<'batch' | 'single'>('batch');
+  const id = useId();
+  return <div>
+    <div role="group" aria-label="Image testing mode" className={styles.tabs}>
+      <button aria-pressed={mode === 'batch'} aria-controls={`${id}-batch`} onClick={() => setMode('batch')}>Batch images</button>
+      <button aria-pressed={mode === 'single'} aria-controls={`${id}-single`} onClick={() => setMode('single')}>One image</button>
+    </div>
+    <div id={`${id}-batch`} hidden={mode !== 'batch'}><ImageBatchPanel {...props} /></div>
+    <div id={`${id}-single`} hidden={mode !== 'single'}><ImagePanel {...props} /></div>
+  </div>;
+}
 function ImagePanel({ token, apiUrl, storageUrl, modelId, question }: Props) {
   const panelId = useId();
   const api = useMemo(() => imageApi(apiUrl, storageUrl, token), [apiUrl, storageUrl, token]);

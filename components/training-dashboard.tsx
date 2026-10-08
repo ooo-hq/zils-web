@@ -274,9 +274,10 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
       <button role="tab" aria-selected={vertical === 'text'} aria-controls="text-workspace" onClick={() => setVertical('text')}>Text</button>
       <button role="tab" aria-selected={vertical === 'images'} aria-controls="image-workspace" onClick={() => setVertical('images')}>Images</button>
     </div>}
-    {vertical === 'images' && config.decisionApiUrl && <div id="image-workspace" role="tabpanel"><ImageDecisionPanel owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storageUrl={config.url} />
+    {vertical === 'images' && config.decisionApiUrl && <div id="image-workspace" role="tabpanel">
       {imageProfile && imageService && <ImageTrainingIntake owner={owner} token={imageToken} trainingApi={api} imageApi={imageService} profile={imageProfile} resumeJob={jobs.find(job => job.model?.id === 'imajev-4b-v1' && job.status === 'uploading')} onSubmitted={replaceJob} />}
       {runRows(jobs.filter(job => job.model?.id === 'imajev-4b-v1'), 'Image runs')}
+      <details className={imageStyles.stockTest} open={!imageProfile}><summary>Test images with the starting model</summary><p>Try a batch or a single photo. To use a trained model, open its completed run above.</p><ImageDecisionPanel owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storageUrl={config.url} /></details>
     </div>}
     <div id="text-workspace" role="tabpanel" hidden={vertical !== 'text'}>
     {error && <p className={styles.error} role="alert">{error}</p>}

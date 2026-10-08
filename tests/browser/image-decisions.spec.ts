@@ -42,6 +42,7 @@ async function workspace(page: Page, options: { expired?: boolean; disabled?: bo
 }
 async function enterPhoto(page: Page) {
   await page.getByRole('tab', { name: 'Images', exact: true }).click();
+  await page.getByRole('button', { name: 'One image', exact: true }).click();
   await page.getByLabel('Photo', { exact: true }).setInputFiles({ name: 'inspection.png', mimeType: 'image/png', buffer: png });
   await page.getByLabel('Image decision', { exact: true }).fill('Is the product damaged?');
   await page.getByLabel('Possible answers', { exact: true }).fill('Normal\nDamaged');

@@ -24,3 +24,17 @@
 .tabs button { min-height:44px; padding:10px 20px; background:none; border:0; border-bottom:2px solid transparent; color:var(--zils-muted); cursor:pointer; }
 .tabs button[aria-selected=true] { border-color:var(--zils-accent); color:var(--zils-ink); }
 @media(max-width:650px) { .panel { padding:20px; }.form { grid-template-columns:minmax(0,1fr); gap:20px; }.heading h2 { font-size:24px; } }
+.tabs button[aria-pressed=true] { border-bottom-color:var(--zils-accent); color:var(--zils-ink); }
+.stockTest { margin:32px 0; padding:22px 0; border-top:1px solid var(--zils-edge); }
+.stockTest>summary { font-size:16px; font-weight:500; cursor:pointer; min-height:32px; }
+.stockTest>p { color:var(--zils-muted); font-size:13px; }
+.fields .secondaryButton { background:transparent; color:var(--zils-ink); border:1px solid var(--zils-edge-strong); margin-top:12px; }
+.batchResults { margin-top:28px; border-top:1px solid var(--zils-edge); padding-top:16px; }
+.resultHeading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin:12px 0; }
+.resultHeading h3 { font-size:18px; font-weight:500; }
+.resultHeading button,.resultHeading a { display:inline-flex; align-items:center; min-height:44px; border:1px solid var(--zils-edge-strong); padding:8px 14px; border-radius:5px; color:var(--zils-ink); background:var(--zils-page); font:inherit; font-size:13px; cursor:pointer; text-decoration:none; }
+.resultHeading button:disabled { opacity:.5; cursor:default; }
+.resultTable { overflow:auto; max-height:520px; }
+.resultTable table { width:100%; border-collapse:collapse; font-size:13px; text-align:left; }
+.resultTable td,.resultTable th { border-bottom:1px solid var(--zils-edge); padding:12px 10px; overflow-wrap:anywhere; min-width:110px; vertical-align:top; }
+.resultTable th { font-weight:500; }
