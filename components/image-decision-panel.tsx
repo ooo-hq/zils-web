@@ -1,13 +1,14 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import { imageApi, imageAnswerLabel, imageDigest, imageQuestion, ImageApiError, type ImageQuestion, type ImageResponse } from '@/lib/images';
 import styles from './image-decision-panel.module.css';
 
 type Props = { owner: string; token: () => Promise<string>; apiUrl: string; storageUrl: string; modelId?: string; question?: ImageQuestion };
 export function ImageDecisionPanel(props: Props) { return <ImagePanel key={`${props.owner}:${props.modelId || 'stock'}`} {...props} />; }
 function ImagePanel({ token, apiUrl, storageUrl, modelId, question }: Props) {
+  const panelId = useId();
   const api = useMemo(() => imageApi(apiUrl, storageUrl, token), [apiUrl, storageUrl, token]);
   const [model, setModel] = useState(modelId || '');
   const [file, setFile] = useState<File | null>(null);
@@ -86,18 +87,18 @@ function ImagePanel({ token, apiUrl, storageUrl, modelId, question }: Props) {
     } finally { if (!controller.signal.aborted) setBusy(false); }
   }
   const answer = result && Object.values(result.answers)[0];
-  return <section className={styles.panel} aria-labelledby="image-panel-title">
-    <div className={styles.heading}><span>Images</span><h2 id="image-panel-title">Try an image.</h2><p>Choose a photo and describe the decision. Zils picks from your possible answers.</p></div>
+  return <section className={styles.panel} aria-labelledby={`${panelId}-title`}>
+    <div className={styles.heading}><span>Images</span><h2 id={`${panelId}-title`}>{modelId ? 'Try your image model.' : 'Try an image.'}</h2><p>{modelId ? 'Your saved decision and answers are fixed for this model.' : 'Choose a photo and describe the decision. Zils picks from your possible answers.'}</p></div>
     <form onSubmit={analyze} className={styles.form}>
       <div className={styles.photo}>
-        <label htmlFor="image-photo">Photo</label><input id="image-photo" disabled={busy} type="file" accept="image/jpeg,image/png" onChange={event => void choose(event.target.files?.[0])} />
+        <label htmlFor={`${panelId}-photo`}>Photo</label><input id={`${panelId}-photo`} disabled={busy} type="file" accept="image/jpeg,image/png" onChange={event => void choose(event.target.files?.[0])} />
         <p className={styles.hint}>One JPEG or PNG, up to 10 MB. Your photo is private and expires after 24 hours.</p>
         {preview && <figure>{/* Local object URL; the full original file goes to private Storage. */}<Image src={preview} alt="Selected photo preview" width={800} height={600} unoptimized /><figcaption>{file?.name}</figcaption></figure>}
       </div>
       <div className={styles.fields}>
-        <label htmlFor="image-question">Image decision</label><textarea id="image-question" rows={3} value={instructions} readOnly={Boolean(question)} onChange={event => setInstructions(event.target.value)} placeholder="Is this product damaged?" required disabled={busy} />
-        <label htmlFor="image-answers">Possible answers</label><textarea id="image-answers" rows={3} value={answers} readOnly={Boolean(question)} onChange={event => setAnswers(event.target.value)} required disabled={busy} /><p className={styles.hint}>One answer per line. Use 2–16 answers.</p>
-        <details><summary>Additional information</summary><label htmlFor="image-state">Structured context (optional JSON)</label><textarea id="image-state" rows={3} value={state} onChange={event => setState(event.target.value)} placeholder={'{"product": "headphones"}'} disabled={busy} /></details>
+        <label htmlFor={`${panelId}-question`}>Image decision</label><textarea id={`${panelId}-question`} rows={3} value={instructions} readOnly={Boolean(question)} onChange={event => setInstructions(event.target.value)} placeholder="Is this product damaged?" required disabled={busy} />
+        <label htmlFor={`${panelId}-answers`}>Possible answers</label><textarea id={`${panelId}-answers`} rows={3} value={answers} readOnly={Boolean(question)} onChange={event => setAnswers(event.target.value)} required disabled={busy} /><p className={styles.hint}>One answer per line. Use 2–16 answers.</p>
+        <details><summary>Additional information</summary><label htmlFor={`${panelId}-state`}>Structured context (optional JSON)</label><textarea id={`${panelId}-state`} rows={3} value={state} onChange={event => setState(event.target.value)} placeholder={'{"product": "headphones"}'} disabled={busy} /></details>
         <button type="submit" disabled={!file || !model || busy}>{busy ? 'Working…' : 'Analyze image'}</button>
         {progress && <p role="status">{progress}</p>}{error && <p role="alert" className={styles.error}>{error}</p>}
       </div>

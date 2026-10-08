@@ -66,3 +66,13 @@ test('image upload retries only missing bytes, limits concurrency to two and exc
   assert.ok(![...records.values()].some(row=>row.filename===all[0].filename));
   for(const id of completedBefore)assert.equal(attempts.get(id),1);
 });
+
+test('resuming image uploads rejects changed frozen quality targets before network calls', async()=>{
+ const {prepareImageTraining,imageDraftFingerprint,uploadImageTraining}=subject();
+ const p=prepareImageTraining(examples(),question,Object.keys(question.criteria),'seed');
+ const acceptance={min_accuracy:.8,min_brier_improvement:.01};
+ const draft={job:{id:'10000000-0000-4000-8000-000000000001',acceptance,image_intake:{snapshot_sha256:await imageDraftFingerprint(p,question)}},assets:{}};
+ let calls=0;const api=new Proxy({}, {get(){return ()=>{calls++;throw new Error('unexpected network');};}});
+ await assert.rejects(uploadImageTraining(p,question,{acceptance:{...acceptance,min_accuracy:.5}},api,api,draft),/targets|changed|new run/);
+ assert.equal(calls,0);
+});

@@ -10,25 +10,31 @@ export const submissionSchema = z.object({
   allow_training_data_export: z.literal(true, { error: 'Confirm permission to export training data to approved workers.' }),
 });
 export type Submission = z.infer<typeof submissionSchema>;
+export const imageAcceptanceSchema = acceptanceSchema.extend({ positive_class: z.string().min(1).optional(), min_positive_recall: z.number().min(0).max(1).optional(), max_false_positive_rate: z.number().min(0).max(1).optional(), min_class_recall: z.record(z.string(), z.number().min(0).max(1)).optional() });
 export const imageIntakeSchema = z.object({ version: z.literal('zils-image-intake/v1'), seed: z.string().min(1).max(100), snapshot_sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict();
 export const imageSubmissionSchema = submissionSchema.extend({ model: z.literal('imajev-4b-v1'), image_intake: imageIntakeSchema,
-  acceptance: acceptanceSchema.extend({ positive_class: z.string().min(1).optional(), min_positive_recall: z.number().min(0).max(1).optional(), max_false_positive_rate: z.number().min(0).max(1).optional(), min_class_recall: z.record(z.string(), z.number().min(0).max(1)).optional() }),
+  acceptance: imageAcceptanceSchema,
 });
 export type ImageSubmission = z.infer<typeof imageSubmissionSchema>;
 
 export const STATUSES = ['uploading', 'validating', 'awaiting_approval', 'queued', 'running', 'evaluating', 'completed', 'failed'] as const;
 const metrics = z.object({ accuracy: z.number().min(0).max(1), brier: z.number().min(0).max(2), skill: z.number().min(0).max(1) });
+const count = z.number().int().nonnegative();
+const rate = z.number().min(0).max(1);
+const imageMetricFields = { count: count.optional(), cases: count.optional(), nll: z.number().nonnegative().optional(), unknown_rate: rate.optional(), unknown_count: count.optional(), outcome_order: z.array(z.string()).optional(), confusion: z.record(z.string(), z.record(z.string(), count)).optional(), per_class: z.record(z.string(), z.object({ support: count, true_positives: count, false_negatives: count, false_positives: count, negatives: count, recall: rate.nullable(), false_positive_rate: rate.nullable() })).optional() };
 const modelSchema = z.object({ id: z.enum(['kev-0.8b-v1', 'jevk5-4b-v0.3', 'imajev-4b-v1']), name: z.string(), base: z.string(), base_revision: z.string().regex(/^[a-f0-9]{40}$/) });
 export const jobSchema = z.object({
   id: z.string().uuid(), name: z.string(), status: z.enum(STATUSES), created_at: z.string().optional(), error: z.string().nullable().optional(),
   model: modelSchema.nullable().optional(),
+  acceptance: imageAcceptanceSchema.optional(),
   image_intake: imageIntakeSchema.nullable().optional(),
   data_expires_at: z.string().nullable().optional(),
-  workflow: z.object({ state: z.string(), message: z.string().optional(), model_id: z.string().optional(), fingerprint: z.string().optional() }).nullable().optional(),
+  workflow: z.object({ state: z.string(), message: z.string().optional(), model_id: z.string().optional(), model_alias: z.string().optional(), fingerprint: z.string().optional() }).nullable().optional(),
   result: z.object({
-    delivery: z.object({ status: z.enum(['accepted', 'no_qualifying_model']), uid: z.number().optional(), sha256: z.string().optional(), brier_improvement: z.number().optional(), acceptance: acceptanceSchema }),
-    baseline: metrics,
-    miners: z.array(z.object({ uid: z.number(), status: z.string(), accuracy: z.number().optional(), brier: z.number().optional(), skill: z.number().optional() })),
+    delivery: z.object({ status: z.enum(['accepted', 'no_qualifying_model']), uid: z.number().optional(), sha256: z.string().optional(), brier_improvement: z.number().optional(), acceptance: imageAcceptanceSchema }),
+    image_metrics_version: z.literal('zils-image-metrics/v1').optional(),
+    baseline: metrics.extend(imageMetricFields),
+    miners: z.array(z.object({ uid: z.number(), status: z.string(), accuracy: z.number().optional(), brier: z.number().optional(), skill: z.number().optional(), ...imageMetricFields })),
     weights: z.record(z.string(), z.number()),
   }).nullable().optional(),
 });

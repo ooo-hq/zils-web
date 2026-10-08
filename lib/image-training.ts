@@ -57,6 +57,7 @@ export async function imageDraftFingerprint(prepared:PreparedImageTraining, ques
 export async function uploadImageTraining(prepared:PreparedImageTraining, question:ImageQuestion, input:Omit<ImageSubmission,'model'|'image_intake'>, training:ReturnType<typeof trainingApi>, images:ReturnType<typeof imageApi>, draft:ImageDraft, signal?:AbortSignal, progress:(text:string)=>void=()=>{}):Promise<Job> {
   const digests=await hashes(prepared,signal), snapshot=await fingerprint(prepared,question,digests);signal?.throwIfAborted();
   if(draft.job && draft.job.image_intake?.snapshot_sha256!==snapshot) throw new Error('These photos, labels or settings changed. Start a new run.');
+  if(draft.job?.acceptance && JSON.stringify(Object.entries(draft.job.acceptance).sort()) !== JSON.stringify(Object.entries(input.acceptance || {}).sort())) throw new Error('Quality targets changed. Restore the saved targets or start a new run.');
   if(!draft.job) {progress('Saving your reviewed training plan…');const created=await training.createImage({...input,model:'imajev-4b-v1',image_intake:{version:'zils-image-intake/v1',seed:prepared.seed,snapshot_sha256:snapshot}},signal);draft.job=created.job;}
   const job=draft.job;
   const previous=await training.imageAssets(job.id,signal);

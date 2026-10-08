@@ -15,6 +15,7 @@ import { useAuthSession } from '@/components/auth-session';
 import { currentTrainingJob, trainingProgress } from '@/lib/training-status';
 import { ImageDecisionPanel } from '@/components/image-decision-panel';
 import { imageApi, type ImageModels } from '@/lib/images';
+import { ImageTrainingResults, PrivateImageTest } from '@/components/image-training-results';
 import { ImageTrainingIntake } from '@/components/image-training-intake';
 import imageStyles from '@/components/image-decision-panel.module.css';
 import styles from '@/app/(home)/train/train.module.css';
@@ -213,6 +214,11 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
   function runDetails(job: Job) {
     return <>
       <TrainingRunStatus job={job} />
+      {job.model?.id === 'imajev-4b-v1' && <>
+        {job.data_expires_at && <p>Training photos expire {new Date(job.data_expires_at).toLocaleString()}. Saved evaluation results remain available.</p>}
+        <ImageTrainingResults job={job} />
+        {config.decisionApiUrl && <PrivateImageTest key={`${owner}:${job.id}`} job={job} owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storageUrl={config.url} />}
+      </>}
       {job.error && <p role="alert" className={styles.error}>{job.error}</p>}
       {job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1' && <div className={styles.actions}>
         <button className={styles.secondary} disabled={busy} onClick={() => retrySubmit(job)}>Retry submission</button>
@@ -235,7 +241,7 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
         {job.created_at && <p>Submitted {new Date(job.created_at).toLocaleString()}</p>}
         {job.model && <p>Starting model: <strong>{job.model.name}</strong></p>}
         {job.status === 'completed' && !job.result && <p>Result details are not available yet. Refresh to try again.</p>}
-        {job.result && <>
+        {job.result && job.model?.id !== 'imajev-4b-v1' && <>
           <p className={styles.help}>Measured on examples held aside from training. Results are not a guarantee on future inputs.</p>
           <div className={styles.metrics}><div><span>Base model accuracy</span><strong>{metric(job.result.baseline.accuracy, true)}</strong></div><div><span>Base model Brier loss</span><strong>{metric(job.result.baseline.brier)}</strong></div></div>
           <p className={styles.help}>Required: {metric(job.result.delivery.acceptance.min_accuracy, true)} accuracy; {metric(job.result.delivery.acceptance.min_brier_improvement)} absolute Brier improvement.</p>
