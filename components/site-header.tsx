@@ -13,6 +13,7 @@ const LINKS = [
   { href: '/model', label: 'research', id: 'model' },
   { href: '/bittensor', label: 'bittensor' },
   { href: '/playground', label: 'playground' },
+  { href: '/pricing', label: 'pricing' },
 ] as const;
 
 /** Everything else lives in the footer (components/site-footer.tsx). */
@@ -37,7 +38,7 @@ export function SiteHeader({ current, tone = 'dark' }: { current?: string; tone?
       <Link href="/" aria-label="Zils home" className={`col-start-1 row-start-1 justify-self-start leading-none ${tone === 'light' ? 'text-ink' : 'text-white'}`}>
         <ZilsWordmark className="text-[42px]" />
       </Link>
-      <nav aria-label="Main navigation" className="col-span-2 row-start-2 flex items-center justify-center gap-2 justify-self-center text-[13px] font-medium md:col-span-1 md:col-start-2 md:row-start-1 md:gap-4">
+      <nav aria-label="Main navigation" className="col-span-2 row-start-2 flex max-w-full flex-wrap items-center justify-center gap-1 justify-self-center text-[13px] font-medium md:col-span-1 md:col-start-2 md:row-start-1 md:gap-4">
         {LINKS.map((link) => {
           const active = current === ('id' in link ? link.id : link.label);
           return (
@@ -45,7 +46,7 @@ export function SiteHeader({ current, tone = 'dark' }: { current?: string; tone?
               key={link.href}
               href={link.href}
               aria-current={active ? 'page' : undefined}
-              className={`relative inline-flex min-h-11 items-center px-3 transition-colors ${active
+              className={`relative inline-flex min-h-11 items-center px-1 transition-colors md:px-3 ${active
                 ? (tone === 'light' ? 'text-accent' : 'text-white')
                 : (tone === 'light' ? 'text-muted hover:text-ink' : 'text-neutral-400 hover:text-white')}`}
             >
