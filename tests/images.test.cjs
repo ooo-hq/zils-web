@@ -51,3 +51,11 @@ test('predictions use the current owner session and dedicated gateway route', as
   assert.deepEqual(calls.map(x => x.url), ['https://api.example/v1/image-decisions', 'https://api.example/v1/image-decisions']);
   assert.equal(calls[1].options.headers.Authorization, 'Bearer refreshed');
 });
+
+test('native input limits explain how to correct the request', async () => {
+  const { imageApi, ImageApiError } = moduleUnderTest();
+  for (const [status, message] of [[413, /shorten.*context/i], [422, /shorter instructions/i]]) {
+    const api = imageApi('https://api.example', 'https://storage.example', async () => 'session', async () => new Response('{}', { status }));
+    await assert.rejects(api.predict(body), error => error instanceof ImageApiError && error.status === status && message.test(error.message));
+  }
+});
