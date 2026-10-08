@@ -34,7 +34,7 @@ export type BillingSummary = z.infer<typeof summarySchema>;
 export type CheckoutIntent = z.infer<typeof intentSchema>;
 
 export class BillingError extends Error {
-  constructor(message: string, public readonly status: number, public readonly code?: 'checkout_paid') { super(message); this.name = 'BillingError'; }
+  constructor(message: string, public readonly status: number, public readonly code?: 'checkout_paid' | 'billing_unavailable') { super(message); this.name = 'BillingError'; }
 }
 
 export function billingApi(rawUrl: string, token: () => Promise<string>, request: typeof fetch = fetch) {
@@ -56,8 +56,14 @@ export function billingApi(rawUrl: string, token: () => Promise<string>, request
       });
     } catch { throw new BillingError('The billing service could not be reached. Check your connection and try again.', 0); }
     if (!response.ok) {
-      const code = response.status === 409 && z.object({ error: z.object({ code: z.literal('checkout_paid') }) }).safeParse(await response.json().catch(() => null)).success ? 'checkout_paid' : undefined;
-      const message = response.status === 401 ? 'Your session has expired. Please sign in again.'
+      const failure = z.object({ error: z.object({ code: z.enum(['checkout_paid', 'invalid_credentials']) }) }).safeParse(await response.json().catch(() => null));
+      const serviceCode = failure.success ? failure.data.error.code : undefined;
+      // Older gateways send unknown billing routes through API-key authentication.
+      // That rejection does not mean the Supabase user session has expired.
+      const code = response.status === 401 && serviceCode === 'invalid_credentials' ? 'billing_unavailable'
+        : response.status === 409 && serviceCode === 'checkout_paid' ? 'checkout_paid' : undefined;
+      const message = code === 'billing_unavailable' ? 'Billing is not connected on this site yet. Please try again later.'
+        : response.status === 401 ? 'Your session has expired. Please sign in again.'
         : response.status === 403 ? 'Your account does not have permission to manage billing.'
         : response.status === 409 ? 'This checkout could not be continued. Refresh your billing details to check its status.'
         : response.status === 410 ? 'This checkout has expired. Choose an amount to start again.'

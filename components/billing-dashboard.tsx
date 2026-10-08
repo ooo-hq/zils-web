@@ -43,7 +43,7 @@ function AccountBilling({ config, client, owner, testPreview, checkoutReturn }: 
   const scopeFor = useCallback((mode: string) => `${config.apiUrl}:${owner}:${mode}`, [config.apiUrl, owner]);
   const handleError = useCallback((error: unknown) => {
     setError(error instanceof BillingError ? error.message : 'Billing could not be loaded. Please refresh and try again.');
-    if (error instanceof BillingError && error.status === 401) setExpired(true);
+    setExpired(error instanceof BillingError && error.status === 401 && error.code !== 'billing_unavailable');
   }, []);
   const load = useCallback((signal: AbortSignal) => api.summary(signal)
     .then(result => {

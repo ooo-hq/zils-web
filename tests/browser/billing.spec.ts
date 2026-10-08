@@ -8,7 +8,7 @@ const summary = {
   payments: [{ id: purchase, amount_cents: 500, status: 'paid', created_at: '2026-10-08T12:00:00Z', receipt_url: 'https://pay.stripe.com/receipts/payment/test' }],
 };
 
-async function billing(page: Page, options: { signedIn?: boolean; mode?: string; checkout?: 'fail' | 'unsafe' | 'expired' | 'paid' | 'conflict'; training402?: boolean } = {}) {
+async function billing(page: Page, options: { signedIn?: boolean; mode?: string; billingAuth?: 'legacy' | 'expired'; checkout?: 'fail' | 'unsafe' | 'expired' | 'paid' | 'conflict'; training402?: boolean } = {}) {
   const user = { id: '10000000-0000-4000-8000-000000000002', email: 'client@example.com', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
   const expires = Math.floor(Date.now() / 1000) + 3600;
   const token = `${Buffer.from(JSON.stringify({ alg: 'HS256' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: user.id, exp: expires })).toString('base64url')}.browser-test`;
@@ -29,7 +29,13 @@ async function billing(page: Page, options: { signedIn?: boolean; mode?: string;
     if (url.pathname.startsWith('/auth/v1/')) return route.fulfill({ json: user, headers });
     if (url.pathname === '/v1/jobs') return route.fulfill({ json: { jobs: options.training402 ? [{ id: purchase, name: 'Saved training run', status: 'uploading' }] : [] }, headers });
     if (url.pathname === `/v1/jobs/${purchase}/submit`) return route.fulfill({ status: 402, json: { error: 'Add credit before submitting this job.' }, headers });
-    if (url.pathname === '/v1/billing') return route.fulfill({ json: { ...summary, mode: options.mode || 'test' }, headers });
+    if (url.pathname === '/v1/billing') {
+      if (options.billingAuth) return route.fulfill({ status: 401, json: { error: {
+        code: options.billingAuth === 'legacy' ? 'invalid_credentials' : 'service_unavailable',
+        message: options.billingAuth === 'legacy' ? 'API key is invalid or revoked.' : 'Your session has expired; sign in again.',
+      } }, headers });
+      return route.fulfill({ json: { ...summary, mode: options.mode || 'test' }, headers });
+    }
     if (url.pathname === '/v1/billing/checkout') {
       checkouts.push(route.request().postDataJSON());
       if (options.checkout === 'expired') return route.fulfill({ status: 410, json: {}, headers });
@@ -48,6 +54,24 @@ test('signed-out billing offers existing sign-in and never requests private bala
   await expect(page.getByRole('heading', { name: 'Sign in to view billing' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Add $5', exact: true })).toHaveCount(0);
   expect(requests).not.toContain('/v1/billing');
+});
+
+test('unavailable billing keeps the valid workspace session and never asks for another sign-in', async ({ page }) => {
+  const { requests } = await billing(page, { billingAuth: 'legacy' });
+  await page.goto('/billing');
+  await expect(page.locator('main').getByRole('alert')).toHaveText('Billing is not connected on this site yet. Please try again later.');
+  await expect(page.getByRole('link', { name: 'Sign in again', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Add $5', exact: true })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Your workspace', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Train a model', exact: true })).toBeVisible();
+  expect(requests).not.toContain('/auth/v1/logout');
+});
+
+test('an expired billing session still offers a sign-in link', async ({ page }) => {
+  await billing(page, { billingAuth: 'expired' });
+  await page.goto('/billing');
+  await expect(page.locator('main').getByRole('alert')).toContainText('Your session has expired.');
+  await expect(page.getByRole('link', { name: 'Sign in again', exact: true })).toBeVisible();
 });
 
 test('billing shows exact server balances, reservations, allowance, receipts and test-only amounts', async ({ page }) => {
