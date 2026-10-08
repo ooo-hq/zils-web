@@ -57,7 +57,8 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
   const [jobs, setJobs] = useState<Job[]>([]);
   const [availableModels, setAvailableModels] = useState<Job[]>([]);
   const [selectedId, setSelectedId] = useState('');
-  const [modelToUse, setModelToUse] = useState('');
+  const [modelToUse, setModelToUse] = useState<{ id: string } | null>(null);
+  const [collapsedRun, setCollapsedRun] = useState('');
   const [panelOpen, setPanelOpen] = useState(false);
   const [downloadJobId, setDownloadJobId] = useState('');
   const focusSubmitted = useRef(false);
@@ -80,15 +81,14 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
   const history = [...jobs, ...availableModels.filter(model => !jobs.some(job => job.id === model.id))];
   useEffect(() => {
     if (!modelToUse) return;
-    const target = document.getElementById(`use-model-${modelToUse}`);
+    const target = document.getElementById(`use-model-${modelToUse.id}`);
     if (target) { target.scrollIntoView({ block: 'start' }); target.focus({ preventScroll: true }); }
-  }, [modelToUse, selectedId]);
+  }, [modelToUse]);
   function useModel(job: Job) {
+    if (job.id === selected?.id) setCollapsedRun('');
     if (job.id !== selected?.id) setSelectedId(job.id);
-    setModelToUse(job.id);
-    // Repeated clicks still return to the example when it is already open.
-    const target = document.getElementById(`use-model-${job.id}`);
-    if (target) { target.scrollIntoView({ block: 'start' }); target.focus({ preventScroll: true }); }
+    // Each click focuses the example after its containing run has opened.
+    setModelToUse({ id: job.id });
   }
   const api = useMemo(() => trainingApi(config.apiUrl, config.url, async () => {
     const { data, error } = await client.auth.getSession();
@@ -276,11 +276,13 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
         <p>{refreshError ? 'Try checking again in a moment.' : 'Bring a decision and a few reviewed examples. Zils will guide you through the rest.'}</p>
         {refreshError ? <button className={styles.secondary} onClick={refresh} disabled={refreshing}>Try again</button> : <SheetTrigger asChild><button className={styles.secondary}>Get started</button></SheetTrigger>}
       </section> : <div>
-        <div className={styles.currentLabel}><span>{terminal(selected) ? 'Latest run' : 'Current run'}</span><button className={styles.textButton} onClick={refresh} disabled={busy || refreshing}>{refreshing ? 'Checking…' : 'Refresh status'}</button></div>
-        <section className={`${styles.panel} ${styles.currentRun}`} aria-labelledby="current-run-title">
+        <div className={styles.currentLabel}><button type="button" className={styles.runToggle} aria-expanded={collapsedRun !== selected.id} aria-controls="current-run-details" onClick={() => setCollapsedRun(previous => previous === selected.id ? '' : selected.id)}><ChevronDown size={16} aria-hidden="true" />{terminal(selected) ? 'Latest run' : 'Current run'}</button><button className={styles.textButton} onClick={refresh} disabled={busy || refreshing}>{refreshing ? 'Checking…' : 'Refresh status'}</button></div>
+        <section className={`${styles.panel} ${styles.currentRun}`} aria-labelledby="current-run-title" data-collapsed={collapsedRun === selected.id}>
           <div className={styles.currentRunHeader}><h2 id="current-run-title" ref={statusMessage} tabIndex={-1}>{selected.name}</h2><span className={styles.runBadge} data-tone={trainingProgress(selected).tone}>{trainingProgress(selected).label}</span></div>
+          <div id="current-run-details" hidden={collapsedRun === selected.id}>
           {runDetails(selected)}
           <p className={styles.statusFreshness} data-stale={refreshError}>{refreshError ? 'Connection interrupted. Showing the last known status; we’ll retry automatically.' : <>Last checked {checkedAt ? new Date(checkedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'just now'}. {!terminal(selected) && 'Updates automatically.'}</>}</p>
+          </div>
         </section>
       </div>}
       {runRows(jobs.filter(job => job.id !== selected?.id && !terminal(job)), 'Other active runs')}

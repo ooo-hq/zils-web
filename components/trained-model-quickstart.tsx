@@ -3,28 +3,37 @@
 import { useId, useRef, useState, type ReactNode } from 'react';
 import { Check, Copy, Download } from 'lucide-react';
 import { modelQuickstart, type ExampleLanguage } from '@/lib/model-quickstart';
+import { HighlightedCode, type CodeLanguage } from '@/components/highlighted-code';
 import training from '@/app/(home)/train/train.module.css';
 import styles from './trained-model-quickstart.module.css';
 
-function CopyField({ label, value, multiline = false }: { label: string; value: string; multiline?: boolean }) {
+function CopyField({ label, value, language }: { label: string; value: string; language?: CodeLanguage }) {
   const id = useId();
-  const field = useRef<HTMLTextAreaElement>(null);
+  const field = useRef<HTMLElement>(null);
   const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
+  function selectText() {
+    if (!field.current) return;
+    field.current.focus();
+    const range = document.createRange(); range.selectNodeContents(field.current);
+    const selection = window.getSelection(); selection?.removeAllRanges(); selection?.addRange(range);
+  }
   async function copy() {
     setCopied(false); setFailed(false);
     try { await navigator.clipboard.writeText(value); setCopied(true); }
-    catch { setFailed(true); field.current?.focus(); field.current?.select(); }
+    catch { setFailed(true); selectText(); }
   }
-  return <div className={styles.copyField}>
+  return <div className={`${styles.copyField} ${language ? '' : styles.compact}`}>
     <div className={styles.fieldHeading}>
-      <label htmlFor={id}>{label}</label>
+      <span id={id}>{label}</span>
       <button type="button" className={training.secondary} onClick={copy}>
         {copied ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
         {copied ? 'Copied' : `Copy ${label === 'API model name' ? 'model name' : label === 'API model ID' ? 'model ID' : label === 'Example code' ? 'code' : 'command'}`}
       </button>
     </div>
-    <textarea id={id} ref={field} readOnly spellCheck={false} value={value} rows={multiline ? 14 : 3} wrap={multiline ? 'off' : 'soft'} className={`${styles.field} ${multiline ? styles.code : ''}`} onClick={() => { if (!multiline) field.current?.select(); }} />
+    {language
+      ? <pre tabIndex={0} aria-labelledby={id} className={`${styles.field} ${styles.code}`}><code ref={field} tabIndex={-1}><HighlightedCode code={value} language={language} /></code></pre>
+      : <code ref={field} tabIndex={0} aria-labelledby={id} className={styles.modelName} onClick={selectText}>{value}</code>}
     <span className={styles.copyStatus} role="status">{failed ? 'Copy was blocked. The text is selected: press ⌘C on Mac or Ctrl+C on Windows.' : copied ? `${label} copied.` : ''}</span>
   </div>;
 }
@@ -57,14 +66,14 @@ export function TrainedModelQuickstart({ modelId, modelName, apiUrl, apiKeys }: 
           {(['Python', 'JavaScript'] as const).map(item => <button type="button" key={item} aria-pressed={language === item} onClick={() => setLanguage(item)}>{item}</button>)}
           <span>{language === 'Python' ? 'Python 3 · No packages to install' : 'Node.js 20+ · Run on your server'}</span>
         </div>
-        <CopyField key={`${requestModel}-${apiUrl}-${language}`} label="Example code" value={example.code} multiline />
+        <CopyField key={`${requestModel}-${apiUrl}-${language}`} label="Example code" value={example.code} language={language === 'Python' ? 'python' : 'javascript'} />
         <button type="button" className={training.textButton} onClick={download}><Download size={14} aria-hidden="true" />Download {example.filename}</button>
         <p>The code sends one example’s input and question to your model. Its expected answer stays in your file.</p>
       </li>
       <li>
         <h4>Run your first request</h4>
         <p>In a Mac or Linux terminal, open that folder. Replace <code>YOUR_API_KEY</code> below with your key, then run the command.</p>
-        <CopyField key={language} label="Run command" value={example.command} />
+        <CopyField key={language} label="Run command" value={example.command} language="bash" />
         <p>A successful call prints a JSON response with your model ID and decision probabilities. To use new inputs, replace <code>{language === 'Python' ? 'example["state"]' : 'example.state'}</code> in the code and keep your question.</p>
       </li>
     </ol> : <p className={styles.intro}>The API address is not configured on this website. You can still copy your model ID; contact Zils for connection details.</p>}

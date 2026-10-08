@@ -7,7 +7,7 @@
 .model:last-child { border-bottom:1px solid var(--zils-edge); }
 .identity { flex:1; min-width:0; }
 .identity h3 { font-size:15px; font-weight:500; margin:0 0 8px; overflow-wrap:anywhere; }
-.library .identity input { padding:5px 0; border:0; background:transparent; font-family:var(--font-plex-mono),monospace; font-size:12px; color:var(--zils-muted); text-overflow:ellipsis; }
+.identity code { display:block; width:fit-content; max-width:100%; padding:4px 8px; border-radius:4px; background:var(--zils-surface); font-family:var(--font-plex-mono),monospace; font-size:12px; color:var(--zils-muted); overflow-wrap:anywhere; user-select:all; }
 .ready { display:block; color:var(--zils-muted); font-size:11px; margin-top:5px; }
 .controls { position:relative; display:flex; gap:8px; flex-shrink:0; }
 .notice { position:absolute; top:100%; right:0; margin-top:3px; font-size:11px; color:var(--zils-muted); }

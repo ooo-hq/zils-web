@@ -8,18 +8,25 @@ import styles from './trained-model-library.module.css';
 
 function ModelRow({ job, onUse }: { job: Job; onUse: (job: Job) => void }) {
   const name = job.workflow!.model_name || job.workflow!.model_id!;
-  const field = useRef<HTMLInputElement>(null);
+  const field = useRef<HTMLElement>(null);
   const [notice, setNotice] = useState('');
   const [copied, setCopied] = useState(false);
   async function copy() {
     setNotice(''); setCopied(false);
     try { await navigator.clipboard.writeText(name); setCopied(true); setNotice('Copied.'); }
-    catch { field.current?.focus(); field.current?.select(); setNotice('Text selected. Press ⌘C or Ctrl+C to copy.'); }
+    catch {
+      if (field.current) {
+        field.current.focus();
+        const range = document.createRange(); range.selectNodeContents(field.current);
+        const selection = window.getSelection(); selection?.removeAllRanges(); selection?.addRange(range);
+      }
+      setNotice('Text selected. Press ⌘C or Ctrl+C to copy.');
+    }
   }
   return <li className={styles.model}>
     <div className={styles.identity}>
       <h3>{job.name}</h3>
-      <input ref={field} aria-label={`API name for ${job.name}`} readOnly value={name} onClick={() => field.current?.select()} />
+      <code ref={field} tabIndex={0} aria-label={`API name for ${job.name}`}>{name}</code>
       <span className={styles.ready}>Ready to use{job.created_at && <> · Trained {new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</>}</span>
     </div>
     <div className={styles.controls}>
