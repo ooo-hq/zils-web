@@ -8,6 +8,7 @@ import { DecisionPlayground } from './decision-playground';
 import { SetupQuestionEditor } from './setup-question-editor';
 import { SetupDictation } from './setup-dictation';
 import { SetupResults } from './setup-results';
+import { ZilsSymbol } from './zils-symbol';
 import s from './guided-playground.module.css';
 
 const SAVED = 'zils-saved-decision-setup-v1';
@@ -132,7 +133,7 @@ export function GuidedPlayground({ configured, assistantConfigured, models }: { 
 
   return <div className={s.root}>
     <div className={s.workspaceBar}>
-      <span className={s.workspaceTitle}><span className={s.zilMark} aria-hidden="true">z</span>{advanced ? 'Advanced playground' : 'Build a decision'}</span>
+      <span className={s.workspaceTitle}><span className={s.zilMark}><ZilsSymbol /></span>{advanced ? 'Advanced playground' : 'Build a decision'}</span>
       <button type="button" disabled={Boolean(busy)} className={s.quietButton} onClick={advanced ? () => setAdvanced(false) : openAdvanced}><Code2 size={16} />{advanced ? 'Back to guided setup' : 'Advanced editor'}</button>
     </div>
     <div hidden={advanced}>
@@ -204,7 +205,7 @@ export function GuidedPlayground({ configured, assistantConfigured, models }: { 
 
         <aside className={s.aside} aria-label="Setup summary">
           <div className={s.preview}>
-            <div className={s.previewHeading}><span className={s.smallMark} aria-hidden="true">z</span><span>{draft ? 'Your decision setup' : 'A sentence becomes a setup'}</span></div>
+            <div className={s.previewHeading}><span className={s.smallMark}><ZilsSymbol /></span><span>{draft ? 'Your decision setup' : 'A sentence becomes a setup'}</span></div>
             {!draft && <p className={s.exampleGoal}>“Help me sort customer emails.”</p>}
             <h3>{draft ? draft.title || 'Untitled setup' : 'Customer message routing'}</h3>
             {(draft?.questions || STARTERS[0].draft.questions).map((q, i) => <div className={s.previewQuestion} key={q.id}><span>{i + 1}</span><div><p>{q.prompt || 'Your question goes here'}</p><div className={s.previewOptions}>{(q.kind === 'yes_no' ? ['Yes', 'No'] : q.options.map(o => o.label || 'Answer')).map((label, j) => <span key={j}>{label}</span>)}</div></div></div>)}
