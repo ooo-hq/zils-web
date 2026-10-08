@@ -38,7 +38,7 @@ tracking snippet is needed. Do not install another snippet alongside this one.
 
 Only production builds running on `zils.ai` or `www.zils.ai` initialize tracking.
 Local development and Vercel preview domains do not send analytics. `/admin`,
-`/pricing-lab`, and `/a` routes and their descendants are excluded. Event URLs
+`/pricing-lab`, `/investor-lab`, and `/a` routes and their descendants are excluded. Event URLs
 contain only the origin and path; referrers contain only the origin. Query
 parameters (including campaign parameters) and fragments are removed. No form,
 download, outbound-click, or custom-property tracking is enabled.
@@ -265,6 +265,25 @@ closes the panel and returns focus to the current run.
 
 Training still requires approved workers. Completion may produce no qualifying
 model; an accepted download does not provision a prediction API.
+
+## Investor lab
+
+`/investor-lab` is an unlisted, noindex investor scenario page. Keep it out of
+public navigation and sitemaps. It is not an access-controlled data room:
+anyone with the URL can view the default assumptions. Inputs remain in React
+state, reset on refresh, and are not sent to a backend or analytics.
+
+The starting scenario uses $10,000/month for the combined CEO/developer role,
+$3,000 for business development, $48 for DigitalOcean, and the dated 8 Oct 2026
+SN27 snapshot (1,296 owner alpha/day, $0.604169/alpha). The 50% share applies to
+the owner's allocation, not all subnet emissions. Deal entitlement and timing
+are conditional. Unpriced costs start at zero and are labeled as incomplete.
+
+`lib/investor-model.ts` models alpha sales separately from token value,
+emissions-only break-even, payroll overhead, hosting growth, delayed payouts,
+customer cash receipts and a twelve-month cash forecast. All model months have
+30 days. Negative balances represent a funding gap, not spendable cash. Print
+styles include all scenario inputs for saving an investor discussion as a PDF.
 
 ## Checks and GitHub deployment
 
