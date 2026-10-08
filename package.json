@@ -9,7 +9,7 @@
     "types:check": "next typegen && tsc --noEmit",
     "lint": "eslint",
     "test:browser": "playwright test",
-    "test": "tsc --ignoreConfig --types node --module commonjs --target es2022 --esModuleInterop --skipLibCheck --outDir .private/test-build types/saxen.d.ts lib/training-csv.ts lib/training-spreadsheet.ts lib/training-review.ts lib/training-status.ts lib/model-quickstart.ts lib/api-keys.ts lib/contact.ts lib/training-auth.ts lib/playground-server.ts lib/pricing-model.ts lib/investor-model.ts && node --test tests/*.test.cjs"
+    "test": "tsc --ignoreConfig --types node --module commonjs --target es2022 --esModuleInterop --skipLibCheck --outDir .private/test-build types/saxen.d.ts lib/training-csv.ts lib/training-spreadsheet.ts lib/training-review.ts lib/training-status.ts lib/model-quickstart.ts lib/api-keys.ts lib/billing.ts lib/contact.ts lib/training-auth.ts lib/playground-server.ts lib/pricing-model.ts lib/investor-model.ts && node --test tests/*.test.cjs"
   },
   "dependencies": {
     "@fezchat/artifact-viewers": "^0.1.0",

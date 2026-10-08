@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import Link from 'next/link';
 import { prepareTraining, type ColumnMapping, type CsvData, type PreparedTraining } from '@/lib/training-csv';
 import { readSpreadsheet, type SpreadsheetSheet } from '@/lib/training-spreadsheet';
 import { reviewData, suggestAnswers, suggestMapping, type ReviewEdits } from '@/lib/training-review';
@@ -18,6 +19,7 @@ type Props = {
   pending?: boolean;
   pendingName?: string;
   submissionError: string;
+  needsCredit?: boolean;
   progress: string;
   onStopUpload?: () => void;
 };
@@ -27,7 +29,7 @@ const splitNames = { train: 'Training', calibration: 'Calibration', test: 'Evalu
 const errorMessage = (error: unknown) => error instanceof Error ? error.message.replace(/CSV record/g, 'Spreadsheet row') : 'Could not prepare the file. Try saving it as CSV UTF-8 again.';
 
 // State lives outside SheetContent so closing the panel preserves this browser's draft.
-export function TrainingIntake({ busy, onSubmit, onFiles, onCloseAutoFocus, pending = false, pendingName, submissionError, progress, onStopUpload }: Props) {
+export function TrainingIntake({ busy, onSubmit, onFiles, onCloseAutoFocus, pending = false, pendingName, submissionError, needsCredit = false, progress, onStopUpload }: Props) {
   const [advanced, setAdvanced] = useState(false);
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
@@ -176,7 +178,7 @@ export function TrainingIntake({ busy, onSubmit, onFiles, onCloseAutoFocus, pend
     <div className={styles.sheetBody}>
       {!advanced && <ol className={styles.steps} aria-label="Training setup progress">{steps.map((title, index) => <li key={title} aria-current={step === index ? 'step' : undefined}><span>{index + 1}</span>{title}</li>)}</ol>}
       <h3 className={styles.stepTitle} ref={heading} tabIndex={-1}>{advanced ? 'Upload prepared files.' : stepTitles[step]}</h3>
-      {(error || submissionError) && <p ref={alert} tabIndex={-1} role="alert" className={styles.error}>{error || submissionError}</p>}
+      {(error || submissionError) && <p ref={alert} tabIndex={-1} role="alert" className={styles.error}>{error || submissionError}{!error && needsCredit && <> <Link href="/billing" className={styles.textButton}>Add credit</Link>.</>}</p>}
       {progress && <p role="status" className={styles.notice}>{progress}</p>}
       {onStopUpload && <button type="button" className={styles.secondary} onClick={onStopUpload}>Stop upload</button>}
       {pending && !busy && <p className={styles.notice}>A run is already saved. To recover its upload, prepare the original file here, then close this panel and choose “Resume missing uploads.”</p>}

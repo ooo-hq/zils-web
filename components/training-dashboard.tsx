@@ -1,6 +1,7 @@
 'use client';
 
 import { type SupabaseClient } from '@supabase/supabase-js';
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { canDownload, downloadFiles, SPLITS, submissionSchema, terminal, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
 import { TrainingGuide } from '@/components/training-guide';
@@ -69,6 +70,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
+  const [needsCredit, setNeedsCredit] = useState(false);
   const [cancellable, setCancellable] = useState(false);
   const [files, setFiles] = useState<Partial<Record<Split, File>>>({});
   const [downloads, setDownloads] = useState<{ name: string; url: string }[]>([]);
@@ -97,6 +99,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
   }), [config.apiUrl, config.url, client]);
   const handleError = useCallback((error: unknown) => {
     if (error instanceof TrainingApiError && error.status === 401) { void onExpired(); return; }
+    setNeedsCredit(error instanceof TrainingApiError && error.status === 402);
     setError(message(error));
   }, [onExpired]);
   // A ref avoids restarting polling whenever the auth wrapper rerenders.
@@ -266,7 +269,8 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
         <SheetTrigger asChild><button className={styles.button} disabled={busy}><Plus size={16} aria-hidden="true" />Train a model</button></SheetTrigger>
       </div>
     </div>
-    {error && <p className={styles.error} role="alert">{error}</p>}
+    {process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && <p className={styles.notice}>Billing test preview. Submitting a standard run reserves one included run or $2 in test credit. <Link href="/billing" className={styles.textButton}>View credit and billing</Link>.</p>}
+    {error && <p className={styles.error} role="alert">{error}{needsCredit && process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && <> <Link href="/billing" className={styles.textButton}>Add credit</Link>.</>}</p>}
     {progress && <p role="status" className={styles.notice}>{progress}</p>}
     {busy && cancellable && <button type="button" className={styles.secondary} onClick={() => operation.current?.abort()}>Stop upload</button>}
     {!loading && <TrainedModelLibrary jobs={availableModels} onUse={useModel} />}
@@ -288,7 +292,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
       {runRows(jobs.filter(job => job.id !== selected?.id && !terminal(job)), 'Other active runs')}
       {runRows(history.filter(job => job.id !== selected?.id && terminal(job)), 'Past runs')}
     </div>
-    <TrainingIntake key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={error} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
+    <TrainingIntake key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={error} needsCredit={needsCredit && process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test'} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
       if (focusSubmitted.current) { event.preventDefault(); focusSubmitted.current = false; statusMessage.current?.focus(); }
     }} />
   </Sheet>;
