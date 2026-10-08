@@ -64,7 +64,7 @@ Set the same values in the appropriate Vercel environment before building.
 | `NEXT_PUBLIC_ZILS_GOOGLE_AUTH_ENABLED` | Set to `true` after the Google provider is configured in this environment's Supabase project |
 | `NEXT_PUBLIC_ZILS_TRAINING_API_URL` | Reachable HTTPS training coordinator |
 | `NEXT_PUBLIC_ZILS_API_URL` | Optional decision API base URL for key management and billing; defaults to the training coordinator URL followed by `/decision` |
-| `NEXT_PUBLIC_ZILS_BILLING_PREVIEW` | Set to `test` only on an isolated billing test deployment; leaves live checkout disabled |
+| `NEXT_PUBLIC_ZILS_BILLING_PREVIEW` | Set to `test` only for an isolated test deployment; unset allows checkout only when the API reports `live` |
 | `ZILS_DECISION_API_URL` | Complete server-side inference endpoint URL |
 | `ZILS_DECISION_API_KEY` | Server-only inference bearer credential |
 | `ZILS_DECISION_MODEL` | Exact model identifier expected by the inference server |
@@ -238,7 +238,7 @@ create or train a model. See the
 [decision API documentation](https://github.com/ooo-hq/zils/blob/main/docs/decision-api.md)
 for model selection and server-side requests.
 
-## Billing test preview
+## Account billing and checkout
 
 `/billing` uses the existing Supabase session and decision API to show account
 credit, reservations, training allowance, payments, receipts, and credit activity.
@@ -251,8 +251,11 @@ Follow the backend's [prepaid billing setup](https://github.com/ooo-hq/zils/blob
 and point the public service settings above at those test services. Set
 `NEXT_PUBLIC_ZILS_BILLING_PREVIEW=test` before building to enable test Checkout.
 Billing is always linked from the account menu and pricing page; viewing it does
-not enable payments. Checkout also requires the API to report `test`;
-the flag cannot enable live payments. Leave it unset in production. No Stripe
+not enable payments. Test checkout requires both that flag and an API reporting
+`test`. Leave the flag unset in production: checkout then requires an API
+reporting `live`. An API reporting `off`, a failed refresh, or an expired session
+keeps checkout disabled. Before enabling live billing, complete the backend
+live Stripe configuration and upgrade all billing workers and runtimes. No Stripe
 secret belongs in the website or a `NEXT_PUBLIC_` variable.
 
 Checkout opens on Stripe. Its return URL never credits an account; refresh the

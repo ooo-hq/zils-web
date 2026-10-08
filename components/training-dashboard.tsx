@@ -295,7 +295,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
       </div>
     </div>
     {process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && <p className={styles.notice}>Billing test preview. Submitting a standard run reserves one included run or $2 in test credit. <Link href="/billing" className={styles.textButton}>View credit and billing</Link>.</p>}
-    {error && <p className={styles.error} role="alert">{error}{needsCredit && process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && <> <Link href="/billing" className={styles.textButton}>Add credit</Link>.</>}</p>}
+    {error && <p className={styles.error} role="alert">{error}{needsCredit && <> <Link href="/billing" className={styles.textButton}>Add credit</Link>.</>}</p>}
     {progress && <p role="status" className={styles.notice}>{progress}</p>}
     {busy && cancellable && <button type="button" className={styles.secondary} onClick={() => operation.current?.abort()}>Stop upload</button>}
     {!loading && <TrainedModelLibrary jobs={availableModels} onUse={useModel} />}
@@ -317,7 +317,7 @@ function SignedInDashboard({ client, config, onExpired }: { client: SupabaseClie
       {runRows(jobs.filter(job => job.id !== selected?.id && !terminal(job)), 'Other active runs')}
       {runRows(history.filter(job => job.id !== selected?.id && terminal(job)), 'Past runs')}
     </div>
-    <TrainingIntake key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={error} needsCredit={needsCredit && process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test'} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
+    <TrainingIntake key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={error} needsCredit={needsCredit} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
       if (focusSubmitted.current) { event.preventDefault(); focusSubmitted.current = false; statusMessage.current?.focus(); }
     }} />
   </Sheet>;

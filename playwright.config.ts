@@ -25,7 +25,7 @@ export default defineConfig({
       NEXT_PUBLIC_ZILS_GOOGLE_AUTH_ENABLED: 'true',
       NEXT_PUBLIC_ZILS_TRAINING_API_URL: 'http://127.0.0.1:8999',
       NEXT_PUBLIC_ZILS_API_URL: 'http://127.0.0.1:8999',
-      NEXT_PUBLIC_ZILS_BILLING_PREVIEW: 'test',
+      NEXT_PUBLIC_ZILS_BILLING_PREVIEW: process.env.ZILS_BROWSER_BILLING_PREVIEW ?? 'test',
     },
   },
 });

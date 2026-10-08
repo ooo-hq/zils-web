@@ -8,7 +8,7 @@ const summary = {
   payments: [{ id: purchase, amount_cents: 500, status: 'paid', created_at: '2026-10-08T12:00:00Z', receipt_url: 'https://pay.stripe.com/receipts/payment/test' }],
 };
 
-async function billing(page: Page, options: { signedIn?: boolean; mode?: string; billingAuth?: 'legacy' | 'expired'; checkout?: 'fail' | 'unsafe' | 'expired' | 'paid' | 'conflict'; training402?: boolean } = {}) {
+async function billing(page: Page, options: { signedIn?: boolean; mode?: string; billingAuth?: 'legacy' | 'expired'; checkout?: 'fail' | 'unsafe' | 'expired' | 'paid' | 'conflict' | 'success'; training402?: boolean } = {}) {
   const user = { id: '10000000-0000-4000-8000-000000000002', email: 'client@example.com', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
   const expires = Math.floor(Date.now() / 1000) + 3600;
   const token = `${Buffer.from(JSON.stringify({ alg: 'HS256' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: user.id, exp: expires })).toString('base64url')}.browser-test`;
@@ -21,6 +21,7 @@ async function billing(page: Page, options: { signedIn?: boolean; mode?: string;
   page.on('pageerror', error => errors.push(error.message));
   await page.route('**/*', async route => {
     const url = new URL(route.request().url());
+    if (url.origin === 'https://checkout.stripe.com') return route.fulfill({ contentType: 'text/html', body: '<h1>Stripe checkout fixture</h1>' });
     if (url.origin === 'http://127.0.0.1:3107') return route.continue();
     if (!['http://127.0.0.1:8998', 'http://127.0.0.1:8999'].includes(url.origin)) return route.abort();
     const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS' };
@@ -38,6 +39,7 @@ async function billing(page: Page, options: { signedIn?: boolean; mode?: string;
     }
     if (url.pathname === '/v1/billing/checkout') {
       checkouts.push(route.request().postDataJSON());
+      if (options.checkout === 'success') return route.fulfill({ json: { url: 'https://checkout.stripe.com/c/pay/cs_live_fixture', purchase_id: purchase }, headers });
       if (options.checkout === 'expired') return route.fulfill({ status: 410, json: {}, headers });
       if (options.checkout === 'paid' || options.checkout === 'conflict') return route.fulfill({ status: 409, json: { error: { code: options.checkout === 'paid' ? 'checkout_paid' : 'idempotency_conflict' } }, headers });
       if (options.checkout === 'unsafe') return route.fulfill({ json: { url: 'https://evil.example/checkout', purchase_id: purchase }, headers });
@@ -48,6 +50,8 @@ async function billing(page: Page, options: { signedIn?: boolean; mode?: string;
   return { checkouts, requests, errors };
 }
 
+test.describe('isolated test checkout', () => {
+  test.skip(process.env.ZILS_BROWSER_BILLING_PREVIEW === 'off');
 test('signed-out billing offers existing sign-in and never requests private balances', async ({ page }) => {
   const { requests } = await billing(page, { signedIn: false });
   await page.goto('/billing');
@@ -133,7 +137,7 @@ test('unsafe checkout links do not navigate away and verified expiry unlocks a n
 test('off or live backend cannot enable checkout through the test preview', async ({ page }) => {
   await billing(page, { mode: 'live' });
   await page.goto('/billing');
-  await expect(page.getByText(/Top-ups are unavailable in this preview/)).toBeVisible();
+  await expect(page.getByText(/Top-ups are unavailable in this environment/)).toBeVisible();
   await expect(page.getByRole('button', { name: 'Add $5', exact: true })).toBeDisabled();
 });
 
@@ -159,4 +163,46 @@ test('verified already-paid retry clears uncertain checkout while ordinary confl
   await expect(page.getByRole('button', { name: 'Add $20', exact: true })).toBeEnabled();
   await expect(page.getByRole('button', { name: 'Continue $5 checkout', exact: true })).toHaveCount(0);
   expect(requests).toContain('/v1/billing');
+});
+
+});
+
+test.describe('production checkout', () => {
+  test.skip(process.env.ZILS_BROWSER_BILLING_PREVIEW !== 'off');
+
+  test('live billing opens secure checkout with the selected amount and no test notice', async ({ page }) => {
+    const { checkouts } = await billing(page, { mode: 'live', checkout: 'success' });
+    await page.goto('/billing');
+    await expect(page.getByRole('heading', { name: 'Test mode', exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Add $20', exact: true }).click();
+    await expect(page).toHaveURL('https://checkout.stripe.com/c/pay/cs_live_fixture');
+    expect(checkouts).toHaveLength(1);
+    expect(checkouts[0].amount_cents).toBe(2000);
+  });
+
+  for (const mode of ['off', 'test']) test(`${mode} backend keeps production checkout disabled`, async ({ page }) => {
+    const { checkouts } = await billing(page, { mode });
+    await page.goto('/billing');
+    await expect(page.getByRole('button', { name: 'Add $5', exact: true })).toBeDisabled();
+    expect(checkouts).toEqual([]);
+  });
+
+  test('live training credit errors link to billing without the test flag', async ({ page }) => {
+    await billing(page, { training402: true, mode: 'live' });
+    await page.goto('/train');
+    await page.getByRole('button', { name: 'Retry submission', exact: true }).click();
+    await expect(page.locator('main').getByRole('alert').getByRole('link', { name: 'Add credit' })).toHaveAttribute('href', '/billing');
+  });
+
+  test('a failed refresh disables live checkout until a successful refresh', async ({ page }) => {
+    await billing(page, { mode: 'live' });
+    await page.goto('/billing');
+    await expect(page.getByRole('button', { name: 'Add $5', exact: true })).toBeEnabled();
+    await page.route('**/v1/billing', route => route.fulfill({ status: 503, json: {}, headers: { 'access-control-allow-origin': '*' } }));
+    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Add $5', exact: true })).toBeDisabled();
+    await page.unroute('**/v1/billing');
+    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Add $5', exact: true })).toBeEnabled();
+  });
 });

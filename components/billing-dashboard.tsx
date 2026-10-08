@@ -65,7 +65,7 @@ function AccountBilling({ config, client, owner, testPreview, checkoutReturn }: 
     if (refreshing || busy || !life.current) return;
     setRefreshing(true); setError(''); void load(life.current.signal);
   }
-  const canCheckout = testPreview && summary?.mode === 'test' && !stale && !expired;
+  const canCheckout = summary?.mode === (testPreview ? 'test' : 'live') && !stale && !expired;
   async function topUp(amountCents: number) {
     const signal = life.current?.signal;
     if (!canCheckout || !summary || !signal || signal.aborted || mutation.current || refreshing) return;
@@ -114,7 +114,7 @@ function AccountBilling({ config, client, owner, testPreview, checkoutReturn }: 
         </section>
         <section className={styles.topUp} aria-labelledby="topup-heading">
           <h2 id="topup-heading">Add credit</h2><p>Choose a one-time top-up. No subscription or automatic recharge.</p>
-          {!canCheckout && <p className={styles.unavailable}>Top-ups are unavailable in this preview. Real payments are not open.</p>}
+          {!canCheckout && <p className={styles.unavailable}>{summary.mode === 'off' ? 'Payments are currently disabled.' : 'Top-ups are unavailable in this environment.'}</p>}
           <div className={styles.amounts}>{TOPUP_AMOUNTS_CENTS.map(amount => <button type="button" key={amount} onClick={() => void topUp(amount)} disabled={!canCheckout || busy || refreshing || !summary.topup_amounts_cents.includes(amount) || Boolean(pending)} aria-label={`Add $${amount / 100}`}><span>${amount / 100}</span><span>credit</span></button>)}</div>
           {pending && <div className={styles.pending}><p>An unfinished ${pending.amount_cents / 100} checkout is saved. Continue it to avoid starting the same purchase twice.</p><button type="button" className={styles.button} onClick={() => void topUp(pending.amount_cents)} disabled={!canCheckout || busy || refreshing}>{busy ? 'Opening checkout…' : `Continue $${pending.amount_cents / 100} checkout`}</button></div>}
           <p className={styles.checkoutNote}>{busy ? 'Opening secure checkout…' : 'Checkout opens securely on Stripe.'} Credit appears after payment is confirmed.</p>
