@@ -31,6 +31,7 @@ for (const mobile of [false,true]) test(`reviewed photos, labels and groups beco
   const images=await page.evaluate(()=>Array.from({length:18},(_,i)=>{const c=document.createElement('canvas');c.width=8;c.height=8;const x=c.getContext('2d')!;x.fillStyle=`rgb(${i*11},30,80)`;x.fillRect(0,0,8,8);return c.toDataURL().split(',')[1];}));
   await page.getByLabel('Training photos',{exact:true}).setInputFiles(images.map((s,i)=>({name:`photo-${i}.png`,mimeType:'image/png',buffer:Buffer.from(s,'base64')})));
   const csv='filename,answer,group\n'+images.map((_,i)=>`photo-${i}.png,${i===0?'':i%2?'Damaged':'Normal'},item-${i}`).join('\n');
+  await expect(page.getByLabel('Image labels CSV',{exact:true})).toBeEnabled();
   await page.getByLabel('Image labels CSV',{exact:true}).setInputFiles({name:'labels.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
   await page.getByLabel('Image training decision',{exact:true}).fill('Is the item damaged?');
   await expect(page.getByRole('button',{name:'Train on my images',exact:true})).toHaveAttribute('aria-expanded','true');
