@@ -125,6 +125,9 @@
 .workspace { gap:34px; }
 .currentLabel { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:12px; font-size:13px; color:var(--zils-muted); }
 .currentLabel .textButton { color:var(--zils-muted); font-size:11px; }
+.runToggle { display:inline-flex; align-items:center; gap:7px; min-height:36px; border:0; background:none; color:var(--zils-ink); padding:4px 0; cursor:pointer; font:inherit; font-weight:500; }
+.runToggle[aria-expanded=false] svg { transform:rotate(-90deg); }
+.currentRun[data-collapsed=true] .currentRunHeader { margin-bottom:0; }
 .currentRunHeader { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:26px; }
 .currentRunHeader h2 { margin:0; overflow-wrap:anywhere; min-width:0; flex:1; }
 .currentRunHeader h2:focus { outline:none; }

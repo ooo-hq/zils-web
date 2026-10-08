@@ -63,7 +63,8 @@ test('blocked clipboard selects the full ID for manual copying', async ({ page }
   await workspace(page);
   await page.getByRole('button', { name: 'Copy model ID' }).click();
   await expect(page.getByText('Copy was blocked.', { exact: false })).toBeVisible();
-  expect(await page.getByLabel('API model ID').evaluate((node: HTMLTextAreaElement) => node.value.slice(node.selectionStart, node.selectionEnd))).toBe(modelId);
+  await expect(page.getByLabel('API model ID')).toBeFocused();
+  expect(await page.evaluate(() => window.getSelection()?.toString())).toBe(modelId);
 });
 
 test('model usage fits a small screen and optional downloads stay collapsed', async ({ page }) => {
@@ -94,7 +95,7 @@ test('available models list keeps different tasks separate and opens the chosen 
   await invoice.getByRole('button', { name: 'Use model' }).click();
   const example = page.locator('#use-model-20000000-0000-4000-8000-000000000001');
   await expect(example).toBeFocused();
-  await expect(example.getByLabel('API model name')).toHaveValue('invoice-checking-20000000');
+  await expect(example.getByLabel('API model name')).toHaveText('invoice-checking-20000000');
   await expect(example.getByLabel('Example code')).toContainText('invoice-checking-20000000');
   expect(writes).toEqual([]);
   await library.screenshot({ path: '.private/model-library-desktop.png' });
@@ -107,6 +108,51 @@ test('multiple named models fit on mobile and preserve full IDs in technical det
   await expect(library.getByRole('button', { name: 'Use model' })).toHaveCount(2);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.getByText('Evaluation and technical details', { exact: true }).click();
-  await expect(page.getByText(modelId, { exact: true })).toBeVisible();
+  await expect(page.locator('details').filter({ has: page.locator('summary', { hasText: 'Evaluation and technical details' }) }).getByText(modelId, { exact: true })).toBeVisible();
   await library.screenshot({ path: '.private/model-library-mobile.png' });
+});
+
+test('latest run collapses by keyboard and Use model reopens its example', async ({ page }) => {
+  const writes = await workspace(page);
+  const toggle = page.getByRole('button', { name: 'Latest run', exact: true });
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await toggle.focus(); await page.keyboard.press('Enter');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.getByRole('region', { name: 'Use your model' })).not.toBeVisible();
+  await expect(page.locator('#current-run-title')).toBeVisible();
+  await page.getByRole('button', { name: 'Refresh status' }).click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await page.getByRole('region', { name: 'Your models' }).getByRole('button', { name: 'Use model' }).click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator(`#use-model-${id}`)).toBeFocused();
+  await expect(page.getByLabel('Example code')).toBeVisible();
+  expect(writes).toEqual([]);
+});
+
+test('compact model names and highlighted examples preserve the exact copied code in both themes', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await workspace(page, 'ready', true);
+  const example = page.locator(`#use-model-${id}`);
+  await expect(example.getByLabel('API model name')).toHaveText('support-actions-10000000');
+  await expect(example.locator('textarea')).toHaveCount(0);
+  const nameHeight = await example.getByLabel('API model name').evaluate(node => node.getBoundingClientRect().height);
+  expect(nameHeight).toBeLessThan(48);
+  for (const language of ['Python', 'JavaScript']) {
+    await example.getByRole('button', { name: language, exact: true }).click();
+    const code = example.getByLabel('Example code');
+    await expect(code.locator('.token.keyword').first()).toBeVisible();
+    await expect(code.locator('.token.string').first()).toBeVisible();
+    await example.getByRole('button', { name: 'Copy code', exact: true }).click();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(await code.textContent());
+    await example.getByRole('button', { name: 'Copy command', exact: true }).click();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(await example.getByLabel('Run command').textContent());
+  }
+  await example.screenshot({ path: '.private/compact-examples-light.png' });
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  const keyword = example.getByLabel('Example code').locator('.token.keyword').first();
+  expect(await keyword.evaluate(node => getComputedStyle(node).color)).not.toBe(await example.getByLabel('Example code').evaluate(node => getComputedStyle(node).color));
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await example.screenshot({ path: '.private/compact-examples-dark-mobile.png' });
 });
