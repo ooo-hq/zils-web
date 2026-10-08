@@ -12,7 +12,7 @@ const link = 'underline decoration-edge-strong underline-offset-4 hover:text-acc
 
 export default function PrivacyPage() {
   return (
-    <PolicyPage title="Privacy policy." updated="7 October 2026">
+    <PolicyPage title="Privacy policy." updated="8 October 2026">
       <p>This notice describes information handled by the Zils website and its decision-model services, including sign-in, training, model requests, and support.</p>
 
       <PolicySection title="Accounts and browser storage">
@@ -42,6 +42,7 @@ export default function PrivacyPage() {
       </PolicySection>
 
       <PolicySection title="Contact messages and service providers">
+        <p>If you join the early-access email list, we store your email address in Supabase and use it for access updates. Joining the list does not create a workspace account. You can use the contact form to request removal.</p>
         <p>The contact form sends your name, email address, optional company name, and message through Resend to the Zils support inbox so we can respond.</p>
         <p>Vercel hosts the website; Supabase supports authentication, job records, and file storage; Resend delivers contact messages. Hosting, authentication, and delivery infrastructure may process technical records such as request details, IP addresses, and delivery events as part of operating those services.</p>
       </PolicySection>

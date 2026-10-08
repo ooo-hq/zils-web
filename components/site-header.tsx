@@ -25,6 +25,7 @@ export const FOOTER_LINKS = [
   { href: '/bittensor', label: 'Bittensor' },
   { href: '/playground', label: 'Playground' },
   { href: '/pricing', label: 'Pricing' },
+  { href: '/early-access', label: 'Early access' },
   { href: '/contact', label: 'Contact' },
   { href: 'https://github.com/ooo-hq/zils', label: 'Model source' },
   { href: '/privacy', label: 'Privacy' },
