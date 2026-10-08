@@ -1,4 +1,7 @@
 .page { min-height:100vh; background:var(--zils-page); color:var(--zils-ink); font-family:var(--font-plex-sans),sans-serif; line-height:1.6; }
+.googleButton { display:block; min-height:44px; margin-top:24px; padding:2px 0; border:0; border-radius:4px; background:transparent; cursor:pointer; }
+.googleButton img { display:block; width:180px; height:40px; }
+.signIn .signInDivider { margin:20px 0 0; color:var(--zils-muted); font-size:12px; }
 .container { max-width:1240px; margin:auto; padding:0 32px; }
 .hero { max-width:760px; padding:50px 0 40px; }.hero h1 { font-size:clamp(36px,5vw,58px); line-height:1.08; letter-spacing:-.05em; font-weight:600; margin:14px 0 20px; }.hero>p:last-child { color:var(--zils-muted); max-width:660px; }
 .eyebrow { font-size:10px; letter-spacing:.12em; color:var(--zils-muted); }.panel { background:var(--zils-page); border:1px solid var(--zils-edge); border-radius:8px; padding:28px; min-width:0; }.panel h2 { font-size:26px; font-weight:600; letter-spacing:-.035em; line-height:1.2; margin:12px 0 20px; }.panel p { margin:12px 0; }.panel h3 { font-size:21px; line-height:1.3; font-weight:500; overflow-wrap:anywhere; }
