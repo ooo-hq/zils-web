@@ -227,8 +227,9 @@ deducting purchased credit. Further standard runs cost $2.
 Use an isolated Supabase project, decision API, training service, and runtime.
 Follow the backend's [prepaid billing setup](https://github.com/ooo-hq/zils/blob/main/docs/billing.md)
 and point the public service settings above at those test services. Set
-`NEXT_PUBLIC_ZILS_BILLING_PREVIEW=test` before building to expose Billing in the
-account menu and pricing page. Checkout also requires the API to report `test`;
+`NEXT_PUBLIC_ZILS_BILLING_PREVIEW=test` before building to enable test Checkout.
+Billing is always linked from the account menu and pricing page; viewing it does
+not enable payments. Checkout also requires the API to report `test`;
 the flag cannot enable live payments. Leave it unset in production. No Stripe
 secret belongs in the website or a `NEXT_PUBLIC_` variable.
 
