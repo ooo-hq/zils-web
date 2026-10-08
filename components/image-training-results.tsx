@@ -12,19 +12,22 @@ const decimal = (value: number | undefined) => value === undefined ? 'Not measur
 export function ImageTrainingResults({ job }: { job: Job }) {
   if (!job.result) return null;
   const result = job.result, policy = result.delivery.acceptance;
-  const rows = [{ ...result.baseline, uid: 'stock', status: 'evaluated' }, ...result.miners];
+  const previous = job.selection?.previous;
+  const baselineLabel = previous ? 'Previous client model' : 'Stock Imajev';
+  const rows = [{ ...result.baseline, uid: 'baseline', status: 'evaluated' }, ...result.miners];
   return <section role="region" aria-label="Image evaluation results">
     <h3>Image results</h3>
+    {previous && <p>Compared with your previously accepted model: <code>{previous.model_id}</code>.</p>}
     <p className={styles.help}>Measured on held-out photos. Future photos can produce different results. “Needs review” counts as an incorrect answer in these scores.</p>
     <p>Saved targets: accuracy at least {percent(policy.min_accuracy)}; Brier improvement at least {policy.min_brier_improvement}.</p>
     {policy.positive_class && <p>For {policy.positive_class}: recall at least {percent(policy.min_positive_recall)}; false alarms at most {percent(policy.max_false_positive_rate)}.</p>}
     {Object.entries(policy.min_class_recall || {}).map(([label, target]) => <p key={label}>{label}: recall at least {percent(target)}.</p>)}
     <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Image model comparison"><table>
       <thead><tr><th>Model</th><th>Photos</th><th>Accuracy</th><th>Needs review</th><th>Brier loss</th><th>Log loss</th></tr></thead>
-      <tbody>{rows.map(row => <tr key={row.uid}><th>{row.uid === 'stock' ? 'Stock Imajev' : `Candidate ${row.uid}`}</th><td>{row.count ?? row.cases ?? '—'}</td><td>{percent(row.accuracy)}</td><td>{percent(row.unknown_rate)} ({row.unknown_count ?? '—'}/{row.count ?? row.cases ?? '—'})</td><td>{decimal(row.brier)}</td><td>{decimal(row.nll)}</td></tr>)}</tbody>
+      <tbody>{rows.map(row => <tr key={row.uid}><th>{row.uid === 'baseline' ? baselineLabel : `Candidate ${row.uid}`}</th><td>{row.count ?? row.cases ?? '—'}</td><td>{percent(row.accuracy)}</td><td>{percent(row.unknown_rate)} ({row.unknown_count ?? '—'}/{row.count ?? row.cases ?? '—'})</td><td>{decimal(row.brier)}</td><td>{decimal(row.nll)}</td></tr>)}</tbody>
     </table></div>
     {rows.map(row => <div key={row.uid}>
-      <h4>{row.uid === 'stock' ? 'Stock Imajev' : `Candidate ${row.uid}`} — {row.status}</h4>
+      <h4>{row.uid === 'baseline' ? baselineLabel : `Candidate ${row.uid}`} — {row.status}</h4>
       <div className={styles.tableWrap} tabIndex={0} role="region" aria-label={`${row.uid} recall and false alarms`}><table><thead><tr><th>Answer</th><th>Recall</th><th>False alarms</th></tr></thead><tbody>{Object.entries(row.per_class || {}).map(([label, value]) => <tr key={label}><th>{label}</th><td>{percent(value.recall)} ({value.true_positives}/{value.support})</td><td>{percent(value.false_positive_rate)} ({value.false_positives}/{value.negatives})</td></tr>)}</tbody></table></div>
       {row.confusion && <details><summary>Answer counts</summary><div className={styles.tableWrap} tabIndex={0}><table><thead><tr><th>Actual answer</th>{[...(row.outcome_order || []), '__unknown__'].map(key => <th key={key}>{key === '__unknown__' ? 'Needs review' : key}</th>)}</tr></thead><tbody>{Object.entries(row.confusion).map(([label, counts]) => <tr key={label}><th>{label}</th>{[...(row.outcome_order || []), '__unknown__'].map(key => <td key={key}>{counts[key] ?? 0}</td>)}</tr>)}</tbody></table></div></details>}
     </div>)}

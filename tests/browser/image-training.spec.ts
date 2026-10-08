@@ -51,3 +51,27 @@ for (const mobile of [false,true]) test(`reviewed photos, labels and groups beco
   for(const row of rows) {expect(row.state).toEqual({});expect(Object.keys(row.image as object)).toEqual(['asset_id']);expect(row).not.toHaveProperty('filename');}
   expect(calls.findIndex(c=>c==='POST /v1/jobs')).toBeLessThan(calls.findIndex(c=>c==='POST /v1/image-assets'));
 });
+
+test('saved image draft can be abandoned without selecting the original photos',async({page})=>{
+ const expires=Math.floor(Date.now()/1000)+3600;
+ await page.addInitScript(({owner,expires})=>{const user={id:owner,email:'owner@example.com',aud:'authenticated',role:'authenticated',app_metadata:{},user_metadata:{},created_at:'2026-01-01T00:00:00Z'};localStorage.setItem('zils-training-auth',JSON.stringify({user,access_token:`${btoa('{"alg":"HS256"}')}.${btoa(JSON.stringify({sub:owner,exp:expires}))}.fixture`,refresh_token:'fixture',expires_at:expires,expires_in:3600,token_type:'bearer'}));},{owner,expires});
+ let cancelled=false;const mutations:string[]=[];
+ const job=()=>({id:jobId,name:'saved-inspection',status:cancelled?'failed':'uploading',model:{id:'imajev-4b-v1',name:'Imajev 4B',base:'Qwen/Qwen3.5-4B',base_revision:'8'.repeat(40)},image_intake:{version:'zils-image-intake/v1',seed:'saved',snapshot_sha256:'a'.repeat(64)}});
+ await page.route('**/*',async route=>{
+  const req=route.request(),url=new URL(req.url());
+  if(url.origin==='http://127.0.0.1:3107')return url.pathname==='/api/access/session'?route.fulfill({json:{status:'active'}}):route.continue();
+  const headers={'access-control-allow-origin':'*','access-control-allow-headers':'*','access-control-allow-methods':'GET, POST, OPTIONS'};
+  if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});
+  if(req.method()!=='GET')mutations.push(url.pathname);
+  if(url.pathname==='/v1/jobs')return route.fulfill({headers,json:{jobs:[job()]}});
+  if(url.pathname==='/v1/image-models')return route.fulfill({headers,json:{models:[{name:'image-stock',stock:true,capabilities:{modalities:['image','text']}}],training_enabled:true,training_profile:{model:'imajev-4b-v1',max_train:1024,max_calibration:256,max_test:512,max_source_bytes:10485760,max_pixels:16000000,max_edge:8192}}});
+  if(url.pathname===`/v1/jobs/${jobId}/cancel`){cancelled=true;return route.fulfill({headers,json:{job:job()}});}
+  return route.fulfill({status:404,headers,json:{}});
+ });
+ await page.goto('/train');await page.getByRole('tab',{name:'Images',exact:true}).click();await page.getByRole('button',{name:'Train on my images',exact:true}).click();
+ await expect(page.getByText(/A saved image draft is available/)).toBeVisible();
+ await page.getByRole('button',{name:'Start a new run',exact:true}).click({timeout:2000});
+ await expect(page.getByText(/A saved image draft is available/)).toHaveCount(0);
+ await expect(page.getByLabel('Training photos',{exact:true})).toBeEnabled();
+ expect(mutations).toEqual([`/v1/jobs/${jobId}/cancel`]);
+});

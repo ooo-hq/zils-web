@@ -28,6 +28,7 @@ export const jobSchema = z.object({
   model: modelSchema.nullable().optional(),
   acceptance: imageAcceptanceSchema.optional(),
   image_intake: imageIntakeSchema.nullable().optional(),
+  selection: z.object({ version: z.literal('zils-version-selection/v1'), root_job_id: z.string().uuid(), previous: z.object({ job_id: z.string().uuid(), model_id: z.string().min(1), sha256: z.string().regex(/^[a-f0-9]{64}$/) }).nullable() }).nullable().optional(),
   data_expires_at: z.string().nullable().optional(),
   workflow: z.object({ state: z.string(), message: z.string().optional(), model_id: z.string().optional(), model_alias: z.string().optional(), fingerprint: z.string().optional() }).nullable().optional(),
   result: z.object({

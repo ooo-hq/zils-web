@@ -96,3 +96,14 @@ test('changing accounts during a private-model upload cancels the pending predic
  await expect(page.getByText('pending-private.png',{exact:true})).toHaveCount(0);
  expect(control.mutations.some(path=>path.endsWith('/v1/image-decisions'))).toBe(false);
 });
+
+test('upgrade compares against the immutable previous client model', async ({page}) => {
+ const previous={job_id:'40000000-0000-4000-8000-000000000004',model_id:'zils-adapter-previous-fixture',sha256:'b'.repeat(64)};
+ await workspace(page,{jobs:[{...imageJob(),selection:{version:'zils-version-selection/v1',root_job_id:previous.job_id,previous}}]});
+ await openRun(page);
+ const results=page.getByRole('region',{name:'Image evaluation results'});
+ await expect(results.getByRole('columnheader',{name:'Model',exact:true})).toBeVisible();
+ await expect(results.getByRole('rowheader',{name:'Previous client model',exact:true})).toBeVisible();
+ await expect(results.getByText(previous.model_id,{exact:true})).toBeVisible();
+ await expect(results.getByText('Stock Imajev',{exact:true})).toHaveCount(0);
+});

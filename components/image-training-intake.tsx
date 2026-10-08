@@ -107,7 +107,7 @@ function Intake({trainingApi:training,imageApi:images,profile,resumeJob,onSubmit
         {!submitted&&<button className={styles.button} disabled={busy||!consent} onClick={()=>void submit()}>{busy?'Uploading…':frozen?'Resume missing image uploads':'Start image training'}</button>}
       </div>}
       {busy&&<button className={styles.secondary} onClick={()=>{operation.current?.abort();setProgress('Upload stopped. Completed photos remain saved.');}}>Stop image upload</button>}
-      {frozen&&<button className={styles.secondary} disabled={busy} onClick={()=>void reset()}>Start a new run</button>}
+      {(frozen||resumeJob?.status==='uploading')&&<button className={styles.secondary} disabled={busy} onClick={()=>void reset()}>Start a new run</button>}
       {progress&&<p role="status">{progress}</p>}{error&&<p role="alert" className={styles.error}>{error}</p>}{submitted&&<p role="status">Image run submitted for validation.</p>}
     </div>
   </section>;

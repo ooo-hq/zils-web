@@ -58,6 +58,11 @@ export async function uploadImageTraining(prepared:PreparedImageTraining, questi
   const digests=await hashes(prepared,signal), snapshot=await fingerprint(prepared,question,digests);signal?.throwIfAborted();
   if(draft.job && draft.job.image_intake?.snapshot_sha256!==snapshot) throw new Error('These photos, labels or settings changed. Start a new run.');
   if(draft.job?.acceptance && JSON.stringify(Object.entries(draft.job.acceptance).sort()) !== JSON.stringify(Object.entries(input.acceptance || {}).sort())) throw new Error('Quality targets changed. Restore the saved targets or start a new run.');
+  if(draft.job) {
+    const current=(await training.get(draft.job.id,signal)).job;
+    draft.job=current;
+    if(current.status!=='uploading')return current;
+  }
   if(!draft.job) {progress('Saving your reviewed training plan…');const created=await training.createImage({...input,model:'imajev-4b-v1',image_intake:{version:'zils-image-intake/v1',seed:prepared.seed,snapshot_sha256:snapshot}},signal);draft.job=created.job;}
   const job=draft.job;
   const previous=await training.imageAssets(job.id,signal);

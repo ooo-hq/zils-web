@@ -48,6 +48,7 @@ test('image upload retries only missing bytes, limits concurrency to two and exc
   const draft={assets:{}};
   const training={
     async createImage(input){return {job:{id:'10000000-0000-4000-8000-000000000001',status:'uploading',image_intake:input.image_intake}};},
+    async get(){return {job:draft.job};},
     async imageAssets(){return {assets:[...records.values()]};},
     async resume(){return {uploads:{train:{},calibration:{},test:{}}};},
     async upload(split,slot,file){const data=(await file.text()).trim().split('\n').map(JSON.parse);for(const row of data)assert.ok(finalized.has(row.image.asset_id));datasets.push(...data);},
@@ -65,6 +66,26 @@ test('image upload retries only missing bytes, limits concurrency to two and exc
   assert.equal(result.status,'validating');assert.equal(draft.job.status,'validating');assert.equal(peak,2);assert.equal(datasets.length,17);
   assert.ok(![...records.values()].some(row=>row.filename===all[0].filename));
   for(const id of completedBefore)assert.equal(attempts.get(id),1);
+});
+
+test('retry reconciles a submit that committed before its response was lost', async () => {
+  const { prepareImageTraining, uploadImageTraining } = subject();
+  const prepared = prepareImageTraining(examples(), question, Object.keys(question.criteria), 'seed');
+  const draft = { assets: {} }; let job, uploads = 0, submits = 0;
+  const training = {
+    async createImage(input) { job = { id: '10000000-0000-4000-8000-000000000001', status: 'uploading', image_intake: input.image_intake }; return { job: { ...job } }; },
+    async get() { return { job: { ...job } }; },
+    async imageAssets() { if (job.status !== 'uploading') throw new Error('409: no longer accepting image uploads'); return { assets: [] }; },
+    async resume() { return { uploads: { train: {}, calibration: {}, test: {} } }; },
+    async upload() { uploads++; },
+    async submit() { submits++; job = { ...job, status: 'validating' }; throw new Error('lost response'); },
+  };
+  let next = 0;
+  const images = { async createAsset() { return { asset: { id: String(++next) }, upload: {} }; }, async upload() { uploads++; }, async completeAsset() { return { state: 'ready' }; } };
+  await assert.rejects(uploadImageTraining(prepared, question, {}, training, images, draft), /lost response/);
+  const before = uploads;
+  assert.equal((await uploadImageTraining(prepared, question, {}, training, images, draft)).status, 'validating');
+  assert.equal(draft.job.status, 'validating'); assert.equal(uploads, before); assert.equal(submits, 1);
 });
 
 test('resuming image uploads rejects changed frozen quality targets before network calls', async()=>{
