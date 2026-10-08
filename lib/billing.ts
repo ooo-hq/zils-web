@@ -8,7 +8,7 @@ const timestamp = z.string().datetime({ offset: true });
 const count = z.string().max(40).regex(/^(0|[1-9]\d*)$/);
 const usageSchema = z.object({
   since: timestamp, until: timestamp,
-  calls: count, failed_calls: count, active_calls: count, input_tokens: count,
+  calls: count, failed_calls: count, active_calls: count, input_tokens: count, unmetered_calls: count,
   training_runs: count, failed_training_runs: count, active_training_runs: count,
   inference_spend_nanos: count, training_spend_nanos: count,
   models: z.array(z.object({

@@ -9,7 +9,7 @@ export function BillingUsage({ usage }: { usage?: UsageSummary }) {
     {!usage ? <p className={styles.emptyHistory}>Usage reporting is not available yet. Your balance and payment history are shown below.</p> : <>
       <dl className={styles.usageStats}>
         <div><dt>Completed API calls</dt><dd>{count(usage.calls)}</dd><p>{count(usage.failed_calls)} failed · {count(usage.active_calls)} in progress</p></div>
-        <div><dt>Billable input tokens</dt><dd>{count(usage.input_tokens)}</dd><p>From completed calls</p></div>
+        <div><dt>Billable input tokens</dt><dd>{count(usage.input_tokens)}</dd><p>{usage.unmetered_calls === '0' ? 'From completed calls' : `Token counts unavailable for ${count(usage.unmetered_calls)} earlier calls`}</p></div>
         <div><dt>Completed training runs</dt><dd>{count(usage.training_runs)}</dd><p>{count(usage.failed_training_runs)} failed · {count(usage.active_training_runs)} in progress</p></div>
         <div><dt>Usage spend</dt><dd className={styles.usageSpend}>{formatCredit((BigInt(usage.inference_spend_nanos) + BigInt(usage.training_spend_nanos)).toString())}</dd><p>API {formatCredit(usage.inference_spend_nanos)} · Training {formatCredit(usage.training_spend_nanos)}</p></div>
       </dl>
@@ -24,7 +24,7 @@ export function BillingUsage({ usage }: { usage?: UsageSummary }) {
           </tr>)}</tbody>
         </table>
       </div>}
-      <details className={styles.usageHelp}><summary>About this report</summary><p>Includes activity recorded since billing was enabled, within the last 30 days. Calls and training runs are grouped by when they started; spend is grouped by when it was charged. One batch item counts as one API call.</p><p>Included training runs count toward completed runs and cost $0. Top-ups and refunds are listed separately below. Rejected requests that never start are not counted. Older calls stay in account totals when their model was not recorded.</p></details>
+      <details className={styles.usageHelp}><summary>About this report</summary><p>Shows the last 30 days. Calls and training runs are grouped by when they started; spend is grouped by when it was charged. One batch item counts as one API call.</p><p>Included and pre-billing training runs count toward completed runs and cost $0. Top-ups and refunds are listed separately below. Rejected requests that never start are not counted. Earlier calls stay in account totals when model or billable token details were not recorded.</p></details>
     </>}
   </section>;
 }

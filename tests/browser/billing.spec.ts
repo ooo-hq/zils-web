@@ -3,7 +3,7 @@ import { test, expect, type Page } from '@playwright/test';
 const purchase = '91f22b36-83bd-5da1-90f8-a4b5dc8a6e52';
 const usage = {
   since: '2026-09-08T12:00:00Z', until: '2026-10-08T12:00:00Z',
-  calls: '1200', failed_calls: '3', active_calls: '2', input_tokens: '1000000',
+  calls: '1200', failed_calls: '3', active_calls: '2', input_tokens: '1000000', unmetered_calls: '10',
   training_runs: '3', failed_training_runs: '1', active_training_runs: '1',
   inference_spend_nanos: '42000000', training_spend_nanos: '4000000000',
   models: [
@@ -46,7 +46,7 @@ async function billing(page: Page, options: { signedIn?: boolean; mode?: string;
         code: options.billingAuth === 'legacy' ? 'invalid_credentials' : 'service_unavailable',
         message: options.billingAuth === 'legacy' ? 'API key is invalid or revoked.' : 'Your session has expired; sign in again.',
       } }, headers });
-      return route.fulfill({ json: { ...summary, mode: options.mode || 'test', usage: options.usageMissing ? undefined : options.usageEmpty ? { ...usage, calls: '0', failed_calls: '0', active_calls: '0', input_tokens: '0', training_runs: '0', failed_training_runs: '0', active_training_runs: '0', inference_spend_nanos: '0', training_spend_nanos: '0', models: [] } : usage }, headers });
+      return route.fulfill({ json: { ...summary, mode: options.mode || 'test', usage: options.usageMissing ? undefined : options.usageEmpty ? { ...usage, calls: '0', failed_calls: '0', active_calls: '0', input_tokens: '0', unmetered_calls: '0', training_runs: '0', failed_training_runs: '0', active_training_runs: '0', inference_spend_nanos: '0', training_spend_nanos: '0', models: [] } : usage }, headers });
     }
     if (url.pathname === '/v1/billing/checkout') {
       checkouts.push(route.request().postDataJSON());
@@ -78,6 +78,7 @@ test('account usage is independent of transaction history and models keep unknow
   await expect(report.getByText('1,200', { exact: true })).toBeVisible();
   await expect(report.getByText('1,000,000', { exact: true })).toBeVisible();
   await expect(report.getByText('$4.042', { exact: true })).toBeVisible();
+  await expect(report.getByText('Token counts unavailable for 10 earlier calls')).toBeVisible();
   const row = report.getByRole('row').filter({ hasText: 'support-routing' });
   await expect(row).toContainText('1,100');
   await expect(row).toContainText('$0.0378');
