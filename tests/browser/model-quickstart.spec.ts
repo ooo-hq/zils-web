@@ -25,6 +25,10 @@ async function workspace(page: Page, state = 'ready', withModels = false) {
     if (req.method() !== 'GET') writes.push(url.pathname);
     if (url.pathname.startsWith('/auth/v1/')) return route.fulfill({ json: user, headers });
     if (url.pathname === '/v1/jobs') return route.fulfill({ json: withModels ? { jobs: [modelJobs[0], modelJobs[2]], models: modelJobs.slice(0, 2) } : { jobs: [job] }, headers });
+    if (url.pathname.startsWith('/v1/jobs/')) {
+      const selected = (withModels ? modelJobs : [job]).find(item => url.pathname === `/v1/jobs/${item.id}`);
+      return route.fulfill({ status: selected ? 200 : 404, json: selected ? { job: selected } : { error: 'Not found' }, headers });
+    }
     if (url.pathname === '/v1/keys') return route.fulfill({ json: { keys: [] }, headers });
     return route.fulfill({ status: 404, json: { error: 'Unexpected fixture request' }, headers });
   });
@@ -83,7 +87,7 @@ test('activation in progress does not offer a usable model prematurely', async (
 });
 
 
-test('available models list keeps different tasks separate and opens the chosen example', async ({ page, context }) => {
+test('available models list keeps different tasks separate and links to each model page', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const writes = await workspace(page, 'ready', true);
   const library = page.getByRole('region', { name: 'Your models' });
@@ -92,27 +96,27 @@ test('available models list keeps different tasks separate and opens the chosen 
   const invoice = library.getByRole('listitem').filter({ hasText: 'invoice-checking' });
   await invoice.getByRole('button', { name: 'Copy name' }).click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('invoice-checking-20000000');
-  await invoice.getByRole('button', { name: 'Use model' }).click();
-  const example = page.locator('#use-model-20000000-0000-4000-8000-000000000001');
-  await expect(example).toBeFocused();
+  await library.screenshot({ path: '.private/model-library-desktop.png' });
+  await invoice.getByRole('link', { name: 'View model' }).click();
+  await expect(page).toHaveURL(/\/train\/models\/20000000-0000-4000-8000-000000000001$/);
+  const example = page.getByRole('region', { name: 'Use your model' });
   await expect(example.getByLabel('API model name')).toHaveText('invoice-checking-20000000');
   await expect(example.getByLabel('Example code')).toContainText('invoice-checking-20000000');
   expect(writes).toEqual([]);
-  await library.screenshot({ path: '.private/model-library-desktop.png' });
 });
 
 test('multiple named models fit on mobile and preserve full IDs in technical details', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await workspace(page, 'ready', true);
   const library = page.getByRole('region', { name: 'Your models' });
-  await expect(library.getByRole('button', { name: 'Use model' })).toHaveCount(2);
+  await expect(library.getByRole('link', { name: 'View model' })).toHaveCount(2);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.getByText('Evaluation and technical details', { exact: true }).click();
   await expect(page.locator('details').filter({ has: page.locator('summary', { hasText: 'Evaluation and technical details' }) }).getByText(modelId, { exact: true })).toBeVisible();
   await library.screenshot({ path: '.private/model-library-mobile.png' });
 });
 
-test('latest run collapses by keyboard and Use model reopens its example', async ({ page }) => {
+test('latest run collapses by keyboard while its model page remains accessible', async ({ page }) => {
   const writes = await workspace(page);
   const toggle = page.getByRole('button', { name: 'Latest run', exact: true });
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
@@ -122,13 +126,12 @@ test('latest run collapses by keyboard and Use model reopens its example', async
   await expect(page.locator('#current-run-title')).toBeVisible();
   await page.getByRole('button', { name: 'Refresh status' }).click();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-  await page.getByRole('region', { name: 'Your models' }).getByRole('button', { name: 'Use model' }).click();
-  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-  await expect(page.locator(`#use-model-${id}`)).toBeFocused();
-  await expect(page.getByLabel('Example code')).toBeVisible();
-  await toggle.focus(); await page.keyboard.press('Enter'); await page.keyboard.press('Enter');
+  await toggle.focus(); await page.keyboard.press('Enter');
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
   await expect(toggle).toBeFocused();
+  await page.getByRole('region', { name: 'Your models' }).getByRole('link', { name: 'View model' }).click();
+  await expect(page.getByRole('heading', { name: 'support-actions', level: 1 })).toBeVisible();
+  await expect(page.getByLabel('Example code')).toBeVisible();
   expect(writes).toEqual([]);
 });
 

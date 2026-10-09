@@ -38,7 +38,7 @@ export default function PrivacyPage() {
 
       <PolicySection title="Website analytics">
         <p>We use Plausible Analytics to understand page visits, referral sites, engagement, browser and device types, and approximate locations. Plausible does not use analytics cookies or store raw IP addresses. See <a href="https://plausible.io/data-policy" className={link}>Plausible’s data policy</a> for details.</p>
-        <p>We remove URL query parameters and fragments before sending analytics events and send only the referring site’s origin. We do not send form contents, account identifiers, API keys, training files, or model inputs to Plausible. Internal administration pages, the pricing lab, and individual shared artifacts are excluded.</p>
+        <p>We remove URL query parameters and fragments before sending analytics events and send only the referring site’s origin. We do not send form contents, account identifiers, API keys, training files, or model inputs to Plausible. Private model pages, internal administration pages, the pricing lab, and individual shared artifacts are excluded.</p>
       </PolicySection>
 
       <PolicySection title="Contact messages and service providers">
