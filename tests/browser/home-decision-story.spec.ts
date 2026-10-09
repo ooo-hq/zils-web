@@ -41,7 +41,7 @@ test('the illustrated story shows input and answer, separates training from shar
   await story.getByRole('button', { name: 'Show another message' }).click();
   await expect(newMessage).toContainText('My invoice page keeps crashing.');
   await expect(story.getByText(/Illustrated workflow, not live predictions/)).toBeVisible();
-  await expect(story.getByRole('link', { name: 'Train your own model' })).toHaveAttribute('href', '/train');
+  await expect(story.getByRole('link', { name: 'Request early access' })).toHaveAttribute('href', '/early-access');
   await story.getByRole('link', { name: 'Try the shared model' }).click();
   await expect(page.getByLabel('Question 1', { exact: true })).toHaveValue(starters[0].question);
   expect(requests).toBe(0);
@@ -60,7 +60,7 @@ test('mobile learning story fits without horizontal scrolling', async ({ page })
   await page.goto('/#workflow');
   const story = page.getByRole('region', { name: storyTitle, exact: true });
   await story.getByRole('button', { name: 'Show another message' }).click();
-  await expect(story.getByRole('link', { name: 'Train your own model' })).toBeVisible();
+  await expect(story.getByRole('link', { name: 'Request early access' })).toBeVisible();
   expect(await story.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });

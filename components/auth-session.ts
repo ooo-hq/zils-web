@@ -32,7 +32,7 @@ export function useAuthSession(config?: AuthConfig) {
     const pending = client?.auth.initialize().then(async ({ error: callbackError }) => {
       const current = await client.auth.getSession();
       // getSession reads stored credentials; OAuth callback failures are reported by initialize.
-      return { ...current, error: current.error || (!current.data.session && callbackError ? { message: "Sign-in wasn't completed. Please try again or use email." } : null) };
+      return { ...current, error: current.error || (!current.data.session && callbackError ? { message: "Sign-in wasn't completed. Workspace access is by invitation; use your invited email or join the early-access list." } : null) };
     }) ?? Promise.resolve({ data: { session: null }, error: null });
     pending.then(({ data, error }) => {
       if (active) { setSession(data.session); if (error) setError(error.message); }

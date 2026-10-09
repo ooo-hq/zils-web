@@ -77,7 +77,7 @@ export function HomeDecisionStory() {
       <div className={s.closing}>
         <p>Same idea, different jobs.<br /><span>Choose a team. Flag a problem. Score a match.</span></p>
         <div className={s.actions}>
-          <Link href="/train" className={s.primary}>Train your own model</Link>
+          <Link href="/early-access" className={s.primary}>Request early access</Link>
           <Link href="/playground?starter=customer-routing" className={s.secondary}>Try the shared model</Link>
         </div>
       </div>
