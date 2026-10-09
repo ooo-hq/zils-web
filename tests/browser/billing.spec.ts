@@ -19,7 +19,7 @@ const summary = {
   usage,
 };
 
-async function billing(page: Page, options: { signedIn?: boolean; mode?: string; billingAuth?: 'legacy' | 'expired'; checkout?: 'fail' | 'unsafe' | 'expired' | 'paid' | 'conflict' | 'success'; training402?: boolean; usageMissing?: boolean; usageEmpty?: boolean } = {}) {
+async function billing(page: Page, options: { signedIn?: boolean; mode?: string; billingAuth?: 'legacy' | 'expired'; checkout?: 'fail' | 'unsafe' | 'expired' | 'paid' | 'conflict' | 'success'; training402?: boolean; usageMissing?: boolean; usageEmpty?: boolean; availableNanos?: string } = {}) {
   const user = { id: '10000000-0000-4000-8000-000000000002', email: 'client@example.com', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
   const expires = Math.floor(Date.now() / 1000) + 3600;
   const token = `${Buffer.from(JSON.stringify({ alg: 'HS256' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: user.id, exp: expires })).toString('base64url')}.browser-test`;
@@ -46,7 +46,7 @@ async function billing(page: Page, options: { signedIn?: boolean; mode?: string;
         code: options.billingAuth === 'legacy' ? 'invalid_credentials' : 'service_unavailable',
         message: options.billingAuth === 'legacy' ? 'API key is invalid or revoked.' : 'Your session has expired; sign in again.',
       } }, headers });
-      return route.fulfill({ json: { ...summary, mode: options.mode || 'test', usage: options.usageMissing ? undefined : options.usageEmpty ? { ...usage, calls: '0', failed_calls: '0', active_calls: '0', input_tokens: '0', unmetered_calls: '0', training_runs: '0', failed_training_runs: '0', active_training_runs: '0', inference_spend_nanos: '0', training_spend_nanos: '0', models: [] } : usage }, headers });
+      return route.fulfill({ json: { ...summary, ...(options.availableNanos !== undefined ? { available_nanos: options.availableNanos, balance_nanos: (BigInt(options.availableNanos) + BigInt(summary.reserved_nanos)).toString() } : {}), mode: options.mode || 'test', usage: options.usageMissing ? undefined : options.usageEmpty ? { ...usage, calls: '0', failed_calls: '0', active_calls: '0', input_tokens: '0', unmetered_calls: '0', training_runs: '0', failed_training_runs: '0', active_training_runs: '0', inference_spend_nanos: '0', training_spend_nanos: '0', models: [] } : usage }, headers });
     }
     if (url.pathname === '/v1/billing/checkout') {
       checkouts.push(route.request().postDataJSON());
@@ -79,12 +79,13 @@ test('account usage is independent of transaction history and models keep unknow
   await expect(report.getByText('1,000,000', { exact: true })).toBeVisible();
   await expect(report.getByText('$4.042', { exact: true })).toBeVisible();
   await expect(report.getByText('Token counts unavailable for 10 earlier calls')).toBeVisible();
-  const row = report.getByRole('row').filter({ hasText: 'support-routing' });
+  const modelReport = page.getByRole('region', { name: 'API usage by model', exact: true });
+  const row = modelReport.getByRole('row').filter({ hasText: 'support-routing' });
   await expect(row).toContainText('1,100');
   await expect(row).toContainText('$0.0378');
-  await expect(report.getByRole('rowheader', { name: /Model not recorded/ })).toBeVisible();
-  await report.getByText('About this report', { exact: true }).click();
-  await expect(report.getByText(/One batch item counts as one API call/)).toBeVisible();
+  await expect(modelReport.getByRole('rowheader', { name: /Model not recorded/ })).toBeVisible();
+  await modelReport.getByText('About this report', { exact: true }).click();
+  await expect(modelReport.getByText(/One batch item counts as one API call/)).toBeVisible();
   await page.screenshot({ path: '.private/usage-report-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 375, height: 812 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -219,6 +220,65 @@ test('verified already-paid retry clears uncertain checkout while ordinary confl
 
 test.describe('production checkout', () => {
   test.skip(process.env.ZILS_BROWSER_BILLING_PREVIEW !== 'off');
+
+  test('credit, top-ups and account usage share the first screen; detail comes afterwards', async ({ page }) => {
+    const { checkouts, errors } = await billing(page, { mode: 'live' });
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/billing');
+    const credit = page.getByRole('region', { name: 'Available credit', exact: true });
+    const report = page.getByRole('region', { name: 'Account usage', exact: true });
+    await expect(credit.getByText('$1.00', { exact: true })).toBeVisible();
+    await expect(report.getByText('$4.042', { exact: true })).toBeVisible();
+    for (const name of ['Available credit', 'Account usage', 'Add credit']) {
+      await expect(page.getByRole('heading', { name, exact: true })).toBeInViewport();
+    }
+    await expect(page.getByRole('button', { name: 'Add $100', exact: true })).toBeInViewport();
+    const creditBox = (await credit.boundingBox())!;
+    const reportBox = (await report.boundingBox())!;
+    expect(reportBox.x).toBeGreaterThan(creditBox.x + creditBox.width);
+    await page.screenshot({ path: '.private/billing-redesign-desktop.png', fullPage: true });
+    await page.getByRole('button', { name: 'Refresh', exact: true }).press('Tab');
+    const firstTopupLink = page.getByRole('link', { name: 'View pricing', exact: true });
+    await expect(firstTopupLink).toBeFocused();
+    await firstTopupLink.press('Tab');
+    const add = page.getByRole('button', { name: 'Add $5', exact: true });
+    await expect(add).toBeFocused();
+    expect(await add.evaluate(el => getComputedStyle(el).outlineStyle)).toBe('solid');
+    await page.getByRole('button', { name: 'Dark mode', exact: true }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    expect(await add.evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(16, 16, 20)');
+    await page.screenshot({ path: '.private/billing-redesign-dark.png', fullPage: true });
+    await page.getByRole('link', { name: 'Explore usage by model' }).click();
+    await expect(page.getByRole('heading', { name: 'API usage by model', exact: true })).toBeInViewport();
+    expect(checkouts).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+
+  test('mobile prioritizes credit and top-ups, with exact negative balances and safe continuation', async ({ page }) => {
+    await billing(page, { mode: 'live', availableNanos: '-42' });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/billing');
+    const credit = page.getByRole('region', { name: 'Available credit', exact: true });
+    await expect(credit.getByText('−$0.000000042', { exact: true })).toBeVisible();
+    await expect(credit.getByText('No available credit', { exact: true })).toBeVisible();
+    const add = page.getByRole('button', { name: 'Add $5', exact: true });
+    await expect(add).toBeInViewport();
+    expect(await add.evaluate(el => getComputedStyle(el).transitionDuration)).toBe('0s');
+    const topupBox = (await page.getByRole('region', { name: 'Add credit', exact: true }).boundingBox())!;
+    const usageBox = (await page.getByRole('region', { name: 'Account usage', exact: true }).boundingBox())!;
+    expect(usageBox.y).toBeGreaterThanOrEqual(topupBox.y + topupBox.height);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.screenshot({ path: '.private/billing-redesign-mobile.png', fullPage: true });
+    await page.screenshot({ path: '.private/billing-redesign-mobile-first-screen.png' });
+    await page.setViewportSize({ width: 320, height: 700 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await add.click();
+    await expect(page.getByRole('button', { name: 'Continue $5 checkout', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add $20', exact: true })).toBeDisabled();
+    await page.screenshot({ path: '.private/billing-redesign-pending.png', fullPage: true });
+  });
 
   test('live billing opens secure checkout with the selected amount and no test notice', async ({ page }) => {
     const { checkouts } = await billing(page, { mode: 'live', checkout: 'success' });
