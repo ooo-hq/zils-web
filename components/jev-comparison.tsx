@@ -13,12 +13,13 @@ export function JevComparisonDetails() {
   return (
     <section id="jev-comparison" aria-labelledby="jev-comparison-heading" className="scroll-mt-20 border-t border-edge py-16 sm:py-20">
       <p className="text-xs text-muted">Completed comparison · 6 October 2026 · 500 ABCD test conversations</p>
-      <h2 id="jev-comparison-heading" className="mt-4 max-w-[24ch] text-[clamp(2.1rem,4.4vw,3.3rem)] font-semibold leading-[1.04] tracking-[-0.055em]">Trained Zils outperformed Jev on this support task.</h2>
-      <p className="mt-5 max-w-[68ch] text-[15px] leading-7 text-muted">Our ABCD-trained Zils model chose the recorded next action correctly {percent(jevTrained.accuracy)} of the time, compared with {percent(jevMetrics.accuracy)} for TypeSafe Jev 1.13.0. Both received the same conversations, instructions, and all {jevStudy.splits.action_choices} action choices.</p>
+      <h2 id="jev-comparison-heading" className="mt-4 max-w-[24ch] text-[clamp(2.1rem,4.4vw,3.3rem)] font-semibold leading-[1.04] tracking-[-0.055em]">Support decisions: more correct next actions.</h2>
+      <p className="mt-5 max-w-[68ch] text-[15px] leading-7 text-muted">Given a customer conversation, its previous actions, and a workflow guide, choose the next action from {jevStudy.splits.action_choices} options. ABCD is a public dataset of support role-play conversations; the recorded action is the test answer.</p>
+      <p className="mt-4 max-w-[68ch] text-[15px] leading-7 text-muted">Trained Zils matched that answer {percent(jevTrained.accuracy)} of the time, compared with {percent(jevMetrics.accuracy)} for TypeSafe Jev 1.13.0. Both received the same inputs, instructions, and choices.</p>
 
       <div className="mt-10 grid gap-10 md:grid-cols-2 md:items-center">
         <div>
-          <h3 className="text-xl font-semibold tracking-[-0.035em]">The same task. A specialized model.</h3>
+          <h3 className="text-xl font-semibold tracking-[-0.035em]">What the comparison holds fixed</h3>
           <p className="mt-4 text-sm leading-7 text-muted">The Zils adapter trained on {jevStudy.splits.training_conversations.toLocaleString('en-US')} separate conversations and was selected on a different development set. Its weights were frozen before the final test cases were prepared.</p>
           <p className="mt-4 text-sm leading-7 text-muted">We then called TypeSafe’s hosted Jev API on those same test inputs. The Zils scores reuse verified predictions from the completed training study. No test answers were sent to either model, and no model or prompt was tuned during this comparison.</p>
           <p className="mt-4 text-sm leading-7 text-muted">Trained Zils got <strong className="font-medium text-ink">{jevPaired.trained_correct_other_wrong} cases right that Jev missed</strong>. Jev got {jevPaired.other_correct_trained_wrong} right that our trained model missed.</p>
@@ -36,7 +37,7 @@ export function JevComparisonDetails() {
       <p className="mt-5 text-sm leading-7 text-muted">The 95% interval for the accuracy advantage is <strong className="font-medium text-ink">+{interval[0].toFixed(1)} to +{interval[1].toFixed(1)} percentage points</strong>, from 2,000 paired resamples of test conversations. This measures uncertainty across these conversations, not across different training runs.</p>
 
       <div className="mt-8 rounded-md bg-surface p-5 sm:p-6">
-        <h3 className="text-sm font-semibold">Higher accuracy overall. Confidence still needs work.</h3>
+        <h3 className="text-lg font-semibold">Confidence is a separate test.</h3>
         <p className="mt-2 text-sm leading-7 text-muted">Jev was more accurate among its smaller set of answers assigned at least 90% probability. Our model assigned that probability to more cases, but made more mistakes within them. These groups contain different cases and have different coverage.</p>
         <div role="region" aria-label="Jev comparison confidence and coverage" tabIndex={0} className="mt-5 overflow-x-auto overscroll-x-contain">
           <table className="w-full min-w-[540px] border-collapse text-sm">
