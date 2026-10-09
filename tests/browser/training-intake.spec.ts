@@ -27,13 +27,13 @@ async function workspace(page: Page) {
     if (url.pathname.startsWith('/auth/v1/')) return route.fulfill({ json: user, headers });
     if (request.method() !== 'GET') mutations.push(`${request.method()} ${url.pathname}`);
     if (request.method() === 'PUT' && url.pathname.startsWith('/storage/v1/object/')) {
-      uploads[url.pathname.split('/').at(-1)!] = request.postDataBuffer()!.toString('utf8');
+      uploads[url.pathname.split('/').at(-1)!.replace(/\.jsonl$/, '')] = request.postDataBuffer()!.toString('utf8');
       return route.fulfill({ json: {}, headers });
     }
     if (url.pathname === '/v1/jobs' && request.method() === 'GET') return route.fulfill({ json: { jobs: job ? [job] : [] }, headers });
     if (url.pathname === '/v1/jobs' && request.method() === 'POST') {
       job = { id: jobId, name: request.postDataJSON().name, status: 'uploading' };
-      const slots = Object.fromEntries(['train', 'calibration', 'test'].map(split => [split, { url: `http://127.0.0.1:8998/storage/v1/object/${split}`, method: 'PUT', headers: { 'Content-Type': 'application/octet-stream', 'x-upsert': 'false' } }]));
+      const slots = Object.fromEntries(['train', 'calibration', 'test'].map(split => [split, { url: `http://127.0.0.1:8998/storage/v1/object/upload/sign/fez-training-data/${jobId}/inputs/${split}.jsonl?token=test-upload`, method: 'PUT', headers: { 'Content-Type': 'application/octet-stream', 'x-upsert': 'false' } }]));
       return route.fulfill({ json: { job, uploads: slots }, headers });
     }
     if (url.pathname === `/v1/jobs/${jobId}/submit` && job) {

@@ -8,13 +8,13 @@ const rows = () => ['one.png', 'two.png', 'three.png'].map((name, i) => ({ id: S
 function service(failSecond = false, onPredict = () => {}) {
   let count = 0;
   const calls = [];
-  const api = images.imageApi('https://api.example', 'https://storage.example', async () => 'owner-session', async (url, options) => {
+  const api = images.imageApi('https://api.example', { legacyOrigin: 'https://storage.example' }, async () => 'owner-session', async (url, options) => {
     const path = new URL(url).pathname;
     const body = options.method === 'POST' ? JSON.parse(options.body) : null;
     calls.push({ method: options.method, path, body });
     if (path === '/v1/image-assets') {
       const id = `10000000-0000-4000-8000-${String(++count).padStart(12, '0')}`;
-      return Response.json({ asset: { id, state: 'uploading', expires_at: '2099-01-01T00:00:00Z' }, upload: { url: `https://storage.example/storage/v1/object/upload/sign/zils-images/owner/${id}/source`, method: 'PUT', headers: { 'x-upsert': 'false', 'Content-Type': 'application/octet-stream' } } });
+      return Response.json({ asset: { id, state: 'uploading', expires_at: '2099-01-01T00:00:00Z' }, upload: { url: `https://storage.example/storage/v1/object/upload/sign/zils-images/11111111-1111-4111-8111-111111111111/${id}/source`, method: 'PUT', headers: { 'x-upsert': 'false', 'Content-Type': 'application/octet-stream' } } });
     }
     if (options.method === 'PUT') return Response.json({});
     if (options.method === 'DELETE') return new Response(null, { status: 204 });
@@ -59,7 +59,7 @@ test('one failed image does not discard other results or stop later images', asy
 
 test('expired access pauses the batch before uploading more private files', async () => {
   const { runImageBatch } = batch(), calls = [], results = [];
-  const api = images.imageApi('https://api.example', 'https://storage.example', async () => 'expired', async (url) => { calls.push(url); return new Response('{}', { status: 401 }); });
+  const api = images.imageApi('https://api.example', { legacyOrigin: 'https://storage.example' }, async () => 'expired', async (url) => { calls.push(url); return new Response('{}', { status: 401 }); });
   await assert.rejects(runImageBatch(rows(), { api, model: 'private-image', question, signal: new AbortController().signal, onResult: row => results.push(row) }), /sign in again/);
   assert.equal(calls.length, 1);
   assert.equal(results.length, 1);
@@ -80,7 +80,7 @@ test('CSV keeps review and failure states, escapes filenames and neutralizes spr
 
 test('insufficient credit pauses image batches before more uploads', async () => {
   const calls = [], results = [];
-  const api = images.imageApi('https://api.example', 'https://storage.example', async () => 'session', async url => { calls.push(url); return new Response('{}', { status: 402 }); });
+  const api = images.imageApi('https://api.example', { legacyOrigin: 'https://storage.example' }, async () => 'session', async url => { calls.push(url); return new Response('{}', { status: 402 }); });
   await assert.rejects(batch().runImageBatch(rows(), { api, model: 'private-image', question, signal: new AbortController().signal, onResult: row => results.push(row) }), error => error.status === 402);
   assert.equal(calls.length, 1);
   assert.equal(results.length, 1);

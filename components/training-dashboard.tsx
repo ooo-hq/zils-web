@@ -1,5 +1,7 @@
 'use client';
 
+import type { StorageLocations } from '@/lib/storage';
+
 import { type SupabaseClient } from '@supabase/supabase-js';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
@@ -23,7 +25,7 @@ import { ImageTrainingIntake } from '@/components/image-training-intake';
 import imageStyles from '@/components/image-decision-panel.module.css';
 import styles from '@/app/(home)/train/train.module.css';
 
-type Config = { url: string; key: string; apiUrl: string; decisionApiUrl: string | null };
+type Config = { storage: StorageLocations; url: string; key: string; apiUrl: string; decisionApiUrl: string | null };
 const message = (error: unknown) => error instanceof Error ? error.message : 'Something went wrong. Please try again.';
 const metric = (value: number | undefined, percent = false) => value === undefined ? '—' : percent ? `${(value * 100).toFixed(2)}%` : value.toFixed(4);
 
@@ -96,11 +98,11 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
   useEffect(() => {
     if (!config.decisionApiUrl) return;
     const controller = new AbortController();
-    imageApi(config.decisionApiUrl, config.url, imageToken).models(controller.signal)
+    imageApi(config.decisionApiUrl, config.storage, imageToken).models(controller.signal)
       .then(data => { if (!controller.signal.aborted) { setImagesAvailable(data.models.some(model => model.stock)); setImageProfile(data.training_enabled ? data.training_profile : undefined); } })
       .catch(() => { if (!controller.signal.aborted) setImagesAvailable(false); });
     return () => controller.abort();
-  }, [config.decisionApiUrl, config.url, imageToken]);
+  }, [config.decisionApiUrl, config.storage, imageToken]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [availableModels, setAvailableModels] = useState<Job[]>([]);
   const [selectedId, setSelectedId] = useState('');
@@ -126,8 +128,8 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
   const life = useRef<AbortController | null>(null);
   const operation = useRef<AbortController | null>(null);
   const selected = currentTrainingJob(jobs.filter(job => job.model?.id !== 'imajev-4b-v1'));
-  const imageService = useMemo(() => config.decisionApiUrl ? imageApi(config.decisionApiUrl, config.url, imageToken) : null, [config.decisionApiUrl, config.url, imageToken]);
-  const api = useMemo(() => trainingApi(config.apiUrl, config.url, imageToken), [config.apiUrl, config.url, imageToken]);
+  const imageService = useMemo(() => config.decisionApiUrl ? imageApi(config.decisionApiUrl, config.storage, imageToken) : null, [config.decisionApiUrl, config.storage, imageToken]);
+  const api = useMemo(() => trainingApi(config.apiUrl, config.storage, imageToken), [config.apiUrl, config.storage, imageToken]);
   const history = [...jobs, ...availableModels.filter(model => !jobs.some(job => job.id === model.id))];
   useEffect(() => {
     if (!modelToUse) return;
@@ -260,7 +262,7 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
       {job.model?.id === 'imajev-4b-v1' && <>
         {job.data_expires_at && <p>Training photos expire {new Date(job.data_expires_at).toLocaleString()}. Saved evaluation results remain available.</p>}
         <ImageTrainingResults job={job} />
-        {config.decisionApiUrl && <PrivateImageTest key={`${owner}:${job.id}`} job={job} owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storageUrl={config.url} />}
+        {config.decisionApiUrl && <PrivateImageTest key={`${owner}:${job.id}`} job={job} owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storage={config.storage} />}
       </>}
       {job.error && <p role="alert" className={styles.error}>{job.error}</p>}
       {job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1' && <div className={styles.actions}>
@@ -327,7 +329,7 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
     {vertical === 'images' && config.decisionApiUrl && <div id="image-workspace" role="tabpanel">
       {imageProfile && imageService && <ImageTrainingIntake owner={owner} token={imageToken} trainingApi={api} imageApi={imageService} profile={imageProfile} resumeJob={jobs.find(job => job.model?.id === 'imajev-4b-v1' && job.status === 'uploading')} onSubmitted={replaceJob} />}
       {runRows(history.filter(job => job.model?.id === 'imajev-4b-v1'), 'Image runs')}
-      <details className={imageStyles.stockTest} open={!imageProfile}><summary>Test images with the starting model</summary><p>Try a batch or a single photo. To use a trained model, open its completed run above.</p><ImageDecisionPanel owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storageUrl={config.url} /></details>
+      <details className={imageStyles.stockTest} open={!imageProfile}><summary>Test images with the starting model</summary><p>Try a batch or a single photo. To use a trained model, open its completed run above.</p><ImageDecisionPanel owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storage={config.storage} /></details>
     </div>}
     <div id="text-workspace" role="tabpanel" hidden={vertical !== 'text'}>
     {progress && <p role="status" className={styles.notice}>{progress}</p>}

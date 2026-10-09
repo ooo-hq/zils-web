@@ -1,5 +1,7 @@
 'use client';
 
+import type { StorageLocations } from '@/lib/storage';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Job } from '@/lib/training';
 import { isImageReady } from '@/lib/training-status';
@@ -34,8 +36,8 @@ export function ImageTrainingResults({ job }: { job: Job }) {
   </section>;
 }
 
-export function PrivateImageTest({ job, owner, token, apiUrl, storageUrl }: { job: Job; owner: string; token: () => Promise<string>; apiUrl: string; storageUrl: string }) {
-  const api = useMemo(() => imageApi(apiUrl, storageUrl, token), [apiUrl, storageUrl, token]);
+export function PrivateImageTest({ job, owner, token, apiUrl, storage }: { job: Job; owner: string; token: () => Promise<string>; apiUrl: string; storage: StorageLocations }) {
+  const api = useMemo(() => imageApi(apiUrl, storage, token), [apiUrl, storage, token]);
   const [question, setQuestion] = useState<ImageQuestion | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -56,7 +58,7 @@ export function PrivateImageTest({ job, owner, token, apiUrl, storageUrl }: { jo
     {job.workflow?.model_alias && <p>Task alias: <code>{job.workflow.model_alias}</code></p>}
     <button className={styles.button} disabled={busy} onClick={() => void open()}>{busy ? 'Checking model…' : 'Use your model'}</button>
     {error && <p role="alert">{error}</p>}
-    {question && <ImageDecisionPanel owner={owner} token={token} apiUrl={apiUrl} storageUrl={storageUrl} modelId={job.workflow!.model_id} question={question} />}
+    {question && <ImageDecisionPanel owner={owner} token={token} apiUrl={apiUrl} storage={storage} modelId={job.workflow!.model_id} question={question} />}
     {question && <details><summary>Use from your application</summary><p>Upload and finalize a private photo through /v1/image-assets, then send its asset ID with your existing API key.</p><pre className={styles.hash}>{`POST ${apiUrl}/v1/systemone\nAuthorization: Bearer YOUR_API_KEY\nContent-Type: application/json\n\n${JSON.stringify({ model: job.workflow!.model_id, state: {}, questions: { inspection: question }, images: [{ asset_id: 'YOUR_FINALIZED_ASSET_ID' }] }, null, 2)}`}</pre></details>}
   </div>;
 }

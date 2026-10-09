@@ -102,8 +102,8 @@ test('mixed-outcome groups preserve coverage and cannot cross splits', async () 
 test('prepared data uses the existing authenticated create, upload and submit contract', async () => {
   const result=await prepare(); const calls=[];
   const job={id:'123e4567-e89b-42d3-a456-426614174000',name:decision.name,status:'uploading'};
-  const uploads=Object.fromEntries(['train','calibration','test'].map(split=>[split,{url:`https://storage.example/storage/v1/object/${split}`,method:'PUT',headers:{'Content-Type':'application/octet-stream','x-upsert':'false'}}]));
-  const api=trainingApi('https://api.example','https://storage.example',async()=> 'test-session',async(url,options)=>{
+  const uploads=Object.fromEntries(['train','calibration','test'].map(split=>[split,{url:`https://storage.example/storage/v1/object/upload/sign/fez-training-data/${job.id}/inputs/${split}.jsonl`,method:'PUT',headers:{'Content-Type':'application/octet-stream','x-upsert':'false'}}]));
+  const api=trainingApi('https://api.example',{ legacyOrigin: 'https://storage.example' },async()=> 'test-session',async(url,options)=>{
     calls.push({url,options});
     if(options.method==='PUT') return new Response('',{status:200});
     return Response.json(url.endsWith('/submit')?{job:{...job,status:'validating'}}:{job,uploads});

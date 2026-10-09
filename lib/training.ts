@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { uploadSchema, uploadDescriptor, storageUrl, type StorageLocations } from './storage';
 
 export const SPLITS = ['train', 'calibration', 'test'] as const;
 export type Split = typeof SPLITS[number];
@@ -120,19 +121,12 @@ export async function validateDatasets(files: Record<Split, Blob>, signal?: Abor
   return counts;
 }
 
-const uploadSchema = z.object({ url: z.string().url(), method: z.literal('PUT'), headers: z.object({ 'Content-Type': z.literal('application/octet-stream'), 'x-upsert': z.literal('false') }).strict() });
 const uploadSlot = z.union([uploadSchema, z.object({ uploaded: z.literal(true) })]);
 const uploadsSchema = z.object({ train: uploadSlot, calibration: uploadSlot, test: uploadSlot });
 export class TrainingApiError extends Error { constructor(message: string, public status: number) { super(message); } }
 
-export function trainingApi(baseUrl: string, storageUrl: string, token: () => Promise<string>, request: typeof fetch = fetch) {
+export function trainingApi(baseUrl: string, storage: StorageLocations, token: () => Promise<string>, request: typeof fetch = fetch) {
   const base = serviceUrl(baseUrl);
-  const storageOrigin = new URL(serviceUrl(storageUrl)).origin;
-  function signedUrl(raw: string) {
-    const url = new URL(raw);
-    if (url.origin !== storageOrigin || !url.pathname.startsWith('/storage/v1/object/') || url.username || url.password) throw new Error('The coordinator returned an unexpected storage destination.');
-    return url.href;
-  }
   async function call<T>(path: string, schema: z.ZodType<T>, body?: unknown, signal?: AbortSignal): Promise<T> {
     const accessToken = await token();
     if (!accessToken) throw new TrainingApiError('Your session expired. Sign in again.', 401);
@@ -153,13 +147,23 @@ export function trainingApi(baseUrl: string, storageUrl: string, token: () => Pr
     return parsed.data;
   }
   const idPath = (id: string) => `/${z.string().uuid().parse(id)}`;
+  function checkedUploads<T extends { job: Job; uploads: z.infer<typeof uploadsSchema> }>(result: T, expectedId?: string): T {
+    if (expectedId && result.job.id !== expectedId) throw new Error('The upload does not match this job.');
+    for (const split of SPLITS) {
+      const descriptor = result.uploads[split];
+      if ('uploaded' in descriptor) continue;
+      const slot = uploadDescriptor(descriptor, storage, 'dataset-upload');
+      if (!new URL(slot.url).pathname.endsWith(`/${result.job.id}/inputs/${split}.jsonl`)) throw new Error('The upload does not match this job.');
+    }
+    return result;
+  }
   return {
     list: (signal?: AbortSignal) => call('', z.object({ jobs: z.array(jobSchema), models: z.array(jobSchema).optional() }), undefined, signal),
     get: (id: string, signal?: AbortSignal) => call(idPath(id), z.object({ job: jobSchema }), undefined, signal),
-    create: (input: Submission, signal?: AbortSignal) => call('', z.object({ job: jobSchema, uploads: uploadsSchema }), submissionSchema.parse(input), signal),
-    createImage: (input: ImageSubmission, signal?: AbortSignal) => call('', z.object({ job: jobSchema, uploads: uploadsSchema }), imageSubmissionSchema.parse(input), signal),
+    create: (input: Submission, signal?: AbortSignal) => call('', z.object({ job: jobSchema, uploads: uploadsSchema }), submissionSchema.parse(input), signal).then(result => checkedUploads(result)),
+    createImage: (input: ImageSubmission, signal?: AbortSignal) => call('', z.object({ job: jobSchema, uploads: uploadsSchema }), imageSubmissionSchema.parse(input), signal).then(result => checkedUploads(result)),
     imageAssets: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/image-assets`, z.object({ assets: z.array(z.object({ id: z.string().uuid(), filename: z.string(), source_sha256: z.string() })) }), undefined, signal),
-    resume: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/uploads`, z.object({ job: jobSchema, uploads: uploadsSchema }), {}, signal),
+    resume: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/uploads`, z.object({ job: jobSchema, uploads: uploadsSchema }), {}, signal).then(result => checkedUploads(result, id)),
     cancel: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/cancel`, z.object({ job: jobSchema }), {}, signal),
     submit: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/submit`, z.object({ job: jobSchema }), {}, signal),
     downloads: async (job: Job, signal?: AbortSignal) => {
@@ -168,13 +172,18 @@ export function trainingApi(baseUrl: string, storageUrl: string, token: () => Pr
       const data = await call(`${idPath(job.id)}/downloads`, schema, undefined, signal);
       const files = downloadFiles(job);
       if (Object.keys(data.downloads).length !== files.length || files.some(name => !data.downloads[name])) throw new Error('The model download does not match this job’s model version.');
-      return files.map(name => ({ name, url: signedUrl(data.downloads[name].url) }));
+      return files.map(name => {
+        const url = storageUrl(data.downloads[name].url, storage, 'model-download');
+        if (!url.pathname.includes(`/fez-training-models/${job.id}/releases/`) || !url.pathname.endsWith(`/${name}`)) throw new Error('The model download does not match this job.');
+        return { name, url: url.href };
+      });
     },
     upload: async (split: Split, descriptor: z.infer<typeof uploadSchema>, file: Blob, signal?: AbortSignal) => {
-      const valid = uploadSchema.parse(descriptor);
+      const valid = uploadDescriptor(descriptor, storage, 'dataset-upload');
+      if (!new URL(valid.url).pathname.endsWith(`/inputs/${split}.jsonl`)) throw new Error('The upload does not match this split.');
       if (!file.size || file.size > MAX_DATASET_BYTES) throw new Error(`${split}: file must be nonempty and at most 128 MiB.`);
       try {
-        const response = await request(signedUrl(valid.url), { method: valid.method, headers: valid.headers, body: file, credentials: 'omit', redirect: 'error', signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(600_000)]) : AbortSignal.timeout(600_000) });
+        const response = await request(valid.url, { method: valid.method, headers: valid.headers, body: file, credentials: 'omit', redirect: 'error', signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(600_000)]) : AbortSignal.timeout(600_000) });
         if (!response.ok) throw new Error('Upload rejected.');
       } catch (error) {
         if (signal?.aborted) throw error;
