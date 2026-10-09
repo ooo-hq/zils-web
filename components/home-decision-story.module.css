@@ -1,6 +1,6 @@
 .root { scroll-margin-top: 32px; }
 .heading { display: grid; grid-template-columns: 1fr 1fr; align-items: end; gap: 64px; }
-.heading h2 { margin: 0; font-size: clamp(36px,4.6vw,54px); line-height: 1.02; font-weight: 600; letter-spacing: -.05em; }
+.heading h2 { margin: 0; font-size: clamp(36px,4.6vw,54px); line-height: 1.02; font-weight: 600; letter-spacing: -.05em; text-wrap: balance; }
 .heading > p { margin: 0; max-width: 44ch; color: var(--zils-muted); font-size: 16px; line-height: 1.75; }
 .scenario { margin: 46px 0 24px; color: var(--zils-muted); font-size: 14px; line-height: 1.6; }
 .story { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,.78fr) minmax(0,1.1fr); gap: 36px; }

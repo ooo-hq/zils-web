@@ -25,7 +25,7 @@ export function HomeDecisionStory() {
   return (
     <div className={s.root} id="try-decision-heading">
       <header className={s.heading}>
-        <h2 id="workflow-h">Teach a small AI<br />to make your call.</h2>
+        <h2 id="workflow-h">Show it what a good answer looks like.</h2>
         <p>Show Zils examples of decisions you already know how to make. It trains a model for that job, checks how well it does, and hosts it for your app to use.</p>
       </header>
 

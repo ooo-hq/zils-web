@@ -1,8 +1,12 @@
 import { test, expect } from '@playwright/test';
 
-test('early-access email signup remains available alongside account sign-in', async ({ page }) => {
+test('the homepage opens training while early-access email signup remains available', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('link', { name: 'Request early access', exact: true }).first().click();
+  await page.getByRole('region', { name: 'Teach AI to make decisions your way.', exact: true }).getByRole('link', { name: 'Train your own model', exact: true }).click();
+  await expect(page).toHaveURL(/\/train$/);
+  await expect(page.getByRole('heading', { name: 'Sign in to Zils', exact: true })).toBeVisible();
+  await page.goto('/');
+  await page.getByRole('navigation', { name: 'Footer', exact: true }).getByRole('link', { name: 'Early access', exact: true }).click();
   await expect(page).toHaveURL(/\/early-access$/);
   await expect(page.getByRole('form', { name: 'Join Zils early access' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Sign in to your workspace.' })).toHaveAttribute('href', '/train');
