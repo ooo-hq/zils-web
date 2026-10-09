@@ -4,8 +4,9 @@ import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { HeroBackdrop } from '@/components/hero-backdrop';
 import jevbench from '@/public/model/jevbench-public-001.json';
-import round from '@/public/model/testnet-round-001.json';
-import { DecisionInstrument, RoundReplay, type ReplayTab } from './live';
+import { DecisionInstrument } from './live';
+import { HomeDecisionStarter } from '@/components/home-decision-starter';
+import { STARTERS } from '@/lib/decision-setup';
 import { ZilsWordmark } from '@/components/zils-wordmark';
 import { SupportStudySummary } from '@/components/support-study';
 import { jevMetrics, jevTrained, jevErrorReduction } from '@/lib/jev-comparison';
@@ -30,51 +31,6 @@ export const metadata: Metadata = {
 
 // Recorded figures are sourced from public experiment records.
 const fez = jevbench.models.find((m) => m.id === 'fez')!.metrics;
-const miners = round.miners;
-const counts = round.benchmark.counts;
-const onChain = round.chain.verification.on_chain_weights as Record<string, number>;
-
-const REPLAY: ReplayTab[] = [
-  {
-    tab: 'Train',
-    lines: [
-      ['c', `# recorded round ${round.round_id.slice(0, 8)} · ${round.verified_at.slice(0, 10)}`],
-      ['k', `$ base ${round.model.base} @ ${round.model.base_revision.slice(0, 7)}`],
-      ['o', `  lora_rank ${round.training.lora_rank} · head_dim ${round.training.head_dim} · lr ${round.training.learning_rate} · epochs ${round.training.epochs}`],
-      ['o', `  splits  train ${counts.train.cases} · calibration ${counts.calibration.cases} · test ${counts.test.cases} (held out)`],
-      ['o', `  placement  ${round.hardware.participant_placement}`],
-      ['o', `  device  ${round.hardware.processor} · ${round.hardware.device} · ${round.hardware.dtype}`],
-      ['a', `✓ ${miners.length} candidate checkpoints trained`],
-    ],
-  },
-  {
-    tab: 'Evaluate',
-    lines: [
-      ['k', `$ evaluate · rubric ${round.benchmark.rubric} · ${counts.test.cases} held-out cases`],
-      ...miners.map(
-        (m) =>
-          [
-            'o',
-            `  uid ${m.uid}  ${m.correct}/${m.cases}  acc ${(m.accuracy * 100).toFixed(1)}%  brier ${m.brier.toFixed(3)}  confident errors ${m.confident_errors}`,
-          ] as const,
-      ),
-      ['c', `# uniform-guess brier would be ${miners[0].uniform_brier.toFixed(3)}; lower is better`],
-      ['a', '✓ every candidate beat the uniform baseline'],
-    ],
-  },
-  {
-    tab: 'Verify',
-    lines: [
-      ['k', `$ set_weights · ${round.chain.network}net · netuid ${round.chain.netuid} · commit-reveal`],
-      ['o', `  extrinsic ${round.chain.weight_transaction.extrinsic_id}`],
-      ['o', `  on-chain u16  ${Object.entries(onChain).map(([uid, w]) => `uid${uid} ${w}`).join(' · ')}`],
-      ['c', '# connection dropped during confirmation;'],
-      ['c', '# inclusion recovered from the block, not resubmitted'],
-      ['a', `✓ weights verified at block ${round.chain.verification.block}`],
-    ],
-  },
-];
-
 const USE_CASES = [
   ['Choose the right model', 'Evaluate whether a request needs a larger model or can stay on a smaller one. Reserve expensive calls for the work that needs them.', 'Request → model'],
   ['Select the next tool', 'Turn context into a choice among the tools your agent can use, without generating a full text response for every selection.', 'Context → tool'],
@@ -181,7 +137,7 @@ export default function HomePage() {
         </main>
       </div>
 
-      {/* ── Workflow + replay ──────────────────────────────── */}
+      {/* ── Workflow + starter ──────────────────────────────── */}
       <section id="workflow" aria-labelledby="workflow-h" className="scroll-mt-8 bg-[var(--zils-surface)] px-6 py-24 sm:px-8">
         <div className="mx-auto max-w-5xl">
           <p className="flex items-center justify-center gap-2 text-[12px] font-medium">
@@ -206,19 +162,7 @@ export default function HomePage() {
             ))}
           </ol>
 
-          <div className="mt-20 grid gap-10 md:grid-cols-[0.8fr_1.2fr] md:items-start">
-            <div className="md:pt-12">
-              <p className="text-xs text-subtle">Recorded testnet round</p>
-              <h3 className="mt-3 text-[28px] font-semibold leading-[1.08] tracking-[-0.04em]">Train. Evaluate. Verify. On the record.</h3>
-              <p className="mt-4 text-sm leading-6 text-muted">
-                Inspect the recorded Bittensor testnet round, from training through on-chain verification. Every number comes from the public record.
-              </p>
-              <a href="/model/testnet-round-001.json" className="mt-5 inline-block font-mono text-xs underline decoration-edge-strong underline-offset-4 hover:decoration-ink">
-                testnet-round-001.json ↗
-              </a>
-            </div>
-            <RoundReplay tabs={REPLAY} caption={round.limitations.slice(0, 2).join(' ')} />
-          </div>
+          <HomeDecisionStarter starters={STARTERS} />
         </div>
       </section>
 

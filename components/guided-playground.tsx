@@ -14,17 +14,18 @@ import s from './guided-playground.module.css';
 const SAVED = 'zils-saved-decision-setup-v1';
 const STAGES = ['Describe', 'Review questions', 'Try an example'];
 
-export function GuidedPlayground({ configured, assistantConfigured, models }: { configured: boolean; assistantConfigured: boolean; models: ModelOption[] }) {
-  const [stage, setStage] = useState(0);
-  const [goal, setGoal] = useState('');
+export function GuidedPlayground({ configured, assistantConfigured, models, initialStarterId }: { configured: boolean; assistantConfigured: boolean; models: ModelOption[]; initialStarterId?: string }) {
+  const initialStarter = STARTERS.find(starter => starter.id === initialStarterId);
+  const [stage, setStage] = useState(initialStarter ? 1 : 0);
+  const [goal, setGoal] = useState(initialStarter?.goal ?? '');
   const [reply, setReply] = useState('');
   const [messages, setMessages] = useState<SetupMessage[]>([]);
   const [clarification, setClarification] = useState<Extract<SetupReply, { kind: 'clarify' }> | null>(null);
-  const [draft, setDraft] = useState<SetupDraft | null>(null);
-  const [source, setSource] = useState('');
+  const [draft, setDraft] = useState<SetupDraft | null>(() => initialStarter ? structuredClone(initialStarter.draft) : null);
+  const [source, setSource] = useState(initialStarter ? 'Starter template' : '');
   const [revision, setRevision] = useState('');
-  const [example, setExample] = useState('');
-  const [sample, setSample] = useState('');
+  const [example, setExample] = useState(initialStarter?.example ?? '');
+  const [sample, setSample] = useState(initialStarter?.example ?? '');
   const [response, setResponse] = useState<DecisionResponse | null>(null);
   const [busy, setBusy] = useState<'assistant' | 'model' | null>(null);
   const [error, setError] = useState('');
