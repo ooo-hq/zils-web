@@ -79,11 +79,11 @@ export function FlightStudyDetails() {
     <section id="flight-study" aria-labelledby="flight-study-heading" className="scroll-mt-20 border-t border-edge py-16 sm:py-20">
       <p className="text-xs text-muted">Completed experiment · 5 October 2026 UTC</p>
       <h2 id="flight-study-heading" className="mt-4 max-w-[23ch] text-[clamp(2.1rem,4.4vw,3.3rem)] font-semibold leading-[1.04] tracking-[-0.055em]">
-        A base model. A flight adapter. A measurable improvement.
+        Flight risk: historical rates still scored best.
       </h2>
       <p className="mt-5 max-w-[68ch] text-[15px] leading-7 text-muted">
-        Could training on past flights improve Zils’ estimates of arrival delays?
-        On {number(flightSplits.test.count)} held-out flights, the trained adapter reduced probability error by {flightImprovement}% versus the base.
+        Estimate whether a flight will arrive at least 15 minutes late, using scheduled information only.
+        On {number(flightSplits.test.count)} later test flights, the trained adapter reduced probability error by {flightImprovement}% versus the base.
         A simple historical-rate baseline still had the best measured score.
       </p>
 

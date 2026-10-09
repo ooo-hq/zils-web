@@ -38,8 +38,9 @@ export function ChessStudySummary() {
     <section id="chess-study" aria-labelledby="chess-study-heading" className="scroll-mt-20 border-t border-edge py-16 sm:py-20">
       <div className="grid gap-10 md:grid-cols-2 md:items-center">
         <div>
-          <p className="text-xs text-muted">New research · Chess · 7 October 2026 UTC</p>
-          <h2 id="chess-study-heading" className="mt-4 max-w-[20ch] text-[clamp(2rem,4.4vw,3.25rem)] font-semibold leading-[1.04] tracking-[-0.055em]">Training improved mate-in-one choices.</h2>
+          <p className="text-xs text-muted">Chess specialization · 7 October 2026 UTC</p>
+          <h2 id="chess-study-heading" className="mt-4 max-w-[20ch] text-[clamp(2rem,4.4vw,3.25rem)] font-semibold leading-[1.04] tracking-[-0.055em]">Chess: find the move that ends the game.</h2>
+          <p className="mt-5 max-w-[48ch] text-[15px] leading-7 text-muted">Choose an immediate checkmate from a supplied list of legal checking moves. A correct answer ends the game in one move; this does not test playing a whole game.</p>
           <p className="mt-5 max-w-[48ch] text-[15px] leading-7 text-muted">
             A fresh chess adapter selected a checkmating move in <strong className="font-semibold text-ink">260 of 512 held-out positions</strong>.
             Accuracy improved by {chessPoints(chessStudy.paired_comparisons.trained_minus_shared.accuracy.right_minus_left)} percentage points over shared Zils

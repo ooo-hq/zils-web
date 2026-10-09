@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SupportDecisionExamples } from '@/components/support-decision-examples';
 import {
   supportStudy, supportBase, supportAdapter, supportGain, supportErrorReduction,
   supportComparisons, supportSource, supportMethod,
@@ -76,58 +77,66 @@ export function SupportStudyDetails() {
   ] as const;
   return (
     <section id="support-study" aria-labelledby="support-study-heading" className="scroll-mt-20 border-t border-edge py-16 sm:py-20">
-      <p className="text-xs text-muted">Completed experiment · 6 October 2026 · ABCD support conversations</p>
-      <h2 id="support-study-heading" className="mt-4 max-w-[24ch] text-[clamp(2.1rem,4.4vw,3.3rem)] font-semibold leading-[1.04] tracking-[-0.055em]">Better at choosing the next support action.</h2>
+      <p className="text-xs text-muted">Support training protocol · 6 October 2026</p>
+      <h2 id="support-study-heading" className="mt-4 max-w-[24ch] text-[clamp(2.1rem,4.4vw,3.3rem)] font-semibold leading-[1.04] tracking-[-0.055em]">How the support model learned.</h2>
       <p className="mt-5 max-w-[68ch] text-[15px] leading-7 text-muted">After training on {number(supportStudy.splits.training_conversations)} separate conversations, Zils’ accuracy rose from {percent(supportBase.accuracy)} to {percent(supportAdapter.accuracy)} on the untouched test set. The task was to choose the next recorded support action from all {supportStudy.splits.action_choices} tool choices.</p>
 
-      <div className="mt-10 grid gap-10 md:grid-cols-2 md:items-center">
-        <div>
-          <h3 className="text-xl font-semibold tracking-[-0.035em]">Learn, select, then test.</h3>
-          <ol className="mt-5 divide-y divide-edge border-y border-edge">
-            {[
-              ['Train', `${number(supportStudy.splits.training_conversations)} conversations`, 'One fixed recipe. Three saved checkpoints.'],
-              ['Select', `${supportStudy.splits.development_conversations} development conversations`, 'Choose the strongest qualifying checkpoint.'],
-              ['Test', `${supportStudy.splits.test_conversations} untouched conversations`, 'Freeze the adapter, then compare both models on identical cases.'],
-            ].map(([label, count, note], i) => <li key={label} className="flex gap-4 py-5"><span aria-hidden="true" className="pt-0.5 text-xs text-subtle">{i + 1}</span><div><h4 className="text-sm font-semibold">{label} · {count}</h4><p className="mt-1 text-xs leading-6 text-muted">{note}</p></div></li>)}
-          </ol>
-          <p className="mt-5 text-sm leading-6 text-muted">The adapter corrected {test.paired_cases_improved} baseline mistakes and introduced {test.paired_cases_worsened} new ones. Total mistakes fell from {supportBase.count - supportBase.correct} to {supportAdapter.count - supportAdapter.correct}.</p>
-        </div>
-        <AccuracyComparison />
-      </div>
-
-      <div className="mt-10 grid gap-6 border-y border-edge py-6 sm:grid-cols-3">
-        {[
-          ['Accuracy gain', `+${supportGain} points`, 'On the final test set'],
-          ['Fewer mistakes', `${supportErrorReduction}%`, 'Compared with before training'],
-          ['Lower probability error', `${test.brier_relative_improvement_percent.toFixed(1)}%`, 'Relative decrease in multiclass Brier score'],
-        ].map(([label, value, note]) => <div key={label}><p className="text-xs text-muted">{label}</p><p className="mt-2 text-2xl font-semibold tracking-[-0.035em] tabular-nums">{value}</p><p className="mt-2 text-xs leading-5 text-subtle">{note}</p></div>)}
-      </div>
-      <p className="mt-5 text-sm leading-7 text-muted">The 95% interval for the accuracy gain is <strong className="font-medium text-ink">+{test.accuracy_gain_95_percent_paired_bootstrap_percentage_points[0].toFixed(1)} to +{test.accuracy_gain_95_percent_paired_bootstrap_percentage_points[1].toFixed(1)} percentage points</strong>, from 2,000 paired resamples of test conversations. The trained adapter also beat both simple frequency baselines.</p>
-
       <details className="group mt-8 rounded-md border border-edge">
-        <summary className="cursor-pointer px-5 py-5 text-sm font-semibold marker:text-accent hover:text-accent">All scores, training checkpoints, and methodology</summary>
+        <summary className="cursor-pointer px-5 py-5 text-sm font-semibold marker:text-accent hover:text-accent">Training protocol, checkpoint selection, and full evaluation</summary>
         <div className="border-t border-edge p-5 sm:p-6">
-          <div role="region" aria-label="Support study final test scores" tabIndex={0} className="overflow-x-auto overscroll-x-contain">
-            <table className="w-full min-w-[580px] border-collapse text-sm">
-              <caption className="pb-4 text-left text-xs leading-6 text-muted">Final test only. Same 500 conversations. Higher accuracy and macro F1 are better; lower Brier error is better.</caption>
-              <thead><tr><th scope="col" className="px-4 py-3 text-left font-medium">Model</th><th scope="col" className="px-4 py-3 text-right font-medium">Accuracy</th><th scope="col" className="px-4 py-3 text-right font-medium">Macro F1</th><th scope="col" className="px-4 py-3 text-right font-medium">Brier error</th></tr></thead>
-              <tbody>{metrics.map(([name, metric]) => <tr key={name}><th scope="row" className="border-t border-edge px-4 py-4 text-left font-normal">{name}</th><td className={cell}>{percent(metric.accuracy)}</td><td className={cell}>{metric.macro_f1.toFixed(4)}</td><td className={cell}>{metric.multiclass_brier.toFixed(6)}</td></tr>)}</tbody>
-            </table>
+          <div className="grid gap-10 md:grid-cols-2 md:items-center">
+            <div>
+              <h3 className="text-xl font-semibold tracking-[-0.035em]">Learn, select, then test.</h3>
+              <ol className="mt-5 divide-y divide-edge border-y border-edge">
+                {[
+                  ['Train', `${number(supportStudy.splits.training_conversations)} conversations`, 'One fixed recipe. Three saved checkpoints.'],
+                  ['Select', `${supportStudy.splits.development_conversations} development conversations`, 'Choose the strongest qualifying checkpoint.'],
+                  ['Test', `${supportStudy.splits.test_conversations} untouched conversations`, 'Freeze the adapter, then compare both models on identical cases.'],
+                ].map(([label, count, note], i) => <li key={label} className="flex gap-4 py-5"><span aria-hidden="true" className="pt-0.5 text-xs text-subtle">{i + 1}</span><div><h4 className="text-sm font-semibold">{label} · {count}</h4><p className="mt-1 text-xs leading-6 text-muted">{note}</p></div></li>)}
+              </ol>
+              <p className="mt-5 text-sm leading-6 text-muted">The adapter corrected {test.paired_cases_improved} baseline mistakes and introduced {test.paired_cases_worsened} new ones. Total mistakes fell from {supportBase.count - supportBase.correct} to {supportAdapter.count - supportAdapter.correct}.</p>
+            </div>
+            <AccuracyComparison />
           </div>
-          <div role="region" aria-label="Development checkpoint scores" tabIndex={0} className="mt-8 overflow-x-auto overscroll-x-contain">
-            <table className="w-full min-w-[480px] border-collapse text-sm">
-              <caption className="pb-4 text-left text-xs leading-6 text-muted">Development results used for selection. These are a separate set of 500 conversations, not the final test above.</caption>
-              <thead><tr><th scope="col" className="px-4 py-3 text-left font-medium">Training examples</th><th scope="col" className="px-4 py-3 text-right font-medium">Accuracy</th><th scope="col" className="px-4 py-3 text-right font-medium">Brier error</th></tr></thead>
-              <tbody>{[{ checkpoint_examples: 0, ...baseline }, ...checkpoints].map(row => <tr key={row.checkpoint_examples}><th scope="row" className="border-t border-edge px-4 py-4 text-left font-normal">{row.checkpoint_examples === 0 ? 'Before training' : number(row.checkpoint_examples)}</th><td className={cell}>{percent(row.accuracy)}</td><td className={cell}>{row.multiclass_brier.toFixed(6)}</td></tr>)}</tbody>
-            </table>
+
+          <div className="mt-10 grid gap-6 border-y border-edge py-6 sm:grid-cols-3">
+            {[
+              ['Accuracy gain', `+${supportGain} points`, 'On the final test set'],
+              ['Fewer mistakes', `${supportErrorReduction}%`, 'Compared with before training'],
+              ['Lower probability error', `${test.brier_relative_improvement_percent.toFixed(1)}%`, 'Relative decrease in multiclass Brier score'],
+            ].map(([label, value, note]) => <div key={label}><p className="text-xs text-muted">{label}</p><p className="mt-2 text-2xl font-semibold tracking-[-0.035em] tabular-nums">{value}</p><p className="mt-2 text-xs leading-5 text-subtle">{note}</p></div>)}
           </div>
-          <div className="mt-8 space-y-5 text-sm leading-7 text-muted">
-            <p><strong className="font-medium text-ink">What the model sees.</strong> The conversation so far, previously completed tool calls and their results, and a compact catalog of workflow sequences. The current answer, future turns, and labeled workflow metadata are excluded. Each case comes from a distinct conversation in its official split.</p>
-            <p><strong className="font-medium text-ink">One fixed recipe.</strong> JevK5 4B with an attention-only rank-16 LoRA adapter, one epoch, learning rate 0.00001, and seed 553. The base weights stayed frozen. Training used groups of 15 or 16 answer choices; every evaluation offered all 30 through JevK5’s native selection process. Published temperatures stayed at 1.22 and 0.93; no confidence recalibration was fitted.</p>
-            <p><strong className="font-medium text-ink">Selection before testing.</strong> A checkpoint needed at least 59% development accuracy, lower Brier error, and no macro-F1 regression. Highest accuracy won among qualifying checkpoints. All three qualified; the 1,024-example checkpoint was frozen before the final test.</p>
-            <p><strong className="font-medium text-ink">How improvement is measured.</strong> The +{supportGain}-point gain is the difference in accuracy. The {supportErrorReduction}% figure is the relative reduction in mistakes. The {test.brier_relative_improvement_percent.toFixed(1)}% probability improvement is the relative reduction in multiclass Brier error, the summed squared difference between predicted probabilities and the recorded answer.</p>
+          <p className="mt-5 text-sm leading-7 text-muted">The 95% interval for the accuracy gain is <strong className="font-medium text-ink">+{test.accuracy_gain_95_percent_paired_bootstrap_percentage_points[0].toFixed(1)} to +{test.accuracy_gain_95_percent_paired_bootstrap_percentage_points[1].toFixed(1)} percentage points</strong>, from 2,000 paired resamples of test conversations. The trained adapter also beat both simple frequency baselines.</p>
+
+          <div className="mt-8 border-t border-edge pt-6">
+            <h3 className="mb-6 text-lg font-semibold">Final scores and checkpoint selection</h3>
+            <div role="region" aria-label="Support study final test scores" tabIndex={0} className="overflow-x-auto overscroll-x-contain">
+              <table className="w-full min-w-[580px] border-collapse text-sm">
+                <caption className="pb-4 text-left text-xs leading-6 text-muted">Final test only. Same 500 conversations. Higher accuracy and macro F1 are better; lower Brier error is better.</caption>
+                <thead><tr><th scope="col" className="px-4 py-3 text-left font-medium">Model</th><th scope="col" className="px-4 py-3 text-right font-medium">Accuracy</th><th scope="col" className="px-4 py-3 text-right font-medium">Macro F1</th><th scope="col" className="px-4 py-3 text-right font-medium">Brier error</th></tr></thead>
+                <tbody>{metrics.map(([name, metric]) => <tr key={name}><th scope="row" className="border-t border-edge px-4 py-4 text-left font-normal">{name}</th><td className={cell}>{percent(metric.accuracy)}</td><td className={cell}>{metric.macro_f1.toFixed(4)}</td><td className={cell}>{metric.multiclass_brier.toFixed(6)}</td></tr>)}</tbody>
+              </table>
+            </div>
+            <div role="region" aria-label="Development checkpoint scores" tabIndex={0} className="mt-8 overflow-x-auto overscroll-x-contain">
+              <table className="w-full min-w-[480px] border-collapse text-sm">
+                <caption className="pb-4 text-left text-xs leading-6 text-muted">Development results used for selection. These are a separate set of 500 conversations, not the final test above.</caption>
+                <thead><tr><th scope="col" className="px-4 py-3 text-left font-medium">Training examples</th><th scope="col" className="px-4 py-3 text-right font-medium">Accuracy</th><th scope="col" className="px-4 py-3 text-right font-medium">Brier error</th></tr></thead>
+                <tbody>{[{ checkpoint_examples: 0, ...baseline }, ...checkpoints].map(row => <tr key={row.checkpoint_examples}><th scope="row" className="border-t border-edge px-4 py-4 text-left font-normal">{row.checkpoint_examples === 0 ? 'Before training' : number(row.checkpoint_examples)}</th><td className={cell}>{percent(row.accuracy)}</td><td className={cell}>{row.multiclass_brier.toFixed(6)}</td></tr>)}</tbody>
+              </table>
+            </div>
+            <div className="mt-8 space-y-5 text-sm leading-7 text-muted">
+              <p><strong className="font-medium text-ink">What the model sees.</strong> The conversation so far, previously completed tool calls and their results, and a compact catalog of workflow sequences. The current answer, future turns, and labeled workflow metadata are excluded. Each case comes from a distinct conversation in its official split.</p>
+              <p><strong className="font-medium text-ink">One fixed recipe.</strong> JevK5 4B with an attention-only rank-16 LoRA adapter, one epoch, learning rate 0.00001, and seed 553. The base weights stayed frozen. Training used groups of 15 or 16 answer choices; every evaluation offered all 30 through JevK5’s native selection process. Published temperatures stayed at 1.22 and 0.93; no confidence recalibration was fitted.</p>
+              <p><strong className="font-medium text-ink">Selection before testing.</strong> A checkpoint needed at least 59% development accuracy, lower Brier error, and no macro-F1 regression. Highest accuracy won among qualifying checkpoints. All three qualified; the 1,024-example checkpoint was frozen before the final test.</p>
+              <p><strong className="font-medium text-ink">How improvement is measured.</strong> The +{supportGain}-point gain is the difference in accuracy. The {supportErrorReduction}% figure is the relative reduction in mistakes. The {test.brier_relative_improvement_percent.toFixed(1)}% probability improvement is the relative reduction in multiclass Brier error, the summed squared difference between predicted probabilities and the recorded answer.</p>
+            </div>
           </div>
         </div>
+      </details>
+
+      <details className="mt-4 rounded-md border border-edge px-5 sm:px-6">
+        <summary className="cursor-pointer py-5 text-sm font-semibold marker:text-accent hover:text-accent">Inspect recorded decisions: three corrections and one new mistake</summary>
+        <SupportDecisionExamples />
       </details>
 
       <div className="mt-8 rounded-md bg-surface p-5 sm:p-6">
