@@ -5,28 +5,27 @@ import { SiteHeader } from '@/components/site-header';
 import { HeroBackdrop } from '@/components/hero-backdrop';
 import jevbench from '@/public/model/jevbench-public-001.json';
 import { DecisionInstrument } from './live';
-import { HomeDecisionStarter } from '@/components/home-decision-starter';
-import { STARTERS } from '@/lib/decision-setup';
+import { HomeDecisionStory } from '@/components/home-decision-story';
 import { ZilsWordmark } from '@/components/zils-wordmark';
 import { SupportStudySummary } from '@/components/support-study';
 import { jevMetrics, jevTrained, jevErrorReduction } from '@/lib/jev-comparison';
 import s from './home.module.css';
 
 const TITLE = 'Your data. Your decision model.';
-const DESCRIPTION = 'Train, evaluate, and deploy models for your business’s decisions.';
+const DESCRIPTION = 'Teach a small AI with your examples. Use it to make decisions in your app.';
 
 export const metadata: Metadata = {
   title: `zils — ${TITLE}`,
-  description: `${DESCRIPTION} A trainable decision primitive for your AI stack, built around authorized labeled examples. Early access; customer delivery is planned.`,
+  description: DESCRIPTION,
   alternates: { canonical: 'https://zils.ai' },
   openGraph: {
     title: `zils — ${TITLE}`,
-    description: `${DESCRIPTION} Early access; customer delivery is planned.`,
+    description: DESCRIPTION,
     url: 'https://zils.ai',
     siteName: 'Zils',
     type: 'website',
   },
-  twitter: { card: 'summary', title: `zils — ${TITLE}`, description: `${DESCRIPTION} Early access; customer delivery is planned.` },
+  twitter: { card: 'summary', title: `zils — ${TITLE}`, description: DESCRIPTION },
 };
 
 // Recorded figures are sourced from public experiment records.
@@ -35,13 +34,6 @@ const USE_CASES = [
   ['Choose the right model', 'Evaluate whether a request needs a larger model or can stay on a smaller one. Reserve expensive calls for the work that needs them.', 'Request → model'],
   ['Select the next tool', 'Turn context into a choice among the tools your agent can use, without generating a full text response for every selection.', 'Context → tool'],
   ['Know when to escalate', 'Use labeled outcomes to evaluate whether an agent should continue, retry, or ask for review before the next step.', 'Agent state → next action'],
-] as const;
-
-const STEPS = [
-  ['Provide labeled examples', 'One recurring decision, its possible outcomes, and data you’re authorized to train on, with a separate set held out.'],
-  ['Train candidates', 'Adapt a starting model to the task. Recipes and candidate versions stay traceable.'],
-  ['Evaluate against a baseline', 'Accuracy, probability quality, consequential mistakes, latency, and total cost vs. your current approach.'],
-  ['Deploy a qualifying model', 'Acceptance criteria are agreed before training. Only a candidate that meets them moves on.'],
 ] as const;
 
 const DELIVERABLES = [
@@ -66,7 +58,7 @@ export default function HomePage() {
           <section className="mx-auto max-w-4xl px-6 pb-24 pt-8 text-center sm:px-8">
             <ZilsWordmark className="text-[112px] text-[var(--zils-accent)] sm:text-[144px]" />
             <p className="mt-8 flex items-center justify-center gap-2 text-[12px] font-medium">
-              Specialized decision models · Early access
+              Specialized decision models
             </p>
             <h1 className="mt-5 text-balance text-[clamp(2.9rem,7vw,5.4rem)] font-semibold leading-[0.98] tracking-[-0.06em]">
               Your data.
@@ -75,8 +67,8 @@ export default function HomePage() {
             </h1>
             <p className="mx-auto mt-6 max-w-lg text-[18px] leading-7 text-muted">{DESCRIPTION}</p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
-              <Link href="/early-access" className="inline-flex items-center rounded-md bg-action px-5 py-3 text-[13px] font-medium text-on-action transition-colors hover:bg-action-hover">
-                Request early access
+              <Link href="/train" className="inline-flex items-center rounded-md bg-action px-5 py-3 text-[13px] font-medium text-on-action transition-colors hover:bg-action-hover">
+                Train your own model
               </Link>
               <a href="#workflow" className="text-[13px] hover:text-[var(--zils-accent)]">
                 See how it works ↓
@@ -110,7 +102,7 @@ export default function HomePage() {
                 <span className="size-1.5 rounded-full bg-[var(--zils-accent)]" />
                 Training &amp; evaluation implemented
               </span>
-              <span>Customer delivery planned</span>
+              <Link href="/train" className="text-ink hover:text-[var(--zils-accent)]">Open the training workspace</Link>
               <Link href="/model" className="text-ink hover:text-[var(--zils-accent)]">
                 Explore the research ↗
               </Link>
@@ -137,33 +129,9 @@ export default function HomePage() {
         </main>
       </div>
 
-      {/* ── Workflow + starter ──────────────────────────────── */}
-      <section id="workflow" aria-labelledby="workflow-h" className="scroll-mt-8 bg-[var(--zils-surface)] px-6 py-24 sm:px-8">
-        <div className="mx-auto max-w-5xl">
-          <p className="flex items-center justify-center gap-2 text-[12px] font-medium">
-            Training workflow
-          </p>
-          <h2 id="workflow-h" className="mx-auto mt-4 max-w-2xl text-balance text-center text-[clamp(2.1rem,4.4vw,3.3rem)] font-semibold leading-[1.04] tracking-[-0.055em]">
-            Good examples in.
-            <br />
-            Evidence behind every decision.
-          </h2>
-          <p className="mx-auto mt-4 max-w-md text-center text-sm leading-6 text-muted">
-            Train a task-specific adapter, verify its checkpoint, and compare its predictions with a starting model. Evaluate quality before using a candidate for decisions.
-          </p>
-
-          <ol className="mt-14 grid gap-px overflow-hidden rounded-md bg-edge ring-1 ring-edge md:grid-cols-4">
-            {STEPS.map(([title, body], i) => (
-              <li key={title} className="bg-page/90 p-6">
-                <span className="font-mono text-xs text-[var(--zils-accent)]">0{i + 1}</span>
-                <h3 className="mt-5 text-[15px] font-semibold tracking-[-0.02em]">{title}</h3>
-                <p className="mt-2 text-[13px] leading-6 text-muted">{body}</p>
-              </li>
-            ))}
-          </ol>
-
-          <HomeDecisionStarter starters={STARTERS} />
-        </div>
+      {/* ── Teach a decision ───────────────────────────────── */}
+      <section id="workflow" aria-labelledby="workflow-h" className="scroll-mt-8 bg-[var(--zils-surface)] px-6 py-20 sm:px-8">
+        <div className="mx-auto max-w-5xl"><HomeDecisionStory /></div>
       </section>
 
       {/* ── Deliverables ───────────────────────────────────── */}
