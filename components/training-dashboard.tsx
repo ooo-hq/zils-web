@@ -12,8 +12,8 @@ import { TrainingIntake } from '@/components/training-intake';
 import { ApiKeysPanel } from '@/components/api-keys-panel';
 import { TrainedModelQuickstart } from '@/components/trained-model-quickstart';
 import { TrainedModelLibrary } from '@/components/trained-model-library';
-import { Plus, ChevronDown } from 'lucide-react';
-import { Sheet, SheetTrigger } from '@/components/ui/sheet';
+import { Plus, ChevronDown, ArrowRight, ImageIcon, MessageSquareText } from 'lucide-react';
+import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { TrainingRunStatus } from '@/components/training-run-status';
 import { useAuthSession } from '@/components/auth-session';
 import { signInWithGoogle } from '@/lib/training-auth';
@@ -22,10 +22,11 @@ import { ImageDecisionPanel } from '@/components/image-decision-panel';
 import { imageApi, type ImageModels } from '@/lib/images';
 import { ImageTrainingResults, PrivateImageTest } from '@/components/image-training-results';
 import { ImageTrainingIntake } from '@/components/image-training-intake';
+import onboardingStyles from '@/components/training-onboarding.module.css';
 import imageStyles from '@/components/image-decision-panel.module.css';
 import styles from '@/app/(home)/train/train.module.css';
 
-type Config = { storage: StorageLocations; url: string; key: string; apiUrl: string; decisionApiUrl: string | null };
+type Config = { assistantConfigured?: boolean; storage: StorageLocations; url: string; key: string; apiUrl: string; decisionApiUrl: string | null };
 const message = (error: unknown) => error instanceof Error ? error.message : 'Something went wrong. Please try again.';
 const metric = (value: number | undefined, percent = false) => value === undefined ? '—' : percent ? `${(value * 100).toFixed(2)}%` : value.toFixed(4);
 
@@ -87,7 +88,7 @@ export function TrainingDashboard({ config }: { config: Config }) {
 }
 
 function SignedInDashboard({ owner, client, config, onExpired }: { owner: string; client: SupabaseClient; config: Config; onExpired: () => Promise<void> }) {
-  const [vertical, setVertical] = useState<'text' | 'images'>('text');
+  const [intakeMode, setIntakeMode] = useState<'choose' | 'text' | 'images'>('choose');
   const [imagesAvailable, setImagesAvailable] = useState(false);
   const [imageProfile, setImageProfile] = useState<ImageModels['training_profile']>();
   const imageToken = useCallback(async () => {
@@ -127,7 +128,7 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
   const statusMessage = useRef<HTMLHeadingElement>(null);
   const life = useRef<AbortController | null>(null);
   const operation = useRef<AbortController | null>(null);
-  const selected = currentTrainingJob(jobs.filter(job => job.model?.id !== 'imajev-4b-v1'));
+  const selected = currentTrainingJob(jobs);
   const imageService = useMemo(() => config.decisionApiUrl ? imageApi(config.decisionApiUrl, config.storage, imageToken) : null, [config.decisionApiUrl, config.storage, imageToken]);
   const api = useMemo(() => trainingApi(config.apiUrl, config.storage, imageToken), [config.apiUrl, config.storage, imageToken]);
   const history = [...jobs, ...availableModels.filter(model => !jobs.some(job => job.id === model.id))];
@@ -217,7 +218,7 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
   }
   async function resumeUploads(job: Job) {
     const { train, calibration, test } = files;
-    if (!train || !calibration || !test) { setPanelOpen(true); setError('Prepare the same CSV with its original settings, or choose the three original files using prepared-file setup. Then close this panel and resume the saved upload.'); return; }
+    if (!train || !calibration || !test) { setIntakeMode('text'); setPanelOpen(true); setError('Prepare the same CSV with its original settings, or choose the three original files using prepared-file setup. Then close this panel and resume the saved upload.'); return; }
     const datasets = { train, calibration, test };
     const controller = new AbortController(); operation.current = controller;
     setBusy(true); setCancellable(true); setError(''); setProgress('Checking original files…');
@@ -262,7 +263,8 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
       {job.model?.id === 'imajev-4b-v1' && <>
         {job.data_expires_at && <p>Training photos expire {new Date(job.data_expires_at).toLocaleString()}. Saved evaluation results remain available.</p>}
         <ImageTrainingResults job={job} />
-        {config.decisionApiUrl && <PrivateImageTest key={`${owner}:${job.id}`} job={job} owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storage={config.storage} />}
+        {job.status === 'uploading' && imageProfile && <button className={styles.secondary} onClick={() => { setIntakeMode('images'); setPanelOpen(true); }}>Continue image setup</button>}
+        {config.decisionApiUrl && <div id={`use-model-${job.id}`} tabIndex={-1}><PrivateImageTest key={`${owner}:${job.id}`} job={job} owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storage={config.storage} /></div>}
       </>}
       {job.error && <p role="alert" className={styles.error}>{job.error}</p>}
       {job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1' && <div className={styles.actions}>
@@ -317,24 +319,14 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
       <div className={styles.workspaceActions}>
         <Link href="/billing#usage" className={styles.secondary}>Usage & billing</Link>
         <ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={onExpired} />
-        {vertical === 'text' && <SheetTrigger asChild><button className={styles.button} disabled={busy}><Plus size={16} aria-hidden="true" />Train a model</button></SheetTrigger>}
+        <SheetTrigger asChild><button className={styles.button} disabled={busy}><Plus size={16} aria-hidden="true" />Train a model</button></SheetTrigger>
       </div>
     </div>
     {process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && <p className={styles.notice}>Billing test preview. Submitting a standard run reserves one included run or $2 in test credit. <Link href="/billing" className={styles.textButton}>View credit and billing</Link>.</p>}
     {error && <p className={styles.error} role="alert">{error}{needsCredit && <> <Link href="/billing" className={styles.textButton}>Add credit</Link>.</>}</p>}
-    {imagesAvailable && <div role="tablist" aria-label="Decision capability" className={imageStyles.tabs}>
-      <button role="tab" aria-selected={vertical === 'text'} aria-controls="text-workspace" onClick={() => setVertical('text')}>Text</button>
-      <button role="tab" aria-selected={vertical === 'images'} aria-controls="image-workspace" onClick={() => setVertical('images')}>Images</button>
-    </div>}
-    {vertical === 'images' && config.decisionApiUrl && <div id="image-workspace" role="tabpanel">
-      {imageProfile && imageService && <ImageTrainingIntake owner={owner} token={imageToken} trainingApi={api} imageApi={imageService} profile={imageProfile} resumeJob={jobs.find(job => job.model?.id === 'imajev-4b-v1' && job.status === 'uploading')} onSubmitted={replaceJob} />}
-      {runRows(history.filter(job => job.model?.id === 'imajev-4b-v1'), 'Image runs')}
-      <details className={imageStyles.stockTest} open={!imageProfile}><summary>Test images with the starting model</summary><p>Try a batch or a single photo. To use a trained model, open its completed run above.</p><ImageDecisionPanel owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storage={config.storage} /></details>
-    </div>}
-    <div id="text-workspace" role="tabpanel" hidden={vertical !== 'text'}>
     {progress && <p role="status" className={styles.notice}>{progress}</p>}
     {busy && cancellable && <button type="button" className={styles.secondary} onClick={() => operation.current?.abort()}>Stop upload</button>}
-    {!loading && <TrainedModelLibrary jobs={availableModels.filter(job => job.model?.id !== 'imajev-4b-v1')} onUse={useModel} />}
+    {!loading && <TrainedModelLibrary jobs={availableModels} onUse={useModel} />}
     <div className={styles.workspace}>
       {loading ? <p role="status" className={styles.empty}>Loading your training runs…</p> : !selected ? <section className={styles.emptyWorkspace}>
         <h2>{refreshError ? 'Your runs could not be loaded.' : 'Train your first model.'}</h2>
@@ -350,11 +342,21 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
           </div>
         </section>
       </div>}
-      {runRows(jobs.filter(job => job.model?.id !== 'imajev-4b-v1' && job.id !== selected?.id && !terminal(job)), 'Other active runs')}
-      {runRows(history.filter(job => job.model?.id !== 'imajev-4b-v1' && job.id !== selected?.id && terminal(job)), 'Past runs')}
+      {runRows(jobs.filter(job => job.id !== selected?.id && !terminal(job)), 'Other active runs')}
+      {runRows(history.filter(job => job.id !== selected?.id && terminal(job)), 'Past runs')}
     </div>
-    </div>
-    <TrainingIntake key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={error} needsCredit={needsCredit} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
+    {imagesAvailable && config.decisionApiUrl && <details className={imageStyles.stockTest}><summary>Test images with the starting model</summary><p>Try a batch or a single photo. To use a trained model, open its completed run above.</p><ImageDecisionPanel owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storage={config.storage} /></details>}
+    {intakeMode === 'choose' && <SheetContent className={`${styles.page} ${styles.trainingSheet}`}>
+      <div className={styles.sheetHeader}><SheetTitle>Train a model</SheetTitle><SheetDescription>Start with one decision. We’ll guide you through the rest.</SheetDescription></div>
+      <div className={`${styles.sheetBody} ${onboardingStyles.chooserBody}`}><h3 className={styles.stepTitle}>What will your model learn from?</h3><p className={onboardingStyles.intro}>Choose the examples you have. Both paths help you define a decision, review your data and test a trained model.</p>
+        <div className={onboardingStyles.typeChoices}>
+          <button type="button" aria-label="Text examples" className={onboardingStyles.typeChoice} onClick={() => setIntakeMode('text')}><MessageSquareText className={onboardingStyles.typeIcon} size={26} aria-hidden="true" /><span><strong>Text examples</strong><span>Route tickets, classify feedback, or make decisions from written information.</span><small>Bring an Excel spreadsheet or CSV</small></span><ArrowRight size={18} aria-hidden="true" /></button>
+          <button type="button" aria-label="Images" className={onboardingStyles.typeChoice} disabled={!imageProfile || !imageService} onClick={() => setIntakeMode('images')}><ImageIcon className={onboardingStyles.typeIcon} size={26} aria-hidden="true" /><span><strong>Images</strong><span>Spot damage, sort photos, or make decisions from what’s visible.</span><small>{imageProfile ? 'Bring photos with correct answers' : 'Image training is unavailable right now'}</small></span><ArrowRight size={18} aria-hidden="true" /></button>
+        </div><p className={styles.localNote}>Your examples are uploaded only when you start training.</p>
+      </div>
+    </SheetContent>}
+    {imageProfile && imageService && <ImageTrainingIntake active={intakeMode === 'images'} onChooseType={() => setIntakeMode('choose')} assistantConfigured={config.assistantConfigured} owner={owner} token={imageToken} trainingApi={api} imageApi={imageService} profile={imageProfile} resumeJob={jobs.find(job => job.model?.id === 'imajev-4b-v1' && job.status === 'uploading')} onSubmitted={replaceJob} />}
+    <TrainingIntake active={intakeMode === 'text'} onChooseType={() => setIntakeMode('choose')} assistantConfigured={config.assistantConfigured} key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={error} needsCredit={needsCredit} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
       if (focusSubmitted.current) { event.preventDefault(); focusSubmitted.current = false; statusMessage.current?.focus(); }
     }} />
   </Sheet>;

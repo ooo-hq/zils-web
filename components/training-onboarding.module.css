@@ -1,0 +1,40 @@
+.setup { padding:0 0 4px; }
+.intro { font-size:15px; color:var(--zils-muted); line-height:1.65; max-width:60ch; margin:12px 0 24px; }
+.composer { border:1px solid var(--zils-edge-strong); border-radius:10px; overflow:hidden; background:var(--zils-page); }
+.composer:focus-within { border-color:var(--zils-accent); box-shadow:0 0 0 1px var(--zils-accent); }
+.composer label { display:block; font-size:13px; font-weight:500; margin:18px 20px 0; }
+.composer textarea { display:block; width:100%; border:0!important; border-radius:0; box-shadow:none; outline:none; padding:12px 20px 20px!important; margin:0!important; font-size:18px!important; line-height:1.6; min-height:115px; resize:vertical; background:transparent; color:var(--zils-ink); }
+.assistBar { border-top:1px solid var(--zils-edge); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.assistBar>span { color:var(--zils-muted); font-size:12px; }
+.assistBar button,.clarification button { display:inline-flex; align-items:center; justify-content:center; gap:8px; background:var(--zils-soft); color:var(--zils-accent); border:1px solid var(--zils-edge); padding:10px 14px; min-height:44px; border-radius:7px; font-size:13px; font-weight:500; cursor:pointer; }
+.setup button:disabled { opacity:.55; cursor:default; }
+.setup button:focus-visible,.typeChoice:focus-visible { outline:2px solid var(--zils-accent); outline-offset:4px; }
+.answers { margin:24px 0; }
+.answers label { font-size:14px; }
+.answers small,.preview small { display:block; font-size:12px; color:var(--zils-muted); line-height:1.6; }
+.preview { padding:20px; border-left:3px solid var(--zils-accent); background:var(--zils-soft); border-radius:0 8px 8px 0; margin:24px 0; }
+.previewTitle { display:flex; gap:10px; align-items:center; font-size:13px; color:var(--zils-accent); font-weight:500; }
+.preview>p { font-size:18px; line-height:1.5; margin:16px 0; overflow-wrap:anywhere; }
+.previewFlow { display:flex; gap:12px; align-items:center; font-size:13px; margin-bottom:14px; }
+.answerChips { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 18px; }
+.answerChips span { background:var(--zils-page); border:1px solid var(--zils-edge); padding:5px 10px; border-radius:5px; font-size:12px; overflow-wrap:anywhere; max-width:100%; }
+.starters { display:flex; align-items:center; flex-wrap:wrap; gap:8px 16px; margin:0 0 22px; }
+.starters>p { font-size:12px; color:var(--zils-muted); margin:0; }
+.starters button { padding:4px 0; border:0; background:transparent; font-size:12px; color:var(--zils-accent); text-align:left; text-decoration:underline; text-underline-offset:3px; cursor:pointer; min-height:32px; }
+.clarification { margin:16px 0; padding:18px; background:var(--zils-soft); border-radius:8px; }
+.clarification p { line-height:1.6; }
+.clarification label { display:block; margin-top:16px; }
+.suggestions { display:flex; flex-wrap:wrap; gap:8px; }
+.note { color:var(--zils-muted); font-size:13px; line-height:1.6; }
+.error { color:var(--zils-danger,#b42318); font-size:13px; line-height:1.6; }
+.typeChoices { margin:28px 0; display:grid; gap:16px; }
+.typeChoice { display:grid; grid-template-columns:40px 1fr 20px; align-items:start; gap:14px; width:100%; border:1px solid var(--zils-edge); border-radius:10px; padding:24px; text-align:left; background:var(--zils-page); color:var(--zils-ink); cursor:pointer; }
+.typeChoice:hover:not(:disabled) { border-color:var(--zils-accent); background:var(--zils-soft); }
+.typeChoice:disabled { opacity:.6; cursor:default; }
+.typeChoice strong { display:block; font-size:20px; font-weight:500; margin-bottom:8px; }
+.typeChoice span span { display:block; color:var(--zils-muted); font-size:14px; line-height:1.6; }
+.typeChoice small { display:block; margin-top:14px; color:var(--zils-accent); font-size:12px; }
+.typeIcon { color:var(--zils-accent); margin-top:4px; }
+@media(max-width:500px) { .typeChoice { grid-template-columns:28px 1fr 16px; gap:10px; padding:20px 16px; }.assistBar { align-items:stretch; }.assistBar button { flex:1 0 190px; }.composer textarea { font-size:17px!important; }.preview { padding:16px; }.previewFlow { gap:8px; font-size:12px; } }
+
+.chooserBody { padding-top:28px; }

@@ -38,7 +38,7 @@ async function workspace(page: Page, options: { expired?: boolean; disabled?: bo
   return { mutations, release: () => releaseUpload?.() };
 }
 async function enterPhoto(page: Page) {
-  await page.getByRole('tab', { name: 'Images', exact: true }).click();
+  await page.getByText('Test images with the starting model', { exact: true }).click();
   await page.getByRole('button', { name: 'One image', exact: true }).click();
   await page.getByLabel('Photo', { exact: true }).setInputFiles({ name: 'inspection.png', mimeType: 'image/png', buffer: png });
   await page.getByLabel('Image decision', { exact: true }).fill('Is the product damaged?');
@@ -98,5 +98,5 @@ test('switching owners during upload clears private state and stops prediction',
 test('unavailable image capability leaves text training usable', async ({ page }) => {
   await workspace(page, { disabled: true });
   await expect(page.getByRole('button', { name: 'Train a model', exact: true })).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'Images', exact: true })).not.toBeVisible();
+  await expect(page.getByText('Test images with the starting model', { exact: true })).not.toBeVisible();
 });

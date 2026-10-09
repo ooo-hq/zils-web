@@ -53,7 +53,7 @@ async function changeSession(page: Page, id: string, tag: string) {
 const policy={min_accuracy:.8,min_brier_improvement:.01,positive_class:'Damaged',min_positive_recall:.9,max_false_positive_rate:.1};
 function metric(recall:number, falseAlarm:number){return {accuracy:.84,brier:.2,skill:.6,count:100,cases:100,nll:.4,unknown_rate:0,unknown_count:0,outcome_order:['Normal','Damaged'],per_class:{Damaged:{support:50,true_positives:Math.round(recall*50),false_negatives:Math.round((1-recall)*50),false_positives:Math.round(falseAlarm*50),negatives:50,recall,false_positive_rate:falseAlarm}},confusion:{Normal:{Normal:Math.round((1-falseAlarm)*50),Damaged:Math.round(falseAlarm*50),__unknown__:0},Damaged:{Normal:Math.round((1-recall)*50),Damaged:Math.round(recall*50),__unknown__:0}}};}
 function imageJob(ready=false){return {id:'30000000-0000-4000-8000-000000000003',name:'connector-inspection',status:'completed',model:{id:'imajev-4b-v1',name:'Imajev 4B',base:'Qwen/Qwen3.5-4B',base_revision:'a'.repeat(40)},acceptance:policy,data_expires_at:'2099-11-07T00:00:00Z',workflow:{state:ready?'ready':'finished',...(ready?{model_id:'private-image-fixture'}:{})},result:{image_metrics_version:'zils-image-metrics/v1',baseline:{...metric(.6,.2),accuracy:.7},miners:[{uid:1,status:'evaluated',...metric(.96,.28)},{uid:2,status:'evaluated',...metric(.72,.04)}],weights:{},delivery:{status:ready?'accepted':'no_qualifying_model',acceptance:policy}}};}
-async function openRun(page:Page){await page.getByRole('tab',{name:'Images',exact:true}).click();await page.getByRole('button',{name:/connector-inspection/}).click();}
+async function openRun(page:Page){await expect(page.getByRole('heading',{name:'connector-inspection',exact:true,level:2})).toBeVisible();}
 test('equal accuracy shows different recall and false alarms without offering a rejected model',async({page})=>{
  await workspace(page,{jobs:[imageJob()]});await openRun(page);
  const results=page.getByRole('region',{name:'Image evaluation results'});
@@ -69,7 +69,7 @@ for(const mobile of [false,true]) test(`ready private prediction and account iso
  if(mobile)await page.setViewportSize({width:390,height:844});
  await workspace(page,{jobs:[imageJob(true)]});await openRun(page);
  await page.getByRole('button',{name:'Use your model'}).click();
- await page.getByRole('region',{name:'Image runs',exact:true}).getByRole('button',{name:'One image',exact:true}).click();
+ await page.getByRole('button',{name:'One image',exact:true}).click();
  const panel=page.getByRole('region',{name:'Try your image model.'});
  await expect(panel.getByLabel('Image decision',{exact:true})).toHaveValue('Inspect the connector.');
  await panel.getByLabel('Photo',{exact:true}).setInputFiles({name:'private-photo.png',mimeType:'image/png',buffer:png});
@@ -87,7 +87,7 @@ for(const mobile of [false,true]) test(`ready private prediction and account iso
 test('changing accounts during a private-model upload cancels the pending prediction',async({page})=>{
  const control=await workspace(page,{jobs:[imageJob(true)],holdUpload:true});await openRun(page);
  await page.getByRole('button',{name:'Use your model'}).click();
- await page.getByRole('region',{name:'Image runs',exact:true}).getByRole('button',{name:'One image',exact:true}).click();
+ await page.getByRole('button',{name:'One image',exact:true}).click();
  const panel=page.getByRole('region',{name:'Try your image model.'});
  await panel.getByLabel('Photo',{exact:true}).setInputFiles({name:'pending-private.png',mimeType:'image/png',buffer:png});
  await panel.getByRole('button',{name:'Analyze image'}).click();
