@@ -12,7 +12,7 @@ const link = 'underline decoration-edge-strong underline-offset-4 hover:text-acc
 
 export default function PrivacyPage() {
   return (
-    <PolicyPage title="Privacy policy." updated="8 October 2026">
+    <PolicyPage title="Privacy policy." updated="9 October 2026">
       <p>This notice describes information handled by the Zils website and its decision-model services, including sign-in, training, model requests, and support.</p>
 
       <PolicySection title="Accounts and browser storage">
@@ -22,7 +22,7 @@ export default function PrivacyPage() {
 
       <PolicySection title="Files you prepare and submit">
         <p>Spreadsheet review and preparation happen in your browser. Selecting a file for review does not upload it. When you submit a training run, the prepared datasets are uploaded to private storage, and the service records the job settings, progress, evaluation results, and model artifacts.</p>
-        <p>The training service uses Supabase for account and job records and file storage. Authorized service operators process the data to validate your submission, coordinate training, evaluate candidates, and deliver available results.</p>
+        <p>The training service uses Supabase for account and job records. DigitalOcean Spaces stores newly uploaded datasets, photos, and model artifacts in private storage. Existing files may remain in Supabase Storage during migration. Authorized service operators process the data to validate your submission, coordinate training, evaluate candidates, and deliver available results.</p>
       </PolicySection>
 
       <PolicySection title="Training workers and retained copies">
@@ -44,7 +44,7 @@ export default function PrivacyPage() {
       <PolicySection title="Contact messages and service providers">
         <p>If you join the early-access email list, we store your email address in Supabase and use it for access updates. Joining the list does not create a workspace account. You can use the contact form to request removal.</p>
         <p>The contact form sends your name, email address, optional company name, and message through Resend to the Zils support inbox so we can respond.</p>
-        <p>Vercel hosts the website; Supabase supports authentication, job records, and file storage; Resend delivers contact messages. Hosting, authentication, and delivery infrastructure may process technical records such as request details, IP addresses, and delivery events as part of operating those services.</p>
+        <p>Vercel hosts the website; Supabase supports authentication and job records and retains existing file copies during migration; DigitalOcean Spaces provides private file storage; Resend delivers contact messages. Hosting, authentication, and delivery infrastructure may process technical records such as request details, IP addresses, and delivery events as part of operating those services.</p>
       </PolicySection>
 
       <PolicySection title="Questions and data requests">
