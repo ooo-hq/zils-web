@@ -26,8 +26,8 @@ export function AccountMenu({ tone }: { tone: 'light' | 'dark' }) {
     return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape); };
   }, [open]);
   const button = `inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium transition-colors ${tone === 'light' ? 'bg-action text-on-action hover:bg-action-hover' : 'bg-white text-black hover:bg-neutral-200'}`;
-  if (session === undefined) return <button className={button} disabled aria-busy="true">Sign in</button>;
-  if (!session) return <div className="relative"><Link href="/train" className={button} title={sessionError || undefined}>Sign in</Link>{error && <p role="alert" className="absolute right-0 top-full z-50 mt-2 w-64 max-w-[calc(100vw-3rem)] rounded-lg border border-edge bg-page p-4 text-sm text-ink shadow-lg">{error}</p>}</div>;
+  if (session === undefined) return <button className={button} disabled aria-busy="true">Early access</button>;
+  if (!session) return <div className="relative"><Link href="/early-access" className={button} title={sessionError || undefined}>Early access</Link>{error && <p role="alert" className="absolute right-0 top-full z-50 mt-2 w-64 max-w-[calc(100vw-3rem)] rounded-lg border border-edge bg-page p-4 text-sm text-ink shadow-lg">{error}</p>}</div>;
   async function signOut() {
     if (!client || busy) return;
     setBusy(true); setError('');

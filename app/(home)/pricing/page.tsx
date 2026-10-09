@@ -101,7 +101,7 @@ export default function PricingPage() {
               </details>
               <details>
                 <summary>Can I pay and start today?</summary>
-                <p>These are planned beta launch prices. Checkout and usage billing are not open yet. <Link href="/early-access">Request early access</Link>, or <Link href="/train">open the experimental training workspace</Link>.</p>
+                <p>These are planned beta launch prices. Checkout and usage billing are not open yet. <Link href="/early-access">Request early access</Link>, or, if you’ve already been invited, <Link href="/train">sign in to your workspace</Link>.</p>
               </details>
             </div>
           </section>

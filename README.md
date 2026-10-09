@@ -78,6 +78,29 @@ The corresponding `FEZ_*` names remain fallbacks for existing deployments; a
 present Zils setting takes precedence, including an empty value. Credentials
 remain server-only.
 
+### Invitation-only workspace access
+
+New visitors join `/early-access`; this saves their email without creating an
+account or granting workspace access. Existing accounts retain their access.
+
+In the workspace's Supabase project, open **Authentication → Sign In / Providers**
+and turn off **Allow new users to sign up**. Keep email and Google sign-in enabled
+for existing accounts, and anonymous sign-in disabled. This project-wide setting
+blocks account creation through direct Auth API calls as well as Google OAuth.
+The email form also sends `shouldCreateUser: false`; that browser setting alone
+is not an access control. Use a dedicated Auth project if another application
+needs public registration.
+
+To approve someone, open **Authentication → Users → Add user → Send invitation**
+and enter the approved email address. Configure the Site URL as the deployment's
+`/train` URL, or set `redirectTo` to that allowed URL when inviting through the
+Auth Admin API. After accepting the invitation, they can use email sign-in or
+Google with the same verified email. Review or ban existing accounts separately
+if their access should be revoked; disabling signup does not revoke sessions.
+
+See [Supabase signup configuration](https://supabase.com/docs/guides/auth/general-configuration)
+and [inviting users](https://supabase.com/docs/guides/auth/users#inviting-users).
+
 ### Google sign-in
 
 Google sign-in uses the existing Supabase account and session system. Email

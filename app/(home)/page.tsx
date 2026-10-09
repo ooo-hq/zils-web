@@ -51,7 +51,7 @@ export default function HomePage() {
             </h1>
             <p className="mx-auto mt-6 max-w-[35rem] text-[17px] leading-7 text-muted sm:text-[18px]">{DESCRIPTION}</p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
-              <Link href="/train" className={s.primary}>Train your own model</Link>
+              <Link href="/early-access" className={s.primary}>Request early access</Link>
               <a href="#workflow" className={s.textLink}>See how it works</a>
             </div>
             <p className="mt-4 text-xs leading-5 text-muted">Start with a spreadsheet of examples and answers you trust.</p>
@@ -107,7 +107,7 @@ export default function HomePage() {
               Bring examples and their right answers. The training workspace helps you prepare your data and start a run.
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
-              <Link href="/train" className="inline-flex min-h-11 items-center justify-center rounded-md bg-white px-5 py-3 text-[13px] font-medium text-black hover:bg-[#eceafa]">Train your own model</Link>
+              <Link href="/early-access" className="inline-flex min-h-11 items-center justify-center rounded-md bg-white px-5 py-3 text-[13px] font-medium text-black hover:bg-[#eceafa]">Request early access</Link>
               <Link href="/playground?starter=customer-routing" className="inline-flex min-h-11 items-center text-[13px] text-white underline decoration-white/40 underline-offset-4 hover:decoration-white">Try the shared model</Link>
             </div>
           </div>
