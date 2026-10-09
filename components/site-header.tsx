@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { ZilsWordmark } from '@/components/zils-wordmark';
-import { discordUrl, docsUrl } from '@/lib/shared';
 import { ThemeToggle } from '@/components/theme';
 import { AccountMenu } from '@/components/account-menu';
 
@@ -14,22 +13,6 @@ const LINKS = [
   { href: '/bittensor', label: 'bittensor' },
   { href: '/playground', label: 'playground' },
   { href: '/pricing', label: 'pricing' },
-] as const;
-
-/** Everything else lives in the footer (components/site-footer.tsx). */
-export const FOOTER_LINKS = [
-  // The manual lives on its own hostname — an absolute link, not a path.
-  { href: docsUrl, label: 'Docs' },
-  { href: discordUrl, label: 'Discord' },
-  { href: '/model', label: 'Research' },
-  { href: '/bittensor', label: 'Bittensor' },
-  { href: '/playground', label: 'Playground' },
-  { href: '/pricing', label: 'Pricing' },
-  { href: '/early-access', label: 'Early access' },
-  { href: '/contact', label: 'Contact' },
-  { href: 'https://github.com/ooo-hq/zils', label: 'Model source' },
-  { href: '/privacy', label: 'Privacy' },
-  { href: '/terms', label: 'Terms' },
 ] as const;
 
 export function SiteHeader({ current, tone = 'dark' }: { current?: string; tone?: 'light' | 'dark' }) {

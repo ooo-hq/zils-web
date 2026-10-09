@@ -1,48 +1,73 @@
 import Link from 'next/link';
-import { FOOTER_LINKS } from '@/components/site-header';
 import { ZilsWordmark } from '@/components/zils-wordmark';
-import { XProfileLink } from '@/components/x-profile-link';
+import { discordUrl, docsUrl } from '@/lib/shared';
+import footer from '@/components/site-footer.module.css';
 import s from '@/components/light.module.css';
 
-function FooterLinks({ tone = 'light' }: { tone?: 'light' | 'dark' }) {
-  const linkClassName = tone === 'dark' ? 'hover:text-neutral-200' : 'hover:text-[var(--zils-accent,#3455dc)]';
+const LINK_GROUPS = [
+  { label: 'Build', links: [
+    { href: docsUrl, label: 'Docs' },
+    { href: '/playground', label: 'Playground' },
+    { href: '/pricing', label: 'Pricing' },
+    { href: '/early-access', label: 'Early access' },
+  ] },
+  { label: 'Explore', links: [
+    { href: '/model', label: 'Research' },
+    { href: '/bittensor', label: 'Bittensor' },
+    { href: 'https://github.com/ooo-hq/zils', label: 'Model source' },
+  ] },
+  { label: 'Keep in touch', links: [
+    { href: discordUrl, label: 'Discord' },
+    { href: 'https://x.com/zils_ai', label: 'X' },
+    { href: '/contact', label: 'Contact' },
+  ] },
+] as const;
 
-  return FOOTER_LINKS.map((link) => (
-    <div key={link.href + link.label} className="flex flex-col items-start">
-      <Link href={link.href} className={linkClassName}>{link.label}</Link>
-      {link.label === 'Discord' && <div className="-ml-3.5"><XProfileLink tone={tone} /></div>}
-    </div>
-  ));
+/** A little crooked decision path, echoing the angles in the Zils mark. */
+function DecisionDoodle() {
+  return (
+    <svg className={footer.doodle} viewBox="0 0 176 74" fill="none" aria-hidden="true" focusable="false">
+      <path className={footer.doodleWash} d="m17 26 101-13-43 40 78-8-20 20-119-4 43-28Z" />
+      <path d="M10 36 80 24 55 53 115 41M80 24l25-13m10 30 32 16m-32-16 32-17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="10" cy="36" r="4" fill="currentColor" />
+      <circle cx="110" cy="9" r="5" fill="currentColor" />
+      <path d="m153 13 8 10-11 8-8-10Z" fill="currentColor" />
+      <path className={footer.doodleSpark} d="m154 41 3 10 11-2-7 9 8 8-12-1-4 10-3-11-11 1 8-8-6-9 10 3Z" />
+    </svg>
+  );
 }
 
 /** Shared Zils resources and policy links for every page. */
-export function SiteFooter({ tone = 'light', showSmallWordmark = true }: { tone?: 'light' | 'dark'; showSmallWordmark?: boolean }) {
-  if (tone === 'dark') {
-    return (
-      <footer className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-5 border-t border-neutral-900 px-6 py-8 font-mono text-xs text-neutral-500 sm:px-8">
-        <div className="flex items-center gap-3">
-          <Link href="/" aria-label="Zils home" className="leading-none text-neutral-300"><ZilsWordmark className="text-[36px]" /></Link>
-        </div>
-        <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-2">
-          <FooterLinks tone="dark" />
-        </nav>
-      </footer>
-    );
-  }
+export function SiteFooter({ tone = 'light' }: { tone?: 'light' | 'dark' }) {
   return (
-    <footer className="overflow-hidden border-t border-edge bg-page pb-8 text-ink">
-      <div className="mx-auto grid max-w-5xl gap-10 px-6 pt-14 sm:px-8 md:grid-cols-[1fr_auto]">
-        <div>
-          {showSmallWordmark && <Link href="/" aria-label="Zils home" className="inline-block leading-none"><ZilsWordmark className="text-[42px]" /></Link>}
-          <p className={`${showSmallWordmark ? 'mt-3' : ''} text-sm text-muted`}>Specialized models.<br />Decisions that are yours.</p>
+    <footer className={`${footer.root} ${tone === 'dark' ? footer.dark : ''}`}>
+      <div className={footer.inner}>
+        <div className={footer.main}>
+          <div className={footer.brand}>
+            <Link href="/" aria-label="Zils home" className={footer.logo}><ZilsWordmark className="text-[42px]" /></Link>
+            <p>Specialized models.<br />Decisions that are yours.</p>
+            <DecisionDoodle />
+          </div>
+          <nav aria-label="Footer" className={footer.navigation}>
+            {LINK_GROUPS.map((group) => (
+              <div key={group.label} className={footer.group}>
+                <h2>{group.label}</h2>
+                <ul>
+                  {group.links.map((link) => (
+                    <li key={link.href}><Link href={link.href}>{link.label}</Link></li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </nav>
         </div>
-        <nav aria-label="Footer" className="grid grid-cols-2 gap-x-12 gap-y-1.5 text-sm sm:grid-cols-3">
-          <FooterLinks />
-        </nav>
-      </div>
-      <div className="mx-auto mt-10 flex max-w-5xl justify-between gap-4 px-6 font-mono text-[10px] tracking-[0.1em] text-subtle sm:px-8">
-        <span>YOUR DATA. YOUR DECISION MODEL.</span>
-        <span>ZILS.AI / EARLY ACCESS</span>
+        <div className={footer.bottom}>
+          <p>Your data. Your decision model.</p>
+          <nav aria-label="Policies">
+            <Link href="/privacy">Privacy</Link>
+            <Link href="/terms">Terms</Link>
+          </nav>
+        </div>
       </div>
     </footer>
   );

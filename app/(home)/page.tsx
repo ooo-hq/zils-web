@@ -281,7 +281,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <SiteFooter showSmallWordmark={false} />
+      <SiteFooter />
     </div>
   );
 }
