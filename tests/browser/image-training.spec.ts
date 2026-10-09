@@ -33,15 +33,21 @@ for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,fa
     if(path.endsWith('/submit')) return route.fulfill({headers,json:{job:{...job(),status:'validating'}}});
     return route.fulfill({status:404,headers,json:{}});
   });
-  await page.goto('/train');await page.getByRole('tab',{name:'Images',exact:true}).click();
+  await page.goto('/train');await page.getByRole('button',{name:'Train a model',exact:true}).click();await page.getByRole('button',{name:'Images',exact:true}).click();
+  await expect(page.getByLabel('Training photos',{exact:true})).toHaveCount(0);
+  await page.getByLabel('Image training decision',{exact:true}).fill('Is the item damaged?');
+  await page.getByLabel('Image training answers',{exact:true}).fill('Normal\nDamaged');
+  await page.getByRole('button',{name:'Continue',exact:true}).click();
   const images=await page.evaluate(()=>Array.from({length:18},(_,i)=>{const c=document.createElement('canvas');c.width=8;c.height=8;const x=c.getContext('2d')!;x.fillStyle=`rgb(${i*11},30,80)`;x.fillRect(0,0,8,8);return c.toDataURL().split(',')[1];}));
   await page.getByLabel('Training photos',{exact:true}).setInputFiles(images.map((s,i)=>({name:`photo-${i}.png`,mimeType:'image/png',buffer:Buffer.from(s,'base64')})));
   const csv='filename,answer,group\n'+images.map((_,i)=>`photo-${i}.png,${i===0?'':i%2?'Damaged':'Normal'},item-${i}`).join('\n');
   await expect(page.getByLabel('Image labels CSV',{exact:true})).toBeEnabled();
   await page.getByLabel('Image labels CSV',{exact:true}).setInputFiles({name:'labels.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
-  await page.getByLabel('Image training decision',{exact:true}).fill('Is the item damaged?');
-  await expect(page.getByRole('heading',{name:'Train your image model',exact:true})).toBeVisible();
-  await page.getByLabel('Image training answers',{exact:true}).fill('Normal\nDamaged');
+  await page.getByRole('button',{name:'Review photos',exact:true}).click();
+  expect(calls.filter(call=>call.startsWith('POST')||call.startsWith('PUT'))).toEqual([]);
+  await page.keyboard.press('Escape');
+  await page.getByRole('button',{name:'Train a model',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Check what your model will learn.'})).toBeVisible();
   await page.getByLabel('Answer for photo-0.png',{exact:true}).selectOption('Normal');
   await page.getByLabel('I have reviewed the labels and item groups',{exact:true}).check();
   await page.getByRole('button',{name:'Review image splits',exact:true}).click();
@@ -82,10 +88,10 @@ test('saved image draft can be abandoned without selecting the original photos',
   if(url.pathname===`/v1/jobs/${jobId}/cancel`){cancelled=true;return route.fulfill({headers,json:{job:job()}});}
   return route.fulfill({status:404,headers,json:{}});
  });
- await page.goto('/train');await page.getByRole('tab',{name:'Images',exact:true}).click();
+ await page.goto('/train');await page.getByRole('button',{name:'Train a model',exact:true}).click();await page.getByRole('button',{name:'Images',exact:true}).click();
  await expect(page.getByText(/A saved image draft is available/)).toBeVisible();
  await page.getByRole('button',{name:'Start a new run',exact:true}).click({timeout:2000});
  await expect(page.getByText(/A saved image draft is available/)).toHaveCount(0);
- await expect(page.getByLabel('Training photos',{exact:true})).toBeEnabled();
+ await expect(page.getByLabel('Image training decision',{exact:true})).toBeEnabled();
  expect(mutations).toEqual([`/v1/jobs/${jobId}/cancel`]);
 });

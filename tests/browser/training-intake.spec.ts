@@ -7,7 +7,8 @@ const jobId = '10000000-0000-4000-8000-000000000001';
 
 // All service requests are intercepted. These tests never send customer data or
 // start a job on a real coordinator, even when a developer has local env files.
-async function workspace(page: Page) {
+async function workspace(page: Page, start = true) {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   const uploads: Record<string, string> = {};
   const mutations: string[] = [];
   const user = { id: '10000000-0000-4000-8000-000000000002', email: 'client@example.com', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
@@ -25,6 +26,7 @@ async function workspace(page: Page) {
     const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, PUT, OPTIONS' };
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
     if (url.pathname.startsWith('/auth/v1/')) return route.fulfill({ json: user, headers });
+    if (url.pathname === '/v1/image-models') return route.fulfill({ headers, json: { models: [{ name: 'image-stock', stock: true, capabilities: { modalities: ['image', 'text'] } }], training_enabled: true, training_profile: { model: 'imajev-4b-v1', max_train: 1024, max_calibration: 256, max_test: 512, max_source_bytes: 10485760, max_pixels: 16000000, max_edge: 8192 } } });
     if (request.method() !== 'GET') mutations.push(`${request.method()} ${url.pathname}`);
     if (request.method() === 'PUT' && url.pathname.startsWith('/storage/v1/object/')) {
       uploads[url.pathname.split('/').at(-1)!.replace(/\.jsonl$/, '')] = request.postDataBuffer()!.toString('utf8');
@@ -43,7 +45,10 @@ async function workspace(page: Page) {
     return route.fulfill({ status: 404, json: { error: 'Unexpected test request' }, headers });
   });
   await page.goto('/train');
+  if (!start) return { uploads, mutations };
   await page.getByRole('button', { name: 'Train a model', exact: true }).click();
+  await expect(page.getByRole('tablist', { name: 'Decision capability' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Text examples', exact: true }).click();
   await page.getByLabel('The decision', { exact: true }).fill('Which team should handle this support ticket?');
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
   return { uploads, mutations };
@@ -84,7 +89,7 @@ test('Excel import, corrections and exclusions reach the existing submission con
   await expect(page.getByText('No examples need attention.', { exact: false })).toBeVisible();
   await page.getByLabel('Examples to review').selectOption('sample');
   await page.getByRole('heading', { name: 'Check what your model will learn.' }).scrollIntoViewIfNeeded();
-  await page.screenshot({ path: '.private/onboarding-review-desktop.png', fullPage: true });
+  await page.screenshot({ path: '.private/onboarding-review-desktop.png', fullPage: true, animations: 'disabled' });
   await page.getByRole('button', { name: 'Check readiness' }).click();
   await expect(page.getByRole('heading', { name: 'Your data is ready for an experiment.' })).toBeVisible();
   await expect(page.getByText('18 examples from 18 separate cases.')).toBeVisible();
@@ -106,7 +111,7 @@ test('Excel import, corrections and exclusions reach the existing submission con
 });
 
 test('mobile CSV review preserves the draft and requires resolving expert flags', async ({ page }) => {
-  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
   await page.setViewportSize({ width: 390, height: 844 });
   const { mutations } = await workspace(page);
   const background = await page.locator('body').evaluate(element => getComputedStyle(element).backgroundColor);
@@ -132,9 +137,60 @@ test('mobile CSV review preserves the draft and requires resolving expert flags'
   await expect(page.getByRole('button', { name: 'Include again' })).toBeVisible();
   await page.getByRole('button', { name: 'Include again' }).click();
   await page.getByRole('heading', { name: 'Check what your model will learn.' }).scrollIntoViewIfNeeded();
-  await page.screenshot({ path: '.private/onboarding-review-mobile.png', fullPage: true });
+  await page.screenshot({ path: '.private/onboarding-review-mobile.png', fullPage: true, animations: 'disabled' });
   expect(await page.getByRole('dialog').evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
   await page.getByRole('button', { name: 'Check readiness' }).click();
   await expect(page.getByText('18 examples from 18 separate cases.')).toBeVisible();
   expect(mutations).toEqual([]);
+});
+
+for (const kind of ['text', 'images'] as const) test(`guided ${kind} setup clarifies, suggests and keeps an editable draft`, async ({ page }) => {
+  const { mutations } = await workspace(page, false);
+  const requests: object[] = [];
+  await page.route('**/api/setup', async route => {
+    requests.push(route.request().postDataJSON());
+    await route.fulfill({ json: requests.length === 1 ? { kind: 'clarify', message: 'What should count as damage?', choices: ['Visible cracks or dents', 'Any color variation'] } : { kind: 'draft', message: 'Here is a focused decision.', draft: { title: 'Damage inspection', questions: [{ id: 'damage', kind: 'choice', prompt: 'Does this product show visible damage?', options: [{ label: 'Normal', description: '' }, { label: 'Damaged', description: '' }] }] } } });
+  });
+  await page.getByRole('button', { name: 'Train a model', exact: true }).click();
+  await expect(page.getByRole('tablist', { name: 'Decision capability' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Images', exact: true })).toBeEnabled();
+  if (kind === 'text') await page.screenshot({ path: '.private/training-chooser-desktop.png', fullPage: true, animations: 'disabled' });
+  await page.getByRole('button', { name: kind === 'text' ? 'Text examples' : 'Images', exact: true }).click();
+  const question = page.getByLabel(kind === 'text' ? 'The decision' : 'Image training decision', { exact: true });
+  const answers = page.getByLabel(kind === 'text' ? 'Possible answers (optional)' : 'Image training answers', { exact: true });
+  await question.fill('I need to catch damaged products.');
+  await page.getByRole('button', { name: 'Help me set this up', exact: true }).click();
+  await page.getByRole('button', { name: 'Visible cracks or dents', exact: true }).click();
+  await expect(question).toHaveValue('Does this product show visible damage?');
+  await expect(answers).toHaveValue('Normal\nDamaged');
+  expect(JSON.stringify(requests)).toContain('exactly one choice question');
+  await question.fill('Is this packaging visibly damaged?');
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Train a model', exact: true }).click();
+  await expect(question).toHaveValue('Is this packaging visibly damaged?');
+  await page.getByRole('button', { name: 'Change example type' }).click();
+  await page.getByRole('button', { name: kind === 'text' ? 'Images' : 'Text examples', exact: true }).click();
+  await page.getByRole('button', { name: 'Change example type' }).click();
+  await page.getByRole('button', { name: kind === 'text' ? 'Text examples' : 'Images', exact: true }).click();
+  await expect(question).toHaveValue('Is this packaging visibly damaged?');
+  if (kind === 'images') { await page.setViewportSize({ width: 390, height: 844 }); await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' }); }
+  await page.screenshot({ path: `.private/training-setup-${kind}.png`, fullPage: true, animations: 'disabled' });
+  expect(await page.getByRole('dialog').evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Bring examples of your work.' })).toBeVisible();
+  expect(mutations).toEqual([]);
+});
+
+test('unsupported assistant suggestions leave the training draft unchanged', async ({ page }) => {
+  await workspace(page, false);
+  await page.route('**/api/setup', route => route.fulfill({ json: { kind: 'draft', message: 'Two questions.', draft: { title: 'Wrong shape', questions: ['first', 'second'].map(id => ({ id, kind: 'choice', prompt: 'A different question?', options: [{ label: 'A', description: '' }, { label: 'B', description: '' }] })) } } }));
+  await page.getByRole('button', { name: 'Train a model', exact: true }).click();
+  await page.getByRole('button', { name: 'Text examples', exact: true }).click();
+  await page.getByRole('button', { name: 'Route support tickets', exact: true }).click();
+  await page.getByRole('button', { name: 'Help me set this up', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('Your draft is unchanged');
+  await expect(page.getByLabel('The decision', { exact: true })).toHaveValue('Which team should handle this support ticket?');
+  await expect(page.getByLabel('Possible answers (optional)', { exact: true })).toHaveValue('Billing\nTechnical support\nAccount changes');
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Try sample examples' })).toBeVisible();
 });

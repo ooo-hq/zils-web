@@ -6,12 +6,16 @@ import { prepareTraining, type ColumnMapping, type CsvData, type PreparedTrainin
 import { readSpreadsheet, type SpreadsheetSheet } from '@/lib/training-spreadsheet';
 import { reviewData, suggestAnswers, suggestMapping, type ReviewEdits } from '@/lib/training-review';
 import { MAX_DATASET_BYTES, SPLITS, submissionSchema, validateDatasets, type Split, type Submission } from '@/lib/training';
+import { TrainingDecisionSetup } from '@/components/training-decision-setup';
 import { TrainingExampleSetup } from '@/components/training-example-setup';
 import { TrainingExampleReview } from '@/components/training-example-review';
 import { SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
 import styles from '@/app/(home)/train/train.module.css';
 
 type Props = {
+  active?: boolean;
+  onChooseType?: () => void;
+  assistantConfigured?: boolean;
   busy: boolean;
   onSubmit: (input: Submission, files: Record<Split, File>) => Promise<void>;
   onFiles: (files: Partial<Record<Split, File>>) => void;
@@ -23,13 +27,13 @@ type Props = {
   progress: string;
   onStopUpload?: () => void;
 };
-const steps = ['Decision', 'Data', 'Review', 'Ready'];
+const steps = ['Describe', 'Examples', 'Review', 'Train'];
 const stepTitles = ['What should Zils decide?', 'Bring examples of your work.', 'Check what your model will learn.', 'Your data is ready for an experiment.'];
 const splitNames = { train: 'Training', calibration: 'Calibration', test: 'Evaluation' };
 const errorMessage = (error: unknown) => error instanceof Error ? error.message.replace(/CSV record/g, 'Spreadsheet row') : 'Could not prepare the file. Try saving it as CSV UTF-8 again.';
 
 // State lives outside SheetContent so closing the panel preserves this browser's draft.
-export function TrainingIntake({ busy, onSubmit, onFiles, onCloseAutoFocus, pending = false, pendingName, submissionError, needsCredit = false, progress, onStopUpload }: Props) {
+export function TrainingIntake({ active = true, onChooseType, assistantConfigured, busy, onSubmit, onFiles, onCloseAutoFocus, pending = false, pendingName, submissionError, needsCredit = false, progress, onStopUpload }: Props) {
   const [advanced, setAdvanced] = useState(false);
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
@@ -64,11 +68,6 @@ export function TrainingIntake({ busy, onSubmit, onFiles, onCloseAutoFocus, pend
     setStep(next); setError('');
     if (next < 3) { setPrepared(null); setConsent(false); setReviewed(false); onFiles({}); }
     requestAnimationFrame(() => heading.current?.focus());
-  }
-  function useExample() {
-    suggestedAnswers.current = false;
-    setName('support-routing-v1'); setQuestion('Which team should handle this support ticket?');
-    setAnswers('Billing\nTechnical support\nAccount changes');
   }
   function nextDecision(event: FormEvent) {
     event.preventDefault();
@@ -173,8 +172,9 @@ export function TrainingIntake({ busy, onSubmit, onFiles, onCloseAutoFocus, pend
     </details>
     <label className={styles.consent}><input type="checkbox" required checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I am authorized to use and share these examples. I permit the learning data to be copied to assigned, approved workers, whose operators can read and retain it. Confidence-check and final-evaluation data stay with the validator. This is not confidential compute.</span></label>
   </>;
+  if (!active) return null;
   return <SheetContent className={`${styles.page} ${styles.trainingSheet}`} onCloseAutoFocus={onCloseAutoFocus} onOpenAutoFocus={event => { event.preventDefault(); heading.current?.focus(); }}>
-    <div className={styles.sheetHeader}><SheetTitle>Train a model</SheetTitle><SheetDescription>Turn reviewed examples into a tested decision model.</SheetDescription></div>
+    <div className={styles.sheetHeader}><SheetTitle>Train a model</SheetTitle><SheetDescription>Text examples · Turn reviewed decisions into a tested model.</SheetDescription>{onChooseType && <button type="button" className={styles.textButton} disabled={locked || pending} onClick={onChooseType}>Change example type</button>}</div>
     <div className={styles.sheetBody}>
       {!advanced && <ol className={styles.steps} aria-label="Training setup progress">{steps.map((title, index) => <li key={title} aria-current={step === index ? 'step' : undefined}><span>{index + 1}</span>{title}</li>)}</ol>}
       <h3 className={styles.stepTitle} ref={heading} tabIndex={-1}>{advanced ? 'Upload prepared files.' : stepTitles[step]}</h3>
@@ -193,10 +193,7 @@ export function TrainingIntake({ busy, onSubmit, onFiles, onCloseAutoFocus, pend
         {criteria}<div className={styles.wizardActions}><button type="button" className={styles.secondary} onClick={switchMode}>Guided setup</button><button className={styles.button} disabled={locked || pending}>{busy ? 'Sending…' : 'Send for training'}</button></div>
       </fieldset></form> : <>
         {step === 0 && <form onSubmit={nextDecision}><fieldset disabled={locked}>
-          <p className={styles.intakeIntro}>Choose one decision your team makes repeatedly.</p>
-          <label htmlFor="decision-question">The decision</label><textarea id="decision-question" required maxLength={1000} rows={3} placeholder="Which team should handle this support ticket?" value={question} onChange={event => setQuestion(event.target.value)} />
-          <details className={styles.details}><summary>I already know the possible answers</summary><label htmlFor="decision-answers">Possible answers (optional)</label><textarea id="decision-answers" rows={3} placeholder={'Billing\nTechnical support\nAccount changes'} value={answers} onChange={event => { setAnswers(event.target.value); suggestedAnswers.current = false; setEdits({}); }} /><small>One answer per line. Leave blank to suggest answers from your spreadsheet.</small></details>
-          <button type="button" className={styles.textButton} onClick={useExample}>Try the support-routing example</button>
+          <TrainingDecisionSetup kind="text" question={question} answers={answers} assistantConfigured={assistantConfigured} onQuestion={setQuestion} onAnswers={value => { setAnswers(value); suggestedAnswers.current = false; setEdits({}); }} />
           <div className={styles.wizardActions}><button type="button" className={styles.textButton} onClick={switchMode}>Use prepared files</button><button className={styles.button}>Continue</button></div>
         </fieldset></form>}
         {step === 1 && <form onSubmit={nextExamples}><fieldset disabled={locked}>
