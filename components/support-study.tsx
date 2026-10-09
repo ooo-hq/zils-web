@@ -48,18 +48,19 @@ export function SupportStudySummary() {
     <section id="support-evidence" aria-labelledby="support-evidence-heading" className="mx-auto max-w-5xl scroll-mt-8 border-t border-edge px-6 py-20 sm:px-8">
       <div className="grid gap-10 md:grid-cols-2 md:items-center">
         <div>
-          <p className="text-xs text-muted">ABCD support decisions · Compared with TypeSafe Jev</p>
-          <h2 id="support-evidence-heading" className="mt-4 max-w-[18ch] text-[clamp(2rem,4.4vw,3.25rem)] font-semibold leading-[1.04] tracking-[-0.055em]">Custom training, tested against Jev.</h2>
+          <h2 id="support-evidence-heading" className="max-w-[18ch] text-balance text-[clamp(2rem,4.4vw,3.25rem)] font-semibold leading-[1.04] tracking-[-0.055em]">See what training changed.</h2>
+          <p className="mt-5 max-w-[45ch] text-[15px] leading-7 text-muted">We trained Zils to choose the next action in a customer-support conversation, then tested it on conversations it had not trained on.</p>
           <p className="mt-5 max-w-[45ch] text-[15px] leading-7 text-muted">
-            On {supportBase.count} held-out support conversations, our trained Zils model reached {percent(jevTrained.accuracy)} accuracy against TypeSafe Jev’s {percent(jevMetrics.accuracy)}.
+            On {supportBase.count} test conversations from the public ABCD dataset, trained Zils chose the recorded answer {percent(jevTrained.accuracy)} of the time, compared with {percent(jevMetrics.accuracy)} for TypeSafe Jev, another decision model.
             That is <strong className="font-semibold text-ink">{jevErrorReduction}% fewer mistakes</strong> on the same next-action task.
           </p>
           <p className="mt-5 text-sm text-muted">{number(supportStudy.splits.training_conversations)} training conversations. Separate development and test sets.</p>
-          <Link href="/model#jev-comparison" className="mt-7 inline-flex min-h-11 items-center rounded-md bg-action px-5 py-3 text-[13px] font-medium text-on-action hover:bg-action-hover">See the Jev comparison</Link>
+          <Link href="/model#jev-comparison" className="mt-7 inline-flex min-h-11 items-center rounded-md bg-action px-5 py-3 text-[13px] font-medium text-on-action hover:bg-action-hover">See the results and test method</Link>
+          <Link href="/model" className="mt-3 flex min-h-11 w-fit items-center text-[13px] underline decoration-edge-strong underline-offset-4 hover:text-accent">Explore all the research</Link>
         </div>
         <AccuracyComparison includeJev />
       </div>
-      <p className="mt-7 max-w-[80ch] text-xs leading-6 text-muted">One public support-workflow benchmark. Jev had higher accuracy among its smaller set of high-probability answers; our model’s confidence still needs calibration.</p>
+      <p className="mt-7 max-w-[80ch] text-xs leading-6 text-muted">One research experiment, not a guarantee for your task. It tested the choice of the next action, not success at resolving a whole conversation. Jev was more accurate on its smaller set of high-confidence answers; Zils still overstates its confidence. The research model shown here is not deployed in the shared playground.</p>
     </section>
   );
 }

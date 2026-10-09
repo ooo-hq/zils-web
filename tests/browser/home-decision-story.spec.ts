@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const storyTitle = 'Teach a small AI to make your call.';
+const storyTitle = 'Show it what a good answer looks like.';
 const starters = [
   { title: 'Customer message routing', id: 'customer-routing', question: 'Which team should handle this customer message?', sample: /entire team has been locked out/ },
   { title: 'Refund requests', id: 'refund-request', question: 'Is the customer explicitly asking for their money back?', sample: /replacement arrived broken/ },
