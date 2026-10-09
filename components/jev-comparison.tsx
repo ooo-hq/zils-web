@@ -43,7 +43,7 @@ export function JevComparisonDetails() {
           <table className="w-full min-w-[540px] border-collapse text-sm">
             <caption className="pb-3 text-left text-xs leading-6 text-muted">Probability of the chosen action ≥90%. TypeSafe’s separate confidence field is not used.</caption>
             <thead><tr><th scope="col" className="px-4 py-3 text-left font-medium">Model</th><th scope="col" className="px-4 py-3 text-right font-medium">Cases / 500</th><th scope="col" className="px-4 py-3 text-right font-medium">Mistakes</th><th scope="col" className="px-4 py-3 text-right font-medium">Accuracy in group</th></tr></thead>
-            <tbody>{jevComparisons.filter(row => row.name !== 'Shared Zils').map(({ name, metrics }) => {
+            <tbody>{jevComparisons.map(({ name, metrics }) => {
               const coverage = metrics.coverage.find(row => row.threshold === .9)!;
               return <tr key={name}><th scope="row" className="border-t border-edge px-4 py-4 text-left font-normal">{name}</th><td className={cell}>{coverage.automated}</td><td className={cell}>{coverage.wrong}</td><td className={cell}>{percent(coverage.accuracy_among_automated!)}</td></tr>;
             })}</tbody>
@@ -62,7 +62,7 @@ export function JevComparisonDetails() {
             </table>
           </div>
           <div className="mt-6 space-y-4 text-sm leading-7 text-muted">
-            <p><strong className="font-medium text-ink">Model foundation.</strong> Shared Zils uses the published JevK5 4B weights; trained Zils adds our ABCD-specific adapter.</p>
+            <p><strong className="font-medium text-ink">Model foundation.</strong> Trained Zils combines the published JevK5 4B weights with our ABCD-specific adapter.</p>
             <p><strong className="font-medium text-ink">Identical evidence.</strong> Each model received the prior conversation, completed actions and results, compact workflow catalog, and the same ordered choices. Current answers, future turns, and labeled workflow metadata were excluded. Each case comes from a distinct conversation.</p>
             <p><strong className="font-medium text-ink">Preserved API responses.</strong> All 500 Jev calls returned answers. {jevMetrics.distributions_normalized} probability vectors summed to 0.99; they were normalized for Brier scoring. One returned choice differed from its probability ranking. Accuracy uses the returned choice; using the highest-probability option instead gives {percent(jevMetrics.canonical_argmax_correct / jevMetrics.n)}. No cases were dropped or re-queried.</p>
             <p><strong className="font-medium text-ink">Usage and timing.</strong> Jev reported {jevMetrics.total_input_tokens.toLocaleString('en-US')} input tokens, an estimated ${jevStudy.test.jev_api_cost_usd.toFixed(5)} at the provider’s listed rate. API response time includes networking; the earlier Zils timings measure local GPU inference. They do not establish a comparable speed advantage.</p>

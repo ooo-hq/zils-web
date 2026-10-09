@@ -11,8 +11,8 @@ if (
     transformRequest(payload) {
       try {
         const url = new URL(payload.u);
-        // Keep internal tools and individual shared artifacts out of analytics.
-        if (/^\/(?:admin|pricing-lab|investor-lab|a)(?:\/|$)/.test(url.pathname)) return null;
+        // Keep private model IDs, internal tools, and shared artifacts out of analytics.
+        if (/^\/(?:admin|pricing-lab|investor-lab|a|train\/models)(?:\/|$)/.test(url.pathname)) return null;
 
         return {
           ...payload,

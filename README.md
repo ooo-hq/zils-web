@@ -38,7 +38,7 @@ tracking snippet is needed. Do not install another snippet alongside this one.
 
 Only production builds running on `zils.ai` or `www.zils.ai` initialize tracking.
 Local development and Vercel preview domains do not send analytics. `/admin`,
-`/pricing-lab`, `/investor-lab`, and `/a` routes and their descendants are excluded. Event URLs
+`/pricing-lab`, `/investor-lab`, `/train/models`, and `/a` routes and their descendants are excluded. Event URLs
 contain only the origin and path; referrers contain only the origin. Query
 parameters (including campaign parameters) and fragments are removed. No form,
 download, outbound-click, or custom-property tracking is enabled.
@@ -247,6 +247,18 @@ supports keyboard navigation, Escape, and outside-click dismissal. It reports
 when the device session was cleared but server revocation could not be confirmed.
 
 ## Customer API keys
+
+Approved models have private pages at `/train/models/<training-job-id>`, linked
+from **Your models → View model** and accepted training runs. These pages use the
+existing owner-authorized job API. They show the selected candidate’s evaluation,
+model version, and API instructions; accepted models still activating show their
+status without offering API access. Text models retain the Python and JavaScript
+examples, and image models retain their saved question and image tester.
+
+API usage comes from the existing billing summary, matched by immutable model ID
+and labeled with its reporting period and test mode. Unavailable metrics are
+shown as unavailable, not zero. Model data is loaded only after sign-in, requests
+are cancelled when the account or page changes, and the pages are not indexed.
 
 Signed-in customers can open **API keys** beside **Train a model** to create a
 named key, copy its secret once, view active and revoked keys, or revoke a key

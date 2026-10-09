@@ -112,7 +112,6 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
   const [jobs, setJobs] = useState<Job[]>([]);
   const [availableModels, setAvailableModels] = useState<Job[]>([]);
   const [selectedId, setSelectedId] = useState('');
-  const [modelToUse, setModelToUse] = useState<{ id: string } | null>(null);
   const [collapsedRun, setCollapsedRun] = useState('');
   const [panelOpen, setPanelOpen] = useState(false);
   const [downloadJobId, setDownloadJobId] = useState('');
@@ -137,17 +136,6 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
   const imageService = useMemo(() => config.decisionApiUrl ? imageApi(config.decisionApiUrl, config.storage, imageToken) : null, [config.decisionApiUrl, config.storage, imageToken]);
   const api = useMemo(() => trainingApi(config.apiUrl, config.storage, imageToken), [config.apiUrl, config.storage, imageToken]);
   const history = [...jobs, ...availableModels.filter(model => !jobs.some(job => job.id === model.id))];
-  useEffect(() => {
-    if (!modelToUse) return;
-    const target = document.getElementById(`use-model-${modelToUse.id}`);
-    if (target) { target.scrollIntoView({ block: 'start' }); target.focus({ preventScroll: true }); }
-  }, [modelToUse]);
-  function useModel(job: Job) {
-    if (job.id === selected?.id) setCollapsedRun('');
-    if (job.id !== selected?.id) setSelectedId(job.id);
-    // Each click focuses the example after its containing run has opened.
-    setModelToUse({ id: job.id });
-  }
   const handleError = useCallback((error: unknown) => {
     if (error instanceof TrainingApiError && error.status === 401) { void onExpired(); return; }
     setNeedsCredit(error instanceof TrainingApiError && error.status === 402);
@@ -265,6 +253,7 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
   function runDetails(job: Job) {
     return <>
       <TrainingRunStatus job={job} />
+      {canDownload(job) && <Link className={styles.secondary} href={`/train/models/${job.id}`}>View model stats and access</Link>}
       {job.model?.id === 'imajev-4b-v1' && <>
         {job.data_expires_at && <p>Training photos expire {new Date(job.data_expires_at).toLocaleString()}. Saved evaluation results remain available.</p>}
         <ImageTrainingResults job={job} />
@@ -331,7 +320,7 @@ function SignedInDashboard({ owner, client, config, onExpired }: { owner: string
     {error && <p className={styles.error} role="alert">{error}{needsCredit && <> <Link href="/billing" className={styles.textButton}>Add credit</Link>.</>}</p>}
     {progress && <p role="status" className={styles.notice}>{progress}</p>}
     {busy && cancellable && <button type="button" className={styles.secondary} onClick={() => operation.current?.abort()}>Stop upload</button>}
-    {!loading && <TrainedModelLibrary jobs={availableModels} onUse={useModel} />}
+    {!loading && <TrainedModelLibrary jobs={availableModels} />}
     <div className={styles.workspace}>
       {loading ? <p role="status" className={styles.empty}>Loading your training runs…</p> : !selected ? <section className={styles.emptyWorkspace}>
         <h2>{refreshError ? 'Your runs could not be loaded.' : 'Train your first model.'}</h2>

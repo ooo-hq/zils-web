@@ -37,7 +37,7 @@ export function AccuracyComparison({ includeJev = false }: { includeJev?: boolea
       <div aria-hidden="true" className="mt-5 flex justify-between text-[11px] tabular-nums text-subtle"><span>0%</span><span>100%</span></div>
       <p className="mt-6 border-t border-edge pt-5 text-sm leading-6">
         <strong className="font-semibold text-accent">+{includeJev ? jevGain : supportGain} percentage points</strong>
-        <span className="text-muted"> vs {includeJev ? 'TypeSafe Jev' : 'shared Zils'}</span>
+        <span className="text-muted"> vs {includeJev ? 'TypeSafe Jev' : 'before training'}</span>
       </p>
       {includeJev && <p className="mt-2 text-xs leading-5 text-muted">Jev was tested live; Zils scores reuse verified predictions from the same frozen test set.</p>}
     </figure>

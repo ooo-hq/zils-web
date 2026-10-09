@@ -50,7 +50,7 @@ test('analytics removes auth codes and query data from page URLs and referrers',
 
 test('analytics excludes internal tools and artifact IDs while keeping public research', () => {
   const { transformRequest } = configure('zils.ai')[0];
-  for (const path of ['/admin', '/admin/access', '/pricing-lab', '/pricing-lab/', '/investor-lab', '/investor-lab/', '/a', '/a/private-id']) {
+  for (const path of ['/admin', '/admin/access', '/pricing-lab', '/pricing-lab/', '/investor-lab', '/investor-lab/', '/a', '/a/private-id', '/train/models', '/train/models/10000000-0000-4000-8000-000000000001']) {
     assert.equal(transformRequest({ n: 'pageview', d: 'zils.ai', u: `https://zils.ai${path}` }), null);
   }
   for (const path of ['/', '/pricing', '/model', '/model/chess-study', '/early-access']) {
