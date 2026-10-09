@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 const owner='10000000-0000-4000-8000-000000000002', jobId='10000000-0000-4000-8000-000000000003';
-for (const [mobile, insufficient] of [[false,false],[true,false],[false,true]]) test(`reviewed photos, labels and groups become an image job (${mobile?'mobile':'desktop'}${insufficient?' after top-up':''})`, async ({page}) => {
+for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,false],[false,true,false],[false,false,true],[true,true,true]]) test(`reviewed photos, labels and groups become an image job (${mobile?'mobile':'desktop'}${insufficient?' after top-up':''}${spaces?' with Spaces':''})`, async ({page}) => {
   if(mobile) await page.setViewportSize({width:390,height:844});
   const expires=Math.floor(Date.now()/1000)+3600;
   await page.addInitScript(({owner,expires}) => { const user={id:owner,email:'owner@example.com',aud:'authenticated',role:'authenticated',app_metadata:{},user_metadata:{},created_at:'2026-01-01T00:00:00Z'}; localStorage.setItem('zils-training-auth',JSON.stringify({user,access_token:`${btoa('{"alg":"HS256"}')}.${btoa(JSON.stringify({sub:owner,exp:expires}))}.fixture`,refresh_token:'fixture',expires_at:expires,expires_in:3600,token_type:'bearer'})); },{owner,expires});
@@ -8,11 +8,14 @@ for (const [mobile, insufficient] of [[false,false],[true,false],[false,true]]) 
   let created: Record<string,unknown>|undefined;
   const calls:string[]=[], complete=new Set<string>(), rows:Record<string,unknown>[]=[], assets:Record<string,{id:string;state:string;expires_at:string}>= {};
   const job=()=>({id:jobId,name:'inspection',status:'uploading',created_at:'2026-10-08T12:00:00Z',model:{id:'imajev-4b-v1',name:'Imajev 4B',base:'Qwen/Qwen3.5-4B',base_revision:'8'.repeat(40)},image_intake:created?.image_intake});
-  const uploads=()=>Object.fromEntries(['train','calibration','test'].map(s=>[s,{url:`http://127.0.0.1:8998/storage/v1/object/upload/sign/fez-training-data/${jobId}/${s}.jsonl`,method:'PUT',headers:{'Content-Type':'application/octet-stream','x-upsert':'false'}}]));
+  const grant=(logical:string)=>spaces
+    ? {url:`http://127.0.0.1:8996/objects/44444444-4444-4444-8444-444444444444/${logical}?uploadId=fixture&partNumber=1`,method:'PUT',provider:'spaces',expires_at:new Date(Date.now()+600_000).toISOString(),headers:{'Content-Type':'application/octet-stream'}}
+    : {url:`http://127.0.0.1:8998/storage/v1/object/upload/sign/${logical}`,method:'PUT',headers:{'Content-Type':'application/octet-stream','x-upsert':'false'}};
+  const uploads=()=>Object.fromEntries(['train','calibration','test'].map(s=>[s,grant(`fez-training-data/${jobId}/inputs/${s}.jsonl`)]));
   await page.route('**/*', async route => {
     const req=route.request(), url=new URL(req.url()), path=url.pathname;
     if(url.origin==='http://127.0.0.1:3107') return route.continue();
-    if(!['http://127.0.0.1:8998','http://127.0.0.1:8999'].includes(url.origin)) return route.abort();
+    if(!['http://127.0.0.1:8996','http://127.0.0.1:8998','http://127.0.0.1:8999'].includes(url.origin)) return route.abort();
     const headers={'access-control-allow-origin':'*','access-control-allow-headers':'*','access-control-allow-methods':'GET, POST, PUT, DELETE, OPTIONS'};
     if(req.method()==='OPTIONS') return route.fulfill({status:204,headers});
     calls.push(req.method()+' '+path);
@@ -23,9 +26,9 @@ for (const [mobile, insufficient] of [[false,false],[true,false],[false,true]]) 
     if(path.endsWith('/resume')) {const id=path.split('/').at(-2)!;return route.fulfill({headers,json:{asset:assets[id],uploaded:true}});}
     if(path.endsWith('/uploads')) return route.fulfill({headers,json:{job:job(),uploads:uploads()}});
     if(path.endsWith('/image-assets') && path.includes('/jobs/')) return route.fulfill({headers,json:{assets:[]}});
-    if(path==='/v1/image-assets') {expect(created?.model).toBe('imajev-4b-v1'); const id=`20000000-0000-4000-8000-${String(Object.keys(assets).length+1).padStart(12,'0')}`;assets[id]={id,state:'uploading',expires_at:'2099-01-01T00:00:00Z'};return route.fulfill({headers,json:{asset:assets[id],upload:{url:`http://127.0.0.1:8998/storage/v1/object/upload/sign/zils-images/${owner}/${id}/source`,method:'PUT',headers:{'x-upsert':'false','Content-Type':'application/octet-stream'}}}});}
+    if(path==='/v1/image-assets') {expect(created?.model).toBe('imajev-4b-v1'); const id=`20000000-0000-4000-8000-${String(Object.keys(assets).length+1).padStart(12,'0')}`;assets[id]={id,state:'uploading',expires_at:'2099-01-01T00:00:00Z'};return route.fulfill({headers,json:{asset:assets[id],upload:grant(`zils-images/${owner}/${id}/source`)}});}
     if(path.endsWith('/complete')) {const id=path.split('/').at(-2)!;complete.add(id);return route.fulfill({headers,json:{...assets[id],state:'ready',sha256:'a'.repeat(64),width:8,height:8}});}
-    if(req.method()==='PUT') {if(path.endsWith('.jsonl')) for(const row of req.postData()!.trim().split('\n').map(s=>JSON.parse(s))) {expect(complete.has(row.image.asset_id)).toBe(true);rows.push(row);}return route.fulfill({headers,json:{}});}
+    if(req.method()==='PUT') {expect(req.headers()['authorization']).toBeUndefined();expect(req.headers()['cookie']).toBeUndefined();if(path.endsWith('.jsonl')) for(const row of req.postData()!.trim().split('\n').map(s=>JSON.parse(s))) {expect(complete.has(row.image.asset_id)).toBe(true);rows.push(row);}return route.fulfill({headers,json:{}});}
     if(path.endsWith('/submit') && needsCredit) return route.fulfill({status:402,headers,json:{error:'Insufficient credit. Add credit in Billing.'}});
     if(path.endsWith('/submit')) return route.fulfill({headers,json:{job:{...job(),status:'validating'}}});
     return route.fulfill({status:404,headers,json:{}});
@@ -57,7 +60,7 @@ for (const [mobile, insufficient] of [[false,false],[true,false],[false,true]]) 
   }
   await expect(page.getByText('Image run submitted for validation.',{exact:true})).toBeVisible();
   expect(await page.locator('body').evaluate(el=>el.scrollWidth<=window.innerWidth)).toBe(true);
-  await page.screenshot({path:`.private/image-training-${mobile?'mobile':'desktop'}.png`,fullPage:true});
+  await page.screenshot({path:`.private/image-training-${mobile?'mobile':'desktop'}-${spaces?'spaces':'legacy'}.png`,fullPage:true});
   expect(rows).toHaveLength(insufficient?36:18);expect(complete.size).toBe(18);
   for(const row of rows) {expect(row.state).toEqual({});expect(Object.keys(row.image as object)).toEqual(['asset_id']);expect(row).not.toHaveProperty('filename');}
   expect(calls.findIndex(c=>c==='POST /v1/jobs')).toBeLessThan(calls.findIndex(c=>c==='POST /v1/image-assets'));

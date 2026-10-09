@@ -21,6 +21,7 @@ export default defineConfig({
       ZILS_DECISION_API_URL: 'http://127.0.0.1:8997/v1/systemone',
       ZILS_DECISION_API_KEY: 'browser-test-only',
       NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:8998',
+      NEXT_PUBLIC_ZILS_SPACES_URL: 'http://127.0.0.1:8996',
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'publishable-browser-test-key',
       NEXT_PUBLIC_ZILS_GOOGLE_AUTH_ENABLED: 'true',
       NEXT_PUBLIC_ZILS_TRAINING_API_URL: 'http://127.0.0.1:8999',

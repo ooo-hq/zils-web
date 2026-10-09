@@ -1,5 +1,7 @@
 'use client';
 
+import type { StorageLocations } from '@/lib/storage';
+
 import Link from 'next/link';
 
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
@@ -7,10 +9,10 @@ import { ImageApiError, imageApi, imageAnswerLabel, imageQuestion, type ImageQue
 import { imageBatchCsv, MAX_IMAGE_BATCH, runImageBatch, type ImageBatchRow } from '@/lib/image-batch';
 import styles from './image-decision-panel.module.css';
 
-type Props = { token: () => Promise<string>; apiUrl: string; storageUrl: string; modelId?: string; question?: ImageQuestion };
-export function ImageBatchPanel({ token, apiUrl, storageUrl, modelId, question }: Props) {
+type Props = { token: () => Promise<string>; apiUrl: string; storage: StorageLocations; modelId?: string; question?: ImageQuestion };
+export function ImageBatchPanel({ token, apiUrl, storage, modelId, question }: Props) {
   const id = useId();
-  const api = useMemo(() => imageApi(apiUrl, storageUrl, token), [apiUrl, storageUrl, token]);
+  const api = useMemo(() => imageApi(apiUrl, storage, token), [apiUrl, storage, token]);
   const [model, setModel] = useState(modelId || '');
   const [rows, setRows] = useState<ImageBatchRow[]>([]);
   const [instructions, setInstructions] = useState(typeof question?.instructions === 'string' ? question.instructions : '');

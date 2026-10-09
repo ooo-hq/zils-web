@@ -25,9 +25,9 @@ test('uploads reject foreign origins, overwrites and redirects before sending by
   const { imageApi } = moduleUnderTest();
   const calls = [];
   const request = async (url, options) => { calls.push({ url, options }); return new Response('{}', { status: 200 }); };
-  const api = imageApi('https://api.example', 'https://storage.example', async () => 'session', request);
+  const api = imageApi('https://api.example', { legacyOrigin: 'https://storage.example' }, async () => 'session', request);
   const file = new File(['photo'], 'photo.png', { type: 'image/png' });
-  const slot = { url: `https://storage.example/storage/v1/object/upload/sign/zils-images/owner/${id}/source?token=fixture`, method: 'PUT', headers: { 'x-upsert': 'false', 'Content-Type': 'application/octet-stream' } };
+  const slot = { url: `https://storage.example/storage/v1/object/upload/sign/zils-images/11111111-1111-4111-8111-111111111111/${id}/source?token=fixture`, method: 'PUT', headers: { 'x-upsert': 'false', 'Content-Type': 'application/octet-stream' } };
   await assert.rejects(api.upload({ ...slot, url: 'https://evil.example/photo' }, file));
   await assert.rejects(api.upload({ ...slot, headers: { 'x-upsert': 'true' } }, file));
   assert.equal(calls.length, 0);
@@ -42,7 +42,7 @@ test('predictions use the current owner session and dedicated gateway route', as
   const { imageApi } = moduleUnderTest();
   let token = 'first';
   const calls = [];
-  const api = imageApi('https://api.example', 'https://storage.example', async () => token, async (url, options) => {
+  const api = imageApi('https://api.example', { legacyOrigin: 'https://storage.example' }, async () => token, async (url, options) => {
     calls.push({ url, options }); return Response.json(result);
   });
   await api.predict(body);
@@ -55,7 +55,7 @@ test('predictions use the current owner session and dedicated gateway route', as
 test('native input limits explain how to correct the request', async () => {
   const { imageApi, ImageApiError } = moduleUnderTest();
   for (const [status, message] of [[413, /shorten.*context/i], [422, /shorter instructions/i]]) {
-    const api = imageApi('https://api.example', 'https://storage.example', async () => 'session', async () => new Response('{}', { status }));
+    const api = imageApi('https://api.example', { legacyOrigin: 'https://storage.example' }, async () => 'session', async () => new Response('{}', { status }));
     await assert.rejects(api.predict(body), error => error instanceof ImageApiError && error.status === status && message.test(error.message));
   }
 });
@@ -63,6 +63,6 @@ test('native input limits explain how to correct the request', async () => {
 test('image payments preserve the billable meter and direct insufficient credit to billing', async () => {
   const { parseImageResponse, imageApi, ImageApiError } = moduleUnderTest();
   assert.equal(parseImageResponse({ ...result, usage: { ...result.usage, billable_input_tokens: 173 } }, body).usage.billable_input_tokens, 173);
-  const api = imageApi('https://api.example', 'https://storage.example', async () => 'session', async () => new Response('{}', { status: 402 }));
+  const api = imageApi('https://api.example', { legacyOrigin: 'https://storage.example' }, async () => 'session', async () => new Response('{}', { status: 402 }));
   await assert.rejects(api.predict(body), error => error instanceof ImageApiError && error.status === 402 && /credit/i.test(error.message));
 });

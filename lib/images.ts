@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { serviceUrl } from './training';
+import { uploadSchema, uploadDescriptor, type StorageLocations } from './storage';
 
 const probability = z.number().finite().min(0).max(1);
 const criteria = z.record(z.string().trim().min(1).max(100), z.json()).refine(value => {
@@ -24,7 +25,6 @@ export type ImageResponse = z.infer<typeof responseSchema>;
 export type ImageAnswer = z.infer<typeof answerSchema>;
 const assetSchema = z.object({ id: z.string().uuid(), state: z.enum(['uploading', 'verifying', 'ready', 'failed', 'expired', 'deleted']), sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(), width: z.number().int().positive().optional(), height: z.number().int().positive().optional(), expires_at: z.string().datetime({ offset: true }) });
 export type ImageAsset = z.infer<typeof assetSchema>;
-const uploadSchema = z.object({ url: z.string().url(), method: z.literal('PUT'), headers: z.object({ 'x-upsert': z.literal('false'), 'Content-Type': z.literal('application/octet-stream') }).strict() });
 const modelsSchema = z.object({ models: z.array(z.object({ name: z.string(), stock: z.boolean(), capabilities: z.object({ modalities: z.array(z.string()) }), task: z.object({ question: imageQuestionSchema, outcome_order: z.array(z.string()) }).optional() })), training_enabled: z.boolean(), training_profile: z.object({ model: z.literal('imajev-4b-v1'), max_train: z.number().int().positive(), max_calibration: z.number().int().positive(), max_test: z.number().int().positive(), max_source_bytes: z.number().int().positive(), max_pixels: z.number().int().positive(), max_edge: z.number().int().positive() }).optional() });
 export type ImageModels = z.infer<typeof modelsSchema>;
 export type ImageAssetInput = { purpose: 'prediction' | 'training'; job_id?: string; filename: string; source_bytes: number; source_sha256: string };
@@ -50,8 +50,8 @@ export function imageQuestion(instructions: string, answers: string): ImageQuest
 export async function imageDigest(file: Blob): Promise<string> {
   return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', await file.arrayBuffer()))).map(n => n.toString(16).padStart(2, '0')).join('');
 }
-export function imageApi(baseUrl: string, storageUrl: string, token: () => Promise<string>, request: typeof fetch = fetch) {
-  const base = serviceUrl(baseUrl), storageOrigin = new URL(serviceUrl(storageUrl)).origin;
+export function imageApi(baseUrl: string, storage: StorageLocations, token: () => Promise<string>, request: typeof fetch = fetch) {
+  const base = serviceUrl(baseUrl);
   async function send<T>(path: string, schema: z.ZodType<T>, body?: unknown, signal?: AbortSignal, method = body === undefined ? 'GET' : 'POST'): Promise<T> {
     const current = await token();
     if (!current) throw new ImageApiError('Your session has expired. Please sign in again.', 401);
@@ -63,15 +63,22 @@ export function imageApi(baseUrl: string, storageUrl: string, token: () => Promi
     return schema.parse(response.status === 204 ? {} : await response.json());
   }
   const idPath = (id: string) => `/v1/image-assets/${z.string().uuid().parse(id)}`;
+  function checkedAsset<T extends { asset: ImageAsset; upload?: z.infer<typeof uploadSchema> }>(result: T, expectedId?: string): T {
+    if (expectedId && result.asset.id !== expectedId) throw new Error('The upload does not match this image.');
+    if (result.upload) {
+      const slot = uploadDescriptor(result.upload, storage, 'image-upload');
+      if (!new URL(slot.url).pathname.endsWith(`/${result.asset.id}/source`)) throw new Error('The upload does not match this image.');
+    }
+    return result;
+  }
   return {
     models: (signal?: AbortSignal) => send('/v1/image-models', modelsSchema, undefined, signal),
-    createAsset: (input: ImageAssetInput, signal?: AbortSignal) => send('/v1/image-assets', z.object({ asset: assetSchema, upload: uploadSchema }), input, signal),
+    createAsset: (input: ImageAssetInput, signal?: AbortSignal) => send('/v1/image-assets', z.object({ asset: assetSchema, upload: uploadSchema }), input, signal).then(result => checkedAsset(result)),
     completeAsset: (id: string, signal?: AbortSignal) => send(`${idPath(id)}/complete`, assetSchema, {}, signal),
-    resumeAsset: (id: string, signal?: AbortSignal) => send(`${idPath(id)}/resume`, z.object({ asset: assetSchema, uploaded: z.boolean(), upload: uploadSchema.optional() }), {}, signal),
+    resumeAsset: (id: string, signal?: AbortSignal) => send(`${idPath(id)}/resume`, z.object({ asset: assetSchema, uploaded: z.boolean(), upload: uploadSchema.optional() }), {}, signal).then(result => checkedAsset(result, id)),
     deleteAsset: (id: string, signal?: AbortSignal) => send(idPath(id), z.object({}), undefined, signal, 'DELETE'),
     upload: async (descriptor: z.infer<typeof uploadSchema>, file: Blob, signal?: AbortSignal) => {
-      const slot = uploadSchema.parse(descriptor), url = new URL(slot.url);
-      if (url.origin !== storageOrigin || url.username || url.password || url.hash || !url.pathname.startsWith('/storage/v1/object/upload/sign/zils-images/')) throw new ImageApiError('Upload destination could not be verified.', 502);
+      const slot = uploadDescriptor(descriptor, storage, 'image-upload');
       const response = await request(slot.url, { method: 'PUT', headers: slot.headers, body: file, credentials: 'omit', redirect: 'error', signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(60_000)]) : AbortSignal.timeout(60_000) });
       if (!response.ok) throw new ImageApiError('Photo upload was interrupted. Retry to create a new private upload.', response.status);
     },

@@ -1,5 +1,7 @@
 'use client';
 
+import type { StorageLocations } from '@/lib/storage';
+
 import Link from 'next/link';
 
 import Image from 'next/image';
@@ -8,7 +10,7 @@ import { imageApi, imageAnswerLabel, imageDigest, imageQuestion, ImageApiError, 
 import styles from './image-decision-panel.module.css';
 import { ImageBatchPanel } from './image-batch-panel';
 
-type Props = { owner: string; token: () => Promise<string>; apiUrl: string; storageUrl: string; modelId?: string; question?: ImageQuestion };
+type Props = { owner: string; token: () => Promise<string>; apiUrl: string; storage: StorageLocations; modelId?: string; question?: ImageQuestion };
 export function ImageDecisionPanel(props: Props) { return <ImageTools key={`${props.owner}:${props.modelId || 'stock'}`} {...props} />; }
 function ImageTools(props: Props) {
   const [mode, setMode] = useState<'batch' | 'single'>('batch');
@@ -22,9 +24,9 @@ function ImageTools(props: Props) {
     <div id={`${id}-single`} hidden={mode !== 'single'}><ImagePanel {...props} /></div>
   </div>;
 }
-function ImagePanel({ token, apiUrl, storageUrl, modelId, question }: Props) {
+function ImagePanel({ token, apiUrl, storage, modelId, question }: Props) {
   const panelId = useId();
-  const api = useMemo(() => imageApi(apiUrl, storageUrl, token), [apiUrl, storageUrl, token]);
+  const api = useMemo(() => imageApi(apiUrl, storage, token), [apiUrl, storage, token]);
   const [model, setModel] = useState(modelId || '');
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState('');

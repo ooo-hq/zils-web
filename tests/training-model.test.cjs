@@ -15,7 +15,7 @@ test('preserves per-job model identity and supports old jobs without it', () => 
 test('only downloads the expected files for the job model', async () => {
   const current = { ...job, model };
   let names = downloadFiles(current);
-  const api = trainingApi('https://training.example', 'https://storage.example', async () => 'fixture-token', async () => new Response(JSON.stringify({ downloads: Object.fromEntries(names.map(name => [name, { url: `https://storage.example/storage/v1/object/sign/models/${name}` }])) }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+  const api = trainingApi('https://training.example', { legacyOrigin: 'https://storage.example' }, async () => 'fixture-token', async () => new Response(JSON.stringify({ downloads: Object.fromEntries(names.map(name => [name, { url: `https://storage.example/storage/v1/object/sign/fez-training-models/${job.id}/releases/11111111-1111-4111-8111-111111111111/${name}` }])) }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
   assert.deepEqual((await api.downloads(current)).map(file => file.name), names);
   names = downloadFiles(job);
   await assert.rejects(api.downloads(current), /does not match/);
@@ -38,6 +38,6 @@ test('image results retain versioned aggregate metrics and frozen acceptance acr
 });
 test('image downloads reject text artifact lists', async () => {
   const imageJob={...job,model:imageModel};
-  const api=trainingApi('https://training.example','https://storage.example',async()=> 'token',async()=>new Response(JSON.stringify({downloads:Object.fromEntries(downloadFiles({...job,model}).map(n=>[n,{url:`https://storage.example/storage/v1/object/sign/models/${n}`}]))})));
+  const api=trainingApi('https://training.example',{ legacyOrigin: 'https://storage.example' },async()=> 'token',async()=>new Response(JSON.stringify({downloads:Object.fromEntries(downloadFiles({...job,model}).map(n=>[n,{url:`https://storage.example/storage/v1/object/sign/fez-training-models/${job.id}/releases/11111111-1111-4111-8111-111111111111/${n}`}]))})));
   await assert.rejects(api.downloads(imageJob),/does not match/);
 });
