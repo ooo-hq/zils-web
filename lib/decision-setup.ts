@@ -55,8 +55,9 @@ export function setupRequest(value: unknown, example: string, model: string): De
   return request;
 }
 
-export const STARTERS: { name: string; description: string; goal: string; draft: SetupDraft; example: string }[] = [
+export const STARTERS: { id: string; name: string; description: string; goal: string; draft: SetupDraft; example: string }[] = [
   {
+    id: 'customer-routing',
     name: 'Route customer messages', description: 'Send each request to the right team.',
     goal: 'I want to sort customer emails and flag anything urgent.',
     draft: { title: 'Customer message routing', questions: [
@@ -70,12 +71,14 @@ export const STARTERS: { name: string; description: string; goal: string; draft:
     example: 'Our entire team has been locked out since this morning. We have a client presentation in an hour. Can someone help us get back in?',
   },
   {
+    id: 'refund-request',
     name: 'Check a condition', description: 'Get a clear yes or no.',
     goal: 'I want to check whether a customer is asking for a refund.',
     draft: { title: 'Refund requests', questions: [{ id: 'refund', kind: 'yes_no', prompt: 'Is the customer explicitly asking for their money back?', options: [] }] },
     example: 'The replacement arrived broken too. Please return my money instead of sending another one.',
   },
   {
+    id: 'customer-frustration',
     name: 'Rate a message', description: 'Choose a position on a simple scale.',
     goal: 'I want to understand how frustrated a customer sounds.',
     draft: { title: 'Customer frustration', questions: [{ id: 'frustration', kind: 'score', prompt: 'How frustrated is the customer?', options: [
