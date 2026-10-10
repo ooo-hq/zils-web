@@ -5,8 +5,8 @@
 .skeleton span { display:block; height:54px; border-radius:6px; background:var(--zils-soft); animation:breathe 1.5s ease-in-out infinite alternate; }
 .skeleton span:first-child { width:60%; height:24px; }
 .skeleton span:last-child { width:82%; }
-.linkIndicator { display:inline-block; flex-shrink:0; width:12px; height:12px; margin-left:7px; border:1.5px solid currentColor; border-right-color:transparent; border-radius:50%; opacity:0; vertical-align:middle; }
-.linkIndicator[data-pending=true] { opacity:1; animation:turn .7s linear infinite; }
+.linkIndicator { display:none; flex-shrink:0; width:12px; height:12px; margin-left:7px; border:1.5px solid currentColor; border-right-color:transparent; border-radius:50%; vertical-align:middle; }
+.linkIndicator[data-pending=true] { display:inline-block; animation:turn .7s linear infinite; }
 @keyframes breathe { to { opacity:.45; } }
 @keyframes turn { to { transform:rotate(360deg); } }
 @media(prefers-reduced-motion:reduce) { .skeleton span,.linkIndicator[data-pending=true] { animation:none; } }
