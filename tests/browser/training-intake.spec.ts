@@ -71,20 +71,20 @@ test('Excel import, corrections and exclusions reach the existing submission con
   const rows = [['Ticket ID', 'Message', 'Correct Answer', 'Customer Email'], ...Array.from({ length: 18 }, (_, index) => [`case-${index}`, `Help with request ${index}`, ['Billing', 'Technical support', 'Account changes'][index % 3], 'private@example.com'])];
   rows[1][2] = '';
   rows.push([...rows[2]]);
-  await page.getByLabel('Drop your spreadsheet here or choose a file').setInputFiles({ name: 'tickets.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: workbook(rows) });
+  await page.getByLabel('Drop your data here or choose a file').setInputFiles({ name: 'tickets.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: workbook(rows) });
   await expect(page.getByText('19 examples found')).toBeVisible();
-  await expect(page.getByLabel('Choose the sheet with your examples')).toHaveValue('1');
-  await page.getByLabel('Choose the sheet with your examples').selectOption('0');
+  await expect(page.getByLabel('Choose the examples to use')).toHaveValue('1');
+  await page.getByLabel('Choose the examples to use').selectOption('0');
   await expect(page.getByRole('alert')).toContainText('header');
-  await page.getByLabel('Choose the sheet with your examples').selectOption('1');
+  await page.getByLabel('Choose the examples to use').selectOption('1');
   await expect(page.getByLabel('Use this reference to identify each case')).toHaveValue('Ticket ID');
   await page.getByRole('button', { name: 'Review examples', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Check readiness' })).toBeDisabled();
   await page.getByLabel('Examples to review').selectOption('issues');
-  await expect(page.getByText(/Spreadsheet row 2$/)).toBeVisible();
+  await expect(page.getByText(/Source record 2$/)).toBeVisible();
   await page.getByLabel('Correct answer', { exact: true }).selectOption('Billing');
   await page.getByRole('button', { name: 'Next', exact: true }).click();
-  await expect(page.getByText(/Spreadsheet row 20$/)).toBeVisible();
+  await expect(page.getByText(/Source record 20$/)).toBeVisible();
   await page.getByRole('button', { name: 'Leave out of this run' }).click();
   await expect(page.getByText('No examples need attention.', { exact: false })).toBeVisible();
   await page.getByLabel('Examples to review').selectOption('sample');
@@ -117,7 +117,7 @@ test('mobile CSV review preserves the draft and requires resolving expert flags'
   const background = await page.locator('body').evaluate(element => getComputedStyle(element).backgroundColor);
   await expect(page.getByRole('dialog')).toHaveCSS('background-color', background);
   await expect(page.getByRole('dialog')).toHaveCSS('color-scheme', 'dark');
-  const input = page.getByLabel('Drop your spreadsheet here or choose a file');
+  const input = page.getByLabel('Drop your data here or choose a file');
   await input.setInputFiles({ name: 'old.xls', mimeType: 'application/vnd.ms-excel', buffer: Buffer.from('old') });
   await expect(page.getByRole('alert')).toContainText('.xlsx');
   await input.setInputFiles({ name: 'examples.csv', mimeType: 'text/csv', buffer: Buffer.from(example) });
@@ -193,4 +193,62 @@ test('unsupported assistant suggestions leave the training draft unchanged', asy
   await expect(page.getByLabel('Possible answers (optional)', { exact: true })).toHaveValue('Billing\nTechnical support\nAccount changes');
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Try sample examples' })).toBeVisible();
+});
+
+for (const format of ['json', 'jsonl', 'paste']) test(`${format} intake preserves nested data through review and submission`, async ({ page }) => {
+  const { mutations, uploads } = await workspace(page);
+  const records = Array.from({ length: 6 }, (_, index) => ({
+    case_id: `case-${index}`, content: { transcript: [{ text: `Request ${index}`, start: 0 }], brief: 'Route to the right team' },
+    answer: index % 2 ? 'Billing' : 'Technical support', private_email: 'private@example.com',
+  }));
+  const source = format === 'jsonl' ? records.map(record => JSON.stringify(record)).join('\n') : JSON.stringify(records, null, 2);
+  const input = page.getByLabel('Drop your data here or choose a file');
+  await expect(input).toHaveAttribute('accept', /\.json.*\.jsonl/);
+  if (format === 'paste') {
+    await page.getByText('Or paste your data', { exact: true }).click();
+    await page.getByLabel('Paste JSON or JSONL').fill(source);
+    await page.getByRole('button', { name: 'Use pasted data', exact: true }).click();
+  } else {
+    await input.setInputFiles({ name: `cases.${format}`, mimeType: 'application/json', buffer: Buffer.from(source) });
+  }
+  await expect(page.getByText('6 examples found')).toBeVisible();
+  await page.getByRole('button', { name: 'Review examples', exact: true }).click();
+  await expect(page.getByText(/Source record 1$/)).toBeVisible();
+  await expect(page.getByRole('definition')).toContainText('Request 0');
+  await page.getByRole('button', { name: 'Check readiness' }).click();
+  await expect(page.getByText('6 examples from 6 separate cases.')).toBeVisible();
+  expect(mutations).toEqual([]);
+  await page.getByLabel('I checked the answers', { exact: false }).check();
+  await page.getByLabel('I am authorized', { exact: false }).check();
+  await page.getByRole('button', { name: 'Send for training', exact: true }).click();
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+  const examples = Object.values(uploads).flatMap(text => text.trim().split('\n').map(line => JSON.parse(line)));
+  expect(examples).toHaveLength(6);
+  expect(examples.every(row => Object.keys(row.state.information).join() === 'content')).toBe(true);
+  expect(examples.map(row => JSON.parse(row.state.information.content).transcript[0].text).sort()).toEqual(records.map(record => record.content.transcript[0].text).sort());
+  expect(JSON.stringify(examples)).not.toContain('private@example.com');
+});
+
+test('mobile pasted payload lets users select records and clears stale data after an invalid edit', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const { mutations } = await workspace(page);
+  await page.getByText('Or paste your data', { exact: true }).click();
+  const paste = page.getByLabel('Paste JSON or JSONL');
+  await paste.fill(JSON.stringify({ version: 'v1', data: [{ message: 'Invoice', answer: 'Billing' }, { message: 'Login', answer: 'Technical support' }] }, null, 2));
+  await page.getByRole('button', { name: 'Use pasted data', exact: true }).click();
+  await page.getByLabel('Choose the examples to use').selectOption('1');
+  await expect(page.getByText('2 examples found')).toBeVisible();
+  await expect(page.getByText('Fields outside the selected list are not included.')).toBeVisible();
+  await paste.fill('{"message":');
+  await expect(page.getByRole('button', { name: 'Review examples', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Use pasted data', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('JSON');
+  await expect(page.getByText('2 examples found')).not.toBeVisible();
+  await paste.fill('{"message":"Invoice","answer":"Billing"}\n{"message":"Login","answer":"Technical support"}');
+  await page.getByRole('button', { name: 'Use pasted data', exact: true }).click();
+  await expect(page.getByText('2 examples found')).toBeVisible();
+  await page.getByRole('heading', { name: 'Bring examples of your work.' }).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: '.private/onboarding-data-mobile.png', fullPage: true, animations: 'disabled' });
+  expect(await page.getByRole('dialog').evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  expect(mutations).toEqual([]);
 });

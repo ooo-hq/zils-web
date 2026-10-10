@@ -22,7 +22,7 @@ export function suggestAnswers(data: CsvData, answer: string): string[] {
   return values.length <= 16 && values.every(value => value.length <= 100) ? values : [];
 }
 
-/** Corrections are a separate draft; the original spreadsheet is never changed. */
+/** Corrections are a separate draft; the original data is never changed. */
 export function reviewData(data: CsvData, mapping: ColumnMapping, outcomes: string[], edits: ReviewEdits) {
   const answerIndex = data.headers.indexOf(mapping.answer);
   const groupIndex = data.headers.indexOf(mapping.group);
@@ -34,7 +34,7 @@ export function reviewData(data: CsvData, mapping: ColumnMapping, outcomes: stri
   const groups = new Map(outcomes.map(answer => [answer, new Set<string>()]));
   const counts = new Map(outcomes.map(answer => [answer, 0]));
   let excluded = 0, confirmed = 0;
-  if (answerIndex < 0) blockers.push('Choose the column containing the correct answer.');
+  if (answerIndex < 0) blockers.push('Choose the field containing the correct answer.');
   if (!inputIndices.length || inputIndices.includes(-1)) blockers.push('Choose the information available before the decision.');
   if (outcomes.length < 2 || outcomes.length > 16 || new Set(outcomes).size !== outcomes.length || outcomes.some(answer => !answer || answer.length > 100)) blockers.push('Add 2–16 different possible answers, up to 100 characters each.');
   for (const [index, original] of data.rows.entries()) {

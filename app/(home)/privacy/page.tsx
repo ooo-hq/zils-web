@@ -21,7 +21,7 @@ export default function PrivacyPage() {
       </PolicySection>
 
       <PolicySection title="Files you prepare and submit">
-        <p>Spreadsheet review and preparation happen in your browser. Selecting a file for review does not upload it. When you submit a training run, the prepared datasets are uploaded to private storage, and the service records the job settings, progress, evaluation results, and model artifacts.</p>
+        <p>Data review and preparation happen in your browser. Selecting a file or pasting data for review does not upload it. When you submit a training run, the prepared datasets are uploaded to private storage, and the service records the job settings, progress, evaluation results, and model artifacts.</p>
         <p>The training service uses Supabase for account and job records. DigitalOcean Spaces stores newly uploaded datasets, photos, and model artifacts in private storage. Existing files may remain in Supabase Storage during migration. Authorized service operators process the data to validate your submission, coordinate training, evaluate candidates, and deliver available results.</p>
       </PolicySection>
 

@@ -32,6 +32,63 @@ test('CSV and XLSX imports stay local and preserve sheet choices, even with an i
   const [sheet] = await readSpreadsheet(new File([text], 'tickets.CSV'));
   assert.equal(sheet.data.rows[0][0], 'Invoice, please');
 });
+test('JSON and JSONL exports use the same reviewed training contract as CSV', async () => {
+  const original = csv();
+  const records = original.rows.map(row => Object.fromEntries(original.headers.map((header, index) => [header, row[index]])));
+  for (const [name, source] of [['tickets.json', JSON.stringify(records)], ['tickets.jsonl', records.map(record => JSON.stringify(record)).join('\n')]]) {
+    const [sheet] = await readSpreadsheet(new File([source], name));
+    assert.deepEqual(sheet.data.headers, original.headers);
+    assert.deepEqual(sheet.data.rows, original.rows);
+    assert.deepEqual(suggestMapping(sheet.data), mapping);
+    const report = reviewData(sheet.data, mapping, outcomes, {});
+    assert.equal(report.issues.length, 0);
+    const result = await prepareTraining(report.data, mapping, decision, false);
+    assert.deepEqual(await validateDatasets(result.files), result.counts);
+  }
+});
+test('JSON preserves nested payloads, missing fields, booleans, zero and source references', async () => {
+  const records = [
+    { brief: { title: 'Demo', rules: ['Show product'] }, transcript: [{ start: 0, text: 'Hello' }], answer: true, duration: 0 },
+    { brief: { title: 'Second' }, answer: false, reference: '001', missing: null },
+  ];
+  const [sheet] = await readSpreadsheet(new File([JSON.stringify(records)], 'videos.JSON'));
+  assert.deepEqual(sheet.data.headers, ['brief', 'transcript', 'answer', 'duration', 'reference', 'missing']);
+  assert.deepEqual(sheet.data.rows, [
+    [JSON.stringify(records[0].brief), JSON.stringify(records[0].transcript), 'true', '0', '', ''],
+    [JSON.stringify(records[1].brief), '', 'false', '', '001', ''],
+  ]);
+  assert.deepEqual(sheet.data.sourceRows, [1, 2]);
+  const [single] = await readSpreadsheet(new File([JSON.stringify(records[0], null, 2)], 'payload.json'));
+  assert.equal(single.data.rows.length, 1);
+  const [lines] = await readSpreadsheet(new File(['\uFEFF\n' + records.map(record => JSON.stringify(record)).join('\r\n\r\n')], 'payload.ndjson'));
+  assert.deepEqual(lines.data.sourceRows, [2, 4]);
+  const [pastedLines] = await readSpreadsheet(new File([records.map(record => JSON.stringify(record)).join('\n')], 'pasted-data.json'));
+  assert.deepEqual(pastedLines.data.rows, sheet.data.rows);
+});
+test('wrapped JSON offers explicit record-list choices without discarding the original payload', async () => {
+  const record = { message: 'Invoice please', answer: 'Billing' };
+  const payload = { version: 'v1', data: [record], tags: ['support'] };
+  const sources = await readSpreadsheet(new File([JSON.stringify(payload)], 'export.json'));
+  assert.deepEqual(sources.map(source => source.name), ['Whole JSON object', 'data']);
+  assert.deepEqual(sources[0].data.headers, ['version', 'data', 'tags']);
+  assert.deepEqual(sources[1].data.rows, [['Invoice please', 'Billing']]);
+});
+test('invalid JSON inputs fail without dropping records or rounding numeric identifiers', async () => {
+  for (const [source, name, match] of [
+    ['[]', 'empty.json', /no examples|empty/i],
+    ['{}', 'empty.json', /field|empty/i],
+    ['42', 'number.json', /object/i],
+    ['[{"message":"One"}, null]', 'null.json', /2.*object/i],
+    ['[{"message":"One"}, "two"]', 'mixed.json', /2.*object/i],
+    ['{"message":"One","answer":"Yes"}\n\n{"message":', 'bad.jsonl', /line 3/i],
+    ['[{"message":"One","answer":"Yes"}]', 'array.jsonl', /line 1.*object/i],
+    ['{"id":9007199254740993,"answer":"Yes"}', 'id.json', /number.*quotes|quoted/i],
+    [JSON.stringify([{ ' ': 'bad', answer: 'Yes' }]), 'field.json', /field/i],
+    [JSON.stringify(Array.from({ length: 20001 }, () => ({ message: 'a', answer: 'b' }))), 'many.json', /20,000/],
+    [JSON.stringify([Object.fromEntries(Array.from({ length: 65 }, (_, i) => [`field${i}`, i]))]), 'wide.json', /64/],
+  ]) await assert.rejects(readSpreadsheet(new File([source], name)), match);
+  await assert.rejects(readSpreadsheet(new File([new Uint8Array([255])], 'bad.json')), /UTF-8/);
+});
 test('imports reject empty, oversized, unsupported, invalid UTF-8 and corrupt Excel files', async () => {
   for (const [file, match] of [
     [new File([], 'empty.csv'), /empty/i],
