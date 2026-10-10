@@ -4,6 +4,65 @@ import { MAX_CSV_BYTES, MAX_CSV_ROWS, parseCsv, type CsvData } from './training-
 
 export type SpreadsheetSheet = { name: string; data?: CsvData; error?: string };
 
+function jsonRecords(records: unknown[], sourceRows = records.map((_, index) => index + 1), lines = false): CsvData {
+  if (!records.length) throw new Error('This JSON contains no examples. Add objects describing your cases.');
+  if (records.length > MAX_CSV_ROWS) throw new Error('Use at most 20,000 examples. Choose a smaller export.');
+  const fields = new Set<string>();
+  const objects = records.map((record, index) => {
+    if (!record || typeof record !== 'object' || Array.isArray(record)) throw new Error(`${lines ? 'JSONL line' : 'JSON example'} ${sourceRows[index]} must be an object with named fields.`);
+    const keys = Object.keys(record);
+    if (!keys.length || keys.some(key => !key.trim())) throw new Error(`Example ${sourceRows[index]} needs nonempty field names.`);
+    keys.forEach(key => fields.add(key));
+    if (fields.size > 64) throw new Error('Use at most 64 fields. Keep only the fields needed for this decision.');
+    return record as Record<string, unknown>;
+  });
+  const headers = [...fields];
+  const rows = objects.map(record => headers.map(header => {
+    const value = Object.hasOwn(record, header) ? record[header] : null;
+    return value == null ? '' : typeof value === 'object' ? JSON.stringify(value) : String(value).trim();
+  }));
+  return { headers, rows, sourceRows };
+}
+
+function readJson(source: string, name: string, linesOnly: boolean): SpreadsheetSheet[] {
+  const text = source.replace(/^\uFEFF/, '').trim();
+  if (!text) throw new Error('This JSON is empty. Add examples first.');
+  const parse = (value: string): unknown => JSON.parse(value, (_key, item) => {
+    if (typeof item === 'number' && (!Number.isFinite(item) || (Number.isInteger(item) && !Number.isSafeInteger(item)))) throw new Error('A number is too large to read accurately. Put large numbers and identifiers in quotes in the source JSON.');
+    return item;
+  });
+  let payload: unknown;
+  if (!linesOnly) {
+    try { payload = parse(text); }
+    catch (error) {
+      if (!(error instanceof SyntaxError)) throw error;
+      if (text.startsWith('[') || !text.includes('\n')) throw new Error('This JSON could not be read. Check its quotes, commas, and brackets.');
+      linesOnly = true;
+    }
+  }
+  if (linesOnly) {
+    const records: unknown[] = [], sourceRows: number[] = [];
+    for (const [index, line] of source.replace(/^\uFEFF/, '').split(/\r\n|\n|\r/).entries()) {
+      if (!line.trim()) continue;
+      try { records.push(parse(line)); }
+      catch (error) { throw new Error(`JSONL line ${index + 1}: ${error instanceof SyntaxError ? 'could not be read. Put one complete JSON object on each line.' : (error as Error).message}`); }
+      sourceRows.push(index + 1);
+      if (records.length > MAX_CSV_ROWS) throw new Error('Use at most 20,000 examples. Choose a smaller export.');
+    }
+    return [{ name, data: jsonRecords(records, sourceRows, true) }];
+  }
+  if (Array.isArray(payload)) return [{ name, data: jsonRecords(payload) }];
+  const whole = jsonRecords([payload]);
+  const lists = Object.entries(payload as Record<string, unknown>).filter(([, value]) => Array.isArray(value) && value.length && value.every(item => item && typeof item === 'object' && !Array.isArray(item)));
+  return [
+    { name: lists.length ? 'Whole JSON object' : name, data: whole },
+    ...lists.map(([key, records]) => {
+      try { return { name: key, data: jsonRecords(records as unknown[]) }; }
+      catch (error) { return { name: key, error: (error as Error).message }; }
+    }),
+  ];
+}
+
 /** Inspect ZIP directory sizes without inflating entries or loading cell contents. */
 export function checkWorkbookArchive(bytes: Uint8Array, maxExpandedBytes = 64 * 1024 * 1024) {
   let expanded = 0, entries = 0;
@@ -82,15 +141,15 @@ export function normalizeSheet(cells: unknown[][]): CsvData {
 
 /** The file is parsed in browser memory; no network or persistent storage is used. */
 export async function readSpreadsheet(file: File): Promise<SpreadsheetSheet[]> {
-  if (!file.size) throw new Error('This file is empty. Choose a spreadsheet with examples.');
-  if (file.size > MAX_CSV_BYTES) throw new Error('Choose a spreadsheet smaller than 10 MiB, or use prepared files.');
-  if (!/\.(csv|xlsx)$/i.test(file.name)) throw new Error('Choose a .csv or .xlsx file. Save older Excel files as .xlsx first.');
+  if (!file.size) throw new Error('This file is empty. Choose a file with examples.');
+  if (file.size > MAX_CSV_BYTES) throw new Error('Choose data smaller than 10 MiB, or use prepared files.');
+  if (!/\.(csv|xlsx|json|jsonl|ndjson)$/i.test(file.name)) throw new Error('Choose a CSV, Excel (.xlsx), JSON, or JSONL file. Save older Excel files as .xlsx first.');
   const buffer = await file.arrayBuffer();
-  if (/\.csv$/i.test(file.name)) {
+  if (!/\.xlsx$/i.test(file.name)) {
     let source: string;
     try { source = new TextDecoder('utf-8', { fatal: true }).decode(buffer); }
-    catch { throw new Error('Save the spreadsheet as CSV UTF-8 and choose the exported file again.'); }
-    return [{ name: file.name, data: parseCsv(source) }];
+    catch { throw new Error('Save the file with UTF-8 encoding and choose the exported file again.'); }
+    return /\.csv$/i.test(file.name) ? [{ name: file.name, data: parseCsv(source) }] : readJson(source, file.name, /\.(jsonl|ndjson)$/i.test(file.name));
   }
   const bytes = new Uint8Array(buffer);
   checkWorkbookArchive(bytes);

@@ -30,7 +30,7 @@ type Props = {
 const steps = ['Describe', 'Examples', 'Review', 'Train'];
 const stepTitles = ['What should Zils decide?', 'Bring examples of your work.', 'Check what your model will learn.', 'Your data is ready for an experiment.'];
 const splitNames = { train: 'Training', calibration: 'Calibration', test: 'Evaluation' };
-const errorMessage = (error: unknown) => error instanceof Error ? error.message.replace(/CSV record/g, 'Spreadsheet row') : 'Could not prepare the file. Try saving it as CSV UTF-8 again.';
+const errorMessage = (error: unknown) => error instanceof Error ? error.message.replace(/CSV record/g, 'Source record') : 'Could not read your data. Check the file or pasted text and try again.';
 
 // State lives outside SheetContent so closing the panel preserves this browser's draft.
 export function TrainingIntake({ active = true, onChooseType, assistantConfigured, busy, onSubmit, onFiles, onCloseAutoFocus, pending = false, pendingName, submissionError, needsCredit = false, progress, onStopUpload }: Props) {
@@ -45,6 +45,7 @@ export function TrainingIntake({ active = true, onChooseType, assistantConfigure
   const [edits, setEdits] = useState<ReviewEdits>({});
   const [dragging, setDragging] = useState(false);
   const [filename, setFilename] = useState('');
+  const [pasted, setPasted] = useState('');
   const [mapping, setMapping] = useState<ColumnMapping>({ inputs: [], answer: '', group: '' });
   const [independent, setIndependent] = useState(false);
   const [prepared, setPrepared] = useState<PreparedTraining | null>(null);
@@ -71,7 +72,7 @@ export function TrainingIntake({ active = true, onChooseType, assistantConfigure
   }
   function nextDecision(event: FormEvent) {
     event.preventDefault();
-    if (outcomes.length && (outcomes.length < 2 || outcomes.length > 16 || new Set(outcomes).size !== outcomes.length || outcomes.some(value => value.length > 100))) { setError('Enter 2–16 different possible answers, or leave this blank to use answers from your spreadsheet.'); return; }
+    if (outcomes.length && (outcomes.length < 2 || outcomes.length > 16 || new Set(outcomes).size !== outcomes.length || outcomes.some(value => value.length > 100))) { setError('Enter 2–16 different possible answers, or leave this blank to use answers from your data.'); return; }
     if (!name) setName(question.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 64) || 'decision-training');
     go(1);
   }
@@ -87,9 +88,12 @@ export function TrainingIntake({ active = true, onChooseType, assistantConfigure
       }
     }
   }
+  function clearExamples() {
+    setCsv(null); setSheets([]); setEdits({}); setFilename(''); setPrepared(null); setError(''); setConsent(false); setReviewed(false); onFiles({});
+  }
   async function readFile(file: File | undefined) {
     if (!file) return;
-    setCsv(null); setSheets([]); setEdits({}); setFilename(''); setPrepared(null); setError(''); setConsent(false); setReviewed(false); onFiles({});
+    clearExamples();
     setWorking(true);
     try {
       const available = await readSpreadsheet(file);
@@ -100,7 +104,7 @@ export function TrainingIntake({ active = true, onChooseType, assistantConfigure
   }
   function nextExamples(event: FormEvent) {
     event.preventDefault();
-    if (!csv || !mapping.answer || !mapping.inputs.length) { setError('Choose the information your model should read and the column containing the correct answer.'); return; }
+    if (!csv || !mapping.answer || !mapping.inputs.length) { setError('Choose the information your model should read and the field containing the correct answer.'); return; }
     if (mapping.inputs.includes(mapping.answer) || (mapping.group && mapping.inputs.includes(mapping.group)) || mapping.group === mapping.answer) { setError('Keep the answer and case reference separate from the information the model reads.'); return; }
     if (!mapping.group && !independent) { setError('Choose a shared case reference or confirm that each example is a separate case.'); return; }
     if (outcomes.length < 2 || outcomes.length > 16 || new Set(outcomes).size !== outcomes.length || outcomes.some(value => value.length > 100)) { setError('Add 2–16 different possible answers, one per line, up to 100 characters each.'); return; }
@@ -197,20 +201,27 @@ export function TrainingIntake({ active = true, onChooseType, assistantConfigure
           <div className={styles.wizardActions}><button type="button" className={styles.textButton} onClick={switchMode}>Use prepared files</button><button className={styles.button}>Continue</button></div>
         </fieldset></form>}
         {step === 1 && <form onSubmit={nextExamples}><fieldset disabled={locked}>
-          <p className={styles.intakeIntro}>Bring a spreadsheet or an export from your team’s tools. Each row should describe a situation and its correct decision.</p>
+          <p className={styles.intakeIntro}>Bring examples from your team’s tools. Choose a file or paste your data, then check how Zils reads it.</p>
           <div className={styles.spreadsheetDrop} data-dragging={dragging} onDragOver={event => { event.preventDefault(); if (!locked) setDragging(true); }} onDragLeave={event => { if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) setDragging(false); }} onDrop={event => {
             event.preventDefault(); setDragging(false); if (locked) return;
-            if (event.dataTransfer.files.length !== 1) { setError('Choose one spreadsheet at a time.'); return; }
+            if (event.dataTransfer.files.length !== 1) { setError('Choose one file at a time.'); return; }
             void readFile(event.dataTransfer.files[0]);
           }}>
-            <label htmlFor="decision-spreadsheet">Drop your spreadsheet here or choose a file</label>
-            <input ref={fileInput} id="decision-spreadsheet" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={event => { void readFile(event.target.files?.[0]); }} />
-            <small>Excel (.xlsx) or CSV UTF-8 · Up to 10 MiB and 20,000 rows</small>
+            <label htmlFor="decision-data">Drop your data here or choose a file</label>
+            <input ref={fileInput} id="decision-data" type="file" accept=".csv,.xlsx,.json,.jsonl,.ndjson,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/json,application/jsonl,application/x-ndjson" onChange={event => { void readFile(event.target.files?.[0]); }} />
+            <small>CSV, Excel (.xlsx), JSON, or JSONL · Up to 10 MiB and 20,000 examples</small>
           </div>
+          <details className={styles.details}>
+            <summary>Or paste your data</summary>
+            <label htmlFor="pasted-data">Paste JSON or JSONL</label>
+            <textarea id="pasted-data" rows={6} spellCheck={false} value={pasted} onChange={event => { setPasted(event.target.value); clearExamples(); if (fileInput.current) fileInput.current.value = ''; }} placeholder={'[{"message":"Please send my invoice.","answer":"Billing"}]'} />
+            <small>Paste one object, a list of objects, or one object per line. Nested information is kept together.</small>
+            <div className={styles.actions}><button type="button" className={styles.secondary} disabled={locked || !pasted.trim()} onClick={() => { void readFile(new File([pasted], 'pasted-data.json', { type: 'application/json' })); }}>Use pasted data</button></div>
+          </details>
           <p className={styles.localNote}>Read locally in your browser. Nothing is uploaded until you send the prepared examples for training.</p>
           {!csv && <div className={styles.fileHelp}><a href="/training/decision-template.csv" download>Download a template</a>{outcomes.length === 3 && ['Billing', 'Technical support', 'Account changes'].every(answer => outcomes.includes(answer)) && <button type="button" className={styles.textButton} onClick={() => { void loadExample(); }}>Try sample examples</button>}</div>}
           {working && <p role="status" className={styles.localNote}>Checking your examples…</p>}
-          {sheets.length > 1 && <><label htmlFor="spreadsheet-sheet">Choose the sheet with your examples</label><select id="spreadsheet-sheet" value={sheetIndex} onChange={event => chooseSheet(Number(event.target.value))}>{sheets.map((sheet, index) => <option key={index} value={index}>{sheet.name}{sheet.data ? ` (${sheet.data.rows.length.toLocaleString()} examples)` : ''}</option>)}</select></>}
+          {sheets.length > 1 && <><label htmlFor="data-source">Choose the examples to use</label><select id="data-source" value={sheetIndex} onChange={event => chooseSheet(Number(event.target.value))}>{sheets.map((sheet, index) => <option key={index} value={index}>{sheet.name}{sheet.data ? ` (${sheet.data.rows.length.toLocaleString()} examples)` : ''}</option>)}</select>{/\.json$/i.test(filename) && sheetIndex > 0 && <p className={styles.localNote}>Fields outside the selected list are not included.</p>}</>}
           {csv && <>
             <p role="status" className={styles.fileReady}><strong>{csv.rows.length.toLocaleString()} examples found</strong><span>{filename}{sheets.length > 1 ? ` / ${sheets[sheetIndex].name}` : ''}</span></p>
             {/\.xlsx$/i.test(filename) && <p className={styles.localNote}>Excel imports saved cell values. Save your workbook first if formulas have changed.</p>}
@@ -220,9 +231,9 @@ export function TrainingIntake({ active = true, onChooseType, assistantConfigure
             }} onIndependent={setIndependent} />
             <label htmlFor="spreadsheet-answers">Possible answers</label><textarea id="spreadsheet-answers" required rows={3} value={answers} onChange={event => { setAnswers(event.target.value); suggestedAnswers.current = false; setEdits({}); }} placeholder={'Billing\nTechnical support\nAccount changes'} />
             <small>Check these answers before continuing. One per line; you can correct individual examples in the next step.</small>
-            {mapping.answer && suggestAnswers(csv, mapping.answer).length >= 2 && <button type="button" className={styles.textButton} onClick={() => { setAnswers(suggestAnswers(csv, mapping.answer).join('\n')); suggestedAnswers.current = true; setEdits({}); }}>Use answers found in this column</button>}
+            {mapping.answer && suggestAnswers(csv, mapping.answer).length >= 2 && <button type="button" className={styles.textButton} onClick={() => { setAnswers(suggestAnswers(csv, mapping.answer).join('\n')); suggestedAnswers.current = true; setEdits({}); }}>Use answers found in this field</button>}
           </>}
-          {!csv && <details className={styles.details}><summary>My data doesn’t have answers yet</summary><p>Add a column for the correct answer, even if some cells are blank. You can fill in or correct those answers during review. Policy documents alone need real decision examples before training.</p></details>}
+          {!csv && <details className={styles.details}><summary>My data doesn’t have answers yet</summary><p>Include a field for the correct answer, even if some answers are blank. You can fill in or correct those answers during review. Policy documents alone need real decision examples before training.</p></details>}
           <div className={styles.wizardActions}><button type="button" className={styles.secondary} onClick={() => go(0)}>Back</button><button className={styles.button} disabled={!csv || locked}>{working ? 'Checking…' : 'Review examples'}</button></div>
         </fieldset></form>}
         {step === 2 && csv && report && <form onSubmit={prepare}><fieldset disabled={locked}>

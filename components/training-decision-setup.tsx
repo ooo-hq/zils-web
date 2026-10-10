@@ -77,7 +77,7 @@ export function TrainingDecisionSetup({ kind, question, answers, onQuestion, onA
     <div className={styles.answers}>
       <label htmlFor={`${kind}-answers`}>{kind === 'images' ? 'Image training answers' : 'Possible answers (optional)'}</label>
       <textarea id={`${kind}-answers`} required={kind === 'images'} rows={3} disabled={busy} value={answers} onChange={event => onAnswers(event.target.value)} placeholder={kind === 'images' ? 'Normal\nDamaged' : 'Billing\nTechnical support\nAccount changes'} />
-      <small>{kind === 'images' ? 'Add 2–16 answers, one per line. Your photos will use these labels.' : 'One answer per line. Leave blank to use answers from your spreadsheet.'}</small>
+      <small>{kind === 'images' ? 'Add 2–16 answers, one per line. Your photos will use these labels.' : 'One answer per line. Leave blank to use answers from your data.'}</small>
     </div>
     <aside className={styles.preview} aria-label="What your model will learn"><div className={styles.previewTitle}>{kind === 'images' ? <ImageIcon size={18} aria-hidden="true" /> : <MessageSquareText size={18} aria-hidden="true" />}What your model will learn</div><p>{question || 'Your decision goes here.'}</p><div className={styles.previewFlow}><span>{kind === 'images' ? 'A photo' : 'A text example'}</span><ArrowRight size={16} aria-hidden="true" /><span>One of your answers</span></div>{options.length > 0 && <div className={styles.answerChips}>{options.slice(0, 16).map((option, index) => <span key={index}>{option}</span>)}</div>}<small>You provide examples with correct answers in the next step. Zils learns from those examples.</small></aside>
 

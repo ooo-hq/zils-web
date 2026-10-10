@@ -356,7 +356,14 @@ The `/train` workspace prioritizes the current unfinished run and lists past run
 below it. “Train a model” opens a side panel with four steps:
 Decision, Data, Review, and Ready. The panel fills the screen on mobile.
 
-Customers describe one decision, then drop in a UTF-8 CSV or Excel `.xlsx` file.
+Customers describe one decision, then drop in CSV, Excel `.xlsx`, JSON, or JSONL
+data, or paste JSON/JSONL directly. Text files must use UTF-8 encoding.
+JSON accepts an object or an array of objects; JSONL accepts one object per line
+(`.ndjson` is also supported). Nested objects and arrays remain together as JSON
+text within their fields. Missing fields stay blank; numbers and booleans remain
+visible. Unsafe large numbers are rejected with guidance to quote identifiers.
+Wrapped JSON offers explicit choices between the whole payload and top-level
+lists of objects; selecting a list excludes fields outside it.
 Older `.xls` files must be saved as `.xlsx` or CSV first. Workbooks offer a sheet
 selector; an instructions tab does not prevent importing a valid examples tab.
 Recognized business headers suggest the input, answer, and related-case columns.
@@ -364,8 +371,8 @@ Unrecognized fields remain unselected. Customers can supply 2–16 possible answ
 or use answers found in the selected column. These are editable suggestions,
 not AI-generated labels. A CSV template and synthetic example are included.
 
-Guided preparation runs in browser memory. It accepts up to 10 MiB, 20,000 rows,
-and 64 columns. Excel archives are checked against a 64 MiB expanded-size limit
+Guided preparation runs in browser memory. It accepts up to 10 MiB, 20,000 examples,
+and 64 fields. Excel archives are checked against a 64 MiB expanded-size limit
 and 512 entries; at most 32 sheets and four million cells across their occupied
 ranges are accepted. Row and column references are checked before the reader
 allocates cells, including sparse sheets. Excel uses saved formula values,
@@ -392,7 +399,7 @@ incorrect labels, or information that would not be available at prediction time.
 Customers review actual set sizes, answer coverage, input examples, acceptance
 criteria, and worker-sharing consent before upload. Closing the panel preserves
 the draft in browser memory; refreshing, leaving the page, or signing out clears
-it. Keep the original spreadsheet and settings or download the prepared JSONL files before
+it. Keep the original data and settings or download the prepared JSONL files before
 leaving. Advanced JSONL upload remains available for prepared datasets and
 interrupted-upload recovery. An unfinished upload blocks new submissions while
 allowing customers to prepare the original files for recovery. Successful submission
@@ -428,7 +435,7 @@ npm run types:check
 npm run build
 ```
 
-The tests cover CSV parsing, split isolation and coverage, repeatable output,
+The tests cover CSV, Excel, JSON, and JSONL parsing, split isolation and coverage, repeatable output,
 invalid data, and the existing create/upload/submit contract using a local request
 double. Key tests cover authenticated create/list/revoke requests, metadata
 redaction, invalid inputs, expired sessions, and ambiguous service failures.

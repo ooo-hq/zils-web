@@ -47,7 +47,7 @@ export function TrainingExampleReview({ data, mapping, outcomes, edits, report, 
     </select>
     {indices.length ? <>
       <div className={styles.exampleNavigator}>
-        <span aria-live="polite">Example {position + 1} of {indices.length} · Spreadsheet row {sourceRow}</span>
+        <span aria-live="polite">Example {position + 1} of {indices.length} · Source record {sourceRow}</span>
         <div><button type="button" className={styles.secondary} disabled={position <= 0} onClick={() => setSelected(indices[position - 1])}>Previous</button><button type="button" className={styles.secondary} disabled={position >= indices.length - 1} onClick={() => setSelected(indices[position + 1])}>Next</button></div>
       </div>
       <div className={styles.reviewExample} data-excluded={Boolean(edit.excluded)}>
@@ -67,7 +67,7 @@ export function TrainingExampleReview({ data, mapping, outcomes, edits, report, 
         </div>
       </div>
     </> : <p role="status" className={styles.notice}>{filter === 'issues' ? 'No examples need attention. Review the suggested sample before continuing.' : 'No examples are included. Choose “All examples” to include a case again.'}</p>}
-    <p className={styles.localNote}>{report.confirmed} examples confirmed here. {filter === 'sample' && 'The sample covers different answers; it does not verify every example. '}Corrections apply only to this run. Your spreadsheet stays unchanged.</p>
+    <p className={styles.localNote}>{report.confirmed} examples confirmed here. {filter === 'sample' && 'The sample covers different answers; it does not verify every example. '}Corrections apply only to this run. Your source data stays unchanged.</p>
     <div className={styles.readinessChecks} aria-live="polite">
       <h4>{attention.length || report.blockers.length ? 'Before training' : 'Data checks passed'}</h4>
       {attention.length > 0 && <p>Review or leave out {attention.length} {attention.length === 1 ? 'example' : 'examples'} needing attention.</p>}

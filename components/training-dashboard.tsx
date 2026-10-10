@@ -211,7 +211,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId }: { runId?
   }
   async function resumeUploads(job: Job) {
     const { train, calibration, test } = files;
-    if (!train || !calibration || !test) { setIntakeMode('text'); setPanelOpen(true); setError('Prepare the same CSV with its original settings, or choose the three original files using prepared-file setup. Then close this panel and resume the saved upload.'); return; }
+    if (!train || !calibration || !test) { setIntakeMode('text'); setPanelOpen(true); setError('Prepare the same data with its original settings, or choose the three original files using prepared-file setup. Then close this panel and resume the saved upload.'); return; }
     const datasets = { train, calibration, test };
     const controller = new AbortController(); operation.current = controller;
     setBusy(true); setCancellable(true); setError(''); setProgress('Checking original files…');
