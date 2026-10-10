@@ -1,0 +1,36 @@
+{
+  "study": "b300-followups-001",
+  "published": "2026-10-10",
+  "aggregate_only": true,
+  "note": "JSON exports are byte-identical to the verified aggregate reports. Markdown links to unpublished October 9 reports are rendered as plain text; findings are unchanged. Source digests inside exports refer to the original experiment artifacts, not these public copies. Raw cases and trained weights are not distributed; these aggregates do not reproduce inference.",
+  "files": {
+    "development-results.json": {
+      "source_sha256": "f840f5074b96c6e75b268b0457b71e0910a95ff13456685fee5312eef4b7f87f",
+      "published_sha256": "f840f5074b96c6e75b268b0457b71e0910a95ff13456685fee5312eef4b7f87f"
+    },
+    "h2o-comparison.md": {
+      "source_sha256": "a496dd59c731eaf1205a7f0d739502ebc9241c19130a9f0f10c7264df4113118",
+      "published_sha256": "17a5a97bb7e3d0ffc17ac622a2e28a8a403c629431ff15fda339933576207f96"
+    },
+    "h2o-results.json": {
+      "source_sha256": "2f336ab5683d3ed3ad0e4117628955a8027acb6df5cc6e42146af843360ffc4d",
+      "published_sha256": "2f336ab5683d3ed3ad0e4117628955a8027acb6df5cc6e42146af843360ffc4d"
+    },
+    "miner-report.md": {
+      "source_sha256": "ef5e9f5784f9c3c4493848aa1319e53d705480280ebeac24d7288580803ea179",
+      "published_sha256": "e73708c55c9c14b30239f65ce25acfe20e3e896cb358ed69e489a6b1b480ef7c"
+    },
+    "miner-results.json": {
+      "source_sha256": "70ccdf95add5f71539a4d1aab5672f6714138d725bf1d030c7e2cceb76a28772",
+      "published_sha256": "70ccdf95add5f71539a4d1aab5672f6714138d725bf1d030c7e2cceb76a28772"
+    },
+    "report.md": {
+      "source_sha256": "0dbaf17891fb53e095de9f0dd35df5ea8270411cf99a7d1c88c1652f1a900477",
+      "published_sha256": "f71c9c3d5ba0d3014fcba06af480faf6f6eb4704cc9c4285b8c0e1ef7b8d8c55"
+    },
+    "results.json": {
+      "source_sha256": "83f4898fbc993e86c26c2d00243f66a04c85b52b5afdc51e44cd20b3545f4417",
+      "published_sha256": "83f4898fbc993e86c26c2d00243f66a04c85b52b5afdc51e44cd20b3545f4417"
+    }
+  }
+}

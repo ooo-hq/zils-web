@@ -15,7 +15,7 @@ import { benchmark, readComparison, percent, decimal, milliseconds, comparisonHe
 
 export const metadata: Metadata = {
   title: 'zils — teaching small models, testing what they learn',
-  description: 'Explore Zils research on support decisions, chess, and flight risk. Compare training gains, simple baselines, confidence, methods, and published evidence.',
+  description: 'Explore Zils research on miner-sized models, support decisions, chess, and flight risk. B300 experiments compare H2O and JevK5 adapters, accuracy, speed, memory, and limitations.',
   alternates: { canonical: 'https://zils.ai/model' },
 };
 
