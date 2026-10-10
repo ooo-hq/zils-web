@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 
 const id = '10000000-0000-4000-8000-000000000001';
 const modelId = `zils-adapter-${id}-${'a'.repeat(64)}`;
-async function workspace(page: Page, state = 'ready', withModels = false) {
+async function workspace(page: Page, state = 'ready', withModels = false, index = false) {
   const user = { id: '10000000-0000-4000-8000-000000000002', email: 'fixture@example.invalid', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
   const expires = Math.floor(Date.now() / 1000) + 3600;
   const token = `${Buffer.from(JSON.stringify({ alg: 'HS256' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: user.id, exp: expires })).toString('base64url')}.browser-test`;
@@ -32,7 +32,7 @@ async function workspace(page: Page, state = 'ready', withModels = false) {
     if (url.pathname === '/v1/keys') return route.fulfill({ json: { keys: [] }, headers });
     return route.fulfill({ status: 404, json: { error: 'Unexpected fixture request' }, headers });
   });
-  await page.goto('/train');
+  await page.goto(index ? '/train' : `/train?run=${id}`);
   return writes;
 }
 
@@ -89,7 +89,7 @@ test('activation in progress does not offer a usable model prematurely', async (
 
 test('available models list keeps different tasks separate and links to each model page', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  const writes = await workspace(page, 'ready', true);
+  const writes = await workspace(page, 'ready', true, true);
   const library = page.getByRole('region', { name: 'Your models' });
   await expect(library.getByRole('listitem')).toHaveCount(2);
   await expect(library.getByText('still-activating')).toHaveCount(0);
@@ -107,37 +107,38 @@ test('available models list keeps different tasks separate and links to each mod
 
 test('multiple named models fit on mobile and preserve full IDs in technical details', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
-  await workspace(page, 'ready', true);
+  await workspace(page, 'ready', true, true);
   const library = page.getByRole('region', { name: 'Your models' });
   await expect(library.getByRole('link', { name: 'View model' })).toHaveCount(2);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await library.screenshot({ path: '.private/model-library-mobile.png' });
+  await page.getByRole('region', { name: 'Run history' }).getByRole('link', { name: /support-actions/ }).click();
   await page.getByText('Evaluation and technical details', { exact: true }).click();
   await expect(page.locator('details').filter({ has: page.locator('summary', { hasText: 'Evaluation and technical details' }) }).getByText(modelId, { exact: true })).toBeVisible();
-  await library.screenshot({ path: '.private/model-library-mobile.png' });
 });
 
-test('latest run collapses by keyboard while its model page remains accessible', async ({ page }) => {
-  const writes = await workspace(page);
-  const toggle = page.getByRole('button', { name: 'Latest run', exact: true });
-  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-  await toggle.focus(); await page.keyboard.press('Enter');
-  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-  await expect(page.getByRole('region', { name: 'Use your model' })).not.toBeVisible();
-  await expect(page.locator('#current-run-title')).toBeVisible();
-  await page.getByRole('button', { name: 'Refresh status' }).click();
-  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-  await toggle.focus(); await page.keyboard.press('Enter');
-  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-  await expect(toggle).toBeFocused();
+test('completed runs stay out of the index and open through permanent links', async ({ page }) => {
+  const writes = await workspace(page, 'ready', false, true);
+  await expect(page.getByRole('region', { name: 'Use your model' })).toHaveCount(0);
+  await expect(page.locator('#current-run-title')).toHaveCount(0);
+  const link = page.getByRole('region', { name: 'Run history' }).getByRole('link', { name: /support-actions/ });
+  await expect(link).toHaveAttribute('href', `/train?run=${id}`);
+  await link.focus(); await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(new RegExp(`/train\\?run=${id}$`));
+  await expect(page.getByRole('region', { name: 'Use your model' })).toBeVisible();
+  await page.reload();
+  await expect(page.locator('#current-run-title')).toHaveText('support-actions');
+  await page.getByRole('link', { name: 'Back to Training', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Use your model' })).toHaveCount(0);
   await page.getByRole('region', { name: 'Your models' }).getByRole('link', { name: 'View model' }).click();
   await expect(page.getByRole('heading', { name: 'support-actions', level: 1 })).toBeVisible();
-  await expect(page.getByLabel('Example code')).toBeVisible();
   expect(writes).toEqual([]);
 });
 
 test('compact model names and highlighted examples preserve the exact copied code in both themes', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  await workspace(page, 'ready', true);
+  await workspace(page, 'ready', true, true);
+  await page.getByRole('region', { name: 'Run history' }).getByRole('link', { name: /support-actions/ }).click();
   const example = page.locator(`#use-model-${id}`);
   await expect(example.getByLabel('API model name')).toHaveText('support-actions-10000000');
   await expect(example.locator('textarea')).toHaveCount(0);

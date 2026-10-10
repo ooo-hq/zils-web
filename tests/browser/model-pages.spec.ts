@@ -122,9 +122,9 @@ test('signed-out visitors and other owners never see private model data', async 
   expect(control.requests).not.toContain('/v1/billing');
 });
 
-test('changing accounts during loading cannot display the previous owner’s model', async ({ page }) => {
+for (const target of [path, `/train?run=${id}`]) test(`changing accounts during loading clears private data at ${target}`, async ({ page }) => {
   const control = await fixture(page, { hold: true });
-  await page.goto(path);
+  await page.goto(target);
   await expect.poll(() => control.requests.includes(`/v1/jobs/${id}`)).toBe(true);
   await page.evaluate(value => {
     localStorage.setItem('zils-training-auth', JSON.stringify(value));
@@ -132,7 +132,7 @@ test('changing accounts during loading cannot display the previous owner’s mod
     channel.postMessage({ event: 'TOKEN_REFRESHED', session: value });
     setTimeout(() => channel.close(), 100);
   }, session('30000000-0000-4000-8000-000000000003'));
-  await expect(page.getByRole('main').getByRole('alert')).toHaveText('This model is not available to this account.');
+  await expect(page.getByRole('main').getByRole('alert')).toHaveText(target === path ? 'This model is not available to this account.' : 'This run is not available to this account.');
   control.release();
   await expect(page.getByText(job.name, { exact: true })).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Access this model' })).toHaveCount(0);
@@ -141,6 +141,7 @@ test('changing accounts during loading cannot display the previous owner’s mod
 test('activation and approval are distinct: accepted stats are visible before API access', async ({ page }) => {
   const control = await fixture(page, { activating: true });
   await page.goto('/train');
+  await page.getByRole('region', { name: 'Run history' }).getByRole('link').click();
   await page.getByRole('link', { name: 'View model stats and access' }).click();
   await expect(page.getByRole('region', { name: 'Model activation' })).toContainText('Preparing API access');
   await expect(page.getByText('91.00%', { exact: true })).toBeVisible();
@@ -154,8 +155,10 @@ test('unapproved and invalid model links do not expose scores or API instruction
   await expect(page.getByRole('main').getByRole('alert')).toContainText('does not have an approved model');
   await expect(page.getByRole('region', { name: 'How this model performed' })).toHaveCount(0);
   expect(control.requests).not.toContain('/v1/billing');
-  const response = await page.goto('/train/models/not-a-valid-id');
-  expect(response?.status()).toBe(404);
+  await page.goto('/train/models/not-a-valid-id');
+  // Streaming loading boundaries can send 200 before Next renders its 404.
+  await expect(page.getByRole('heading', { name: '404', exact: true })).toBeVisible();
+  await expect(page.locator('meta[name=robots]').first()).toHaveAttribute('content', /noindex/);
   expect(control.requests).not.toContain('/v1/jobs/not-a-valid-id');
 });
 
@@ -191,4 +194,96 @@ test('approved image models retain their saved task and image API access', async
   await expect(access.locator('pre')).toContainText('Inspect the connector.');
   await expect(access.locator('pre')).toContainText('YOUR_FINALIZED_ASSET_ID');
   expect(control.writes).toEqual([]);
+});
+
+
+test('training index stays compact and its footer reaches the bottom without overlaying content', async ({ page }) => {
+  await fixture(page);
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await page.goto('/train');
+  await expect(page.getByRole('region', { name: 'Your models' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Use your model' })).toHaveCount(0);
+  await expect(page.getByText('Evaluation and technical details')).toHaveCount(0);
+  const footer = page.getByRole('contentinfo');
+  const bounds = await footer.boundingBox();
+  expect(bounds!.y + bounds!.height).toBeCloseTo(1000, 0);
+  await page.screenshot({ path: '.private/training-index-desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(await footer.evaluate(node => getComputedStyle(node).position)).not.toBe('fixed');
+  await page.screenshot({ path: '.private/training-index-mobile.png', fullPage: true });
+});
+
+for (const url of ['/train', path]) test(`signed-out ${url} keeps the footer at the bottom`, async ({ page }) => {
+  await fixture(page, { signedOut: true });
+  await page.setViewportSize({ width: 1280, height: 1200 });
+  await page.goto(url);
+  await expect(page.getByRole('heading', { name: url === '/train' ? 'Sign in to Zils' : 'Sign in to view this model', exact: true })).toBeVisible();
+  const footer = await page.getByRole('contentinfo').boundingBox();
+  const main = await page.getByRole('main').boundingBox();
+  expect(footer!.y).toBeGreaterThanOrEqual(main!.y + main!.height - 1);
+  expect(footer!.y + footer!.height).toBeCloseTo(1200, 0);
+});
+
+test('full run links resolve directly, including runs outside the recent list', async ({ page }) => {
+  const control = await fixture(page);
+  await page.goto(`/train?run=${id}`);
+  await expect(page.locator('#current-run-title')).toHaveText(job.name);
+  expect(control.requests).toContain(`/v1/jobs/${id}`);
+  expect(control.requests).not.toContain('/v1/jobs');
+  await page.getByText('Evaluation and technical details', { exact: true }).click();
+  await expect(page.getByText(`Run ID: ${id}`, { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.locator('#current-run-title')).toHaveText(job.name);
+  await page.getByRole('link', { name: 'View model stats and access' }).click();
+  await page.getByRole('navigation', { name: 'Model sections' }).getByRole('link', { name: 'Training run' }).click();
+  await expect(page.locator('#current-run-title')).toHaveText(job.name);
+  await page.goBack();
+  await expect(page.getByRole('heading', { name: job.name, level: 1 })).toBeVisible();
+  expect(control.writes).toEqual([]);
+});
+
+test('run links cannot expose another account or accept invalid IDs', async ({ page }) => {
+  const control = await fixture(page, { denied: true });
+  await page.goto(`/train?run=${id}`);
+  await expect(page.getByRole('main').getByRole('alert')).toHaveText('This run is not available to this account.');
+  await expect(page.getByText(job.name, { exact: true })).toHaveCount(0);
+  await page.goto('/train?run=invalid');
+  await expect(page.getByRole('heading', { name: '404', exact: true })).toBeVisible();
+  expect(control.requests).not.toContain('/v1/jobs/invalid');
+  expect(control.writes).toEqual([]);
+});
+
+test('model and run navigation show loaders until private data arrives', async ({ page }) => {
+  const control = await fixture(page, { hold: true });
+  await page.goto('/train');
+  await page.getByRole('region', { name: 'Your models' }).getByRole('link', { name: 'View model' }).click();
+  await expect(page.getByRole('status', { name: 'Loading your model', exact: true })).toBeVisible();
+  await page.screenshot({ path: '.private/model-transition-loading.png' });
+  control.release();
+  await expect(page.getByRole('heading', { name: job.name, level: 1 })).toBeVisible();
+  await page.getByRole('navigation', { name: 'Model sections' }).getByRole('link', { name: 'Training run' }).click();
+  await expect(page.getByRole('status', { name: 'Loading your training run', exact: true })).toBeVisible();
+  await expect.poll(() => control.requests.filter(value => value === `/v1/jobs/${id}`).length).toBe(2);
+  control.release();
+  await expect(page.locator('#current-run-title')).toHaveText(job.name);
+  await expect(page.getByRole('status', { name: 'Loading your training run', exact: true })).toHaveCount(0);
+});
+
+
+test('long model names keep results, access controls and the footer readable on mobile', async ({ page }) => {
+  await fixture(page);
+  const name = 'which-support-action-should-be-taken-next-in-this-customer-conversation';
+  await page.route(`**/v1/jobs/${id}`, route => route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: { job: { ...job, name } } }));
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
+  await page.goto(path);
+  await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Use this model', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: '.private/model-page-long-mobile.png', fullPage: true });
+  const footer = await page.getByRole('contentinfo').boundingBox();
+  const main = await page.getByRole('main').boundingBox();
+  expect(footer!.y).toBeGreaterThanOrEqual(main!.y + main!.height - 1);
 });

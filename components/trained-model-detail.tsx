@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { WorkspaceLoading, LinkLoading } from '@/components/workspace-loading';
+import { ZilsDecisionMark } from '@/components/zils-decision-mark';
 import { useAuthSession } from '@/components/auth-session';
 import { ApiKeysPanel } from '@/components/api-keys-panel';
 import { TrainedModelQuickstart } from '@/components/trained-model-quickstart';
@@ -21,7 +23,7 @@ type Props = { jobId: string; config: TrainingConfig };
 
 export function TrainedModelDetail(props: Props) {
   const { client, session, error } = useAuthSession(props.config);
-  if (session === undefined) return <p role="status" className={styles.loading}>Checking your session…</p>;
+  if (session === undefined) return <WorkspaceLoading label="Opening your model" />;
   if (!session || !client) return <section className={`${training.panel} ${styles.empty}`}>
     <h1>Sign in to view this model</h1><p>Model results and access details are private to the account that trained it.</p>
     {error && <p role="alert" className={training.error}>{error}</p>}
@@ -62,7 +64,7 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
     return () => controller.abort();
   }, [api, jobId, revision, signOut]);
   function refresh() { setJob(null); setError(''); setLoading(true); setRevision(value => value + 1); }
-  if (loading) return <p role="status" className={styles.loading}>Loading your model…</p>;
+  if (loading) return <WorkspaceLoading label="Loading your model" />;
   if (!job) return <section className={`${training.panel} ${styles.empty}`}>
     <h1>Model unavailable</h1><p role="alert">{error}</p>
     <button className={training.secondary} onClick={refresh}>Try again</button>
@@ -77,25 +79,31 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
   return <div className={styles.detail}>
     <header className={styles.heading}>
       <div>
-        <p className={styles.eyebrow}>Your {image ? 'image' : 'text'} model <span>{ready ? 'Ready to use' : progress.label}</span></p>
+        <p className={styles.modelMeta}>{image ? 'Image' : 'Text'} model <span>{ready ? 'Ready to use' : progress.label}</span></p>
         <h1>{job.name}</h1>
-        <p>Private to your account{job.created_at && <> · Created {date(job.created_at)}</>}.</p>
+        <p>Private to your account{job.created_at && <>. Created {date(job.created_at)}</>}.</p>
       </div>
-      <div className={styles.actions}>
+      <div className={styles.headingAside}><ZilsDecisionMark className={styles.mark} /><div className={styles.actions}>
         <button className={training.secondary} onClick={refresh}>Refresh</button>
         {ready && <a href="#model-access" className={training.button}>Use this model</a>}
-      </div>
+      </div></div>
     </header>
+    <nav aria-label="Model sections" className={styles.sectionNav}><a href="#model-results">Results</a>{ready && <><a href="#model-usage">Usage</a><a href="#model-access">Access</a></>}<Link href={`/train?run=${job.id}`}>Training run<LinkLoading /></Link></nav>
     {error && <p role="alert" className={training.error}>{error}</p>}
     {!ready && <section className={training.notice} aria-label="Model activation"><strong>{progress.title}</strong><p>{progress.detail} {progress.next}</p></section>}
 
-    <section className={styles.section} aria-labelledby="model-results-heading">
+    <section id="model-results" className={styles.section} aria-labelledby="model-results-heading">
       <div className={styles.sectionHeading}><div><h2 id="model-results-heading">How this model performed</h2><p>Evaluation on examples held out from training.</p></div><span>Selected version</span></div>
-      <dl className={styles.stats}>
-        <div><dt>Accuracy</dt><dd>{percent(selected?.accuracy)}</dd><p>{baselineLabel}: {percent(result.baseline.accuracy)}</p></div>
-        <div><dt>Probability error</dt><dd>{decimal(selected?.brier)}</dd><p>Brier loss · Lower is better. {baselineLabel}: {decimal(result.baseline.brier)}</p></div>
-        <div><dt>Test examples</dt><dd>{selected?.count ?? selected?.cases ?? 'Not recorded'}</dd><p>For the selected model</p></div>
-      </dl>
+      <div className={styles.evaluation}>
+        <div className={styles.accuracy}><h3>Accuracy</h3><dl className={styles.comparison}>
+          <div><dt>{baselineLabel}</dt><dd><strong>{percent(result.baseline.accuracy)}</strong><span className={styles.track} aria-hidden="true"><span style={{ width: `${result.baseline.accuracy * 100}%` }} /></span></dd></div>
+          <div data-trained="true"><dt>This model</dt><dd><strong>{percent(selected?.accuracy)}</strong>{selected?.accuracy !== undefined && <span className={styles.track} aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(100, selected.accuracy * 100))}%` }} /></span>}</dd></div>
+        </dl></div>
+        <dl className={styles.supportingStats}>
+          <div><dt>Probability error</dt><dd>{decimal(selected?.brier)}</dd><p>Brier loss. Lower is better.<br />{baselineLabel}: {decimal(result.baseline.brier)}</p></div>
+          <div><dt>Test examples</dt><dd>{selected?.count ?? selected?.cases ?? 'Not recorded'}</dd><p>For the selected model</p></div>
+        </dl>
+      </div>
       {!selected && <p className={training.notice}>The selected model’s detailed scores were not included in this result. No other candidate’s scores are substituted.</p>}
       <p className={styles.note}>Approval targets: at least {percent(result.delivery.acceptance.min_accuracy)} accuracy and {decimal(result.delivery.acceptance.min_brier_improvement)} improvement in Brier loss. These results do not guarantee accuracy on future inputs.</p>
       {image && <details className={training.details}><summary>Image evaluation details</summary><ImageTrainingResults job={job} /></details>}
@@ -122,7 +130,7 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
         {job.workflow?.model_id && <div><dt>Full API model ID</dt><dd><code>{job.workflow.model_id}</code></dd></div>}
         {job.workflow?.model_name && <div><dt>API model name</dt><dd><code>{job.workflow.model_name}</code></dd></div>}
         {job.model && <div><dt>Starting model</dt><dd>{job.model.name}</dd></div>}
-        <div><dt>Training run</dt><dd><code>{job.id}</code></dd></div>
+        <div><dt>Training run</dt><dd><Link href={`/train?run=${job.id}`}>View full run<LinkLoading /></Link><code className={styles.identifier}>{job.id}</code></dd></div>
         {job.selection?.previous && <div><dt>Previous version</dt><dd><Link href={`/train/models/${job.selection.previous.job_id}`}>{job.selection.previous.model_id}</Link></dd></div>}
         {result.delivery.sha256 && <div><dt>Checkpoint SHA-256</dt><dd><code>{result.delivery.sha256}</code></dd></div>}
       </dl>
@@ -146,8 +154,8 @@ function ModelUsage({ modelId, apiUrl, token }: { modelId: string; apiUrl: strin
   const usage = summary?.usage;
   const model = usage?.models.find(row => row.model_id === modelId);
   const count = (value: string) => BigInt(value).toLocaleString();
-  return <section className={styles.section} aria-labelledby="model-usage-heading">
-    <div className={styles.sectionHeading}><div><h2 id="model-usage-heading">API usage</h2><p>For this model version only{summary?.mode === 'test' ? ' · Test mode' : ''}.</p></div><Link href="/billing#usage" className={training.textButton}>Account billing ↗</Link></div>
+  return <section id="model-usage" className={styles.section} aria-labelledby="model-usage-heading">
+    <div className={styles.sectionHeading}><div><h2 id="model-usage-heading">API usage</h2><p>For this model version only{summary?.mode === 'test' ? ' (Test mode)' : ''}.</p></div><Link href="/billing#usage" className={training.textButton}>Account billing</Link></div>
     {loading ? <p role="status">Loading usage…</p> : error ? <p role="status">{error}</p> : !usage ? <p>Usage reporting is not available for this model yet.</p> : <>
       <p className={styles.note}>{date(usage.since)} – {date(usage.until)}</p>
       {!model ? <p>No recorded API usage for this model in this period.</p> : <dl className={styles.stats}>

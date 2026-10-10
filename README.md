@@ -249,7 +249,11 @@ when the device session was cleared but server revocation could not be confirmed
 ## Customer API keys
 
 Approved models have private pages at `/train/models/<training-job-id>`, linked
-from **Your models → View model** and accepted training runs. These pages use the
+from **Your models → View model** and accepted training runs. The Training index
+shows compact history links; full run details are directly addressable at
+`/train?run=<training-job-id>`, including older runs outside the recent list.
+Both workspace views share a footer anchored below short content and accessible
+transition loaders, with reduced motion respected. These pages use the
 existing owner-authorized job API. They show the selected candidate’s evaluation,
 model version, and API instructions; accepted models still activating show their
 status without offering API access. Text models retain the Python and JavaScript
