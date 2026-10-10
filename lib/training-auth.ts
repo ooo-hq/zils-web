@@ -1,11 +1,17 @@
+import { authorizationReturnUrl, isAuthorizationId } from './cli-authorization';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 type AuthStorage = Pick<Storage, 'length' | 'key' | 'getItem'>;
 
-export function signInWithGoogle(client: SupabaseClient, origin: string) {
+export function signInWithGoogle(client: SupabaseClient, origin: string, returnPath = '/train') {
+  if (returnPath !== '/train') {
+    const id = returnPath.replace('/cli/authorize?authorization_id=', '');
+    if (!isAuthorizationId(id) || returnPath !== `/cli/authorize?authorization_id=${id}`) throw new Error('Invalid sign-in return path.');
+    authorizationReturnUrl(origin, id);
+  }
   return client.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: new URL('/train', origin).href },
+    options: { redirectTo: new URL(returnPath, origin).href },
   });
 }
 
