@@ -131,7 +131,7 @@ export function TrainingIntake({ active = true, onChooseType, assistantConfigure
   }
   async function submit(event: FormEvent) {
     event.preventDefault(); setError('');
-    const parsed = submissionSchema.safeParse({ name, acceptance: { min_accuracy: accuracy === '' ? NaN : Number(accuracy) / 100, min_brier_improvement: improvement === '' ? NaN : Number(improvement) }, allow_training_data_export: consent });
+    const parsed = submissionSchema.safeParse({ name, acceptance: { min_accuracy: accuracy === '' ? NaN : Number(accuracy) / 100, min_brier_improvement: improvement === '' ? NaN : Number(improvement) }, allow_training_data_export: consent, allow_jev_comparison: consent });
     if (!parsed.success) { setError('Check your run name, success criteria, and data-sharing permission.'); return; }
     let files = advanced ? advancedFiles : prepared?.files;
     if (!files?.train || !files.calibration || !files.test) { setError('Prepare all three dataset files before submitting.'); return; }
@@ -170,7 +170,7 @@ export function TrainingIntake({ active = true, onChooseType, assistantConfigure
       <label htmlFor="min-brier">Minimum Brier improvement</label><input id="min-brier" type="number" required min="0" max="2" step="any" value={improvement} onChange={event => setImprovement(event.target.value)} />
       <small>An absolute Brier loss decrease from 0 to 2, not a percentage. The default is 0.01.</small>
     </details>
-    <label className={styles.consent}><input type="checkbox" required checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I am authorized to use and share these examples. I permit the learning data to be copied to assigned, approved workers, whose operators can read and retain it. Confidence-check and final-evaluation data stay with the validator. This is not confidential compute.</span></label>
+    <label className={styles.consent}><input type="checkbox" required checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I am authorized to use and share these examples. I permit the learning data to be copied to assigned, approved workers, whose operators can read and retain it. I also permit final-evaluation inputs and questions to be sent to TypeSafe Jev for one saved comparison. Correct answers and confidence-check data stay with Zils. This is not confidential compute.</span></label>
   </>;
   if (!active) return null;
   return <SheetContent className={`${styles.page} ${styles.trainingSheet}`} onCloseAutoFocus={onCloseAutoFocus} onOpenAutoFocus={event => { event.preventDefault(); heading.current?.focus(); }}>
