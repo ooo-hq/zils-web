@@ -4,7 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useAuthSession } from '@/components/auth-session';
-import { authorizationDetails, authorizationReturnUrl, cliCallbackUrl, isAuthorizationId } from '@/lib/cli-authorization';
+import { authorizationDetails, authorizationReturnUrl, cliCallbackUrl, isAuthorizationId, isOAuthClientId } from '@/lib/cli-authorization';
 import { signInWithGoogle } from '@/lib/training-auth';
 import styles from '@/app/(home)/train/train.module.css';
 
@@ -15,7 +15,7 @@ export function CliAuthorization({ authorizationId }: { authorizationId: string 
   const clientId = process.env.NEXT_PUBLIC_ZILS_CLI_OAUTH_CLIENT_ID;
   if (!isAuthorizationId(authorizationId)) return <p role="alert" className={styles.error}>{restart}</p>;
   if (session === undefined) return <p role="status">Checking your Zils account…</p>;
-  if (!isAuthorizationId(clientId) || !client) return <p role="alert" className={styles.error}>CLI sign-in is not configured here yet. Contact the Zils operator.</p>;
+  if (!isOAuthClientId(clientId) || !client) return <p role="alert" className={styles.error}>CLI sign-in is not configured here yet. Contact the Zils operator.</p>;
   return <>
     {error && <p role="alert" className={styles.error}>{error}</p>}
     {session ? <Consent key={`${session.user.id}:${authorizationId}`} client={client} clientId={clientId} userId={session.user.id} authorizationId={authorizationId} /> : <SignIn client={client} authorizationId={authorizationId} />}
