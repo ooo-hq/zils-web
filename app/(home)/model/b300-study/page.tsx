@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
+import { jevTrained, jevMetrics } from '@/lib/jev-comparison';
 import miner from '@/public/model/b300-2026-10-10/miner-results.json';
 import original from '@/public/model/b300-2026-10-10/results.json';
 import s from '@/components/research-guide.module.css';
@@ -53,6 +54,7 @@ export default function B300StudyPage() {
           <p className="mt-8 text-xs text-muted">Completed experiment · <time dateTime="2026-10-10">10 October 2026</time> · NVIDIA B300</p>
           <h1 className="mt-4 max-w-[20ch] text-balance text-[clamp(2.5rem,6vw,4rem)] font-semibold leading-[1.04] tracking-[-0.055em]">Practical models for miners.</h1>
           <p className="mt-6 max-w-[68ch] text-lg leading-8 text-muted">How much model does a support decision need? We tested task-specific adapters across 2B, 4B and 9B models. H2O 4B offered lower latency; JevK5 2B offered lower memory use. Neither established an accuracy advantage over our strongest JevK5 4B adapter.</p>
+          <p className="mt-4 max-w-[75ch] text-sm leading-7 text-muted">The starting point: tuning an open model can make it competitive with official TypeSafe Jev. Our <Link href="/model#jev-comparison" className={LINK}>earlier direct support comparison</Link> measured {percent(jevTrained.accuracy)} for JevK5 4B with an adapter versus {percent(jevMetrics.accuracy)} for hosted Jev 1.13.0 on {jevTrained.n} conversations. This follow-up explores the models and hardware costs behind that approach; it does not rerun the hosted Jev comparison.</p>
           <p className="mt-4 max-w-[75ch] text-sm leading-7 text-muted">B300 was temporary research hardware. These results guide miner experiments; they do not change the shared model or establish production performance. JevK5 here means locally run open weights, separate from the hosted TypeSafe Jev comparison.</p>
           <nav aria-label="B300 study sections" className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm">
             <a href="#miner-results" className={LINK}>Model comparison</a><a href="#larger-models" className={LINK}>9B and full training</a><a href="#method" className={LINK}>Method &amp; limits</a><a href="#evidence" className={LINK}>Download evidence</a>
