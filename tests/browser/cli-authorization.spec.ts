@@ -1,11 +1,12 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const id = '11111111-1111-4111-8111-111111111111';
+const id = 'vabn6ktjrrtguq5usk5neuxumt3mpi6y';
+const userId = '11111111-1111-4111-8111-111111111111';
 const clientId = '22222222-2222-4222-8222-222222222222';
 const path = `/cli/authorize?authorization_id=${id}`;
 const callback = 'http://127.0.0.1:43187/callback';
 const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' };
-const details = { authorization_id: id, redirect_uri: callback, client: { id: clientId, name: 'Zils CLI' }, user: { id, email: 'invited@example.com' }, scope: 'email' };
+const details = { authorization_id: id, redirect_uri: callback, client: { id: clientId, name: 'Zils CLI' }, user: { id: userId, email: 'invited@example.com' }, scope: 'email' };
 
 async function signedIn(page: Page) {
   await page.addInitScript(({ id }) => {
@@ -13,7 +14,7 @@ async function signedIn(page: Page) {
     const user = { id, email: 'invited@example.com', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
     const token = `${btoa('{"alg":"HS256"}')}.${btoa(JSON.stringify({ sub: id, exp: expires }))}.fixture`;
     localStorage.setItem('zils-training-auth', JSON.stringify({ user, access_token: token, refresh_token: 'fixture', token_type: 'bearer', expires_in: 3600, expires_at: expires }));
-  }, { id });
+  }, { id: userId });
 }
 
 for (const action of ['Approve', 'Deny']) test(`signed-in CLI ${action.toLowerCase()} returns only the authorization result`, async ({ page }) => {
