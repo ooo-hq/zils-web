@@ -1,0 +1,621 @@
+{
+  "completed": true,
+  "scope_amendment_sha256": "b8b092362d5d0fd1b98adf447c7269d2843b562ca48dd3adafcbf21f5ad30321",
+  "protocol_sha256": "7ed05e881803f172357363128a062ed1584a1956d19b815cb20a93f8683337d9",
+  "trials": {
+    "h2o-4096-lora": {
+      "completed": true,
+      "public_name": "h2o-lora-4096-epoch1",
+      "selected_epoch": 1,
+      "development": {
+        "candidates": [
+          {
+            "count": 500,
+            "correct": 423,
+            "accuracy": 0.846,
+            "macro_f1": 0.81269274239346,
+            "multiclass_brier": 0.25609297557447785,
+            "log_loss": 0.7025866692580478,
+            "ece_10_bins": 0.06763119096482101,
+            "confident_cases_at_90_percent": 423,
+            "confident_wrong_at_90_percent": 39,
+            "latency_median_seconds": 0.05972389949965873,
+            "latency_p95_seconds": 0.061761543249849636,
+            "epoch": 1
+          },
+          {
+            "count": 500,
+            "correct": 423,
+            "accuracy": 0.846,
+            "macro_f1": 0.8035117648824908,
+            "multiclass_brier": 0.26248594908827305,
+            "log_loss": 0.7675860393335331,
+            "ece_10_bins": 0.07702306614189461,
+            "confident_cases_at_90_percent": 447,
+            "confident_wrong_at_90_percent": 47,
+            "latency_median_seconds": 0.0589429139981803,
+            "latency_p95_seconds": 0.0610845885503295,
+            "epoch": 2
+          }
+        ]
+      },
+      "training": {
+        "train_seconds": 2453.4199613580367,
+        "optimizer_steps": 2048,
+        "training_exposures": 8192
+      },
+      "selection_sha256": "ef89d1579b5336f729e5e06316d75e344626439517ad88837e7f7154cf4b1ea7",
+      "plan_sha256": "a1ed0beacf57ed051069c4305702a52f75d81a781d973859816724123a2e950f"
+    },
+    "jevk5-2b-4096-lora": {
+      "completed": true,
+      "public_name": "2b-lora-4096-epoch2",
+      "selected_epoch": 2,
+      "development": {
+        "candidates": [
+          {
+            "count": 500,
+            "correct": 411,
+            "accuracy": 0.822,
+            "macro_f1": 0.8027457956757957,
+            "multiclass_brier": 0.3100429360271391,
+            "log_loss": 0.8681881692202562,
+            "ece_10_bins": 0.12263196971410416,
+            "confident_cases_at_90_percent": 429,
+            "confident_wrong_at_90_percent": 52,
+            "latency_median_seconds": 0.13602184149931418,
+            "latency_p95_seconds": 0.1401277216988092,
+            "predictions_sha256": "a5e6c1eaca8009a82922172c77888b8532ece537dbf8ccbce77d55e94df0ab02",
+            "checkpoint_completion_sha256": "f2007d8dc4962232fbeeafa1456d2ddb9c499be891e35665732700c1013e5fe2",
+            "epoch": 1
+          },
+          {
+            "count": 500,
+            "correct": 419,
+            "accuracy": 0.838,
+            "macro_f1": 0.8006864827840315,
+            "multiclass_brier": 0.2899103498888061,
+            "log_loss": 0.8451171177040682,
+            "ece_10_bins": 0.12308808018313536,
+            "confident_cases_at_90_percent": 457,
+            "confident_wrong_at_90_percent": 54,
+            "latency_median_seconds": 0.13570049650115834,
+            "latency_p95_seconds": 0.1406338753471573,
+            "predictions_sha256": "448d621ad21f4e55f7f569560384dea58fc228459a0649eb717407e1e08ed2d3",
+            "checkpoint_completion_sha256": "e25f396b1ae0b7a790f9a7f195b5697bba51c022a72aaf82dcacb48fe3a1f147",
+            "epoch": 2
+          }
+        ]
+      },
+      "training": {
+        "train_seconds": 1920.7371997001192,
+        "elapsed_seconds": 2230.5702529049995,
+        "optimizer_steps": 2048,
+        "training_exposures": 8192,
+        "trainable_parameters": 7382016
+      },
+      "selection_sha256": "3355e01982def2716d3faa8a5e3b4b1d37a2e9edf859a4bb32bcfed6f339ac58",
+      "plan_sha256": "b91227f114d2113ead6b0d5f618409e54ae03331ff8f5b73492fb61d28444bea"
+    }
+  },
+  "cohorts": {
+    "historical": {
+      "count": 500,
+      "fresh": false,
+      "retrospective": true,
+      "metrics": {
+        "2b-base": {
+          "count": 500,
+          "correct": 122,
+          "accuracy": 0.244,
+          "macro_f1": 0.2714939595271925,
+          "multiclass_brier": 0.8591080330834128,
+          "log_loss": 2.445663969110122,
+          "ece_10_bins": 0.08636005014102462,
+          "confident_cases_at_90_percent": 0,
+          "confident_wrong_at_90_percent": 0,
+          "latency_median_seconds": 0.09840151950083964,
+          "latency_p95_seconds": 0.10229836429934949,
+          "inference_seconds": 49.50087668899869,
+          "predictions_sha256": "dd2695ce16d35d5998724dbb93e5fc892dce664d6ad6df4d30655285ee906ca5",
+          "inference_memory": {
+            "peak_cuda_bytes": 4001017344,
+            "peak_reserved_bytes": 4349493248,
+            "hardware": "NVIDIA B300",
+            "isolated": true,
+            "b300_only": true
+          }
+        },
+        "2b-lora-4096-epoch2": {
+          "count": 500,
+          "correct": 422,
+          "accuracy": 0.844,
+          "macro_f1": 0.8117333010249155,
+          "multiclass_brier": 0.28002221733932564,
+          "log_loss": 0.8555252531778943,
+          "ece_10_bins": 0.1189705801023776,
+          "confident_cases_at_90_percent": 455,
+          "confident_wrong_at_90_percent": 55,
+          "latency_median_seconds": 0.1317019825000898,
+          "latency_p95_seconds": 0.13881926834856131,
+          "inference_seconds": 66.31488675999935,
+          "predictions_sha256": "f24c82bc9f64cf0962909f4b75e7d30548b5b1682f4e89d02007b318f17718ee",
+          "inference_memory": {
+            "peak_cuda_bytes": 4048201216,
+            "peak_reserved_bytes": 4850712576,
+            "hardware": "NVIDIA B300",
+            "isolated": true,
+            "b300_only": true
+          }
+        },
+        "4b-base": {
+          "count": 500,
+          "correct": 286,
+          "accuracy": 0.572,
+          "macro_f1": 0.48803244451474614,
+          "multiclass_brier": 0.618820473113834,
+          "log_loss": 1.5070949675279277,
+          "ece_10_bins": 0.10823274343822405,
+          "confident_cases_at_90_percent": 64,
+          "confident_wrong_at_90_percent": 15,
+          "latency_median_seconds": 0.1298416649997307,
+          "latency_p95_seconds": 0.13556112669884895,
+          "predictions_sha256": "da1d947751adbfdc6a665c4427424218bcaa42ba22fb747f82887b4b334e9dc8",
+          "completion_sha256": "54f00c4e6fd011645e66cdefac74198952f70dbc5934ce95355ea8523ca0f6a8",
+          "inference_memory": {
+            "peak_cuda_bytes": 8818473472,
+            "peak_reserved_bytes": 9804185600,
+            "hardware": "NVIDIA B300",
+            "isolated": true,
+            "b300_only": true
+          }
+        },
+        "4b-lora-4096-epoch2": {
+          "count": 500,
+          "correct": 424,
+          "accuracy": 0.848,
+          "macro_f1": 0.8252939883124393,
+          "multiclass_brier": 0.2699740831268708,
+          "log_loss": 0.7437298905470859,
+          "ece_10_bins": 0.0867000844871798,
+          "confident_cases_at_90_percent": 461,
+          "confident_wrong_at_90_percent": 56,
+          "latency_median_seconds": 0.17574881499967887,
+          "latency_p95_seconds": 0.18775457385036134,
+          "predictions_sha256": "5fb92aa38729f289a4d1bd0142857b00ca75628929d19992e2ea10229d4d0b95",
+          "completion_sha256": "a8f9ee8aabab3916a414894818ad99364f1e8f7c0b23e92a8f88893e13a26981",
+          "inference_memory": {
+            "peak_cuda_bytes": 8875252224,
+            "peak_reserved_bytes": 10548674560,
+            "hardware": "NVIDIA B300",
+            "isolated": true,
+            "b300_only": true
+          }
+        },
+        "h2o-adapter-1024": {
+          "count": 500,
+          "correct": 400,
+          "accuracy": 0.8,
+          "macro_f1": 0.7851880865883775,
+          "multiclass_brier": 0.33827979133337344,
+          "log_loss": 0.896087113324522,
+          "ece_10_bins": 0.11401180352155574,
+          "confident_cases_at_90_percent": 397,
+          "confident_wrong_at_90_percent": 49,
+          "latency_median_seconds": 0.06000341249955454,
+          "latency_p95_seconds": 0.06252255829958811,
+          "inference_seconds": 30.2225155240003,
+          "native_choice_temperature": 0.75,
+          "predictions_sha256": "e8bb07be5291b94095f1398a402597f9c2f715f58f4af3f277fa3f6dcfc5be13",
+          "completion_sha256": "f1d85cc760c4c382e03fdc6b4133646df764ddd03ff9dc19ce6b5143c831f7c6",
+          "inference_memory": {
+            "peak_cuda_bytes": 9493892608,
+            "peak_reserved_bytes": 9858711552,
+            "hardware": "NVIDIA B300",
+            "isolated": true,
+            "b300_only": true
+          }
+        },
+        "h2o-base": {
+          "count": 500,
+          "correct": 281,
+          "accuracy": 0.562,
+          "macro_f1": 0.48203014941745265,
+          "multiclass_brier": 0.6125794028852112,
+          "log_loss": 1.583853399712698,
+          "ece_10_bins": 0.17481763331360958,
+          "confident_cases_at_90_percent": 137,
+          "confident_wrong_at_90_percent": 24,
+          "latency_median_seconds": 0.04425323849955021,
+          "latency_p95_seconds": 0.04615401369919709,
+          "inference_seconds": 22.202040392000526,
+          "native_choice_temperature": 0.75,
+          "predictions_sha256": "c0b4b0b61a380bdd3dfdd66545cd2f9e6723d101fab2d76f357c0e082c57bae4",
+          "completion_sha256": "e6c4ade01b77f06bcd34a036959a077f2ff70086e620aaa1fbd9b9aec86ba9ae",
+          "inference_memory": {
+            "peak_cuda_bytes": 9436384768,
+            "peak_reserved_bytes": 9636413440,
+            "hardware": "NVIDIA B300",
+            "isolated": true,
+            "b300_only": true
+          }
+        },
+        "h2o-lora-4096-epoch1": {
+          "count": 500,
+          "correct": 418,
+          "accuracy": 0.836,
+          "macro_f1": 0.8149244313084424,
+          "multiclass_brier": 0.27920392296242724,
+          "log_loss": 0.762463377970246,
+          "ece_10_bins": 0.08324462363976345,
+          "confident_cases_at_90_percent": 428,
+          "confident_wrong_at_90_percent": 48,
+          "latency_median_seconds": 0.05939042899990454,
+          "latency_p95_seconds": 0.06130585114970018,
+          "inference_seconds": 29.80290466000224,
+          "inference_memory": {
+            "peak_cuda_bytes": 9489812992,
+            "peak_reserved_bytes": 10303307776,
+            "hardware": "NVIDIA B300",
+            "isolated": true,
+            "b300_only": true
+          }
+        }
+      },
+      "comparisons": {
+        "2b-lora-4096-epoch2_minus_2b-base": {
+          "accuracy_gain_pp": 60.0,
+          "brier_improvement": 0.5790858157440871,
+          "corrected_cases": 308,
+          "new_mistakes": 8,
+          "accuracy_gain_95_ci_pp": [
+            55.0,
+            64.6
+          ],
+          "brier_improvement_95_ci": [
+            0.5195666518405243,
+            0.6363371204581872
+          ]
+        },
+        "2b-lora-4096-epoch2_minus_4b-lora-4096-epoch2": {
+          "accuracy_gain_pp": -0.4,
+          "brier_improvement": -0.010048134212454814,
+          "corrected_cases": 21,
+          "new_mistakes": 23,
+          "accuracy_gain_95_ci_pp": [
+            -3.2,
+            2.2
+          ],
+          "brier_improvement_95_ci": [
+            -0.050771265976883403,
+            0.029536518870690625
+          ]
+        },
+        "h2o-lora-4096-epoch1_minus_2b-lora-4096-epoch2": {
+          "accuracy_gain_pp": -0.8,
+          "brier_improvement": 0.0008182943768984259,
+          "corrected_cases": 24,
+          "new_mistakes": 28,
+          "accuracy_gain_95_ci_pp": [
+            -3.6,
+            2.2
+          ],
+          "brier_improvement_95_ci": [
+            -0.041500560761101986,
+            0.04579770024278965
+          ]
+        },
+        "h2o-lora-4096-epoch1_minus_4b-lora-4096-epoch2": {
+          "accuracy_gain_pp": -1.2,
+          "brier_improvement": -0.009229839835556388,
+          "corrected_cases": 17,
+          "new_mistakes": 23,
+          "accuracy_gain_95_ci_pp": [
+            -3.6,
+            1.4
+          ],
+          "brier_improvement_95_ci": [
+            -0.046377384388974936,
+            0.030098516246602057
+          ]
+        },
+        "h2o-lora-4096-epoch1_minus_h2o-adapter-1024": {
+          "accuracy_gain_pp": 3.6,
+          "brier_improvement": 0.059075868370946215,
+          "corrected_cases": 30,
+          "new_mistakes": 12,
+          "accuracy_gain_95_ci_pp": [
+            1.2,
+            6.2
+          ],
+          "brier_improvement_95_ci": [
+            0.02489026566880039,
+            0.0939228952281919
+          ]
+        },
+        "h2o-lora-4096-epoch1_minus_h2o-base": {
+          "accuracy_gain_pp": 27.4,
+          "brier_improvement": 0.333375479922784,
+          "corrected_cases": 152,
+          "new_mistakes": 15,
+          "accuracy_gain_95_ci_pp": [
+            23.2,
+            32.0
+          ],
+          "brier_improvement_95_ci": [
+            0.274833005976556,
+            0.39478470650034997
+          ]
+        }
+      },
+      "inputs_sha256": "d5b81470e9d9b7ae4c2bf2c42e7d9f06533c635cc8b1da2a8f719269ed7ae193",
+      "labels_sha256": "cefc5660bc04b5d1dc5f303d5794bbbddbc48b742b5853c24f3fd30b897bfbc1"
+    },
+    "test": {
+      "count": 500,
+      "fresh": false,
+      "retrospective": true,
+      "metrics": {
+        "2b-base": {
+          "count": 500,
+          "correct": 112,
+          "accuracy": 0.224,
+          "macro_f1": 0.22871894979036222,
+          "multiclass_brier": 0.8696013855478822,
+          "log_loss": 2.520887099347205,
+          "ece_10_bins": 0.11227486794226361,
+          "confident_cases_at_90_percent": 0,
+          "confident_wrong_at_90_percent": 0,
+          "latency_median_seconds": 0.09964694150039577,
+          "latency_p95_seconds": 0.10321473744952527,
+          "inference_seconds": 50.11073869699976,
+          "predictions_sha256": "5d0b08fd35d738643d68cfad5953a43162d0f94e6e1b5c3c9134c927516f35b7",
+          "inference_memory": {
+            "peak_cuda_bytes": 3987753984,
+            "peak_reserved_bytes": 4343201792,
+            "hardware": "NVIDIA B300",
+            "isolated": true,
+            "b300_only": true
+          }
+        },
+        "2b-lora-4096-epoch2": {
+          "count": 500,
+          "correct": 404,
+          "accuracy": 0.808,
+          "macro_f1": 0.7717228191172928,
+          "multiclass_brier": 0.33702986671163704,
+          "log_loss": 1.0562627395716615,
+          "ece_10_bins": 0.15186709309174554,
+          "confident_cases_at_90_percent": 460,
+          "confident_wrong_at_90_percent": 66,
+          "latency_median_seconds": 0.1358739434999734,
+          "latency_p95_seconds": 0.13906018669713374,
+          "inference_seconds": 68.13944615600121,
+          "predictions_sha256": "2be53ba1ad9a102af58f471974cb6db346bf2db3d707ecb799881da57aa10a8a",
+          "inference_memory": {
+            "peak_cuda_bytes": 4033568256,
+            "peak_reserved_bytes": 4817158144,
+            "hardware": "NVIDIA B300",
+            "isolated": true,
+            "b300_only": true
+          }
+        },
+        "4b-base": {
+          "count": 500,
+          "correct": 263,
+          "accuracy": 0.526,
+          "macro_f1": 0.45310746022298237,
+          "multiclass_brier": 0.6545135376947199,
+          "log_loss": 1.6062094832604021,
+          "ece_10_bins": 0.146779752259529,
+          "confident_cases_at_90_percent": 77,
+          "confident_wrong_at_90_percent": 15,
+          "latency_median_seconds": 0.12971833899973717,
+          "latency_p95_seconds": 0.13373016165005538,
+          "predictions_sha256": "2940dd42f6431e57ed3d01dab45d517c5dc08255d54b2a72104726901f96d983",
+          "completion_sha256": "0ff86e8ca5e8aab68e413d5cfbfd934a3429df28af097b4f382090468be8838a",
+          "inference_memory": {
+            "peak_cuda_bytes": 8795864576,
+            "peak_reserved_bytes": 9598664704,
+            "hardware": "NVIDIA B300",
+            "isolated": true,
+            "b300_only": true
+          }
+        },
+        "4b-lora-4096-epoch2": {
+          "count": 500,
+          "correct": 412,
+          "accuracy": 0.824,
+          "macro_f1": 0.8087474333525531,
+          "multiclass_brier": 0.31152563632589725,
+          "log_loss": 0.8611407959949616,
+          "ece_10_bins": 0.11001809195668329,
+          "confident_cases_at_90_percent": 462,
+          "confident_wrong_at_90_percent": 63,
+          "latency_median_seconds": 0.1784333029991103,
+          "latency_p95_seconds": 0.18895873365054283,
+          "predictions_sha256": "10814beca2e68af34e9b8c41abc6c8c5f844dc6516a8bebb7426753d8c206c7f",
+          "completion_sha256": "e6a4a5cffb01eebba334a76ac45ab15a27a46752d8cd661a147117f049dde8e2",
+          "inference_memory": {
+            "peak_cuda_bytes": 8852961280,
+            "peak_reserved_bytes": 9953083392,
+            "hardware": "NVIDIA B300",
+            "isolated": true,
+            "b300_only": true
+          }
+        },
+        "h2o-adapter-1024": {
+          "count": 500,
+          "correct": 399,
+          "accuracy": 0.798,
+          "macro_f1": 0.7649122575163299,
+          "multiclass_brier": 0.35013813912559244,
+          "log_loss": 0.9476178121860445,
+          "ece_10_bins": 0.11558439099755269,
+          "confident_cases_at_90_percent": 393,
+          "confident_wrong_at_90_percent": 53,
+          "latency_median_seconds": 0.05937009000035687,
+          "latency_p95_seconds": 0.0615743928496613,
+          "inference_seconds": 29.80836056699991,
+          "native_choice_temperature": 0.75,
+          "predictions_sha256": "4e42fbfb236c1e777d51a7d2e8c5fa048d444a595f1cf69dd5df1643aa3e8bc2",
+          "completion_sha256": "48b3ec66298443779131a6397a3831369a8338456f297a1e41605740f18bd5c5",
+          "inference_memory": {
+            "peak_cuda_bytes": 9472301568,
+            "peak_reserved_bytes": 9829351424,
+            "hardware": "NVIDIA B300",
+            "isolated": true,
+            "b300_only": true
+          }
+        },
+        "h2o-base": {
+          "count": 500,
+          "correct": 270,
+          "accuracy": 0.54,
+          "macro_f1": 0.46933181354658465,
+          "multiclass_brier": 0.6573663798454981,
+          "log_loss": 1.6530950731955274,
+          "ece_10_bins": 0.18750061514507926,
+          "confident_cases_at_90_percent": 140,
+          "confident_wrong_at_90_percent": 35,
+          "latency_median_seconds": 0.04376288649973503,
+          "latency_p95_seconds": 0.045391589850078164,
+          "inference_seconds": 22.024057476000053,
+          "native_choice_temperature": 0.75,
+          "predictions_sha256": "0349bdb1e3c694f0de74cd66dce0b31f74992945d365875a0d75198a17f0c5a7",
+          "completion_sha256": "66467567c720268da8b192001ca61a3b91aedc2f320bf0e0ee4d1db3d023589b",
+          "inference_memory": {
+            "peak_cuda_bytes": 9414793728,
+            "peak_reserved_bytes": 9615441920,
+            "hardware": "NVIDIA B300",
+            "isolated": true,
+            "b300_only": true
+          }
+        },
+        "h2o-lora-4096-epoch1": {
+          "count": 500,
+          "correct": 415,
+          "accuracy": 0.83,
+          "macro_f1": 0.8096544553799092,
+          "multiclass_brier": 0.2882635766898958,
+          "log_loss": 0.8190683762618235,
+          "ece_10_bins": 0.09046906940350923,
+          "confident_cases_at_90_percent": 435,
+          "confident_wrong_at_90_percent": 50,
+          "latency_median_seconds": 0.05974348749987257,
+          "latency_p95_seconds": 0.061051618651072205,
+          "inference_seconds": 29.962734773998818,
+          "inference_memory": {
+            "peak_cuda_bytes": 9470365184,
+            "peak_reserved_bytes": 10001317888,
+            "hardware": "NVIDIA B300",
+            "isolated": true,
+            "b300_only": true
+          }
+        }
+      },
+      "comparisons": {
+        "2b-lora-4096-epoch2_minus_2b-base": {
+          "accuracy_gain_pp": 58.4,
+          "brier_improvement": 0.5325715188362452,
+          "corrected_cases": 301,
+          "new_mistakes": 9,
+          "accuracy_gain_95_ci_pp": [
+            53.8,
+            63.0
+          ],
+          "brier_improvement_95_ci": [
+            0.46907268459175194,
+            0.5920418277227764
+          ]
+        },
+        "2b-lora-4096-epoch2_minus_4b-lora-4096-epoch2": {
+          "accuracy_gain_pp": -1.6,
+          "brier_improvement": -0.025504230385739804,
+          "corrected_cases": 20,
+          "new_mistakes": 28,
+          "accuracy_gain_95_ci_pp": [
+            -4.4,
+            1.2
+          ],
+          "brier_improvement_95_ci": [
+            -0.07233886531912588,
+            0.02033468841115496
+          ]
+        },
+        "h2o-lora-4096-epoch1_minus_2b-lora-4096-epoch2": {
+          "accuracy_gain_pp": 2.2,
+          "brier_improvement": 0.048766290021741286,
+          "corrected_cases": 29,
+          "new_mistakes": 18,
+          "accuracy_gain_95_ci_pp": [
+            -0.4,
+            4.8
+          ],
+          "brier_improvement_95_ci": [
+            0.006134362968359843,
+            0.09260589263673075
+          ]
+        },
+        "h2o-lora-4096-epoch1_minus_4b-lora-4096-epoch2": {
+          "accuracy_gain_pp": 0.6,
+          "brier_improvement": 0.02326205963600148,
+          "corrected_cases": 12,
+          "new_mistakes": 9,
+          "accuracy_gain_95_ci_pp": [
+            -1.2,
+            2.4
+          ],
+          "brier_improvement_95_ci": [
+            -0.00476367355023497,
+            0.050822379192206425
+          ]
+        },
+        "h2o-lora-4096-epoch1_minus_h2o-adapter-1024": {
+          "accuracy_gain_pp": 3.2,
+          "brier_improvement": 0.061874562435696674,
+          "corrected_cases": 22,
+          "new_mistakes": 6,
+          "accuracy_gain_95_ci_pp": [
+            1.2,
+            5.2049999999999725
+          ],
+          "brier_improvement_95_ci": [
+            0.031471840878887075,
+            0.09324434172387276
+          ]
+        },
+        "h2o-lora-4096-epoch1_minus_h2o-base": {
+          "accuracy_gain_pp": 29.0,
+          "brier_improvement": 0.36910280315560223,
+          "corrected_cases": 152,
+          "new_mistakes": 7,
+          "accuracy_gain_95_ci_pp": [
+            24.8,
+            33.2
+          ],
+          "brier_improvement_95_ci": [
+            0.30789102578646327,
+            0.42889625487049354
+          ]
+        }
+      },
+      "inputs_sha256": "f2a69d5a93b04aa58631f2ce57ef16e41d1264f26163cca99b2da64567de4f71",
+      "labels_sha256": "e3d6e7f5c7e9934f6a9605b38ca3f455189747392b258b461a7fc568e9c78902"
+    }
+  },
+  "limitations": [
+    "Both 500-case test cohorts are retrospective for these follow-ups: earlier Jev/H2O results had already been inspected. Checkpoint selection for these new runs uses development labels only. Public pretraining overlap is unknown.",
+    "One seed (553), a fixed recipe and two epoch candidates per new model. Selected checkpoints can have different update counts because the development rule may choose different epochs. Shared examples, option views and a two-checkpoint selection budget do not isolate architecture: prompts, decision protocols and native calibration differ. JevK5-2B is an older v0.2 checkpoint; the 4B comparator is v0.3.",
+    "H2O 4,096-example training uses native temperature 0.75; the reused 1,024-example H2O adapter was trained at 0.8. Its comparison therefore changes both data exposure and training calibration.",
+    "Paired intervals resample 500 conversations 2,000 times, seed 553. They describe cohort sampling uncertainty, not variation between training seeds, and are not adjusted for multiple comparisons.",
+    "H2O completed and serialized both training checkpoints, then its training process failed a CUDA-memory release assertion. The unchanged weights were evaluated in new processes after correcting a PEFT layer-name validation mismatch. Original failures are preserved; training peak memory and uninterrupted total runtime are unavailable.",
+    "All new latency and memory measurements are on B300. H2O resets peak allocation after loading and warmup; Jev peaks include loading allocations within isolated final processes. CUDA allocated/reserved memory excludes some driver and process overhead, and is not a guaranteed minimum GPU capacity. Only isolated final inference measurements are compared; no new 4090, quantization, concurrent-serving or production validation was performed."
+  ],
+  "cleanup": {
+    "verified": true,
+    "cumulative_cost_estimate_usd": 37.95,
+    "approved_budget_usd": 50
+  },
+  "source_results_sha256": "8eae0c7d028aec80d43f94e1276ff7954833a75127f32693fcbcda32df9d0a64"
+}
