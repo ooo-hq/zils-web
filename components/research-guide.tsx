@@ -11,22 +11,22 @@ export function ResearchOverview() {
   const { fez, kev } = readComparison(benchmark);
   const studies = [
     {
-      href: '/model/b300-study', title: 'Practical models for miners', scope: '10 October 2026 · ABCD · B300 experiments',
-      result: 'H2O: 2.99× lower median latency', measure: '59.7 ms vs 178.4 ms for the JevK5 4B adapter on B300',
-      comparison: '2B used 54% less CUDA memory; 9B showed no clear accuracy gain.',
-      meaning: 'H2O and 2B are promising miner candidates. Their accuracy differences from the best 4B adapter remain inconclusive on two reused 500-case cohorts. New checkpoints have not been validated on miner hardware.',
-    },
-    {
       href: '#jev-comparison', title: 'Choose the next support action', scope: `${supportBase.count} test conversations · ABCD`,
-      result: `${percent(supportBase.accuracy)} → ${percent(supportAdapter.accuracy)}`, measure: 'Accuracy before → after training',
-      comparison: `TypeSafe Jev: ${percent(jevMetrics.accuracy)} on the same test.`,
-      meaning: 'Training improved agreement with recorded actions. This does not measure whether the whole customer issue was resolved.',
+      result: `${percent(supportAdapter.accuracy)} vs ${percent(jevMetrics.accuracy)}`, measure: 'Tuned open model vs official hosted TypeSafe Jev 1.13.0',
+      comparison: `Before task-specific training: ${percent(supportBase.accuracy)}. Same 500 test conversations.`,
+      meaning: 'The open JevK5 4B model with a support adapter surpassed official Jev on recorded next actions. This does not measure whether the whole customer issue was resolved.',
     },
     {
       href: '#chess-study', title: 'Find a checkmate in one move', scope: '512 test positions · Lichess puzzles',
-      result: `${chessPercent(chessStudy.results.shared.accuracy)} → ${chessPercent(chessStudy.results.trained.accuracy)}`, measure: 'Accuracy before → after training',
-      comparison: `TypeSafe Jev: ${chessPercent(chessStudy.results.jev.accuracy)}. Chess-rules software: 100%.`,
-      meaning: 'Specialization helped on this restricted task. It does not establish full-game chess strength or an advantage over a rules engine.',
+      result: `${chessPercent(chessStudy.results.trained.accuracy)} vs ${chessPercent(chessStudy.results.jev.accuracy)}`, measure: 'Tuned open model vs official hosted TypeSafe Jev 1.13.0',
+      comparison: `Before chess training: ${chessPercent(chessStudy.results.shared.accuracy)}. Chess-rules software: 100%.`,
+      meaning: 'A separate JevK5 4B chess adapter surpassed official Jev on this restricted task. It does not establish full-game chess strength or an advantage over a rules engine.',
+    },
+    {
+      href: '/model/b300-study', title: 'Practical models for miners', scope: '10 October 2026 · ABCD · B300 experiments',
+      result: 'H2O: 2.99× lower median latency', measure: '59.7 ms vs 178.4 ms for the JevK5 4B adapter on B300',
+      comparison: '2B used 54% less CUDA memory; 9B showed no clear accuracy gain.',
+      meaning: 'This follow-up compares local open models, not hosted TypeSafe Jev. H2O and 2B accuracy differences from the best 4B adapter remain inconclusive on two reused 500-case cohorts. New checkpoints have not been validated on miner hardware.',
     },
     {
       href: '#flight-study', title: 'Estimate the risk of a late flight', scope: `${flightSplits.test.count.toLocaleString('en-US')} later test flights · US flight records`,

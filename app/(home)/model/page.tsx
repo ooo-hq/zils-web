@@ -7,15 +7,15 @@ import { ChessStudySummary } from '@/components/chess-study';
 import { SupportStudyDetails } from '@/components/support-study';
 import { JevComparisonDetails } from '@/components/jev-comparison';
 import { ResearchOverview, ResearchModelGuide, ResearchMetricGuide } from '@/components/research-guide';
-import { jevMethod, jevSource } from '@/lib/jev-comparison';
+import { jevMethod, jevSource, jevTrained, jevMetrics } from '@/lib/jev-comparison';
 import { SiteHeader } from '@/components/site-header';
 import { HeroBackdrop } from '@/components/hero-backdrop';
 import s from '@/components/research-guide.module.css';
 import { benchmark, readComparison, percent, decimal, milliseconds, comparisonHeadline } from '@/lib/model-benchmark';
 
 export const metadata: Metadata = {
-  title: 'zils — teaching small models, testing what they learn',
-  description: 'Explore Zils research on miner-sized models, support decisions, chess, and flight risk. B300 experiments compare H2O and JevK5 adapters, accuracy, speed, memory, and limitations.',
+  title: 'zils — tuned open models can compete',
+  description: 'Task-tuned open JevK5 4B models outperformed official hosted TypeSafe Jev 1.13.0 on our support and mate-in-one tests. Explore the evidence and B300 miner follow-ups.',
   alternates: { canonical: 'https://zils.ai/model' },
 };
 
@@ -82,8 +82,9 @@ export default function ModelPage() {
           <HeroBackdrop variant="research" />
           <header className="relative mx-auto max-w-5xl px-6 pb-16 pt-10 sm:px-8 sm:pt-16">
             <p className="text-sm text-muted">Zils research</p>
-            <h1 className="mt-5 max-w-[20ch] text-balance text-[clamp(2.7rem,6.5vw,4.8rem)] font-semibold leading-[1.02] tracking-[-0.055em]">Teaching small models. Testing what they learn.</h1>
-            <p className="mt-6 max-w-[60ch] text-lg leading-8 text-muted">We train models for specific decisions, then test whether their answers improve and their probabilities deserve trust. The comparisons include the model before training, TypeSafe Jev, and simpler methods that sometimes win.</p>
+            <h1 className="mt-5 max-w-[20ch] text-balance text-[clamp(2.7rem,6.5vw,4.8rem)] font-semibold leading-[1.02] tracking-[-0.055em]">Tuned open models can compete.</h1>
+            <p className="mt-6 max-w-[60ch] text-lg leading-8 text-muted">By adding task-specific adapters to open-weight JevK5 4B, we outperformed TypeSafe’s official hosted Jev 1.13.0 on our support-action and mate-in-one tests. On {jevTrained.n} support conversations, accuracy was {percent(jevTrained.accuracy)} versus {percent(jevMetrics.accuracy)}. These are task-specific results, not a general model ranking.</p>
+            <p className="mt-4 max-w-[70ch] text-sm leading-7 text-muted">The <Link href="/model/b300-study" className={LINK}>B300 follow-up</Link> asks which open models offer practical speed and memory use for miners. We also test unchanged models and simpler methods, which sometimes win.</p>
             <a href="#findings" className="mt-7 inline-flex min-h-11 items-center rounded-md bg-action px-5 py-3 text-sm font-medium text-on-action hover:bg-action-hover">Explore the findings</a>
             <nav aria-label="Project resources" className="mt-5 flex flex-wrap gap-x-6 gap-y-1 text-sm">
               {RESOURCES.map(r => (
