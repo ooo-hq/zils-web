@@ -31,6 +31,7 @@ export default function PrivacyPage() {
       </PolicySection>
 
       <PolicySection title="Model requests">
+        <p>New text-training submissions include permission for a one-time comparison with TypeSafe Jev after a model is approved. Zils sends the held-out evaluation inputs and questions to TypeSafe; it does not send their correct-answer labels, training examples, or confidence-check examples for this comparison. Zils retains the predictions and aggregate scores so viewing a model page does not repeat those calls. Earlier submissions are not automatically opted in. See <a href="https://typesafe.ai/legal/privacy-policy" className={link}>TypeSafe’s privacy policy</a>.</p>
         <p>Running the playground or calling the model API sends your supplied context and questions to the model service to produce predictions. These requests are processed on servers, rather than only in your browser. Use information you are authorized to send, and avoid sensitive data in public examples.</p>
         <p>When the setup assistant is connected, requesting suggestions sends your description, follow-up conversation, and any question draft being revised to its configured AI provider. This is separate from running a prediction or submitting training data. Choosing and editing a built-in starter does not call the assistant.</p>
         <p>Optional voice entry uses your browser’s speech recognition service, which may process audio remotely. It starts only when you choose Speak your goal. The transcript appears for you to review before requesting suggestions.</p>

@@ -488,3 +488,9 @@ confidence coverage, and the documented probability-format corrections under
 `public/model/abcd-002-jev*`. Evidence tests recompute accuracy, F1, Brier, and
 confidence coverage from those predictions. They do not call TypeSafe or train a
 model. Keep the earlier training study and its frozen artifacts unchanged.
+
+Approved text-model pages also show an owner-only TypeSafe Jev comparison on the
+same complete test split. New submissions authorize this one-time evaluation;
+page views read cached scores and never call Jev. Pending results refresh
+automatically. Missing, failed, or mismatched comparisons do not affect model
+access or replace the original approval baseline.

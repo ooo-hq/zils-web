@@ -27,12 +27,13 @@ function session(userId: string) {
   const user = { id: userId, email: 'fixture@example.invalid', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
   return { user, access_token: `${Buffer.from(JSON.stringify({ alg: 'HS256' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: userId, exp: expires })).toString('base64url')}.browser-test`, refresh_token: 'fixture', token_type: 'bearer', expires_in: 3600, expires_at: expires };
 }
-async function fixture(page: Page, options: { signedOut?: boolean; denied?: boolean; unapproved?: boolean; activating?: boolean; image?: boolean; missingSelected?: boolean; usage?: 'failed' | 'missing' | 'empty'; hold?: boolean } = {}) {
+async function fixture(page: Page, options: { signedOut?: boolean; denied?: boolean; unapproved?: boolean; activating?: boolean; image?: boolean; missingSelected?: boolean; comparison?: unknown; usage?: 'failed' | 'missing' | 'empty'; hold?: boolean } = {}) {
   if (!options.signedOut) await page.addInitScript(value => localStorage.setItem('zils-training-auth', JSON.stringify(value)), session(owner));
   const requests: string[] = [], writes: string[] = [];
   let release: (() => void) | undefined;
   const current = {
     ...job,
+    jev_comparison: options.comparison ?? null,
     ...(options.image ? { model: { id: 'imajev-4b-v1', name: 'Imajev 4B', base: 'Qwen/Qwen3.5-4B', base_revision: 'a'.repeat(40) } } : {}),
     workflow: { ...job.workflow, state: options.activating ? 'activating' : 'ready' },
     result: { ...job.result, delivery: { ...job.result.delivery, uid: options.missingSelected ? undefined : 2, status: options.unapproved ? 'no_qualifying_model' : 'accepted' } },
@@ -104,6 +105,48 @@ test('workspace links to private model stats, exact-version usage, and runnable 
   expect(html).not.toContain(modelId);
   expect(html).not.toContain(job.name);
   expect(control.writes).toEqual([]);
+});
+
+const jevComparison = { status: 'completed', model: 'jev-1.13.0', accuracy: .81, brier: .2, trained_accuracy: .91, count: 80, evaluated_at: '2026-10-09T12:00:00Z', test_sha256: 'b'.repeat(64), checkpoint_sha256: 'a'.repeat(64) };
+
+test('saved Jev comparison uses matched examples, shows gains and losses, and never requests inference', async ({ page }) => {
+  const control = await fixture(page, { comparison: jevComparison });
+  await page.goto(path);
+  const results = page.getByRole('region', { name: 'How this model performed' });
+  await expect(results).toContainText('Both models evaluated on the same 80 held-out examples.');
+  await expect(results).toContainText('+10.00 percentage points vs Jev');
+  await expect(results.getByText('81.00%', { exact: true })).toBeVisible();
+  await expect(results.getByText('Your trained model', { exact: true })).toBeVisible();
+  await page.screenshot({ path: '.private/model-jev-desktop.png', fullPage: true });
+  await page.reload();
+  await expect(results).toContainText('Saved once');
+  expect(control.writes).toEqual([]);
+  await page.route(`**/v1/jobs/${id}`, route => route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: { job: { ...job, jev_comparison: { ...jevComparison, accuracy: .96 } } } }));
+  await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+  await expect(results).toContainText('-5.00 percentage points vs Jev');
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: '.private/model-jev-mobile.png', fullPage: true });
+});
+
+test('a pending Jev comparison updates without blocking access to the trained model', async ({ page }) => {
+  const control = await fixture(page, { comparison: { status: 'running', model: 'jev-1.13.0', count: 80, completed_cases: 12 } });
+  await page.goto(path);
+  const results = page.getByRole('region', { name: 'How this model performed' });
+  await expect(results.getByRole('status')).toContainText('12 of 80 examples');
+  await expect(page.getByRole('region', { name: 'Access this model' })).toBeVisible();
+  await page.route(`**/v1/jobs/${id}`, route => route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: { job: { ...job, jev_comparison: jevComparison } } }));
+  await expect(results).toContainText('+10.00 percentage points vs Jev', { timeout: 15_000 });
+  expect(control.writes).toEqual([]);
+});
+
+for (const comparison of [{ ...jevComparison, checkpoint_sha256: 'c'.repeat(64) }, { status: 'failed', model: 'jev-1.13.0' }]) test(`unavailable or mismatched Jev data never replaces the trained score: ${comparison.status}`, async ({ page }) => {
+  await fixture(page, { comparison });
+  await page.goto(path);
+  const results = page.getByRole('region', { name: 'How this model performed' });
+  await expect(results.getByText('Not evaluated', { exact: true })).toBeVisible();
+  await expect(results.getByText('91.00%', { exact: true })).toBeVisible();
+  await expect(results.getByText('81.00%', { exact: true })).toHaveCount(0);
 });
 
 test('signed-out visitors and other owners never see private model data', async ({ page }) => {

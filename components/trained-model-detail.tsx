@@ -49,19 +49,24 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
   }, [client]);
   useEffect(() => {
     const controller = new AbortController();
-    api.get(jobId, controller.signal).then(({ job }) => {
+    let timer: ReturnType<typeof setTimeout>;
+    function load() { return api.get(jobId, controller.signal).then(({ job }) => {
       if (controller.signal.aborted) return;
       if (job.id !== jobId) throw new Error('The service returned a different model. Please try again.');
       if (!canDownload(job)) throw new Error('This run does not have an approved model yet. Check its progress in your training workspace.');
       setJob(job);
+      setError('');
+      if (job.jev_comparison && ['pending', 'running'].includes(job.jev_comparison.status)) timer = setTimeout(load, 10_000);
     }).catch(error => {
       if (controller.signal.aborted) return;
+      setJob(null);
       setError(error instanceof TrainingApiError && [403, 404].includes(error.status)
         ? 'This model is not available to this account.'
         : error instanceof Error ? error.message : 'Model details could not be loaded. Please try again.');
       if (error instanceof TrainingApiError && error.status === 401) void signOut();
-    }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
+    }).finally(() => { if (!controller.signal.aborted) setLoading(false); }); }
+    void load();
+    return () => { controller.abort(); clearTimeout(timer); };
   }, [api, jobId, revision, signOut]);
   function refresh() { setJob(null); setError(''); setLoading(true); setRevision(value => value + 1); }
   if (loading) return <WorkspaceLoading label="Loading your model" />;
@@ -75,6 +80,11 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
   const ready = job.workflow?.state === 'ready' && Boolean(job.workflow.model_id);
   const image = job.model?.id === 'imajev-4b-v1';
   const baselineLabel = job.selection?.previous ? 'Previous version' : 'Starting model';
+  const jev = job.jev_comparison;
+  const comparison = !image && jev?.status === 'completed' && jev.checkpoint_sha256 === result.delivery.sha256 && jev.trained_accuracy === selected?.accuracy ? jev : null;
+  const comparing = !image && (jev?.status === 'pending' || jev?.status === 'running');
+  const referenceAccuracy = image ? result.baseline.accuracy : comparison?.accuracy;
+  const difference = comparison ? (comparison.trained_accuracy - comparison.accuracy) * 100 : null;
   const progress = trainingProgress(job);
   return <div className={styles.detail}>
     <header className={styles.heading}>
@@ -93,17 +103,19 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
     {!ready && <section className={training.notice} aria-label="Model activation"><strong>{progress.title}</strong><p>{progress.detail} {progress.next}</p></section>}
 
     <section id="model-results" className={styles.section} aria-labelledby="model-results-heading">
-      <div className={styles.sectionHeading}><div><h2 id="model-results-heading">How this model performed</h2><p>Evaluation on examples held out from training.</p></div><span>Selected version</span></div>
+      <div className={styles.sectionHeading}><div><h2 id="model-results-heading">How this model performed</h2><p>{comparison ? `Both models evaluated on the same ${comparison.count.toLocaleString()} held-out examples.` : 'Evaluation on examples held out from training.'}</p></div><span>{difference === null ? 'Selected version' : `${difference > 0 ? '+' : ''}${difference.toFixed(2)} percentage points vs Jev`}</span></div>
       <div className={styles.evaluation}>
         <div className={styles.accuracy}><h3>Accuracy</h3><dl className={styles.comparison}>
-          <div><dt>{baselineLabel}</dt><dd><strong>{percent(result.baseline.accuracy)}</strong><span className={styles.track} aria-hidden="true"><span style={{ width: `${result.baseline.accuracy * 100}%` }} /></span></dd></div>
-          <div data-trained="true"><dt>This model</dt><dd><strong>{percent(selected?.accuracy)}</strong>{selected?.accuracy !== undefined && <span className={styles.track} aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(100, selected.accuracy * 100))}%` }} /></span>}</dd></div>
+          <div><dt>{image ? baselineLabel : 'TypeSafe Jev'}</dt><dd><strong>{referenceAccuracy === undefined ? (comparing ? 'Evaluating…' : 'Not evaluated') : percent(referenceAccuracy)}</strong>{referenceAccuracy !== undefined && <span className={styles.track} aria-hidden="true"><span style={{ width: `${referenceAccuracy * 100}%` }} /></span>}</dd></div>
+          <div data-trained="true"><dt>Your trained model</dt><dd><strong>{percent(selected?.accuracy)}</strong>{selected?.accuracy !== undefined && <span className={styles.track} aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(100, selected.accuracy * 100))}%` }} /></span>}</dd></div>
         </dl></div>
         <dl className={styles.supportingStats}>
           <div><dt>Probability error</dt><dd>{decimal(selected?.brier)}</dd><p>Brier loss. Lower is better.<br />{baselineLabel}: {decimal(result.baseline.brier)}</p></div>
-          <div><dt>Test examples</dt><dd>{selected?.count ?? selected?.cases ?? 'Not recorded'}</dd><p>For the selected model</p></div>
+          <div><dt>Test examples</dt><dd>{comparison?.count ?? selected?.count ?? selected?.cases ?? 'Not recorded'}</dd><p>{comparison ? 'Same examples for both models' : 'For the selected model'}</p></div>
         </dl>
       </div>
+      {!image && <p className={styles.note} role={comparing ? 'status' : undefined}>{comparison ? `${comparison.model} · Evaluated ${date(comparison.evaluated_at)}. Saved once; viewing this page makes no Jev calls.` : comparing ? `Comparing with TypeSafe Jev${jev?.status === 'running' && jev.count ? `: ${jev.completed_cases ?? 0} of ${jev.count} examples` : ' after training'}. Your model is ready to use while this runs.` : jev?.status === 'failed' ? 'The Jev comparison could not be completed. Your trained model’s results are still available.' : jev?.status === 'skipped' ? 'This test set exceeds the automatic Jev comparison limit. Your trained model’s full evaluation is shown.' : 'No Jev comparison is recorded for this run.'}</p>}
+      {!image && <p className={styles.note}>{baselineLabel} accuracy: {percent(result.baseline.accuracy)}. Model approval uses this baseline; Jev is a separate comparison.</p>}
       {!selected && <p className={training.notice}>The selected model’s detailed scores were not included in this result. No other candidate’s scores are substituted.</p>}
       <p className={styles.note}>Approval targets: at least {percent(result.delivery.acceptance.min_accuracy)} accuracy and {decimal(result.delivery.acceptance.min_brier_improvement)} improvement in Brier loss. These results do not guarantee accuracy on future inputs.</p>
       {image && <details className={training.details}><summary>Image evaluation details</summary><ImageTrainingResults job={job} /></details>}
