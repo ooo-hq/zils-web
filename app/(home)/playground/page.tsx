@@ -32,6 +32,18 @@ export default async function PlaygroundPage({ searchParams }: PageProps<'/playg
       </header>
     </div>
     <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl px-6 pb-20 pt-6 sm:px-8">
+      <section aria-labelledby="ranking-heading" className="mb-8 grid gap-5 rounded-md border border-edge bg-[var(--zils-surface)] p-5 sm:p-6 md:grid-cols-[1fr_auto] md:items-center">
+        <div>
+          <p className="text-xs font-medium text-accent">Available in SDK 0.2.0 · Experimental</p>
+          <h2 id="ranking-heading" className="mt-2 text-2xl font-semibold tracking-[-0.035em]">Rank options</h2>
+          <p className="mt-2 max-w-[65ch] text-sm leading-6 text-muted">Give Zils 2–10 options and describe what should come first. Get an ordered list with relative scores.</p>
+          <p className="mt-2 text-xs leading-5 text-subtle">Ranking works through the SDK. An interactive ranking demo is not available in this playground yet.</p>
+        </div>
+        <div className="flex flex-col items-start gap-3 text-sm">
+          <a href="https://docs.zils.ai/sdks/ranking" className="inline-flex min-h-11 items-center rounded-md bg-action px-4 py-2 font-medium text-on-action hover:bg-action-hover">Use ranking in your app</a>
+          <a href="https://docs.zils.ai/changelog#sdk-0-2-0" className="underline decoration-edge-strong underline-offset-4 hover:text-accent">What’s new in 0.2.0</a>
+        </div>
+      </section>
       <GuidedPlayground key={initialStarterId ?? 'blank'} {...playgroundConfig()} assistantConfigured={setupConfigured()} initialStarterId={initialStarterId} />
       <p className="mt-10 border-t border-edge pt-6 text-xs leading-6 text-subtle">Playground examples are illustrative, not an evaluation benchmark. Answers come only from the connected Zils checkpoint; there is no fallback model.</p>
     </main>
