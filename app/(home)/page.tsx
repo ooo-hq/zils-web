@@ -75,6 +75,16 @@ export default function HomePage() {
               </article>
             ))}
           </div>
+          <article aria-labelledby="rank-options" className="mt-10 rounded-md border border-edge bg-[var(--zils-surface)] p-5 sm:p-6">
+            <p className="text-xs font-medium text-[var(--zils-accent)]">New in SDK 0.2.0 · Experimental</p>
+            <h3 id="rank-options" className="mt-2 text-[22px] font-semibold tracking-[-0.035em]">Rank options.</h3>
+            <p className="mt-3 max-w-[70ch] text-sm leading-6 text-muted">Give Zils 2–10 options and a criterion, such as which support action best addresses a customer’s issue. The SDK returns an ordered list with relative scores.</p>
+            <p className="mt-2 text-xs leading-5 text-muted">Uses the existing model. Relative scores are not confidence percentages.</p>
+            <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3 text-sm">
+              <a href="https://docs.zils.ai/sdks/ranking" className={s.textLink}>Use ranking in your app</a>
+              <a href="https://docs.zils.ai/changelog#sdk-0-2-0" className={s.textLink}>Read the release note</a>
+            </div>
+          </article>
         </section>
 
         <section aria-labelledby="deliver" className="mx-auto max-w-5xl border-t border-edge px-6 py-16 sm:px-8 sm:py-20">
