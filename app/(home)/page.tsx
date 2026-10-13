@@ -76,13 +76,14 @@ export default function HomePage() {
             ))}
           </div>
           <article aria-labelledby="rank-options" className="mt-10 rounded-md border border-edge bg-[var(--zils-surface)] p-5 sm:p-6">
-            <p className="text-xs font-medium text-[var(--zils-accent)]">New in SDK 0.2.0 · Experimental</p>
+            <p className="text-xs font-medium text-[var(--zils-accent)]">New in SDK 0.3.0 · Experimental</p>
             <h3 id="rank-options" className="mt-2 text-[22px] font-semibold tracking-[-0.035em]">Rank options.</h3>
             <p className="mt-3 max-w-[70ch] text-sm leading-6 text-muted">Give Zils 2–10 options and a criterion, such as which support action best addresses a customer’s issue. The SDK returns an ordered list with relative scores.</p>
-            <p className="mt-2 text-xs leading-5 text-muted">Uses the existing model. Relative scores are not confidence percentages.</p>
+            <p className="mt-2 max-w-[70ch] text-sm leading-6 text-muted">Optional grouped ranking compares several options together: ten options use 10 judgments instead of 90. Pairwise ranking stays the default.</p>
+            <p className="mt-2 max-w-[70ch] text-xs leading-5 text-muted">Fewer comparisons can produce a worse order. Test later choices as well as the first. Relative scores are not confidence percentages.</p>
             <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3 text-sm">
               <a href="https://docs.zils.ai/sdks/ranking" className={s.textLink}>Use ranking in your app</a>
-              <a href="https://docs.zils.ai/changelog#sdk-0-2-0" className={s.textLink}>Read the release note</a>
+              <a href="https://docs.zils.ai/changelog#sdk-0-3-0" className={s.textLink}>What’s new in 0.3.0</a>
             </div>
           </article>
         </section>
