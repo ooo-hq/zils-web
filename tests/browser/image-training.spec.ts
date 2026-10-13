@@ -33,7 +33,7 @@ for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,fa
     if(path.endsWith('/submit')) return route.fulfill({headers,json:{job:{...job(),status:'validating'}}});
     return route.fulfill({status:404,headers,json:{}});
   });
-  await page.goto('/train');await page.getByRole('button',{name:'Train a model',exact:true}).click();await page.getByRole('button',{name:'Images',exact:true}).click();
+  await page.goto('/train');await page.getByRole('button',{name:'Classic setup',exact:true}).click();await page.getByRole('button',{name:'Images',exact:true}).click();
   await expect(page.getByLabel('Training photos',{exact:true})).toHaveCount(0);
   await page.getByLabel('Image training decision',{exact:true}).fill('Is the item damaged?');
   await page.getByLabel('Image training answers',{exact:true}).fill('Normal\nDamaged');
@@ -46,7 +46,7 @@ for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,fa
   await page.getByRole('button',{name:'Review photos',exact:true}).click();
   expect(calls.filter(call=>call.startsWith('POST')||call.startsWith('PUT'))).toEqual([]);
   await page.keyboard.press('Escape');
-  await page.getByRole('button',{name:'Train a model',exact:true}).click();
+  await page.getByRole('button',{name:'Classic setup',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Check what your model will learn.'})).toBeVisible();
   await page.getByLabel('Answer for photo-0.png',{exact:true}).selectOption('Normal');
   await page.getByLabel('I have reviewed the labels and item groups',{exact:true}).check();
@@ -88,7 +88,7 @@ test('saved image draft can be abandoned without selecting the original photos',
   if(url.pathname===`/v1/jobs/${jobId}/cancel`){cancelled=true;return route.fulfill({headers,json:{job:job()}});}
   return route.fulfill({status:404,headers,json:{}});
  });
- await page.goto('/train');await page.getByRole('button',{name:'Train a model',exact:true}).click();await page.getByRole('button',{name:'Images',exact:true}).click();
+ await page.goto('/train');await page.getByRole('button',{name:'Classic setup',exact:true}).click();await page.getByRole('button',{name:'Images',exact:true}).click();
  await expect(page.getByText(/A saved image draft is available/)).toBeVisible();
  await page.getByRole('button',{name:'Start a new run',exact:true}).click({timeout:2000});
  await expect(page.getByText(/A saved image draft is available/)).toHaveCount(0);

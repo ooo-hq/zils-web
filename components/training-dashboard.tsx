@@ -313,7 +313,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId }: { runId?
       <div className={styles.workspaceActions}>
         <Link href="/billing#usage" className={styles.secondary}>Usage & billing</Link>
         <ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={onExpired} />
-        {!runId && <SheetTrigger asChild><button className={styles.button} disabled={busy}><Plus size={16} aria-hidden="true" />Train a model</button></SheetTrigger>}
+        {!runId && <><SheetTrigger asChild><button className={styles.textButton} disabled={busy}>Classic setup</button></SheetTrigger><Link className={styles.button} href="/train/teach"><Plus size={16} aria-hidden="true" />Train a model</Link></>}
       </div>
     </div>
     {process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && <p className={styles.notice}>Billing test preview. Submitting a standard run reserves one included run or $2 in test credit. <Link href="/billing" className={styles.textButton}>View credit and billing</Link>.</p>}
@@ -326,7 +326,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId }: { runId?
       {loading ? <WorkspaceLoading label={runId ? "Loading your training run" : "Loading your models and runs"} /> : !selected && (runId || !history.length) ? <section className={styles.emptyWorkspace}>
         <h2>{runId ? 'Run unavailable' : refreshError ? 'Your runs could not be loaded.' : 'Train your first model.'}</h2>
         <p>{runId ? 'Return to Training to choose a run, or try loading it again.' : refreshError ? 'Try checking again in a moment.' : 'Bring a decision and a few reviewed examples. Zils will guide you through the rest.'}</p>
-        {refreshError || runId ? <button className={styles.secondary} onClick={refresh} disabled={refreshing}>Try again</button> : <SheetTrigger asChild><button className={styles.secondary}>Get started</button></SheetTrigger>}
+        {refreshError || runId ? <button className={styles.secondary} onClick={refresh} disabled={refreshing}>Try again</button> : <Link className={styles.secondary} href="/train/teach">Get started</Link>}
       </section> : selected ? <div>
         <div className={styles.currentLabel}><span>{runId ? 'Run details' : 'Current run'}</span><button className={styles.textButton} onClick={refresh} disabled={busy || refreshing}>{refreshing ? 'Checking…' : 'Refresh status'}</button></div>
         <section className={`${styles.panel} ${styles.currentRun}`} aria-labelledby="current-run-title">

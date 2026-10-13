@@ -8,14 +8,16 @@ import { TeachingDocuments } from '@/components/teaching-documents';
 import { TeachingImages } from '@/components/teaching-images';
 import { TeachingAlignment } from '@/components/teaching-alignment';
 import { PreparedTrainingPreview } from '@/components/prepared-training-preview';
+import { TeachingSubmission } from '@/components/teaching-submission';
+import type { TrainingConfig } from '@/lib/training-config';
 import { ThemeToggle } from '@/components/theme';
 import { readSpreadsheet, type SpreadsheetSheet } from '@/lib/training-spreadsheet';
 import { suggestMapping } from '@/lib/training-review';
 import type { ColumnMapping } from '@/lib/training-csv';
-import { importTeachingExamples, inspectTeachingExamples, prepareTeachingDraft, type TeachingExample, type TeachingTask } from '@/lib/teach-by-example';
+import { importTeachingExamples, inspectTeachingExamples, prepareTeachingDraft, teachingTrainingFiles, type TeachingExample, type TeachingTask } from '@/lib/teach-by-example';
 import s from './teach-by-example.module.css';
 
-const steps = ['Describe the task', 'Bring examples', 'Show what’s good', 'Check the gaps', 'Preview the test'];
+const steps = ['Describe the task', 'Bring examples', 'Show what’s good', 'Check the gaps', 'Review and train'];
 const starters = {
   sort: { title: 'Sort or make a decision', description: 'Route a request. Choose a category.', icon: Layers3, goal: 'Send each customer request to the right team.', input: 'Could you send me the invoice for last month?', output: 'Billing', labels: ['Billing', 'Technical support', 'Account changes'], rule: 'Use Billing for payments, Technical support for product issues, and Account changes for profile updates.' },
   write: { title: 'Write in your style', description: 'Draft a reply. Rewrite something.', icon: MessageSquareText, goal: 'Write helpful, concise replies to customer requests.', input: 'My order arrived with a broken handle. What can I do?\nPolicy: replace damaged items free of charge after receiving a photo.', output: 'Please send us a photo of the damaged handle and your order number. We’ll arrange a free replacement.', labels: [], rule: 'Use a warm, direct tone. Follow the supplied policy. Never invent order details.' },
@@ -40,7 +42,8 @@ const samplePairs: Record<TeachingTask['kind'], [string, string][]> = {
   ],
 };
 
-export function TeachByExample() {
+export function TeachByExample({ config }: { config?: TrainingConfig | null }) {
+  const [locked, setLocked] = useState(false);
   const [step, setStep] = useState(0);
   const [assisted, setAssisted] = useState(true);
   const [path, setPath] = useState<'guided' | 'prepared' | 'images'>('guided');
@@ -70,6 +73,7 @@ export function TeachByExample() {
   }, [activeId, step]);
 
   function go(next: number) {
+    if (locked) return;
     setStep(next); setError(''); setNotice('');
     requestAnimationFrame(() => { heading.current?.focus(); window.scrollTo({ top: 0, behavior: 'instant' }); });
   }
@@ -160,24 +164,24 @@ export function TeachByExample() {
 
   return <div className={s.page}>
     <header className={s.header}>
-      <Link href="/" aria-label="Zils home"><ZilsWordmark className="text-[40px]" /></Link>
+      <Link href="/" aria-label="Zils home" target={locked ? '_blank' : undefined} rel={locked ? 'noopener noreferrer' : undefined}><ZilsWordmark className="text-[40px]" /></Link>
       <span className={s.headerTitle}>Teach a model</span>
-      <div className={s.headerEnd}><span className={s.previewBadge}>Teaching preview</span><ThemeToggle /></div>
+      <div className={s.headerEnd}><span className={s.previewBadge}>{config ? 'Training workspace' : 'Teaching preview'}</span><ThemeToggle /></div>
     </header>
     <div className={s.layout}>
       <aside className={s.sidebar}>
-        <Link href="/train" className={s.backLink}><ArrowLeft size={14} /> Training home</Link>
+        <Link href="/train" className={s.backLink} target={locked ? '_blank' : undefined} rel={locked ? 'noopener noreferrer' : undefined}><ArrowLeft size={14} /> Training home</Link>
         <nav aria-label="Teaching progress" hidden={path !== 'guided'}><ol>{steps.map((title, index) => <li key={title} data-active={step === index} data-done={step > index}>
-          <button type="button" aria-label={title} aria-current={step === index ? 'step' : undefined} disabled={index > step} onClick={() => go(index)}><span className={s.stepNumber}>{step > index ? <Check size={13} /> : index + 1}</span><span>{title}</span></button>
+          <button type="button" aria-label={title} aria-current={step === index ? 'step' : undefined} disabled={locked || index > step} onClick={() => go(index)}><span className={s.stepNumber}>{step > index ? <Check size={13} /> : index + 1}</span><span>{title}</span></button>
         </li>)}</ol></nav>
         {path === 'prepared' && <div className={s.directNote}><FileText size={21} /><strong>Prepared training</strong><p>Your labels and dataset splits stay as supplied. Check the files, set your success criteria, and review the run.</p></div>}
         {path === 'images' && <div className={s.directNote}><FileText size={21} /><strong>Teach with images</strong><p>Describe a visual decision, label your photos, and keep related views of the same item together.</p></div>}
-        <div className={s.sidebarNote}><LockKeyhole size={17} /><p>You control when examples leave this tab.</p><span>Import and manual review stay local. Live assisted review sends selected examples to the connected services. Save your draft before closing.</span></div>
+        <div className={s.sidebarNote}><LockKeyhole size={17} /><p>You control when examples leave this tab.</p><span>Import and manual review stay local. Assisted review and training upload examples only when you choose those actions. Save your draft before closing.</span></div>
       </aside>
       <main className={s.main} id="main-content">
-        <div className={s.entryPaths} aria-label="Choose your starting point"><button type="button" aria-pressed={path === 'guided'} onClick={() => setPath('guided')}>Guide me</button><button type="button" aria-pressed={path === 'prepared'} onClick={() => setPath('prepared')}>I have training data</button><button type="button" aria-pressed={path === 'images'} onClick={() => setPath('images')}>Images</button></div>
-        <div hidden={path !== 'prepared'}><PreparedTrainingPreview onGuided={() => { setPath('guided'); setMode('file'); go(0); }} /></div>
-        <div hidden={path !== 'images'}><TeachingImages onDocuments={() => {setPath('guided');if(!examples.length)selectStarter('extract');setMode('documents');go(1);}} /></div>
+        <div className={s.entryPaths} aria-label="Choose your starting point"><button type="button" disabled={locked} aria-pressed={path === 'guided'} onClick={() => setPath('guided')}>Guide me</button><button type="button" disabled={locked} aria-pressed={path === 'prepared'} onClick={() => setPath('prepared')}>I have training data</button><button type="button" disabled={locked} aria-pressed={path === 'images'} onClick={() => setPath('images')}>Images</button></div>
+        <div hidden={path !== 'prepared'}><PreparedTrainingPreview config={config} locked={locked} onLock={setLocked} onGuided={() => { setPath('guided'); setMode('file'); go(0); }} /></div>
+        <div hidden={path !== 'images'}><TeachingImages config={config} locked={locked} onLock={setLocked} onDocuments={() => {setPath('guided');if(!examples.length)selectStarter('extract');setMode('documents');go(1);}} /></div>
         <div hidden={path !== 'guided'}>
         <div className={s.progressLine}><span>Step {step + 1} of 5</span><span>{step === 0 ? 'Start with something you know' : `${examples.length} ${examples.length === 1 ? 'example' : 'examples'} added`}</span></div>
         <h1 ref={heading} tabIndex={-1}>{['What would you like to teach?', 'Start with work you already have.', 'Teach Zils what you mean.', 'A few checks before you train.', 'Decide how you’ll measure success.'][step]}</h1>
@@ -261,13 +265,14 @@ export function TeachByExample() {
         {step === 4 && draft && <>
           <div className={s.splitOverview}>{[{ key: 'train' as const, title: 'For learning', text: 'Examples the model can learn from.' }, { key: 'calibration' as const, title: 'For checking', text: 'Separate cases for confidence checks.' }, { key: 'test' as const, title: 'For the final test', text: 'Held aside to measure the result.' }].map(item => <div key={item.key}><strong>{draft.counts[item.key]}</strong><span>{item.title}</span><p>{item.text}</p></div>)}</div>
           <section className={s.testPreview}><div className={s.testTitle}><div><h2>One example the model won’t train on</h2><p>Use cases like this to compare the original and trained models.</p></div><span>{previewIndex + 1} / {draft.splits.test.length}</span></div>{testExample && <><div className={s.testInput}><span>What it will receive</span><p>{testExample.input}</p></div><div className={s.testExpected}><span>The answer you’ll compare against</span><p>{testExample.output}</p></div></>}{draft.splits.test.length > 1 && <button type="button" className={s.textButton} onClick={() => setPreviewIndex(index => (index + 1) % draft.splits.test.length)}>See another test example <ChevronRight size={15} /></button>}</section>
-          <div className={s.previewNotice}><FolderInput size={22} /><div><strong>Your teaching draft is ready to inspect.</strong><p>This draft prepares examples and a test plan. Assisted review can refine decision rules, but no custom model has been trained or independently evaluated.</p>{task.kind !== 'sort' && <p>Writing and extraction also need a compatible training backend before live submission.</p>}</div></div>
+          <div className={s.previewNotice}><FolderInput size={22} /><div><strong>{task.kind === 'sort' ? 'Your examples are ready for training.' : 'Your teaching draft is ready to inspect.'}</strong><p>No custom model has been trained yet. Your reserved learning, calibration, and test cases stay separate.</p>{task.kind !== 'sort' && <p>Writing and extraction need a compatible training backend. These paths can currently download a preparation draft only.</p>}</div></div>
           <details className={s.details} open={showDemo} onToggle={event => setShowDemo(event.currentTarget.open)}><summary>What would a comparison look like?</summary><div className={s.demoLabel}>Illustrative example · fixed sample answers, not model results</div><p className={s.hint}>Customer asks: “Can you send a copy of my last invoice?” The reviewed answer is Billing.</p><div className={s.demoComparison}><div><span>Original model</span><strong>Account changes</strong><small>Doesn’t match the reviewed answer</small></div><div><span>Trained model</span><strong>Billing</strong><small>Matches the reviewed answer</small></div></div><p className={s.hint}>A real comparison must include failures and use held-out cases. Training may not improve the result.</p></details>
-          <div className={s.actions}><button type="button" className={s.backButton} onClick={() => go(3)}><ArrowLeft size={15} /> Back to checks</button><button type="button" className={s.primary} onClick={downloadDraft}>Download teaching draft <FolderInput size={16} /></button></div>
+          {task.kind === 'sort' && <TeachingSubmission config={config} onLock={setLocked} prepare={async name => ({ kind: 'text', files: await teachingTrainingFiles(draft, name) })} />}
+          <div className={s.actions}><button type="button" disabled={locked} className={s.backButton} onClick={() => go(3)}><ArrowLeft size={15} /> Back to checks</button><button type="button" className={s.secondary} onClick={downloadDraft}>Download teaching draft <FolderInput size={16} /></button></div>
           <details className={s.details}><summary>View or copy the prepared draft</summary><label htmlFor="draft-json">Prepared draft data</label><textarea id="draft-json" rows={8} readOnly spellCheck={false} value={JSON.stringify(draft, null, 2)} /><p className={s.hint}>A portable preparation draft. It is not a file for direct submission to the current training service.</p></details>
         </>}
         </div>
-        <footer className={s.footer}><span><LockKeyhole size={13} /> Training preparation</span><span>Live assisted review is optional.</span></footer>
+        <footer className={s.footer}><span><LockKeyhole size={13} /> Teach and train</span><span>Assisted review is optional.</span></footer>
       </main>
     </div>
   </div>;

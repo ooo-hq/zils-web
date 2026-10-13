@@ -118,7 +118,7 @@ test('unavailable billing keeps the valid workspace session and never asks for a
   await expect(page.getByRole('link', { name: 'Sign in again', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Add $5', exact: true })).toHaveCount(0);
   await page.getByRole('link', { name: 'Your workspace', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Train a model', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Train a model', exact: true })).toBeVisible();
   expect(requests).not.toContain('/auth/v1/logout');
 });
 

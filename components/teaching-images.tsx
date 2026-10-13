@@ -3,12 +3,14 @@
 import Image from 'next/image';
 import {useEffect,useRef,useState} from 'react';
 import {ArrowRight,CheckCheck,Images,Upload} from 'lucide-react';
-import {mapImageExamples} from '@/lib/image-training';
-import {imageDigest} from '@/lib/images';
+import {mapImageExamples,prepareImageTraining} from '@/lib/image-training';
+import {imageDigest,imageQuestion} from '@/lib/images';
+import {TeachingSubmission} from '@/components/teaching-submission';
+import type {TrainingConfig} from '@/lib/training-config';
 import {openTeachingImage,prepareImageTeachingDraft,readImageTeachingLabels,type TeachingImage} from '@/lib/teaching-images';
 import s from './teach-by-example.module.css';
 
-export function TeachingImages({onDocuments}:{onDocuments:()=>void}) {
+export function TeachingImages({onDocuments,config,locked=false,onLock}:{onDocuments:()=>void;config?:TrainingConfig|null;locked?:boolean;onLock:(locked:boolean)=>void}) {
   const [question,setQuestion]=useState(''),[answers,setAnswers]=useState('Normal\nDamaged');
   const [rows,setRows]=useState<TeachingImage[]>([]),[excluded,setExcluded]=useState<Record<string,boolean>>({});
   const [reviewed,setReviewed]=useState(false),[page,setPage]=useState(0);
@@ -20,7 +22,7 @@ export function TeachingImages({onDocuments}:{onDocuments:()=>void}) {
   const included=rows.filter(row=>!excluded[row.id]);
   function changed(){setDraft(null);setReviewed(false);setError('');setNotice('');}
   async function choose(files:File[]) {
-    if(operation.current || !files.length)return;
+    if(operation.current || locked || !files.length)return;
     const controller=new AbortController();operation.current=controller;setBusy(true);setError('');setNotice('Reading photos locally…');
     const nextUrls:string[]=[];
     try {
@@ -41,7 +43,7 @@ export function TeachingImages({onDocuments}:{onDocuments:()=>void}) {
     finally {if(!controller.signal.aborted){setBusy(false);operation.current=null;}}
   }
   async function labels(file?:File) {
-    if(!file || operation.current)return;
+    if(!file || operation.current || locked)return;
     const controller=new AbortController();operation.current=controller;setBusy(true);setError('');
     try {
       const mapped=await readImageTeachingLabels(rows.map(row=>row.file),file);controller.signal.throwIfAborted();
@@ -61,10 +63,10 @@ export function TeachingImages({onDocuments}:{onDocuments:()=>void}) {
     setNotice('Draft download requested. Keep your original photos; the draft contains references, not image files.');
   }
   return <section aria-label="Image teaching" aria-busy={busy}>
-    <div className={s.progressLine}><span>Image training</span><span>Imajev · Local preparation</span></div>
+    <div className={s.progressLine}><span>Image training</span><span>Imajev · Review before uploading</span></div>
     <h1>Show the model what to look for.</h1>
     <p className={s.intro}>Bring photos and their correct answers. Teach a visual decision, such as whether an item is normal or damaged.</p>
-    <fieldset disabled={busy}>
+    <fieldset disabled={busy||locked}>
       <div className={s.pairFields}><div><label htmlFor="image-teaching-question">What should the model decide?</label><textarea id="image-teaching-question" rows={3} maxLength={3000} placeholder="Is this package normal or damaged?" value={question} onChange={event=>{setQuestion(event.target.value);changed();}} /></div><div><label htmlFor="image-teaching-answers">Possible answers</label><textarea id="image-teaching-answers" rows={3} maxLength={1616} value={answers} onChange={event=>{setAnswers(event.target.value);changed();}} /><p className={s.hint}>One answer per line. Use 2–16 different answers.</p></div></div>
       <div className={s.dropzone} data-loaded={Boolean(rows.length)} onDragOver={event=>event.preventDefault()} onDrop={event=>{event.preventDefault();void choose(Array.from(event.dataTransfer.files));}}>
         <Images size={26}/><strong>{rows.length?'Replace selected photos':'Bring your photos'}</strong><p>Choose multiple JPEG/PNG images, or a folder named after each answer.</p>
@@ -89,8 +91,13 @@ export function TeachingImages({onDocuments}:{onDocuments:()=>void}) {
     </fieldset>
     {error&&<p role="alert" className={s.error}>{error}</p>}<p role="status" className={s.hint}>{notice}</p>
     {draft&&<section className={s.preparedReview} aria-label="Image draft review"><div className={s.ready}><CheckCheck size={21}/><div><strong>Your image draft is ready.</strong><p>Photos of the same item stay together. Each split includes every answer.</p></div></div><div className={s.splitOverview}>{(['train','calibration','test'] as const).map(split=><div key={split}><strong>{draft.counts[split]}</strong><span>{split==='train'?'Training':split==='test'?'Evaluation':'Calibration'} photos</span></div>)}</div>
-      <p className={s.hint}>This draft contains labels, file references, and splits. Keep your original photos: image bytes are not included. Live training and quality targets remain in the existing training dashboard.</p>
-      <button type="button" className={s.primary} onClick={download}>Download image draft</button><details className={s.details}><summary>View or copy the image draft</summary><label htmlFor="image-draft-json">Image draft JSON</label><textarea id="image-draft-json" rows={10} readOnly value={JSON.stringify(draft,null,2)}/></details>
+      <TeachingSubmission config={config} onLock={onLock} imageAnswers={outcomes} prepare={async()=>{
+        prepareImageTeachingDraft(included,question,answers,reviewed);
+        const decision=imageQuestion(question,answers);
+        return {kind:'image',question:decision,prepared:prepareImageTraining(included,decision,outcomes,'image-split-v1')};
+      }}/>
+      <p className={s.hint}>Keep your original photos for upload recovery. Downloaded drafts contain labels and references, not image bytes.</p>
+      <button type="button" className={s.secondary} onClick={download}>Download image draft</button><details className={s.details}><summary>View or copy the image draft</summary><label htmlFor="image-draft-json">Image draft JSON</label><textarea id="image-draft-json" rows={10} readOnly value={JSON.stringify(draft,null,2)}/></details>
     </section>}
   </section>;
 }

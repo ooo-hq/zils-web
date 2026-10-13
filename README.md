@@ -353,8 +353,39 @@ the workflow; they are not evidence of model quality.
 ## Customer training setup
 
 The `/train` workspace prioritizes the current unfinished run and lists past runs
-below it. “Train a model” opens a side panel with four steps:
-Decision, Data, Review, and Ready. The panel fills the screen on mobile.
+below it. “Train a model” opens the full-page `/train/teach` workflow. It supports
+reviewed text decisions, prepared JSONL datasets, and labeled photos. Guided text
+preparation preserves any splits reserved during assisted review and converts
+only the reviewed decision inputs, labels, groups, and task instructions into the
+coordinator's dataset format. Writing and extraction remain downloadable drafts;
+the connected service does not train those tasks.
+
+The final review requires an invited Supabase session, quality targets, and
+explicit permission for approved workers to read and retain training data. The
+optional TypeSafe comparison has separate consent. Sign-in and billing open in
+another tab so selected files remain in memory. No upload happens during local
+review. “Start training” creates a job, uploads directly to private storage, and
+submits it for validation; the browser then opens `/train?run=<job-id>`.
+
+Interrupted uploads freeze the data and settings. Resume uses the saved job and
+only missing uploads, including after an insufficient-credit response. A lost
+submission response is reconciled by reading the job before retrying. An uncertain
+creation response blocks a second creation and links to the run list. Saved text
+runs offer the exact frozen JSONL files for recovery after closing the tab.
+Refreshing still clears in-memory files; keep original photos for recovery. Image submissions
+recheck the current service's availability and limits before creating a job.
+
+`/train/teach` is available in production builds when deployed; without training
+configuration it remains a local preparation UI. Its optional assisted-review
+API is still restricted to development and previews. Browser tests intercept all
+service requests; passing them does not establish a completed live training run.
+
+### Classic setup and upload recovery
+
+“Classic setup” retains the side panel with four steps: Decision, Data, Review,
+and Ready. The panel fills the screen on mobile. The following limits and controls
+describe that existing flow; the new guided page currently limits preparation to
+500 text examples or 120 photos.
 
 Customers describe one decision, then drop in CSV, Excel `.xlsx`, JSON, or JSONL
 data, or paste JSON/JSONL directly. Text files must use UTF-8 encoding.

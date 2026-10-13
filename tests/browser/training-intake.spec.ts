@@ -46,7 +46,7 @@ async function workspace(page: Page, start = true) {
   });
   await page.goto('/train');
   if (!start) return { uploads, mutations };
-  await page.getByRole('button', { name: 'Train a model', exact: true }).click();
+  await page.getByRole('button', { name: 'Classic setup', exact: true }).click();
   await expect(page.getByRole('tablist', { name: 'Decision capability' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Text examples', exact: true }).click();
   await page.getByLabel('The decision', { exact: true }).fill('Which team should handle this support ticket?');
@@ -127,7 +127,7 @@ test('mobile CSV review preserves the draft and requires resolving expert flags'
   await expect(page.getByRole('button', { name: 'Check readiness' })).toBeDisabled();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).not.toBeVisible();
-  await page.getByRole('button', { name: 'Train a model', exact: true }).click();
+  await page.getByRole('button', { name: 'Classic setup', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Check what your model will learn.' })).toBeVisible();
   await page.getByLabel('Examples to review').selectOption('issues');
   await page.getByRole('button', { name: 'Confirm answer', exact: true }).click();
@@ -151,7 +151,7 @@ for (const kind of ['text', 'images'] as const) test(`guided ${kind} setup clari
     requests.push(route.request().postDataJSON());
     await route.fulfill({ json: requests.length === 1 ? { kind: 'clarify', message: 'What should count as damage?', choices: ['Visible cracks or dents', 'Any color variation'] } : { kind: 'draft', message: 'Here is a focused decision.', draft: { title: 'Damage inspection', questions: [{ id: 'damage', kind: 'choice', prompt: 'Does this product show visible damage?', options: [{ label: 'Normal', description: '' }, { label: 'Damaged', description: '' }] }] } } });
   });
-  await page.getByRole('button', { name: 'Train a model', exact: true }).click();
+  await page.getByRole('button', { name: 'Classic setup', exact: true }).click();
   await expect(page.getByRole('tablist', { name: 'Decision capability' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Images', exact: true })).toBeEnabled();
   if (kind === 'text') await page.screenshot({ path: '.private/training-chooser-desktop.png', fullPage: true, animations: 'disabled' });
@@ -166,7 +166,7 @@ for (const kind of ['text', 'images'] as const) test(`guided ${kind} setup clari
   expect(JSON.stringify(requests)).toContain('exactly one choice question');
   await question.fill('Is this packaging visibly damaged?');
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'Train a model', exact: true }).click();
+  await page.getByRole('button', { name: 'Classic setup', exact: true }).click();
   await expect(question).toHaveValue('Is this packaging visibly damaged?');
   await page.getByRole('button', { name: 'Change example type' }).click();
   await page.getByRole('button', { name: kind === 'text' ? 'Images' : 'Text examples', exact: true }).click();
@@ -184,7 +184,7 @@ for (const kind of ['text', 'images'] as const) test(`guided ${kind} setup clari
 test('unsupported assistant suggestions leave the training draft unchanged', async ({ page }) => {
   await workspace(page, false);
   await page.route('**/api/setup', route => route.fulfill({ json: { kind: 'draft', message: 'Two questions.', draft: { title: 'Wrong shape', questions: ['first', 'second'].map(id => ({ id, kind: 'choice', prompt: 'A different question?', options: [{ label: 'A', description: '' }, { label: 'B', description: '' }] })) } } }));
-  await page.getByRole('button', { name: 'Train a model', exact: true }).click();
+  await page.getByRole('button', { name: 'Classic setup', exact: true }).click();
   await page.getByRole('button', { name: 'Text examples', exact: true }).click();
   await page.getByRole('button', { name: 'Route support tickets', exact: true }).click();
   await page.getByRole('button', { name: 'Help me set this up', exact: true }).click();

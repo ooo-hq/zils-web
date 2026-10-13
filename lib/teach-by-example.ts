@@ -1,4 +1,5 @@
 import { splitGroups, type ColumnMapping, type CsvData } from './training-csv';
+import { SPLITS, submissionSchema, validateDatasets, type Split } from './training';
 
 export type TeachingTask = { kind: 'sort' | 'write' | 'extract'; goal: string; rules: string; answers: string[] };
 export type TeachingSplit = 'train' | 'calibration' | 'test';
@@ -72,8 +73,20 @@ export function prepareTeachingDraft(task: TeachingTask, examples: TeachingExamp
     }
     if (Object.values(splits).some(rows => !rows.length)) throw new Error('Keep at least one case in each reserved split. Restore excluded cases or start with more examples.');
   }
-  // shortcut: this export is a reviewed onboarding draft, not a coordinator payload; add task-specific adapters before live submission.
+  // Portable drafts stay separate from the validated files used for live decision training.
   return { version: 1, previewOnly: true, task, splits, counts: { total: report.included.length, train: splits.train.length, calibration: splits.calibration.length, test: splits.test.length } };
+}
+
+export async function teachingTrainingFiles(draft: ReturnType<typeof prepareTeachingDraft>, name: string) {
+  if (draft.task.kind !== 'sort') throw new Error('Live training supports decisions with fixed answers. Writing and extraction remain preparation drafts.');
+  submissionSchema.shape.name.parse(name);
+  const reviewed = prepareTeachingDraft(draft.task, SPLITS.flatMap(split => draft.splits[split].map(row => ({ ...row, split }))), true);
+  const question = { type: 'choice', instructions: `${draft.task.goal}\n${draft.task.rules}`, criteria: Object.fromEntries(draft.task.answers.map(answer => [answer, answer])) };
+  const files = Object.fromEntries(SPLITS.map(split => [split, new File([reviewed.splits[split].map(row => JSON.stringify({
+    id: row.id, group_id: row.group, family: name, state: row.input, question, label: row.output,
+  })).join('\n') + '\n'], `${split}.jsonl`, { type: 'application/x-ndjson' })])) as Record<Split, File>;
+  await validateDatasets(files);
+  return files;
 }
 
 export function assignTeachingSplits(examples: TeachingExample[]): TeachingExample[] {

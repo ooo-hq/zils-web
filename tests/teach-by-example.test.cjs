@@ -1,6 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { importTeachingExamples, inspectTeachingExamples, prepareTeachingDraft } = require('../.private/test-build/teach-by-example.js');
+const { importTeachingExamples, inspectTeachingExamples, prepareTeachingDraft, teachingTrainingFiles } = require('../.private/test-build/teach-by-example.js');
+const { validateDatasets } = require('../.private/test-build/training.js');
 
 const task = { kind: 'sort', goal: 'Route customer requests', rules: '', answers: ['Billing', 'Support'] };
 const example = (id, input, output, extras = {}) => ({ id, input, output, group: '', reviewed: true, excluded: false, source: 'Pasted example', ...extras });
@@ -64,4 +65,35 @@ test('writing and extraction preserve the reviewed answer without requiring tech
   const draft = prepareTeachingDraft({ ...task, kind: 'extract', answers: [] }, extraction, true);
   assert.equal(draft.counts.total, 3);
   assert.equal(draft.splits.test[0].output, 'Total: 42\nCurrency: USD');
+});
+
+test('live decision datasets preserve reserved splits and exclude review metadata from model input', async () => {
+  const rules = { ...task, rules: 'Route invoices to Billing.' };
+  const draft = prepareTeachingDraft(rules, examples(), true);
+  const files = await teachingTrainingFiles(draft, 'support-v1');
+  assert.deepEqual(await validateDatasets(files), { train: draft.counts.train, calibration: draft.counts.calibration, test: draft.counts.test });
+  for (const split of ['train', 'calibration', 'test']) {
+    const rows = (await files[split].text()).trim().split('\n').map(JSON.parse);
+    assert.deepEqual(rows.map(row => row.id), draft.splits[split].map(row => row.id));
+    for (const row of rows) {
+      const source = draft.splits[split].find(item => item.id === row.id);
+      assert.equal(row.state, source.input);
+      assert.equal(row.label, source.output);
+      assert.equal(row.group_id, source.group);
+      assert.equal(row.family, 'support-v1');
+      assert.deepEqual(row.question, { type: 'choice', instructions: `${rules.goal}\n${rules.rules}`, criteria: { Billing: 'Billing', Support: 'Support' } });
+      assert.ok(!('reviewed' in row) && !('source' in row) && !('rationale' in row));
+    }
+  }
+});
+
+test('live conversion rejects unsupported tasks, changed labels and crossed reserved groups', async () => {
+  const draft = prepareTeachingDraft(task, examples(), true);
+  await assert.rejects(teachingTrainingFiles({ ...draft, task: { ...task, kind: 'write' } }, 'support'), /decision/i);
+  const invalid = structuredClone(draft);
+  invalid.splits.test[0].output = 'Unrecognized';
+  await assert.rejects(teachingTrainingFiles(invalid, 'support'), /review|answer/i);
+  const crossed = structuredClone(draft);
+  crossed.splits.test[0].group = crossed.splits.train[0].group;
+  await assert.rejects(teachingTrainingFiles(crossed, 'support'), /split|case|review/i);
 });

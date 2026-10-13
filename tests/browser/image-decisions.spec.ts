@@ -97,6 +97,6 @@ test('switching owners during upload clears private state and stops prediction',
 
 test('unavailable image capability leaves text training usable', async ({ page }) => {
   await workspace(page, { disabled: true });
-  await expect(page.getByRole('button', { name: 'Train a model', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Train a model', exact: true })).toBeVisible();
   await expect(page.getByText('Test images with the starting model', { exact: true })).not.toBeVisible();
 });

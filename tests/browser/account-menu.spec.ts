@@ -45,13 +45,13 @@ test('account menu follows navigation and signing out clears both header and wor
   await page.getByRole('button', { name: 'Account', exact: true }).click();
   await expect(page.getByText('client@example.com', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Your workspace', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Train a model', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Train a model', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Account', exact: true }).click();
   await page.screenshot({ path: '.private/account-desktop.png' });
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await expect(page.locator('header').getByRole('link', { name: 'Early access', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Sign in to Zils', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Train a model', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Train a model', exact: true })).toHaveCount(0);
   await page.reload();
   await expect(page.locator('header').getByRole('link', { name: 'Early access', exact: true })).toBeVisible();
   expect(requests.filter(request => request === 'POST /auth/v1/logout')).toHaveLength(1);

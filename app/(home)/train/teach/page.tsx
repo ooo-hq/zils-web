@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { TeachByExample } from '@/components/teach-by-example';
+import { trainingConfig } from '@/lib/training-config';
 
 export const metadata: Metadata = {
   title: 'Teach a model · Zils',
@@ -9,6 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function TeachPage() {
-  if (process.env.NODE_ENV !== 'development' && process.env.VERCEL_ENV !== 'preview') notFound();
-  return <TeachByExample />;
+  return <TeachByExample config={trainingConfig()} />;
 }

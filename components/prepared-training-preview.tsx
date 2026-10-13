@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import Link from 'next/link';
+import { TeachingSubmission } from '@/components/teaching-submission';
+import type { TrainingConfig } from '@/lib/training-config';
 import { ArrowRight, CheckCheck, FileCheck2 } from 'lucide-react';
 import { acceptanceSchema, MAX_DATASET_BYTES, SPLITS, submissionSchema, validateDatasets, type Split } from '@/lib/training';
 import s from './teach-by-example.module.css';
 
 const names = {train:'Training',calibration:'Calibration',test:'Evaluation'};
-export function PreparedTrainingPreview({ onGuided }: { onGuided: () => void }) {
+export function PreparedTrainingPreview({ onGuided, config, locked = false, onLock }: { onGuided: () => void; config?: TrainingConfig | null; locked?: boolean; onLock: (locked: boolean) => void }) {
   const [files,setFiles] = useState<Partial<Record<Split,File>>>({});
   const [name,setName] = useState('');
   const [accuracy,setAccuracy] = useState('80'), [improvement,setImprovement] = useState('0.01');
@@ -28,7 +29,7 @@ export function PreparedTrainingPreview({ onGuided }: { onGuided: () => void }) 
     <div className={s.progressLine}><span>Direct training</span><span>Prepared datasets</span></div>
     <h1>Bring your data. Skip the walkthrough.</h1>
     <p className={s.intro}>Already have reviewed examples and separate test sets? Check your files and run settings here.</p>
-    <form onSubmit={validate}><fieldset disabled={busy}>
+    <form onSubmit={validate}><fieldset disabled={busy || locked}>
       <div className={s.pairFields}><div><label htmlFor="prepared-run-name">Run name</label><input id="prepared-run-name" required pattern="[a-z0-9][a-z0-9-]{0,63}" maxLength={64} placeholder="support-routing-v1" value={name} onChange={event => {setName(event.target.value);invalidate();}} /></div><div className={s.preparedModel}><span>Training type</span><strong>Text decisions</strong><small>The connected training service selects the starting model.</small></div></div>
       <div className={s.preparedFiles}>{SPLITS.map(split => <div key={split}><FileCheck2 size={19} /><label htmlFor={`prepared-${split}`}>{names[split]} dataset</label><p>{split === 'train' ? 'Examples the model learns from.' : split === 'calibration' ? 'Independent confidence checks.' : 'Unseen cases for the final test.'}</p><input id={`prepared-${split}`} type="file" accept=".jsonl,.ndjson" required={!files[split]} onChange={event => { const file=event.target.files?.[0]; setFiles(previous => ({...previous,[split]:file})); invalidate(); if(file && file.size > MAX_DATASET_BYTES) setError(`${names[split]}: choose a file smaller than 128 MiB.`); }} /><small>{files[split]?.name || 'JSONL / NDJSON · Up to 128 MiB'}</small></div>)}</div>
       <details className={s.details}><summary>Prepared dataset format</summary><p className={s.hint}>One reviewed case per line, with id, group_id, family, state, question, and label. IDs must be unique. Related cases and identical prompts must stay within one dataset.</p><pre className={s.formatExample}>{'{"id":"case-1","group_id":"ticket-1","family":"routing","state":{"message":"Send my invoice"},"question":{"type":"choice","criteria":{"billing":"Payments","support":"Product issues"}},"label":"billing"}'}</pre><button type="button" className={s.textButton} onClick={onGuided}>Have CSV, Excel, or JSON? Prepare examples with the guided flow.</button></details>
@@ -40,9 +41,7 @@ export function PreparedTrainingPreview({ onGuided }: { onGuided: () => void }) 
     {counts && <section aria-label="Prepared run review" className={s.preparedReview}>
       <div className={s.ready} role="status"><CheckCheck size={21} /><div><strong>Your files pass the dataset checks.</strong><p>Format, labels, source groups, and overlap checked. This does not measure model quality or verify the answers themselves.</p></div></div>
       <div className={s.splitOverview}>{SPLITS.map(split => <div key={split}><strong>{counts[split]}</strong><span>{names[split]} examples</span></div>)}</div>
-      <dl className={s.runSummary}><div><dt>Run</dt><dd>{name}</dd></div><div><dt>Minimum accuracy</dt><dd>{accuracy}%</dd></div><div><dt>Minimum Brier improvement</dt><dd>{improvement}</dd></div><div><dt>Price and starting model</dt><dd>Available when connected to training</dd></div></dl>
-      <p className={s.hint}>This local preview stops before sign-in, pricing, and job submission. Opening the training dashboard does not transfer these files or start a run.</p>
-      <Link className={s.secondary} href="/train" target="_blank" rel="noreferrer">Open training dashboard <ArrowRight size={15} /></Link>
+      <TeachingSubmission config={config} onLock={onLock} initialName={name} initialAccuracy={accuracy} initialImprovement={improvement} prepare={async () => ({ kind: 'text', files: files as Record<Split, File> })} />
     </section>}
   </section>;
 }
