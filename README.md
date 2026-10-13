@@ -382,7 +382,9 @@ service requests; passing them does not establish a completed live training run.
 
 ### Bulk import and upload recovery
 
-“Bulk import” on `/train/teach` opens `/train?setup=bulk` and the existing side
+On `/train/teach`, “Import labeled examples” appears inside “I have training
+data,” alongside prepared datasets; “Import labeled photos” appears inside
+“Images.” Both open `/train?setup=bulk` and the existing side
 panel with four steps: Decision, Data, Review, and Ready. Closing the panel keeps
 the draft in memory; “Continue bulk import” reopens it. The workspace header has
 one “Train a model” entry point. Interrupted runs retain their “Resume missing

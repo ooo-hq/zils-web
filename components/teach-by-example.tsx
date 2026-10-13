@@ -180,7 +180,6 @@ export function TeachByExample({ config }: { config?: TrainingConfig | null }) {
       </aside>
       <main className={s.main} id="main-content">
         <div className={s.entryPaths} aria-label="Choose your starting point"><button type="button" disabled={locked} aria-pressed={path === 'guided'} onClick={() => setPath('guided')}>Guide me</button><button type="button" disabled={locked} aria-pressed={path === 'prepared'} onClick={() => setPath('prepared')}>I have training data</button><button type="button" disabled={locked} aria-pressed={path === 'images'} onClick={() => setPath('images')}>Images</button></div>
-        {config && !locked && <p className={s.hint}><Link href="/train?setup=bulk" className={s.textButton}>Bulk import</Link> for larger spreadsheets or batches of labeled photos.</p>}
         <div hidden={path !== 'prepared'}><PreparedTrainingPreview config={config} locked={locked} onLock={setLocked} onGuided={() => { setPath('guided'); setMode('file'); go(0); }} /></div>
         <div hidden={path !== 'images'}><TeachingImages config={config} locked={locked} onLock={setLocked} onDocuments={() => {setPath('guided');if(!examples.length)selectStarter('extract');setMode('documents');go(1);}} /></div>
         <div hidden={path !== 'guided'}>

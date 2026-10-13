@@ -33,7 +33,11 @@ for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,fa
     if(path.endsWith('/submit')) return route.fulfill({headers,json:{job:{...job(),status:'validating'}}});
     return route.fulfill({status:404,headers,json:{}});
   });
-  await page.goto('/train/teach');await page.getByRole('link',{name:'Bulk import',exact:true}).click();await page.getByRole('button',{name:'Images',exact:true}).click();
+  await page.goto('/train/teach');
+  await page.getByRole('button',{name:'Images',exact:true}).click();
+  await expect(page.getByRole('link',{name:'Import labeled examples',exact:true})).not.toBeVisible();
+  await page.getByRole('region',{name:'Image teaching',exact:true}).getByRole('link',{name:'Import labeled photos',exact:true}).click();
+  await page.getByRole('button',{name:'Images',exact:true}).click();
   await expect(page.getByLabel('Training photos',{exact:true})).toHaveCount(0);
   await page.getByLabel('Image training decision',{exact:true}).fill('Is the item damaged?');
   await page.getByLabel('Image training answers',{exact:true}).fill('Normal\nDamaged');

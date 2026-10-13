@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import Link from 'next/link';
 import { TeachingSubmission } from '@/components/teaching-submission';
 import type { TrainingConfig } from '@/lib/training-config';
 import { ArrowRight, CheckCheck, FileCheck2 } from 'lucide-react';
@@ -29,6 +30,7 @@ export function PreparedTrainingPreview({ onGuided, config, locked = false, onLo
     <div className={s.progressLine}><span>Direct training</span><span>Prepared datasets</span></div>
     <h1>Bring your data. Skip the walkthrough.</h1>
     <p className={s.intro}>Already have reviewed examples and separate test sets? Check your files and run settings here.</p>
+    {config && !locked && <p className={s.intro}><Link href="/train?setup=bulk" className={s.textButton}>Import labeled examples</Link> from CSV, Excel, JSON, or JSONL (up to 20,000 examples).</p>}
     <form onSubmit={validate}><fieldset disabled={busy || locked}>
       <div className={s.pairFields}><div><label htmlFor="prepared-run-name">Run name</label><input id="prepared-run-name" required pattern="[a-z0-9][a-z0-9-]{0,63}" maxLength={64} placeholder="support-routing-v1" value={name} onChange={event => {setName(event.target.value);invalidate();}} /></div><div className={s.preparedModel}><span>Training type</span><strong>Text decisions</strong><small>The connected training service selects the starting model.</small></div></div>
       <div className={s.preparedFiles}>{SPLITS.map(split => <div key={split}><FileCheck2 size={19} /><label htmlFor={`prepared-${split}`}>{names[split]} dataset</label><p>{split === 'train' ? 'Examples the model learns from.' : split === 'calibration' ? 'Independent confidence checks.' : 'Unseen cases for the final test.'}</p><input id={`prepared-${split}`} type="file" accept=".jsonl,.ndjson" required={!files[split]} onChange={event => { const file=event.target.files?.[0]; setFiles(previous => ({...previous,[split]:file})); invalidate(); if(file && file.size > MAX_DATASET_BYTES) setError(`${names[split]}: choose a file smaller than 128 MiB.`); }} /><small>{files[split]?.name || 'JSONL / NDJSON · Up to 128 MiB'}</small></div>)}</div>

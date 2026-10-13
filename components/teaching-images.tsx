@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import {useEffect,useRef,useState} from 'react';
 import {ArrowRight,CheckCheck,Images,Upload} from 'lucide-react';
 import {mapImageExamples,prepareImageTraining} from '@/lib/image-training';
@@ -66,6 +67,7 @@ export function TeachingImages({onDocuments,config,locked=false,onLock}:{onDocum
     <div className={s.progressLine}><span>Image training</span><span>Imajev · Review before uploading</span></div>
     <h1>Show the model what to look for.</h1>
     <p className={s.intro}>Bring photos and their correct answers. Teach a visual decision, such as whether an item is normal or damaged.</p>
+    {config && !locked && <p className={s.intro}><Link href="/train?setup=bulk" className={s.textButton}>Import labeled photos</Link> for larger batches with a labels CSV.</p>}
     <fieldset disabled={busy||locked}>
       <div className={s.pairFields}><div><label htmlFor="image-teaching-question">What should the model decide?</label><textarea id="image-teaching-question" rows={3} maxLength={3000} placeholder="Is this package normal or damaged?" value={question} onChange={event=>{setQuestion(event.target.value);changed();}} /></div><div><label htmlFor="image-teaching-answers">Possible answers</label><textarea id="image-teaching-answers" rows={3} maxLength={1616} value={answers} onChange={event=>{setAnswers(event.target.value);changed();}} /><p className={s.hint}>One answer per line. Use 2–16 different answers.</p></div></div>
       <div className={s.dropzone} data-loaded={Boolean(rows.length)} onDragOver={event=>event.preventDefault()} onDrop={event=>{event.preventDefault();void choose(Array.from(event.dataTransfer.files));}}>
