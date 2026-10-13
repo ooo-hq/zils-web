@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowRight, Ban, Calendar, Check, ChevronRight, Clock, Inbox, Mail, Play, RotateCcw, ShieldCheck, Trophy, UserRound } from 'lucide-react';
+import { ArrowRight, Ban, Calendar, Check, ChevronRight, Clock, Inbox, Mail, Play, RotateCcw, ShieldCheck, ShoppingBag, Trophy, UserRound } from 'lucide-react';
 import s from './bitcast-examples.module.css';
+import { OroDemo, OroStudyDetails } from './oro-examples';
+import { oroExamples } from '@/lib/oro-examples';
 
 type Verdict = 'pass' | 'fail';
 type Example = {
@@ -19,8 +21,9 @@ type ExamplesData = {
   replies: Reply[];
   chess: { examples: Position[]; scores: { trained: number; shared: number; jev: number }; total: number };
 };
-type Demo = 'content' | 'inbox' | 'chess';
+type Demo = 'oro' | 'content' | 'inbox' | 'chess';
 const demos = [
+  { key: 'oro', name: 'Guide a shopper', description: 'Test whether it asks the right question', icon: ShoppingBag },
   { key: 'chess', name: 'Play a move', description: 'A mate Zils finds and JEV misses', icon: Trophy },
   { key: 'content', name: 'Review content', description: 'Approve the right posts', icon: ShieldCheck },
   { key: 'inbox', name: 'Sort an inbox', description: 'Turn replies into next steps', icon: Inbox },
@@ -153,19 +156,21 @@ function ChessPosition({ position, index, total, onNext }: { position: Position;
 }
 
 export function BitcastExamples({ data }: { data: ExamplesData }) {
-  const [demo, setDemo] = useState<Demo>('chess');
-  const result = demo === 'content'
+  const [demo, setDemo] = useState<Demo>('oro');
+  const result = demo === 'oro'
+    ? { correct: oroExamples.scores.zils, jev: oroExamples.scores.jev, before: null, total: oroExamples.total, title: 'label matches', unit: 'decisions', caveat: 'A small synthetic disclosure pilot: 60 message/rule pairs, with three correlated decisions each. No shopping sessions were run.', scores: [{ name: 'Zils', note: 'Trained H2O Lightning 4B adapter', matches: oroExamples.scores.zils, total: oroExamples.total }, { name: 'TypeSafe JEV', note: 'Live API run · jev-1.13.0', matches: oroExamples.scores.jev, total: oroExamples.total }] }
+    : demo === 'content'
     ? { correct: 139, jev: 132, before: 116, total: 155, title: 'label matches', unit: 'posts', caveat: 'Agreement with Bitcast’s automated labels on reused development posts.', scores: data.scores }
     : demo === 'inbox'
       ? { correct: 93, jev: 96, before: 86, total: 100, title: 'correct replies', unit: 'replies', caveat: 'Against the supplied labels on a reused synthetic test. All 15 opt-outs recognized; one false opt-out.', scores: [{ name: 'Zils', note: 'After task training', matches: 93, total: 100 }, { name: 'TypeSafe JEV', note: 'Supplied results', matches: 96, total: 100 }, { name: 'Luna 6', note: 'Supplied results', matches: 89, total: 100 }, { name: 'Zils before training', note: 'Without task training', matches: 86, total: 100 }] }
       : { correct: data.chess.scores.trained, jev: data.chess.scores.jev, before: data.chess.scores.shared, total: data.chess.total, title: 'winning moves', unit: 'positions', caveat: 'One-move selection among legal checks. This measures a narrow puzzle task, not full-game playing strength.', scores: [{ name: 'Zils', note: 'Chess adapter from October 7', matches: data.chess.scores.trained, total: data.chess.total }, { name: 'TypeSafe JEV', note: 'Recorded study results', matches: data.chess.scores.jev, total: data.chess.total }, { name: 'Zils before training', note: 'Without chess training', matches: data.chess.scores.shared, total: data.chess.total }] };
   return <main id="main-content" tabIndex={-1} className={s.page}>
-    <header className={s.intro}><div><h1>See what Zils decides.</h1><p>Find a winning move. Review a post. Sort a reply.<br className={s.desktopBreak} /> Small models, trained for the decisions your app makes.</p></div><span className={s.preview}>Recorded results</span></header>
+    <header className={s.intro}><div><h1>See what Zils decides.</h1><p>Guide a shopper. Find a winning move. Review a post.<br className={s.desktopBreak} /> Small models, trained for the decisions your app makes.</p></div><span className={s.preview}>Recorded results</span></header>
     <nav className={s.demoTabs} aria-label="Choose a demo">{demos.map(({ key, name, description, icon: Icon }) => <button type="button" key={key} aria-pressed={demo === key} aria-controls="decision-demo" onClick={() => setDemo(key)}><Icon size={22} /><span><strong>{name}</strong><span>{description}</span></span><ChevronRight size={17} /></button>)}</nav>
     <section id="decision-demo" aria-label={`${demos.find(row => row.key === demo)!.name} example`} className={s.demo} key={demo}>
-      {demo === 'content' ? <ContentDemo examples={data.examples} /> : demo === 'inbox' ? <InboxDemo replies={data.replies} /> : <ChessDemo positions={data.chess.examples} />}
+      {demo === 'oro' ? <OroDemo /> : demo === 'content' ? <ContentDemo examples={data.examples} /> : demo === 'inbox' ? <InboxDemo replies={data.replies} /> : <ChessDemo positions={data.chess.examples} />}
     </section>
-    <p className={s.replayNote}>Recorded decisions, with selected Zils wins first. The results below cover the full test, including mistakes.</p>
+    <p className={s.replayNote}>{demo === 'oro' ? 'Three recorded examples: start with a direct question, then try a quoted question.' : 'Recorded decisions, with selected Zils wins first.'} The results below cover the full test, including mistakes.</p>
     <section className={s.results} aria-labelledby="results-heading">
       <div className={s.resultsHeading}><h2 id="results-heading">Zils and JEV, across the full test.</h2><p>{result.caveat}</p></div>
       <div className={s.scoreStrip}>
@@ -173,9 +178,9 @@ export function BitcastExamples({ data }: { data: ExamplesData }) {
         <div><span className={s.scoreLabel}>TypeSafe JEV</span><strong>{(100 * result.jev / result.total).toFixed(1)}<span>%</span></strong><p>{result.jev}/{result.total} {result.title}</p></div>
         <div><span className={s.scoreLabel}>The difference</span><strong>+{Math.abs(result.correct - result.jev)}</strong><p>More {result.title} for {result.correct >= result.jev ? 'Zils' : 'JEV'}</p></div>
       </div>
-      <p className={s.trainingGain}>Training improved Zils from {result.before}/{result.total} to {result.correct}/{result.total} on this test.</p>
+      <p className={s.trainingGain}>{result.before === null ? <>Zils was trained on {oroExamples.training} synthetic disclosure decisions. An untrained baseline was not measured.</> : <>Training improved Zils from {result.before}/{result.total} to {result.correct}/{result.total} on this test.</>}</p>
       <details className={s.studyDetails} key={demo}><summary>Compare scores and read study details</summary><div className={s.studyBody}><table className={s.scoreTable}><caption>All {result.total} {result.unit} in this test</caption><thead><tr><th scope="col">Model</th><th scope="col">Matches</th><th scope="col">{demo === 'content' ? 'Agreement' : 'Accuracy'}</th></tr></thead><tbody>{result.scores.map(row => <tr key={row.name}><th scope="row">{row.name}<span>{row.note}</span></th><td>{row.matches}/{row.total}</td><td>{(100 * row.matches / row.total).toFixed(1)}%</td></tr>)}</tbody></table>
-        {demo === 'content' ? <p>486 training posts, 159 calibration posts and 155 development posts, with campaign groups kept separate. Reference labels came from Qwen3-32B and can be wrong. This pilot used an 80% campaign-relevance rule; the development set had been used before. Private holdout testing and human review remain needed. Zils minus JEV: +4.52 percentage points, descriptive 95% interval +0.72 to +8.97. JEV verdicts were supplied, with no exact model version or fresh API run.</p> : demo === 'inbox' ? <p>294 authored training examples, 60 separate calibration cases, and 100 synthetic reserve replies. This set had been evaluated before. Zils scored 93/100 on all three passes. JEV and Luna results were supplied; JEV scored three cases higher. Zils’s seven errors all had high confidence. The dataset’s labels have not been independently reviewed.</p> : <p>2,048 training positions and 512 test positions from separate source games. One chess adapter, one training seed. All legal checking moves were offered; any immediate mate received credit. Full-game strength was not tested. An exact chess-rules engine solves 100% of these positions.</p>}
+        {demo === 'oro' ? <OroStudyDetails /> : demo === 'content' ? <p>486 training posts, 159 calibration posts and 155 development posts, with campaign groups kept separate. Reference labels came from Qwen3-32B and can be wrong. This pilot used an 80% campaign-relevance rule; the development set had been used before. Private holdout testing and human review remain needed. Zils minus JEV: +4.52 percentage points, descriptive 95% interval +0.72 to +8.97. JEV verdicts were supplied, with no exact model version or fresh API run.</p> : demo === 'inbox' ? <p>294 authored training examples, 60 separate calibration cases, and 100 synthetic reserve replies. This set had been evaluated before. Zils scored 93/100 on all three passes. JEV and Luna results were supplied; JEV scored three cases higher. Zils’s seven errors all had high confidence. The dataset’s labels have not been independently reviewed.</p> : <p>2,048 training positions and 512 test positions from separate source games. One chess adapter, one training seed. All legal checking moves were offered; any immediate mate received credit. Full-game strength was not tested. An exact chess-rules engine solves 100% of these positions.</p>}
         <p>Each example uses its task-specific Zils adapter. These studies do not establish production reliability. The research adapters shown here have not been deployed.</p></div></details>
     </section>
     <a className={s.researchLink} href="/model">Explore the research <ArrowRight size={16} /></a>

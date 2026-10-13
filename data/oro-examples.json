@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-13",
+  "source": "https://github.com/ORO-AI/oro/tree/5753a1283dbe38f6b3620e67ee0621583363050c",
+  "provenance": {
+    "scope": "Authored synthetic messages; recorded model probabilities; derived first-turn actions. No shopper session executed.",
+    "zilsModel": "h2o-lightning-4b-v1.2.3",
+    "jevModel": "jev-1.13.0",
+    "calibrationTemperature": 2.9281713918912504,
+    "resultsSha256": "62a817c60682504e1396c7c33955986a6356ae28967caab32ba3e498fc1b37da"
+  },
+  "training": 720,
+  "calibration": 60,
+  "total": 180,
+  "pairs": 60,
+  "scores": {
+    "zils": 180,
+    "jev": 173
+  },
+  "actions": {
+    "zils": 60,
+    "jev": 58
+  },
+  "questions": {
+    "facet:need": "Does `message` ask the shopper about this: The message puts a direct question to the shopper about what they will use the item for, or about the pattern they need (a bare list of attribute names is not such a question).",
+    "all": "Does `message` ask the shopper about several different attributes or needs in one message (such as a list of specs to fill in, or all of their needs or preferences at once), rather than asking about one thing? Asking which of two things matters more is asking about one thing.",
+    "asks": "Does `message` ask the shopper anything: a question, or a request to tell, choose or confirm something?"
+  },
+  "cases": [
+    {
+      "id": "test-01-01",
+      "title": "1. Ask the shopper directly",
+      "message": "To narrow these down, is there a particular pattern you require?",
+      "explanation": "Both models let the shopper answer the question. The assistant now knows to look for stripes. Next, try a quote: it contains a question, but nobody is asking this shopper.",
+      "expected": {
+        "facet:need": true,
+        "all": false,
+        "asks": true
+      },
+      "zils": {
+        "facet:need": 0.9669029277340998,
+        "all": 0.02078329864870706,
+        "asks": 0.9655674869856298
+      },
+      "jev": {
+        "facet:need": 0.93,
+        "all": 0.15,
+        "asks": 0.98
+      }
+    },
+    {
+      "id": "test-27-01",
+      "title": "2. Quote someone else’s question",
+      "message": "A customer review reads: \"What will you use it for? That was the first thing the seller asked me.\"",
+      "explanation": "JEV gives the assistant an answer it never asked this shopper for. In a shopping test, that extra clue could make an assistant look better than it is. Zils keeps the answer hidden in this example.",
+      "expected": {
+        "facet:need": false,
+        "all": false,
+        "asks": false
+      },
+      "zils": {
+        "facet:need": 0.038007909664448045,
+        "all": 0.025681236744995024,
+        "asks": 0.04254271727734961
+      },
+      "jev": {
+        "facet:need": 0.77,
+        "all": 0.04,
+        "asks": 0.54
+      }
+    },
+    {
+      "id": "test-19-01",
+      "title": "3. Ask two questions at once",
+      "message": "Please answer both questions: which pattern is needed, and what is your spending limit?",
+      "explanation": "Both models ask the assistant to slow down. ORO’s rule is one thing at a time, so the shopper waits before sharing its preference.",
+      "expected": {
+        "facet:need": true,
+        "all": true,
+        "asks": true
+      },
+      "zils": {
+        "facet:need": 0.9535916475237433,
+        "all": 0.9608768420322207,
+        "asks": 0.9639910460979927
+      },
+      "jev": {
+        "facet:need": 0.9,
+        "all": 0.95,
+        "asks": 0.99
+      }
+    }
+  ]
+}
