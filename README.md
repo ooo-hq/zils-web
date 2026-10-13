@@ -380,10 +380,14 @@ configuration it remains a local preparation UI. Its optional assisted-review
 API is still restricted to development and previews. Browser tests intercept all
 service requests; passing them does not establish a completed live training run.
 
-### Classic setup and upload recovery
+### Bulk import and upload recovery
 
-“Classic setup” retains the side panel with four steps: Decision, Data, Review,
-and Ready. The panel fills the screen on mobile. The following limits and controls
+“Bulk import” on `/train/teach` opens `/train?setup=bulk` and the existing side
+panel with four steps: Decision, Data, Review, and Ready. Closing the panel keeps
+the draft in memory; “Continue bulk import” reopens it. The workspace header has
+one “Train a model” entry point. Interrupted runs retain their “Resume missing
+uploads” and “Continue image setup” actions independently of bulk import.
+The panel fills the screen on mobile. The following limits and controls
 describe that existing flow; the new guided page currently limits preparation to
 500 text examples or 120 photos.
 

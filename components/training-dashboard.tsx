@@ -31,7 +31,7 @@ type Config = { assistantConfigured?: boolean; storage: StorageLocations; url: s
 const message = (error: unknown) => error instanceof Error ? error.message : 'Something went wrong. Please try again.';
 const metric = (value: number | undefined, percent = false) => value === undefined ? '—' : percent ? `${(value * 100).toFixed(2)}%` : value.toFixed(4);
 
-export function TrainingDashboard({ config, runId }: { config: Config; runId?: string }) {
+export function TrainingDashboard({ config, runId, bulkImport = false }: { config: Config; runId?: string; bulkImport?: boolean }) {
   const { client, session, error: sessionError } = useAuthSession(config);
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -72,7 +72,7 @@ export function TrainingDashboard({ config, runId }: { config: Config; runId?: s
   return <>
     {(error || sessionError) && <p role="alert" className={styles.error}>{error || sessionError}</p>}
     {session && client ? <div id="training-workspace">
-      <SignedInDashboard key={`${session.user.id}:${runId || "index"}`} runId={runId} owner={session.user.id} client={client} config={config} onExpired={signOut} />
+      <SignedInDashboard key={`${session.user.id}:${runId || (bulkImport ? "bulk" : "index")}`} runId={runId} bulkImport={bulkImport} owner={session.user.id} client={client} config={config} onExpired={signOut} />
     </div> : <>
       <div className={styles.workspaceHeading}><h1>Training</h1><p>Teach Zils a decision using examples your team has reviewed.</p></div>
       <section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}>
@@ -93,7 +93,7 @@ export function TrainingDashboard({ config, runId }: { config: Config; runId?: s
   </>;
 }
 
-function SignedInDashboard({ owner, client, config, onExpired, runId }: { runId?: string; owner: string; client: SupabaseClient; config: Config; onExpired: () => Promise<void> }) {
+function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport }: { runId?: string; bulkImport: boolean; owner: string; client: SupabaseClient; config: Config; onExpired: () => Promise<void> }) {
   const [intakeMode, setIntakeMode] = useState<'choose' | 'text' | 'images'>('choose');
   const [imagesAvailable, setImagesAvailable] = useState(false);
   const [imageProfile, setImageProfile] = useState<ImageModels['training_profile']>();
@@ -112,7 +112,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId }: { runId?
   }, [config.decisionApiUrl, config.storage, imageToken]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [availableModels, setAvailableModels] = useState<Job[]>([]);
-  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(bulkImport);
   const [downloadJobId, setDownloadJobId] = useState('');
   const focusSubmitted = useRef(false);
   const [loading, setLoading] = useState(true);
@@ -313,9 +313,10 @@ function SignedInDashboard({ owner, client, config, onExpired, runId }: { runId?
       <div className={styles.workspaceActions}>
         <Link href="/billing#usage" className={styles.secondary}>Usage & billing</Link>
         <ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={onExpired} />
-        {!runId && <><SheetTrigger asChild><button className={styles.textButton} disabled={busy}>Classic setup</button></SheetTrigger><Link className={styles.button} href="/train/teach"><Plus size={16} aria-hidden="true" />Train a model</Link></>}
+        {!runId && <Link className={styles.button} href="/train/teach"><Plus size={16} aria-hidden="true" />Train a model</Link>}
       </div>
     </div>
+    {bulkImport && <p className={styles.notice}><SheetTrigger asChild><button className={styles.textButton} disabled={busy}>Continue bulk import</button></SheetTrigger> · Import a spreadsheet, prepared datasets, or labeled photos.</p>}
     {process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && <p className={styles.notice}>Billing test preview. Submitting a standard run reserves one included run or $2 in test credit. <Link href="/billing" className={styles.textButton}>View credit and billing</Link>.</p>}
     {error && <p className={styles.error} role="alert">{error}{needsCredit && <> <Link href="/billing" className={styles.textButton}>Add credit</Link>.</>}</p>}
     {progress && <p role="status" className={styles.notice}>{progress}</p>}
@@ -341,7 +342,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId }: { runId?
     </div>
     {!runId && imagesAvailable && config.decisionApiUrl && <details className={imageStyles.stockTest}><summary>Test images with the starting model</summary><p>Try a batch or a single photo. For a trained model, choose View model above.</p><ImageDecisionPanel owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storage={config.storage} /></details>}
     {intakeMode === 'choose' && <SheetContent className={`${styles.page} ${styles.trainingSheet}`}>
-      <div className={styles.sheetHeader}><SheetTitle>Train a model</SheetTitle><SheetDescription>Start with one decision. We’ll guide you through the rest.</SheetDescription></div>
+      <div className={styles.sheetHeader}><SheetTitle>Bulk import</SheetTitle><SheetDescription>Bring existing examples and review them before training.</SheetDescription></div>
       <div className={`${styles.sheetBody} ${onboardingStyles.chooserBody}`}><h3 className={styles.stepTitle}>What will your model learn from?</h3><p className={onboardingStyles.intro}>Choose the examples you have. Both paths help you define a decision, review your data and test a trained model.</p>
         <div className={onboardingStyles.typeChoices}>
           <button type="button" aria-label="Text examples" className={onboardingStyles.typeChoice} onClick={() => setIntakeMode('text')}><MessageSquareText className={onboardingStyles.typeIcon} size={26} aria-hidden="true" /><span><strong>Text examples</strong><span>Route tickets, classify feedback, or make decisions from written information.</span><small>Bring an Excel spreadsheet or CSV</small></span><ArrowRight size={18} aria-hidden="true" /></button>

@@ -83,6 +83,34 @@ async function consent(page: Page) {
   await page.getByLabel('I am authorized to share these examples.', { exact: false }).check();
 }
 
+test('saved text uploads recover from the run page without classic setup', async ({ page }) => {
+  const { state } = await workspace(page, { failUpload: true });
+  await prepared(page);
+  await consent(page);
+  await page.getByRole('button', { name: 'Start training', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Submit training run' }).getByRole('alert')).toBeVisible();
+  const original: Record<string, string> = {};
+  for (const split of splits) {
+    const download = page.waitForEvent('download');
+    await page.getByRole('button', { name: `Download ${split}.jsonl`, exact: true }).click();
+    original[split] = await readFile((await (await download).path())!, 'utf8');
+  }
+  await page.goto(`/train?run=${jobId}`);
+  await expect(page.getByRole('button', { name: 'Classic setup', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Resume missing uploads', exact: true }).click();
+  await page.getByRole('button', { name: 'Use prepared files', exact: true }).click();
+  for (const split of splits) {
+    await page.locator(`#dataset-${split}`).setInputFiles({ name: `${split}.jsonl`, mimeType: 'application/x-ndjson', buffer: Buffer.from(original[split]) });
+  }
+  await page.getByRole('button', { name: 'Close training setup', exact: true }).click();
+  await page.getByRole('button', { name: 'Resume missing uploads', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Resume missing uploads', exact: true })).toHaveCount(0);
+  expect(state.creates).toBe(1);
+  expect(state.submits).toBe(1);
+  expect(state.putAttempts).toEqual(['train', 'calibration', 'calibration', 'test']);
+  expect(state.uploads).toEqual(original);
+});
+
 for (const recover of [false, true]) test(`reviewed examples submit without leaking metadata, with recovery (${recover})`, async ({ page }) => {
   const { state, created } = await workspace(page, { failUpload: recover });
   await page.goto('/train');
