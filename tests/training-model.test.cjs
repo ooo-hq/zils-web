@@ -5,21 +5,37 @@ const { jobSchema, downloadFiles, trainingApi } = require('../.private/test-buil
 const job = { id: '3a752a1b-8857-4822-9b13-c7d283e0dd54', name: 'routing', status: 'completed', result: { delivery: { status: 'accepted', acceptance: { min_accuracy: 0.8, min_brier_improvement: 0.01 } }, baseline: { accuracy: 1, brier: 0.1, skill: 0.9 }, miners: [], weights: {} } };
 const model = { id: 'jevk5-4b-v0.3', name: 'JevK5 4B', base: 'alibiserikbay/JevK5', base_revision: 'c4f7fdb3aeab5582336406e78d3bef11bf98833d' };
 
+const h2oModel = { id: 'h2o-lightning-4b-v1.2.3', name: 'H2O Lightning 4B', base: 'h2oai/h2o-lightning-4b', base_revision: 'acaf0d4ea251e54de928c75ef4352670d33192d3' };
+
 test('preserves per-job model identity and supports old jobs without it', () => {
-  assert.deepEqual(jobSchema.parse({ ...job, model }).model, model);
+  for (const currentModel of [model, h2oModel]) {
+    const parsed = jobSchema.parse({ ...job, model: currentModel });
+    assert.deepEqual(parsed.model, currentModel);
+    assert.deepEqual(downloadFiles(parsed), ['adapter_config.json', 'adapter_model.safetensors', 'model.json', 'release.json']);
+  }
   assert.ok(downloadFiles(jobSchema.parse(job)).includes('head.pt'));
   assert.ok(downloadFiles(jobSchema.parse({ ...job, model })).includes('model.json'));
   assert.equal(jobSchema.safeParse({ ...job, model: { ...model, id: 'unrecognized-model' } }).success, false);
 });
 
-test('only downloads the expected files for the job model', async () => {
-  const current = { ...job, model };
-  let names = downloadFiles(current);
-  const api = trainingApi('https://training.example', { legacyOrigin: 'https://storage.example' }, async () => 'fixture-token', async () => new Response(JSON.stringify({ downloads: Object.fromEntries(names.map(name => [name, { url: `https://storage.example/storage/v1/object/sign/fez-training-models/${job.id}/releases/11111111-1111-4111-8111-111111111111/${name}` }])) }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
-  assert.deepEqual((await api.downloads(current)).map(file => file.name), names);
-  names = downloadFiles(job);
-  await assert.rejects(api.downloads(current), /does not match/);
+test('loads H2O jobs in the run list and job detail', async () => {
+  const current = { ...job, model: h2oModel };
+  const listing = { jobs: [job, current], models: [current] };
+  const api = trainingApi('https://training.example', { legacyOrigin: 'https://storage.example' }, async () => 'fixture-token', async url => Response.json(url.endsWith(`/${job.id}`) ? { job: current } : listing));
+  assert.deepEqual(await api.list(), listing);
+  assert.deepEqual(await api.get(job.id), { job: current });
 });
+
+for (const currentModel of [model, h2oModel]) {
+  test(`${currentModel.id} only downloads the expected text adapter files`, async () => {
+    const current = { ...job, model: currentModel };
+    let names = ['adapter_config.json', 'adapter_model.safetensors', 'model.json', 'release.json'];
+    const api = trainingApi('https://training.example', { legacyOrigin: 'https://storage.example' }, async () => 'fixture-token', async () => new Response(JSON.stringify({ downloads: Object.fromEntries(names.map(name => [name, { url: `https://storage.example/storage/v1/object/sign/fez-training-models/${job.id}/releases/11111111-1111-4111-8111-111111111111/${name}` }])) }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+    assert.deepEqual((await api.downloads(current)).map(file => file.name), names);
+    names = ['adapter_config.json', 'adapter_model.safetensors', 'head.pt', 'release.json'];
+    await assert.rejects(api.downloads(current), /does not match/);
+  });
+}
 
 const imageModel = { ...model, id: 'imajev-4b-v1', name: 'Imajev 4B' };
 const imagePolicy = { min_accuracy: .8, min_brier_improvement: .01, positive_class: 'damaged', min_positive_recall: .9, max_false_positive_rate: .1 };

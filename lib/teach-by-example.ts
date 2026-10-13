@@ -1,18 +1,20 @@
 import { splitGroups, type ColumnMapping, type CsvData } from './training-csv';
 
 export type TeachingTask = { kind: 'sort' | 'write' | 'extract'; goal: string; rules: string; answers: string[] };
-export type TeachingExample = { id: string; input: string; output: string; group: string; reviewed: boolean; excluded: boolean; source: string };
+export type TeachingSplit = 'train' | 'calibration' | 'test';
+export type TeachingExample = { id: string; input: string; output: string; group: string; reviewed: boolean; excluded: boolean; source: string; rationale?: string; split?: TeachingSplit };
+export type TeachingPrediction = { id: string; choice: string; probabilities: Record<string, number> };
 
 export function importTeachingExamples(data: CsvData, mapping: ColumnMapping, source: string): TeachingExample[] {
-  if (!mapping.inputs.length || !mapping.answer || [...mapping.inputs, mapping.answer, ...(mapping.group ? [mapping.group] : [])].some(field => !data.headers.includes(field))) throw new Error('Choose the information and the correct-answer columns.');
-  if (mapping.inputs.includes(mapping.answer) || mapping.inputs.includes(mapping.group) || mapping.answer === mapping.group) throw new Error('Keep answers and case references separate from the information the model receives.');
+  if (!mapping.inputs.length || [...mapping.inputs, ...(mapping.answer ? [mapping.answer] : []), ...(mapping.group ? [mapping.group] : [])].some(field => !data.headers.includes(field))) throw new Error('Choose the information columns and, if available, the correct-answer column.');
+  if (mapping.inputs.includes(mapping.answer) || mapping.inputs.includes(mapping.group) || (mapping.answer && mapping.answer === mapping.group)) throw new Error('Keep answers and case references separate from the information the model receives.');
   if (data.rows.length > 500) throw new Error('This local preview supports 500 examples. Choose a smaller sample.');
   const inputIndices = mapping.inputs.map(field => data.headers.indexOf(field));
   const answerIndex = data.headers.indexOf(mapping.answer), groupIndex = data.headers.indexOf(mapping.group);
   return data.rows.map((row, index) => ({
     id: crypto.randomUUID(),
     input: inputIndices.map((column, i) => mapping.inputs.length === 1 ? row[column] : `${mapping.inputs[i]}: ${row[column]}`).join('\n'),
-    output: row[answerIndex], group: groupIndex < 0 ? '' : row[groupIndex],
+    output: answerIndex < 0 ? '' : row[answerIndex], group: groupIndex < 0 ? '' : row[groupIndex],
     reviewed: false, excluded: false, source: `${source} · row ${data.sourceRows?.[index] ?? index + 2}`,
   }));
 }
@@ -60,7 +62,58 @@ export function prepareTeachingDraft(task: TeachingTask, examples: TeachingExamp
     group.rows.push({ ...example, input: example.input.trim(), output: example.output.trim(), group: id, label });
     group.labels.add(label); groups.set(id, group);
   }
-  const splits = splitGroups([...groups.values()], task.kind === 'sort' ? task.answers : ['example']);
+  const frozen = examples.some(row => row.split);
+  const splits = frozen ? { train: [] as (TeachingExample & { label: string })[], calibration: [] as (TeachingExample & { label: string })[], test: [] as (TeachingExample & { label: string })[] } : splitGroups([...groups.values()], task.kind === 'sort' ? task.answers : ['example']);
+  if (frozen) {
+    const assignments = new Map(assignTeachingSplits(examples).map(row => [row.id, row.split!]));
+    for (const group of groups.values()) for (const row of group.rows) {
+      const split = assignments.get(row.id)!;
+      splits[split].push({ ...row, split });
+    }
+    if (Object.values(splits).some(rows => !rows.length)) throw new Error('Keep at least one case in each reserved split. Restore excluded cases or start with more examples.');
+  }
   // shortcut: this export is a reviewed onboarding draft, not a coordinator payload; add task-specific adapters before live submission.
   return { version: 1, previewOnly: true, task, splits, counts: { total: report.included.length, train: splits.train.length, calibration: splits.calibration.length, test: splits.test.length } };
+}
+
+export function assignTeachingSplits(examples: TeachingExample[]): TeachingExample[] {
+  const key = (row: TeachingExample) => row.group.trim() || row.id;
+  const inputs = new Set<string>();
+  for (const row of examples.filter(row => !row.excluded)) {
+    const input = row.input.trim().replace(/\s+/g, ' ').toLowerCase();
+    if (!input) throw new Error('Fill in each example’s input before assisted review.');
+    if (inputs.has(input)) throw new Error('Duplicate inputs need review. Keep one copy or add the missing context before assisted review.');
+    inputs.add(input);
+  }
+  const assignments = new Map<string, TeachingSplit>();
+  for (const row of examples) if (row.split) {
+    if (assignments.has(key(row)) && assignments.get(key(row)) !== row.split) throw new Error('Related cases cross reserved splits. Restore the original case references.');
+    assignments.set(key(row), row.split);
+  }
+  const keys = [...new Set(examples.filter(row => !row.excluded).map(key))];
+  if (keys.length < 3) throw new Error('Bring at least three separate cases before assisted review.');
+  if (!assignments.size) {
+    // Partition before predictions or labels influence selection; preserve these assignments in exports.
+    const hash = (value: string) => { let n = 2166136261; for (const c of value) n = Math.imul(n ^ c.charCodeAt(0), 16777619); return n >>> 0; };
+    keys.sort((a, b) => hash(a) - hash(b) || a.localeCompare(b));
+    const held = Math.max(1, Math.floor(keys.length * .15));
+    keys.forEach((id, i) => assignments.set(id, i < held ? 'test' : i < held * 2 ? 'calibration' : 'train'));
+  } else for (const id of keys) if (!assignments.has(id)) assignments.set(id, 'train');
+  return examples.map(row => ({ ...row, ...(assignments.has(key(row)) ? { split: assignments.get(key(row)) } : {}) }));
+}
+
+export function selectTeachingBatch(examples: TeachingExample[], predictions: TeachingPrediction[], random = Math.random) {
+  const eligible = new Set(examples.filter(row => row.split === 'train' && !row.reviewed && !row.excluded).map(row => row.id));
+  const margin = (p: TeachingPrediction) => { const sorted = Object.values(p.probabilities).sort((a, b) => b - a); return sorted[0] - sorted[1]; };
+  const pool = predictions.filter(p => eligible.has(p.id)).sort((a, b) => margin(a) - margin(b));
+  const uncertain = pool.slice(0, Math.min(2, Math.max(0, pool.length - 1))).map(p => ({ id: p.id, reason: 'uncertain' as const }));
+  const remaining = pool.slice(uncertain.length);
+  const audit = remaining.length ? [{ id: remaining[Math.floor(random() * remaining.length)].id, reason: 'audit' as const }] : [];
+  return [...uncertain, ...audit];
+}
+
+export function teachingAccuracy(examples: TeachingExample[], predictions: TeachingPrediction[]) {
+  const answers = new Map(examples.filter(row => row.split === 'train' && row.reviewed && !row.excluded).map(row => [row.id, row.output.trim()]));
+  const compared = predictions.filter(p => answers.has(p.id));
+  return { correct: compared.filter(p => p.choice === answers.get(p.id)).length, total: compared.length };
 }

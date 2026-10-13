@@ -11,5 +11,5 @@ export const jevMethod = '/model/abcd-002-jev.md';
 export const jevPredictions = '/model/abcd-002-jev-predictions.json';
 export const jevComparisons = [
   { name: 'TypeSafe Jev 1.13', note: 'Hosted Jev 1.13.0 · Same inputs and choices', metrics: { ...jevMetrics, count: jevMetrics.n }, trained: false },
-  { name: 'Trained Zils', note: 'Trained on 1,024 separate conversations', metrics: { ...jevTrained, count: jevTrained.n }, trained: true },
+  { name: 'Trained with Zils', note: 'Trained on 1,024 separate conversations', metrics: { ...jevTrained, count: jevTrained.n }, trained: true },
 ] as const;

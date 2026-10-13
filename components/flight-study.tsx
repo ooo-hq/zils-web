@@ -71,8 +71,8 @@ export function FlightStudySummary() {
 export function FlightStudyDetails() {
   const improvement = flightStudy.adapter_brier_improvement;
   const rawRows = [
-    ['Shared Zils, raw', flightStudy.metrics.base_raw],
-    ['Flight-trained Zils, raw', flightStudy.metrics.adapter_raw],
+    ['Before training, raw', flightStudy.metrics.base_raw],
+    ['After training, raw', flightStudy.metrics.adapter_raw],
   ] as const;
 
   return (

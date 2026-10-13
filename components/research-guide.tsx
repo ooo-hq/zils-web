@@ -11,31 +11,31 @@ export function ResearchOverview() {
   const { fez, kev } = readComparison(benchmark);
   const studies = [
     {
-      href: '#jev-comparison', title: 'Choose the next support action', scope: `${supportBase.count} test conversations · ABCD`,
+      outcome: 'Higher accuracy', tone: 'positive', href: '#jev-comparison', title: 'Choose the next support action', scope: `${supportBase.count} test conversations · ABCD`,
       result: `${percent(supportAdapter.accuracy)} vs ${percent(jevMetrics.accuracy)}`, measure: 'Tuned open model vs official hosted TypeSafe Jev 1.13.0',
       comparison: `Before task-specific training: ${percent(supportBase.accuracy)}. Same 500 test conversations.`,
       meaning: 'The open JevK5 4B model with a support adapter surpassed official Jev on recorded next actions. This does not measure whether the whole customer issue was resolved.',
     },
     {
-      href: '#chess-study', title: 'Find a checkmate in one move', scope: '512 test positions · Lichess puzzles',
+      outcome: 'Higher accuracy', tone: 'positive', href: '#chess-study', title: 'Find a checkmate in one move', scope: '512 test positions · Lichess puzzles',
       result: `${chessPercent(chessStudy.results.trained.accuracy)} vs ${chessPercent(chessStudy.results.jev.accuracy)}`, measure: 'Tuned open model vs official hosted TypeSafe Jev 1.13.0',
       comparison: `Before chess training: ${chessPercent(chessStudy.results.shared.accuracy)}. Chess-rules software: 100%.`,
       meaning: 'A separate JevK5 4B chess adapter surpassed official Jev on this restricted task. It does not establish full-game chess strength or an advantage over a rules engine.',
     },
     {
-      href: '/model/b300-study', title: 'Practical models for miners', scope: '10 October 2026 · ABCD · B300 experiments',
+      outcome: 'Hardware follow-up', tone: 'neutral', href: '/model/b300-study', title: 'Practical models for miners', scope: '10 October 2026 · ABCD · B300 experiments',
       result: 'H2O: 2.99× lower median latency', measure: '59.7 ms vs 178.4 ms for the JevK5 4B adapter on B300',
       comparison: '2B used 54% less CUDA memory; 9B showed no clear accuracy gain.',
       meaning: 'This follow-up compares local open models, not hosted TypeSafe Jev. H2O and 2B accuracy differences from the best 4B adapter remain inconclusive on two reused 500-case cohorts. New checkpoints have not been validated on miner hardware.',
     },
     {
-      href: '#flight-study', title: 'Estimate the risk of a late flight', scope: `${flightSplits.test.count.toLocaleString('en-US')} later test flights · US flight records`,
+      outcome: 'Mixed result', tone: 'neutral', href: '#flight-study', title: 'Estimate the risk of a late flight', scope: `${flightSplits.test.count.toLocaleString('en-US')} later test flights · US flight records`,
       result: `${flightImprovement}% less probability error`, measure: 'Relative Brier reduction vs the base model',
       comparison: 'Historical delay rates had the best measured score.',
       meaning: 'The adapter improved risk estimates but did not meet the requirement to beat both baselines. No flight model was deployed.',
     },
     {
-      href: '#quality', title: 'Earlier public decision benchmark', scope: `${fez.metrics.n_attempted} public items · Kev 0.8B model line`,
+      outcome: 'No accuracy gain', tone: 'neutral', href: '#quality', title: 'Earlier public decision benchmark', scope: `${fez.metrics.n_attempted} public items · Kev 0.8B model line`,
       result: `${fez.metrics.n_correct} correct for Zils; ${kev.metrics.n_correct} for Kev`, measure: 'Same accuracy; worse probability estimates',
       comparison: 'The unchanged published Kev checkpoint is the baseline.',
       meaning: 'This earlier run did not establish an improvement. Its tasks, models, and scoring differ from the studies above.',
@@ -47,11 +47,10 @@ export function ResearchOverview() {
         <h2 id="findings-heading">What we’ve measured.</h2>
         <p>Read each result against its own task and baseline. These experiments do not form a single leaderboard.</p>
       </div>
-      <div className={s.columnLabels} aria-hidden="true"><span>Decision task</span><span>Recorded result</span><span>Interpretation</span></div>
       <div className={s.studies}>
         {studies.map(study => <article key={study.href} className={s.study}>
-          <div><h3><a href={study.href}>{study.title}</a></h3><p className={s.scope}>{study.scope}</p></div>
-          <div><p className={s.result}>{study.result}</p><p className={s.measure}>{study.measure}</p><p className={s.comparator}>{study.comparison}</p></div>
+          <div className={s.studyTitle}><span className={s.outcome} data-tone={study.tone}>{study.outcome}</span><h3><a href={study.href}>{study.title}</a></h3><p className={s.scope}>{study.scope}</p></div>
+          <div className={s.studyResult}><p className={s.result}>{study.result}</p><p className={s.measure}>{study.measure}</p><p className={s.comparator}>{study.comparison}</p></div>
           <p className={s.meaning}>{study.meaning}</p>
         </article>)}
       </div>
@@ -68,7 +67,7 @@ export function ResearchModelGuide() {
         <p>A model that assigns probabilities to a set of possible answers. Each experiment tests a specific decision, such as which action to take next.</p>
       </div>
       <ol className={s.process}>
-        <li><span className={s.step}>1</span><div><h3>Start with a shared model.</h3><p>The support, flight, and chess studies use the published JevK5 4B weights. This unchanged model is the baseline for measuring what training adds.</p></div></li>
+        <li><span className={s.step}>1</span><div><h3>Start with a base model.</h3><p>The support, flight, and chess studies use the published JevK5 4B weights. This unchanged model is the baseline for measuring what training adds.</p></div></li>
         <li><span className={s.step}>2</span><div><h3>Teach one task with an adapter.</h3><p>A LoRA adapter is a small set of learned weights added to the model. The base weights stay frozen while the adapter learns from examples for that task.</p></div></li>
         <li><span className={s.step}>3</span><div><h3>Test on separate examples.</h3><p>Compare models on the same held-out cases. Measure correctness, probability quality, and simple alternatives. Test data does not select the adapter.</p></div></li>
       </ol>
@@ -76,7 +75,7 @@ export function ResearchModelGuide() {
         <summary>Model names, comparison controls, and deployment status</summary>
         <div className={s.detailBody}>
           <dl className={s.definitions}>
-            <div><dt>Shared Zils and trained Zils</dt><dd>Shared Zils is the unadapted JevK5 4B baseline. Trained Zils adds the task-specific adapter; the support, flight, and chess adapters are separate models.</dd></div>
+            <div><dt>Before and after training</dt><dd>Before training, each study uses the published JevK5 4B model. After training, it includes an adapter learned from examples for that task. The support, flight, and chess studies each use a separate adapter.</dd></div>
             <div><dt>TypeSafe Jev</dt><dd>The external hosted comparator is Jev 1.13.0. It receives the same test inputs and choices. The support comparison reuses recorded Zils predictions and makes fresh Jev API calls; their timing measurements are not comparable.</dd></div>
             <div><dt>Earlier Kev 0.8B</dt><dd>A different model line, used in the archived JevBench comparison. Its percentages and probability-error scores should not be mixed with the newer studies.</dd></div>
             <div><dt>Research and deployment</dt><dd>The research adapters shown here have not been deployed. A benchmark result is evidence about that experiment; it is not a measurement of the shared playground or a guarantee for a customer-trained model.</dd></div>

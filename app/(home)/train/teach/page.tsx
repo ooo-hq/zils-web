@@ -9,6 +9,6 @@ export const metadata: Metadata = {
 };
 
 export default function TeachPage() {
-  if (process.env.NODE_ENV !== 'development') notFound();
+  if (process.env.NODE_ENV !== 'development' && process.env.VERCEL_ENV !== 'preview') notFound();
   return <TeachByExample />;
 }

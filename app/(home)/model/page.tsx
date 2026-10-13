@@ -7,8 +7,9 @@ import { ChessStudySummary } from '@/components/chess-study';
 import { SupportStudyDetails } from '@/components/support-study';
 import { JevComparisonDetails } from '@/components/jev-comparison';
 import { ResearchOverview, ResearchModelGuide, ResearchMetricGuide } from '@/components/research-guide';
-import { jevMethod, jevSource, jevTrained, jevMetrics } from '@/lib/jev-comparison';
+import { supportMethod, supportSource } from '@/lib/support-study';
 import { SiteHeader } from '@/components/site-header';
+import { SupportTrainingExample } from '@/components/support-decision-examples';
 import { HeroBackdrop } from '@/components/hero-backdrop';
 import s from '@/components/research-guide.module.css';
 import { benchmark, readComparison, percent, decimal, milliseconds, comparisonHeadline } from '@/lib/model-benchmark';
@@ -37,8 +38,8 @@ const SECTIONS = [
 ] as const;
 const RESOURCES = [
   { href: REPO, title: 'Research code' },
-  { href: jevMethod, title: 'Support comparison report' },
-  { href: jevSource, title: 'Support results (JSON)' },
+  { href: supportMethod, title: 'Training study report' },
+  { href: supportSource, title: 'Training results (JSON)' },
 ] as const;
 
 function time(value: string) {
@@ -78,28 +79,30 @@ export default function ModelPage() {
     <div className={`${s.page} min-h-screen bg-page font-sans text-ink antialiased selection:bg-[#4942c7] selection:text-white`}>
       <div className="mx-auto max-w-6xl px-6 sm:px-8"><SiteHeader tone="light" current="model" /></div>
       <main id="main-content" tabIndex={-1}>
-        <div className="relative overflow-hidden">
-          <HeroBackdrop variant="research" />
-          <header className="relative mx-auto max-w-5xl px-6 pb-16 pt-10 sm:px-8 sm:pt-16">
-            <p className="text-sm text-muted">Zils research</p>
-            <h1 className="mt-5 max-w-[20ch] text-balance text-[clamp(2.7rem,6.5vw,4.8rem)] font-semibold leading-[1.02] tracking-[-0.055em]">Tuned open models can compete.</h1>
-            <p className="mt-6 max-w-[60ch] text-lg leading-8 text-muted">By adding task-specific adapters to open-weight JevK5 4B, we outperformed TypeSafe’s official hosted Jev 1.13.0 on our support-action and mate-in-one tests. On {jevTrained.n} support conversations, accuracy was {percent(jevTrained.accuracy)} versus {percent(jevMetrics.accuracy)}. These are task-specific results, not a general model ranking.</p>
-            <p className="mt-4 max-w-[70ch] text-sm leading-7 text-muted">The <Link href="/model/b300-study" className={LINK}>B300 follow-up</Link> asks which open models offer practical speed and memory use for miners. We also test unchanged models and simpler methods, which sometimes win.</p>
-            <a href="#findings" className="mt-7 inline-flex min-h-11 items-center rounded-md bg-action px-5 py-3 text-sm font-medium text-on-action hover:bg-action-hover">Explore the findings</a>
-            <nav aria-label="Project resources" className="mt-5 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-              {RESOURCES.map(r => (
-                <a key={r.href} href={r.href} className={`inline-flex min-h-11 items-center ${LINK}`}>{r.title}</a>
-              ))}
+        <div className={s.heroStage}>
+          <div className={s.heroAtmosphere}><HeroBackdrop variant="research" /></div>
+          <header className={s.hero}>
+            <div className={s.heroCopy}>
+              <p className={s.heroIdentity}>Zils research</p>
+              <h1>Tuned open models can compete.</h1>
+              <p className={s.heroLead}>We train open models for a specific job, then test them on examples they haven’t trained on. Here’s what improved, what didn’t, and how we measured it.</p>
+              <a href="#findings" className={s.primaryLink}>Explore the findings</a>
+              <p className={s.heroNote}>Recorded experiments. Published evidence.<br /> Results apply to each test, not every task.</p>
+            </div>
+            <SupportTrainingExample />
+            <nav aria-label="Project resources" className={s.resources}>
+              <span>Explore the evidence</span>
+              {RESOURCES.map(r => <a key={r.href} href={r.href}>{r.title}</a>)}
             </nav>
-            <p className="mt-3 text-xs leading-6 text-muted">Recorded experiments with published methods and limitations. Research adapters are separate from the live shared model.</p>
           </header>
         </div>
 
-        <div className="mx-auto max-w-5xl px-6 sm:px-8">
-          <nav aria-label="On this page" className="z-10 -mx-2 flex flex-wrap gap-x-4 gap-y-1 bg-page/95 px-2 py-2 backdrop-blur md:sticky md:top-0">
-            {SECTIONS.map(section => <a key={section.id} href={`#${section.id}`} className="inline-flex min-h-11 items-center text-[13px] text-muted underline decoration-edge-strong underline-offset-4 hover:text-accent">{section.title}</a>)}
+        <div className={s.researchLayout}>
+          <nav aria-label="On this page" className={s.sectionNav}>
+            <span>On this page</span>
+            {SECTIONS.map(section => <a key={section.id} href={`#${section.id}`}>{section.title}</a>)}
           </nav>
-
+          <div className={s.reports}>
           <ResearchOverview />
           <ResearchModelGuide />
           <JevComparisonDetails />
@@ -190,6 +193,7 @@ export default function ModelPage() {
             Mining, validation, and the recorded testnet round are on the <Link href="/bittensor" className={LINK}>Bittensor page</Link>.
           </aside>
           <p className="border-t border-edge py-8 text-xs leading-6 text-subtle">All results on this page are recorded experiments. The study reports define their scope, artifacts, and reproduction limits.</p>
+          </div>
         </div>
       </main>
       <SiteFooter />

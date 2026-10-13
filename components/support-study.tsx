@@ -50,9 +50,9 @@ export function SupportStudySummary() {
       <div className="grid gap-10 md:grid-cols-2 md:items-center">
         <div>
           <h2 id="support-evidence-heading" className="max-w-[18ch] text-balance text-[clamp(2rem,4.4vw,3.25rem)] font-semibold leading-[1.04] tracking-[-0.055em]">See what training changed.</h2>
-          <p className="mt-5 max-w-[45ch] text-[15px] leading-7 text-muted">We trained Zils to choose the next action in a customer-support conversation, then tested it on conversations it had not trained on.</p>
+          <p className="mt-5 max-w-[45ch] text-[15px] leading-7 text-muted">We trained a model to choose the next action in a customer-support conversation, then tested it on conversations it had not trained on.</p>
           <p className="mt-5 max-w-[45ch] text-[15px] leading-7 text-muted">
-            On {supportBase.count} test conversations from the public ABCD dataset, trained Zils chose the recorded answer {percent(jevTrained.accuracy)} of the time, compared with {percent(jevMetrics.accuracy)} for TypeSafe Jev, another decision model.
+            On {supportBase.count} test conversations from the public ABCD dataset, our trained model chose the recorded answer {percent(jevTrained.accuracy)} of the time, compared with {percent(jevMetrics.accuracy)} for TypeSafe Jev, another decision model.
             That is <strong className="font-semibold text-ink">{jevErrorReduction}% fewer mistakes</strong> on the same next-action task.
           </p>
           <p className="mt-5 text-sm text-muted">{number(supportStudy.splits.training_conversations)} training conversations. Separate development and test sets.</p>

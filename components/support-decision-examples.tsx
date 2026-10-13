@@ -1,8 +1,45 @@
 import examples from '@/public/model/abcd-002-examples.json';
+import { supportBase, supportAdapter } from '@/lib/support-study';
+import s from './research-guide.module.css';
 
 const action = (key: string) => examples.action_labels[key as keyof typeof examples.action_labels] ?? key;
 const corrected = examples.examples.filter(example => example.trained.choice === example.expected_action);
 const regression = examples.examples.find(example => example.trained.choice !== example.expected_action)!;
+
+export function SupportTrainingExample() {
+  const example = examples.examples.find(example => example.id === 'abcd-test-4827-turn-15')!;
+  return (
+    <figure className={s.evidenceFigure} aria-labelledby="training-example-title">
+      <figcaption id="training-example-title" className={s.figureTitle}>
+        <span>Learning a customer-support task.</span>
+        <span>Correct next actions across all {supportBase.count} test conversations</span>
+      </figcaption>
+      <dl className={s.trainingScores} aria-label="Accuracy before and after training">
+        <div><dt>Before training</dt><dd>{(supportBase.accuracy * 100).toFixed(1)}%</dd></div>
+        <div><dt>After training</dt><dd>{(supportAdapter.accuracy * 100).toFixed(1)}%</dd></div>
+      </dl>
+      <div className={s.recordedExample} data-example-id={example.id}>
+        <p className={s.exampleLabel}>One recorded correction</p>
+        <h2>{example.title}</h2>
+        <p className={s.exampleContext}>{example.context_summary}</p>
+        <dl className={s.exampleChoices}>
+          <div>
+            <dt>Before training</dt>
+            <dd>{action(example.unchanged.choice)}</dd>
+            <dd className={s.choiceStatus}>Did not match the recorded action</dd>
+          </div>
+          <div>
+            <dt>After training</dt>
+            <dd>{action(example.trained.choice)}</dd>
+            <dd className={s.choiceStatus}>Matched the recorded action</dd>
+          </div>
+        </dl>
+        <p className={s.exampleNote}>Selected correction from public ABCD role-play data. Context paraphrased; the scores above cover all {supportBase.count} test cases.</p>
+        <a href="#support-study" className={s.metricLink}>Read the training study</a>
+      </div>
+    </figure>
+  );
+}
 
 export function SupportDecisionExamples() {
   return (

@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test';
+import study from '../../public/model/abcd-002-jev.json';
+import training from '../../public/model/abcd-002.json';
+import examples from '../../public/model/abcd-002-examples.json';
 
 test('research readers can move from findings to evidence and the metric reference', async ({ page, request }) => {
   await page.goto('/model');
@@ -46,4 +49,43 @@ test('research overview and expanded technical tables fit mobile in dark mode', 
     await expect(scores).toBeFocused();
     expect(await scores.evaluate(el => el.scrollWidth > el.clientWidth)).toBe(true);
   }
+});
+
+
+test('research hero separates full-test accuracy from a recorded correction', async ({ page }) => {
+  await page.goto('/model');
+  const hero = page.locator('main header');
+  const figure = hero.getByRole('figure', { name: /Learning a customer-support task/ });
+  const scores = figure.getByLabel('Accuracy before and after training', { exact: true });
+  for (const metrics of [training.test.metrics.base, training.test.metrics.candidate]) {
+    await expect(scores).toContainText(`${(metrics.accuracy * 100).toFixed(1)}%`);
+  }
+  const example = examples.examples.find(row => row.id === 'abcd-test-4827-turn-15')!;
+  expect(example.unchanged.choice).not.toBe(example.expected_action);
+  expect(example.trained.choice).toBe(example.expected_action);
+  const correction = figure.locator(`[data-example-id="${example.id}"]`);
+  await expect(correction).toContainText(example.context_summary);
+  for (const choice of [example.unchanged.choice, example.trained.choice]) {
+    await expect(correction).toContainText(examples.action_labels[choice as keyof typeof examples.action_labels]);
+  }
+  await expect(correction).toContainText('Context paraphrased');
+  await expect(hero.getByRole('figure', { name: /One test. 500 support decisions/ })).toHaveCount(0);
+  await correction.getByRole('link', { name: 'Read the training study', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'How the support model learned.', exact: true })).toBeInViewport();
+});
+
+test('detailed Jev comparison accounts for all paired support decisions', async ({ page }) => {
+  await page.goto('/model');
+  const figure = page.locator('#jev-comparison').getByRole('figure', { name: /One test. 500 support decisions/ });
+  await expect(figure.locator('rect')).toHaveCount(study.test.metrics.trained_jevk5.n);
+  const paired = study.test.comparisons.trained_vs_jev;
+  for (const [label, count] of Object.entries({
+    'Both correct': paired.both_correct,
+    'Only trained model correct': paired.trained_correct_other_wrong,
+    'Only Jev correct': paired.other_correct_trained_wrong,
+    'Both incorrect': paired.both_wrong,
+  })) {
+    await expect(figure.locator(`g[data-outcome="${label}"] rect`)).toHaveCount(count);
+  }
+  await expect(figure.getByRole('link', { name: 'View all 500 predictions' })).toHaveAttribute('href', '/model/abcd-002-jev-predictions.json');
 });

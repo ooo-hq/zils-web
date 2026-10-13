@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default function EarlyAccessPage() {
-  return <div className={`${home.home} ${styles.page}`}>
-    <div className={styles.container}><SiteHeader tone="light" />
+  return <div className={`${home.home} ${styles.page} flex flex-col`}>
+    <div className={`${styles.container} w-full flex-1`}><SiteHeader tone="light" />
       <main id="main-content" tabIndex={-1} className={styles.main}>
         <div className={styles.intro}><h1>Get early access.</h1><p>Join the email list. We’ll invite selected users as space opens up.</p><p className={styles.detail}>Already invited? <Link href="/train" className="underline underline-offset-4">Sign in to your workspace.</Link></p></div>
         <EmailSignup earlyAccess />

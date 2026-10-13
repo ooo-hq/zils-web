@@ -9,13 +9,16 @@
     "types:check": "next typegen && tsc --noEmit",
     "lint": "eslint",
     "test:browser": "playwright test",
-    "test": "tsc --ignoreConfig --types node --module commonjs --target es2022 --esModuleInterop --skipLibCheck --outDir .private/test-build types/saxen.d.ts lib/training-csv.ts lib/training-spreadsheet.ts lib/training-review.ts lib/teach-by-example.ts lib/teaching-documents.ts lib/training-status.ts lib/model-quickstart.ts lib/api-keys.ts lib/billing.ts lib/contact.ts lib/training-auth.ts lib/cli-authorization.ts lib/playground-server.ts lib/decision-setup-server.ts lib/pricing-model.ts lib/investor-model.ts lib/images.ts lib/image-training.ts lib/image-batch.ts && node --test tests/*.test.cjs"
+    "test": "tsc --ignoreConfig --types node --module commonjs --target es2022 --esModuleInterop --skipLibCheck --outDir .private/test-build types/saxen.d.ts lib/training-csv.ts lib/training-spreadsheet.ts lib/training-review.ts lib/teach-by-example.ts lib/teaching-alignment-server.ts lib/teaching-documents.ts lib/teaching-images.ts lib/training-status.ts lib/model-quickstart.ts lib/api-keys.ts lib/billing.ts lib/contact.ts lib/training-auth.ts lib/cli-authorization.ts lib/playground-server.ts lib/decision-setup-server.ts lib/pricing-model.ts lib/investor-model.ts lib/images.ts lib/image-training.ts lib/image-batch.ts && node --test tests/*.test.cjs",
+    "predev": "node scripts/prepare-ocr-assets.mjs",
+    "prebuild": "node scripts/prepare-ocr-assets.mjs"
   },
   "dependencies": {
     "@fezchat/artifact-viewers": "^0.1.0",
     "@plausible-analytics/tracker": "0.4.6",
     "@radix-ui/react-dialog": "^1.1.23",
     "@supabase/supabase-js": "^2.117.2",
+    "@tesseract.js-data/eng": "1.0.0",
     "class-variance-authority": "^0.7.1",
     "cnfast": "^0.1.0",
     "fflate": "0.8.3",
@@ -29,6 +32,7 @@
     "react-dom": "^19.2.8",
     "read-excel-file": "9.3.10",
     "saxen": "11.2.0",
+    "tesseract.js": "7.0.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

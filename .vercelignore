@@ -1,0 +1,8 @@
+.git
+.private
+.env*
+node_modules
+.next
+*.tsbuildinfo
+# Recreated by prebuild from installed dependencies.
+public/_ocr

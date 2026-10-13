@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Check, CheckCheck, ChevronRight, FileSpreadsheet, FileText, FolderInput, HelpCircle, Layers3, LockKeyhole, MessageSquareText, Plus, Sparkles, TriangleAlert, Upload, X } from 'lucide-react';
 import { ZilsWordmark } from '@/components/zils-wordmark';
 import { TeachingDocuments } from '@/components/teaching-documents';
+import { TeachingImages } from '@/components/teaching-images';
+import { TeachingAlignment } from '@/components/teaching-alignment';
 import { PreparedTrainingPreview } from '@/components/prepared-training-preview';
 import { ThemeToggle } from '@/components/theme';
 import { readSpreadsheet, type SpreadsheetSheet } from '@/lib/training-spreadsheet';
@@ -40,7 +42,8 @@ const samplePairs: Record<TeachingTask['kind'], [string, string][]> = {
 
 export function TeachByExample() {
   const [step, setStep] = useState(0);
-  const [path, setPath] = useState<'guided' | 'prepared'>('guided');
+  const [assisted, setAssisted] = useState(true);
+  const [path, setPath] = useState<'guided' | 'prepared' | 'images'>('guided');
   const [task, setTask] = useState<TeachingTask>({ kind: 'sort', goal: '', rules: '', answers: [] });
   const [answerText, setAnswerText] = useState('');
   const [examples, setExamples] = useState<TeachingExample[]>([]);
@@ -159,7 +162,7 @@ export function TeachByExample() {
     <header className={s.header}>
       <Link href="/" aria-label="Zils home"><ZilsWordmark className="text-[40px]" /></Link>
       <span className={s.headerTitle}>Teach a model</span>
-      <div className={s.headerEnd}><span className={s.previewBadge}>Local preview</span><ThemeToggle /></div>
+      <div className={s.headerEnd}><span className={s.previewBadge}>Teaching preview</span><ThemeToggle /></div>
     </header>
     <div className={s.layout}>
       <aside className={s.sidebar}>
@@ -168,18 +171,20 @@ export function TeachByExample() {
           <button type="button" aria-label={title} aria-current={step === index ? 'step' : undefined} disabled={index > step} onClick={() => go(index)}><span className={s.stepNumber}>{step > index ? <Check size={13} /> : index + 1}</span><span>{title}</span></button>
         </li>)}</ol></nav>
         {path === 'prepared' && <div className={s.directNote}><FileText size={21} /><strong>Prepared training</strong><p>Your labels and dataset splits stay as supplied. Check the files, set your success criteria, and review the run.</p></div>}
-        <div className={s.sidebarNote}><LockKeyhole size={17} /><p>Your examples stay in this tab.</p><span>No uploads or training charges. Download your draft before closing.</span></div>
+        {path === 'images' && <div className={s.directNote}><FileText size={21} /><strong>Teach with images</strong><p>Describe a visual decision, label your photos, and keep related views of the same item together.</p></div>}
+        <div className={s.sidebarNote}><LockKeyhole size={17} /><p>You control when examples leave this tab.</p><span>Import and manual review stay local. Live assisted review sends selected examples to the connected services. Save your draft before closing.</span></div>
       </aside>
       <main className={s.main} id="main-content">
-        <div className={s.entryPaths} aria-label="Choose your starting point"><button type="button" aria-pressed={path === 'guided'} onClick={() => setPath('guided')}>Guide me</button><button type="button" aria-pressed={path === 'prepared'} onClick={() => setPath('prepared')}>I have training data</button></div>
+        <div className={s.entryPaths} aria-label="Choose your starting point"><button type="button" aria-pressed={path === 'guided'} onClick={() => setPath('guided')}>Guide me</button><button type="button" aria-pressed={path === 'prepared'} onClick={() => setPath('prepared')}>I have training data</button><button type="button" aria-pressed={path === 'images'} onClick={() => setPath('images')}>Images</button></div>
         <div hidden={path !== 'prepared'}><PreparedTrainingPreview onGuided={() => { setPath('guided'); setMode('file'); go(0); }} /></div>
+        <div hidden={path !== 'images'}><TeachingImages onDocuments={() => {setPath('guided');if(!examples.length)selectStarter('extract');setMode('documents');go(1);}} /></div>
         <div hidden={path !== 'guided'}>
         <div className={s.progressLine}><span>Step {step + 1} of 5</span><span>{step === 0 ? 'Start with something you know' : `${examples.length} ${examples.length === 1 ? 'example' : 'examples'} added`}</span></div>
-        <h1 ref={heading} tabIndex={-1}>{['What would you like to teach?', 'Start with work you already have.', 'Show Zils what a good answer is.', 'A few checks before you train.', 'Decide how you’ll measure success.'][step]}</h1>
+        <h1 ref={heading} tabIndex={-1}>{['What would you like to teach?', 'Start with work you already have.', 'Teach Zils what you mean.', 'A few checks before you train.', 'Decide how you’ll measure success.'][step]}</h1>
         <p className={s.intro}>{[
           'Pick a task you do repeatedly. One clear job is a good place to start.',
           'Bring what you received and what a good result looked like. One example is enough to start.',
-          'You know your work best. Check each answer, make corrections, and leave out examples you don’t want to use.',
+          'Review a few decisions with help from a base model, or check your examples yourself. Custom training comes later.',
           'Good examples cover different situations. These checks help you find what’s missing.',
           'Some examples teach the model. Others stay separate to check whether it learned something useful.',
         ][step]}</p>
@@ -192,7 +197,7 @@ export function TeachByExample() {
           <textarea id="teaching-goal" rows={2} required maxLength={1000} value={task.goal} onChange={event => changeTask({ ...task, goal: event.target.value })} placeholder={starter.goal} />
           <details className={s.details}><summary>Add rules or preferences <span>Optional</span></summary><label htmlFor="teaching-rules">What should a good answer follow?</label><textarea id="teaching-rules" rows={3} maxLength={3000} value={task.rules} placeholder={starter.rule} onChange={event => changeTask({ ...task, rules: event.target.value })} /></details>
           <div className={s.lessonPreview}><div className={s.lessonTitle}><Sparkles size={16} /><span>What one teaching example looks like</span></div><div className={s.lessonPair}><div><span>What comes in</span><p>{starter.input}</p></div><ChevronRight size={20} className={s.pairArrow} /><div><span>A good answer</span><p>{starter.output}</p></div></div></div>
-          <button type="button" className={s.documentEntry} onClick={() => { if (!examples.length) selectStarter('extract'); setMode('documents'); go(1); }}><FileText size={19} /><span><strong>Is your information in documents?</strong><small>Read a PDF or Word file, review its fields, and use what you need.</small></span><ArrowRight size={17} /></button>
+          <button type="button" className={s.documentEntry} onClick={() => { if (!examples.length) selectStarter('extract'); setMode('documents'); go(1); }}><FileText size={19} /><span><strong>Is your information in documents?</strong><small>Read a PDF, Word file, or scan, review its fields, and use what you need.</small></span><ArrowRight size={17} /></button>
           <div className={s.actions}><button type="button" className={s.textButton} onClick={useSamples}>Try with sample examples</button><button className={s.primary}>Bring my first example <ArrowRight size={16} /></button></div>
         </form>}
 
@@ -206,12 +211,12 @@ export function TeachByExample() {
             </form></div>
             <div hidden={mode !== 'file'}>
               <div className={s.dropzone} data-dragging={dragging} onDragOver={event => { event.preventDefault(); setDragging(true); }} onDragLeave={event => { if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) setDragging(false); }} onDrop={event => { event.preventDefault(); setDragging(false); if (busy) return; if (event.dataTransfer.files.length !== 1) { setError('Choose one file at a time.'); return; } void readFile(event.dataTransfer.files[0]); }}>
-                <Upload size={24} strokeWidth={1.5} /><strong>Drop a file with past examples</strong><p>CSV, Excel (.xlsx), JSON, or JSONL. Keep the input and answer in separate fields.</p><label className={s.secondary} htmlFor="teaching-file">Choose a file</label><input className={s.fileInput} id="teaching-file" ref={fileInput} type="file" disabled={busy} accept=".csv,.xlsx,.json,.jsonl,.ndjson,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/json,application/jsonl,application/x-ndjson" onChange={event => void readFile(event.target.files?.[0])} /><small>Up to 10 MiB · 500 examples in this preview</small>
+                <Upload size={24} strokeWidth={1.5} /><strong>Drop a file with past examples</strong><p>CSV, Excel (.xlsx), JSON, or JSONL. Bring inputs with or without answers.</p><label className={s.secondary} htmlFor="teaching-file">Choose a file</label><input className={s.fileInput} id="teaching-file" ref={fileInput} type="file" disabled={busy} accept=".csv,.xlsx,.json,.jsonl,.ndjson,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/json,application/jsonl,application/x-ndjson" onChange={event => void readFile(event.target.files?.[0])} /><small>Up to 10 MiB · 500 examples in this preview</small>
               </div>
               <p className={s.hint}>JSON can contain a list of examples or one example. JSONL and NDJSON use one example per line. Nested objects and lists are kept as text for review.</p>
               {busy && <p role="status" className={s.hint}>Reading your file…</p>}
               {sheets.length > 1 && <><label htmlFor="teaching-sheet">Which sheet or list has your examples?</label><select id="teaching-sheet" value={sheetIndex} onChange={event => chooseSheet(Number(event.target.value))}>{sheets.map((sheet, index) => <option key={index} value={index}>{sheet.name}</option>)}</select></>}
-              {currentSheet?.data && <div className={s.mapping}><h2>Check how we read your file</h2><p>{fileName} · {currentSheet.data.rows.length} examples found</p><div className={s.pairFields}><fieldset><legend>Information the model receives</legend>{currentSheet.data.headers.map(header => <label className={s.checkLabel} key={header}><input type="checkbox" checked={mapping.inputs.includes(header)} disabled={header === mapping.answer || header === mapping.group} onChange={event => setMapping(current => ({ ...current, inputs: event.target.checked ? [...current.inputs, header] : current.inputs.filter(value => value !== header) }))} />{header}</label>)}</fieldset><div><label htmlFor="teaching-answer-column">The correct answer</label><select id="teaching-answer-column" value={mapping.answer} onChange={event => setMapping(current => ({ ...current, answer: event.target.value, inputs: current.inputs.filter(value => value !== event.target.value), group: current.group === event.target.value ? '' : current.group }))}><option value="">Choose a field</option>{currentSheet.data.headers.map(header => <option key={header}>{header}</option>)}</select><label htmlFor="teaching-group-column">Shared case reference <span className={s.optional}>Optional</span></label><select id="teaching-group-column" value={mapping.group} onChange={event => setMapping(current => ({ ...current, group: event.target.value, inputs: current.inputs.filter(value => value !== event.target.value) }))}><option value="">No reference field</option>{currentSheet.data.headers.filter(header => header !== mapping.answer).map(header => <option key={header}>{header}</option>)}</select></div></div><div className={s.importPreview}><span>First example</span><p>{mapping.inputs.map(header => `${header}: ${currentSheet.data!.rows[0][currentSheet.data!.headers.indexOf(header)]}`).join('\n') || 'Select the information fields.'}</p><strong>{mapping.answer ? currentSheet.data.rows[0][currentSheet.data.headers.indexOf(mapping.answer)] || 'Answer is blank — review needed' : 'Choose the answer field.'}</strong></div><button type="button" className={s.secondary} disabled={busy} onClick={importFile}>Add {currentSheet.data.rows.length} examples</button></div>}
+              {currentSheet?.data && <div className={s.mapping}><h2>Check how we read your file</h2><p>{fileName} · {currentSheet.data.rows.length} examples found</p><div className={s.pairFields}><fieldset><legend>Information the model receives</legend>{currentSheet.data.headers.map(header => <label className={s.checkLabel} key={header}><input type="checkbox" checked={mapping.inputs.includes(header)} disabled={header === mapping.answer || header === mapping.group} onChange={event => setMapping(current => ({ ...current, inputs: event.target.checked ? [...current.inputs, header] : current.inputs.filter(value => value !== header) }))} />{header}</label>)}</fieldset><div><label htmlFor="teaching-answer-column">The correct answer</label><select id="teaching-answer-column" value={mapping.answer} onChange={event => setMapping(current => ({ ...current, answer: event.target.value, inputs: current.inputs.filter(value => value !== event.target.value), group: current.group === event.target.value ? '' : current.group }))}><option value="">No answers yet — label during review</option>{currentSheet.data.headers.map(header => <option key={header}>{header}</option>)}</select><label htmlFor="teaching-group-column">Shared case reference <span className={s.optional}>Optional</span></label><select id="teaching-group-column" value={mapping.group} onChange={event => setMapping(current => ({ ...current, group: event.target.value, inputs: current.inputs.filter(value => value !== event.target.value) }))}><option value="">No reference field</option>{currentSheet.data.headers.filter(header => header !== mapping.answer).map(header => <option key={header}>{header}</option>)}</select></div></div><div className={s.importPreview}><span>First example</span><p>{mapping.inputs.map(header => `${header}: ${currentSheet.data!.rows[0][currentSheet.data!.headers.indexOf(header)]}`).join('\n') || 'Select the information fields.'}</p><strong>{mapping.answer ? currentSheet.data.rows[0][currentSheet.data.headers.indexOf(mapping.answer)] || 'Answer is blank — review needed' : 'You’ll add answers during review.'}</strong></div><button type="button" className={s.secondary} disabled={busy} onClick={importFile}>Add {currentSheet.data.rows.length} examples</button></div>}
             </div>
             <div hidden={mode !== 'documents'}><TeachingDocuments extractionTask={task.kind === 'extract'} onAdd={row => { if (examples.length >= 500) throw new Error('Keep this preview to 500 examples.'); setExamples(previous => [...previous, row]); setActiveId(row.id); setDraft(null); setIndependent(false); setError(''); }} /></div>
           </div>
@@ -221,10 +226,19 @@ export function TeachByExample() {
 
         {step === 2 && <>
           {task.kind === 'sort' && <details className={s.details} open={!task.answers.length}><summary>Possible answers <span>{task.answers.length ? task.answers.join(', ') : 'Add your categories'}</span></summary><label htmlFor="teaching-answers">One answer per line</label><textarea id="teaching-answers" rows={3} value={answerText} placeholder={'Billing\nTechnical support\nAccount changes'} onChange={event => { setAnswerText(event.target.value); changeTask({ ...task, answers: event.target.value.split('\n').map(answer => answer.trim()).filter(Boolean) }); }} /></details>}
+          {task.kind === 'sort' && assisted && <TeachingAlignment
+            key={JSON.stringify([task, examples.map(row => [row.id, row.input, row.group, row.excluded])])}
+            task={task} examples={examples} independent={independent}
+            onIndependent={() => setIndependent(true)} onFreeze={rows => { setExamples(rows); setDraft(null); }}
+            onUpdate={updateExample} onManual={() => setAssisted(false)}
+            onApply={rules => { setTask(current => ({ ...current, rules })); setDraft(null); setAssisted(false); setNotice('Rules approved. Review the remaining examples before preparing training.'); }}
+          />}
+          {(task.kind !== 'sort' || !assisted) && <>
+          {task.kind === 'sort' && <button type="button" className={s.secondary} onClick={() => setAssisted(true)}><Sparkles size={16} /> Try assisted review</button>}
           <div className={s.reviewProgress}><span><strong>{reviewed}</strong> of {report.included.length} included examples reviewed</span><progress value={reviewed} max={Math.max(1, report.included.length)} aria-label="Examples reviewed" /></div>
           <div className={s.reviewWorkspace}>
             <div ref={exampleList} className={s.exampleList} aria-label="Your examples">{examples.map((example, index) => <button type="button" key={example.id} aria-pressed={active?.id === example.id} data-excluded={example.excluded} onClick={() => { setActiveId(example.id); setError(''); }}><span className={s.exampleIndex}>{example.excluded ? <X size={13} /> : example.reviewed ? <Check size={13} /> : index + 1}</span><span><strong>Example {index + 1}</strong><small>{example.excluded ? 'Left out' : example.reviewed ? 'Reviewed' : 'Needs your review'}</small></span></button>)}</div>
-            {active && <div className={s.reviewEditor}><div className={s.editorTop}><span>{active.source}</span><button type="button" className={s.textButton} onClick={() => updateExample(active.id, { excluded: !active.excluded, reviewed: false })}>{active.excluded ? 'Include again' : 'Leave out'}</button></div>
+            {active && <div className={s.reviewEditor}><div className={s.editorTop}><span>{active.source}{active.split && ` · ${active.split === 'train' ? 'For learning' : active.split === 'test' ? 'Reserved final test' : 'Reserved calibration'}`}</span><button type="button" className={s.textButton} onClick={() => updateExample(active.id, { excluded: !active.excluded, reviewed: false })}>{active.excluded ? 'Include again' : 'Leave out'}</button></div>
               <label htmlFor="review-input">What the model receives</label><textarea id="review-input" rows={4} maxLength={16000} value={active.input} disabled={active.excluded} onChange={event => updateExample(active.id, { input: event.target.value })} />
               <label htmlFor="review-output">The answer you want it to learn</label>{task.kind === 'sort' && task.answers.length > 0 ? <select id="review-output" value={active.output} disabled={active.excluded} onChange={event => updateExample(active.id, { output: event.target.value })}><option value="">Choose the correct answer</option>{!task.answers.includes(active.output) && active.output && <option value={active.output}>{active.output} — check this answer</option>}{task.answers.map(answer => <option key={answer}>{answer}</option>)}</select> : <textarea id="review-output" rows={4} maxLength={16000} value={active.output} disabled={active.excluded} onChange={event => updateExample(active.id, { output: event.target.value })} />}
               <details className={s.details}><summary>Case reference <span>{active.group.startsWith('document-') ? 'Source document' : active.group || 'Not set'}</span></summary><label htmlFor="review-group">Shared case reference</label><input id="review-group" value={active.group} maxLength={200} disabled={active.excluded} onChange={event => updateExample(active.id, { group: event.target.value })} /></details>
@@ -232,6 +246,7 @@ export function TeachByExample() {
             </div>}
           </div>
           <div className={s.actions}><button type="button" className={s.backButton} onClick={() => go(1)}><ArrowLeft size={15} /> Add more examples</button><button type="button" className={s.primary} onClick={() => go(3)}>Check for gaps <ArrowRight size={16} /></button></div>
+          </>}
         </>}
 
         {step === 3 && <>
@@ -246,13 +261,13 @@ export function TeachByExample() {
         {step === 4 && draft && <>
           <div className={s.splitOverview}>{[{ key: 'train' as const, title: 'For learning', text: 'Examples the model can learn from.' }, { key: 'calibration' as const, title: 'For checking', text: 'Separate cases for confidence checks.' }, { key: 'test' as const, title: 'For the final test', text: 'Held aside to measure the result.' }].map(item => <div key={item.key}><strong>{draft.counts[item.key]}</strong><span>{item.title}</span><p>{item.text}</p></div>)}</div>
           <section className={s.testPreview}><div className={s.testTitle}><div><h2>One example the model won’t train on</h2><p>Use cases like this to compare the original and trained models.</p></div><span>{previewIndex + 1} / {draft.splits.test.length}</span></div>{testExample && <><div className={s.testInput}><span>What it will receive</span><p>{testExample.input}</p></div><div className={s.testExpected}><span>The answer you’ll compare against</span><p>{testExample.output}</p></div></>}{draft.splits.test.length > 1 && <button type="button" className={s.textButton} onClick={() => setPreviewIndex(index => (index + 1) % draft.splits.test.length)}>See another test example <ChevronRight size={15} /></button>}</section>
-          <div className={s.previewNotice}><FolderInput size={22} /><div><strong>Your teaching draft is ready to inspect.</strong><p>This preview prepares examples and a test plan. It doesn’t train a model, run predictions, or measure improvement.</p>{task.kind !== 'sort' && <p>Writing and extraction also need a compatible training backend before live submission.</p>}</div></div>
+          <div className={s.previewNotice}><FolderInput size={22} /><div><strong>Your teaching draft is ready to inspect.</strong><p>This draft prepares examples and a test plan. Assisted review can refine decision rules, but no custom model has been trained or independently evaluated.</p>{task.kind !== 'sort' && <p>Writing and extraction also need a compatible training backend before live submission.</p>}</div></div>
           <details className={s.details} open={showDemo} onToggle={event => setShowDemo(event.currentTarget.open)}><summary>What would a comparison look like?</summary><div className={s.demoLabel}>Illustrative example · fixed sample answers, not model results</div><p className={s.hint}>Customer asks: “Can you send a copy of my last invoice?” The reviewed answer is Billing.</p><div className={s.demoComparison}><div><span>Original model</span><strong>Account changes</strong><small>Doesn’t match the reviewed answer</small></div><div><span>Trained model</span><strong>Billing</strong><small>Matches the reviewed answer</small></div></div><p className={s.hint}>A real comparison must include failures and use held-out cases. Training may not improve the result.</p></details>
           <div className={s.actions}><button type="button" className={s.backButton} onClick={() => go(3)}><ArrowLeft size={15} /> Back to checks</button><button type="button" className={s.primary} onClick={downloadDraft}>Download teaching draft <FolderInput size={16} /></button></div>
           <details className={s.details}><summary>View or copy the prepared draft</summary><label htmlFor="draft-json">Prepared draft data</label><textarea id="draft-json" rows={8} readOnly spellCheck={false} value={JSON.stringify(draft, null, 2)} /><p className={s.hint}>A portable preparation draft. It is not a file for direct submission to the current training service.</p></details>
         </>}
         </div>
-        <footer className={s.footer}><span><LockKeyhole size={13} /> Local preparation only</span><span>Nothing is sent to a model.</span></footer>
+        <footer className={s.footer}><span><LockKeyhole size={13} /> Training preparation</span><span>Live assisted review is optional.</span></footer>
       </main>
     </div>
   </div>;

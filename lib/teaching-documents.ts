@@ -9,7 +9,7 @@ export const MAX_DOCUMENT_TEXT = 200_000;
 export function checkDocumentFile(file: File) {
   if (!file.size) throw new Error('This document is empty. Choose a document with text.');
   if (file.size > 10 * 1024 * 1024) throw new Error('Choose a document smaller than 10 MiB.');
-  if (!/\.(pdf|docx|txt|md)$/i.test(file.name)) throw new Error('Choose PDF, Word (.docx), plain text, or Markdown.');
+  if (!/\.(pdf|docx|txt|md|jpe?g|png)$/i.test(file.name)) throw new Error('Choose PDF, Word (.docx), text, Markdown, JPEG, or PNG.');
 }
 
 export async function readTextDocument(file: File): Promise<string> {
@@ -54,12 +54,12 @@ export async function readTextDocument(file: File): Promise<string> {
       text = chunks.join('');
     } catch { throw new Error('Could not read this Word document. Save an unprotected .docx or export its text.'); }
   } else {
-    if (/\.pdf$/i.test(file.name)) throw new Error('PDFs must be opened with the PDF reader.');
+    if (/\.(pdf|jpe?g|png)$/i.test(file.name)) throw new Error('PDFs and images must be opened with their document reader.');
     try { text = new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
     catch { throw new Error('Save this text document with UTF-8 encoding.'); }
   }
   text = text.replace(/^\uFEFF/, '').trim();
-  if (!text) throw new Error('No readable text was found. Scanned documents need OCR, which is not connected in this preview.');
+  if (!text) throw new Error('No readable text was found. For scans, choose a PDF, JPEG, or PNG.');
   if (text.length > MAX_DOCUMENT_TEXT) throw new Error('This document has too much text. Use a shorter document or an excerpt.');
   return text;
 }

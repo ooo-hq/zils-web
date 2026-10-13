@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Check, FileText, Upload } from 'lucide-react';
 import { checkDocumentFile, documentTeachingExample, readTextDocument, suggestDocumentFields, type DocumentField, type TeachingDocument } from '@/lib/teaching-documents';
 import type { TeachingExample } from '@/lib/teach-by-example';
@@ -16,26 +16,39 @@ export function TeachingDocuments({ extractionTask, onAdd }: { extractionTask: b
   const [checked, setChecked] = useState(false), [added, setAdded] = useState(false);
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [note, setNote] = useState('');
   const [notice, setNotice] = useState('');
+  const [progress,setProgress] = useState(''), [forceOcr,setForceOcr] = useState(false);
+  const [original,setOriginal] = useState<{url:string;image:boolean}|null>(null);
+  const operation=useRef<AbortController|null>(null), originalUrl=useRef('');
+  useEffect(()=>()=>{operation.current?.abort();if(originalUrl.current)URL.revokeObjectURL(originalUrl.current);},[]);
   const fileInput = useRef<HTMLInputElement>(null);
   function resetReview() { setFields([]); setChecked(false); setAdded(false); setError(''); setNotice(''); }
   async function read(file?: File) {
     if (!file || busy) return;
-    setBusy(true); setError(''); setNotice('');
+    setBusy(true); setError(''); setNotice('');setProgress('Reading the document locally…');
+    const controller=new AbortController();operation.current=controller;
+    const signal=AbortSignal.any([controller.signal,AbortSignal.timeout(180_000)]);
+    const onProgress=(message:string)=>{if(!signal.aborted)setProgress(message);};
     try {
       checkDocumentFile(file);
       const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
       let text: string, description: string;
       if (/\.pdf$/i.test(file.name)) {
-        const result = await (await import('@/lib/teaching-pdf')).readTeachingPdf(file);
+        const result = await (await import('@/lib/teaching-pdf')).readTeachingPdf(file,signal,onProgress,forceOcr);
+        text = result.text; description = result.note;
+      } else if (/\.(jpe?g|png)$/i.test(file.name)) {
+        const result = await (await import('@/lib/teaching-ocr')).readTeachingScan(file,signal,onProgress);
         text = result.text; description = result.note;
       } else {
         text = await readTextDocument(file);
         description = /\.docx$/i.test(file.name) ? 'Word body text and tables only. Images, headers, footers, and comments are not extracted.' : 'Text read locally. Check it before extracting fields.';
       }
+      signal.throwIfAborted();
+      if(originalUrl.current)URL.revokeObjectURL(originalUrl.current);
+      originalUrl.current=URL.createObjectURL(file);setOriginal({url:originalUrl.current,image:/\.(jpe?g|png)$/i.test(file.name)});
       setDocument({name:file.name, text, group:`document-${Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')}`});
       setNote(description); resetReview();
-    } catch (error) { setError(error instanceof Error ? error.message : 'Could not read this document.'); }
-    finally { setBusy(false); if (fileInput.current) fileInput.current.value = ''; }
+    } catch (error) { setError(signal.aborted ? controller.signal.aborted ? 'Reading stopped. Your previous document is unchanged.' : 'Reading took too long. Try fewer pages or a smaller scan.' : error instanceof Error ? error.message : 'Could not read this document.'); }
+    finally { setBusy(false);setProgress('');operation.current=null; if (fileInput.current) fileInput.current.value = ''; }
   }
   function extract() {
     if (!document) return;
@@ -56,20 +69,23 @@ export function TeachingDocuments({ extractionTask, onAdd }: { extractionTask: b
   }
   return <section aria-label="Document workspace" aria-busy={busy}>
     <div className={s.dropzone} data-loaded={Boolean(document)} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); if (event.dataTransfer.files.length !== 1) { setError('Choose one document at a time.'); return; } void read(event.dataTransfer.files[0]); }}>
-      <FileText size={26} strokeWidth={1.5} /><strong>{document ? 'Read another document' : 'Start with a document'}</strong><p>PDF, Word (.docx), text, or Markdown. Read it here, then decide what to keep.</p>
-      <label className={s.secondary} htmlFor="teaching-document"><Upload size={15} /> Choose a document</label><input ref={fileInput} id="teaching-document" type="file" className={s.fileInput} accept=".pdf,.docx,.txt,.md" disabled={busy} onChange={event => void read(event.target.files?.[0])} />
-      <small>10 MiB maximum · PDFs up to 50 pages · Text extraction only; no OCR</small>
+      <FileText size={26} strokeWidth={1.5} /><strong>{document ? 'Read another document' : 'Start with a document'}</strong><p>PDF, Word, text, Markdown, or a JPEG/PNG scan. Read it here, then decide what to keep.</p>
+      <label className={s.secondary} htmlFor="teaching-document"><Upload size={15} /> Choose a document</label><input ref={fileInput} id="teaching-document" type="file" className={s.fileInput} accept=".pdf,.docx,.txt,.md,.jpg,.jpeg,.png" disabled={busy} onChange={event => void read(event.target.files?.[0])} />
+      <small>10 MiB maximum · PDFs up to 50 pages, including at most 10 scanned pages</small>
     </div>
+    <label className={s.checkLabel}><input type="checkbox" checked={forceOcr} disabled={busy} onChange={event=>setForceOcr(event.target.checked)} /><span>Read every PDF page with OCR <span className={s.optional}>For mixed pages or incomplete text · 10 pages maximum</span></span></label>
+    <p className={s.hint}>English OCR runs in your browser for images and PDF pages without text. The reader loads from Zils when needed; your files stay in this tab.</p>
     {!document && <button type="button" className={s.textButton} disabled={busy} onClick={() => { setDocument({name:'Sample invoice.txt',text:sampleText,group:'sample-invoice-1042'}); setNote('Sample document. Try changing a field or removing a value.'); resetReview(); }}>Try a sample invoice</button>}
-    {busy && <p role="status" className={s.hint}>Reading the document locally…</p>}
+    {busy && <div className={s.actions}><p role="status" className={s.hint}>{progress}</p><button type="button" className={s.secondary} onClick={()=>operation.current?.abort()}>Stop reading</button></div>}
     {error && <p role="alert" className={s.error}>{error}</p>}
     <p role="status" className={s.hint}>{notice}</p>
     {document && <fieldset disabled={busy}>
       <div className={s.documentHeading}><h2>{document.name}</h2><span>Stays in this tab</span></div>
       <p className={s.hint}>{note}</p>
+      {original && <details className={s.details}><summary>View original document</summary>{original.image ? <ImagePreview url={original.url} /> : <a className={s.textButton} href={original.url} target="_blank" rel="noreferrer">Open original file</a>}</details>}
       <div className={s.documentColumns}>
         <div><label htmlFor="document-text">Text from your document</label><textarea id="document-text" rows={15} maxLength={200000} value={document.text} onChange={event => { setDocument({...document,text:event.target.value}); resetReview(); }} /><p className={s.hint}>Correct reading errors here. For teaching, use an excerpt up to 16,000 characters. Related excerpts keep the same document reference.</p></div>
-        <div><label htmlFor="document-fields">What information do you want?</label><textarea id="document-fields" rows={4} maxLength={1616} value={requested} onChange={event => { setRequested(event.target.value); resetReview(); }} /><p className={s.hint}>One field per line. This local preview finds values beside matching labels; it does not infer meaning or read images.</p><button type="button" className={s.secondary} onClick={extract}>Find matching fields</button>
+        <div><label htmlFor="document-fields">What information do you want?</label><textarea id="document-fields" rows={4} maxLength={1616} value={requested} onChange={event => { setRequested(event.target.value); resetReview(); }} /><p className={s.hint}>One field per line. This preview finds values beside matching labels in the extracted text; it does not infer meaning.</p><button type="button" className={s.secondary} onClick={extract}>Find matching fields</button>
           {fields.length > 0 && <div className={s.documentFields}>{fields.map((field,index) => <div key={field.name}><label htmlFor={`document-value-${index}`}>{field.name}{' '}<span className={s.optional}>{field.status === 'edited' ? 'Edited by you' : field.status === 'found' ? 'Match found' : field.status === 'ambiguous' ? 'Conflicting values' : 'Not found'}</span></label><input id={`document-value-${index}`} value={field.value} maxLength={4000} placeholder="Leave blank if not provided" onChange={event => { setFields(rows => rows.map((row,i) => i === index ? {...row,value:event.target.value,status:'edited'} : row)); setChecked(false); setAdded(false); setNotice(''); }} />{field.evidence.length > 0 && <details className={s.fieldEvidence}><summary>Show source</summary><p>{field.evidence.join('\n')}</p></details>}</div>)}</div>}
         </div>
       </div>
@@ -80,4 +96,10 @@ export function TeachingDocuments({ extractionTask, onAdd }: { extractionTask: b
       </>}
     </fieldset>}
   </section>;
+}
+
+function ImagePreview({url}:{url:string}) {
+  // Object URLs refer only to the user's locally selected image.
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={url} alt="Original scanned document for checking OCR text" className={s.scanPreview} />;
 }

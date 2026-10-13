@@ -42,7 +42,7 @@ test('the illustrated story shows input and answer, separates training from shar
   await expect(newMessage).toContainText('My invoice page keeps crashing.');
   await expect(story.getByText(/Illustrated workflow, not live predictions/)).toBeVisible();
   await expect(story.getByRole('link', { name: 'Request early access' })).toHaveAttribute('href', '/early-access');
-  await story.getByRole('link', { name: 'Try the shared model' }).click();
+  await story.getByRole('link', { name: 'Try the playground' }).click();
   await expect(page.getByLabel('Question 1', { exact: true })).toHaveValue(starters[0].question);
   expect(requests).toBe(0);
 });

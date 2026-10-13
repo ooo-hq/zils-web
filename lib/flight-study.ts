@@ -11,7 +11,7 @@ const adapter = result.metrics.adapter_calibrated;
 export const flightImprovement = ((base.brier - adapter.brier) / base.brier * 100).toFixed(1);
 
 export const flightComparisons = [
-  { name: 'Shared Zils', note: 'No flight-specific training', metrics: base, adapted: false },
-  { name: 'Flight-trained Zils', note: 'Trained on January flights', metrics: adapter, adapted: true },
+  { name: 'Before training', note: 'No flight-specific training', metrics: base, adapted: false },
+  { name: 'After training', note: 'Trained on January flights', metrics: adapter, adapted: true },
   { name: 'Historical delay rates', note: 'Simple baseline from the same training data', metrics: result.metrics.historical_rate, adapted: false },
 ] as const;

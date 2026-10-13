@@ -1,5 +1,5 @@
 import { imageDigest, imageQuestionSchema, type ImageQuestion, type imageApi } from './images';
-import { parseCsv, splitGroups } from './training-csv';
+import { parseCsv, splitGroups, type CsvData } from './training-csv';
 import { SPLITS, type Split, type ImageSubmission, type Job, type trainingApi } from './training';
 
 export type ImageExample = { id: string; filename: string; file: File; label: string; groupId: string; state: Record<string, unknown> };
@@ -7,13 +7,13 @@ export type PreparedImageTraining = { splits: Record<Split, ImageExample[]>; cou
 export type ImageDraft = { job?: Job; assets: Record<string, string> };
 // This seed only orders groups; it is not used for cryptography or image identity.
 function orderKey(value: string) { let n=2166136261; for(const c of value) {n ^= c.charCodeAt(0); n=Math.imul(n,16777619);} return (n>>>0).toString(16).padStart(8,'0'); }
-export function mapImageExamples(files: File[], csv?: string): ImageExample[] {
+export function mapImageExamples(files: File[], csv?: string | CsvData): ImageExample[] {
   files = [...files].sort((a,b)=>(a.webkitRelativePath||a.name).localeCompare(b.webkitRelativePath||b.name));
   const paths = files.map(file => file.webkitRelativePath || file.name);
   if (new Set(paths).size !== paths.length) throw new Error('Duplicate filenames are ambiguous. Choose folders with relative paths or rename the files.');
   const rows = files.map((file, i) => ({ id: `image-${i}`, filename: paths[i], file, label: paths[i].split('/').at(-2) || '', groupId: paths[i], state: {} }));
   if (!csv) return rows;
-  const table=parseCsv(csv), filename=table.headers.indexOf('filename'), answer=table.headers.indexOf('answer'), group=table.headers.indexOf('group');
+  const table=typeof csv==='string'?parseCsv(csv):csv, filename=table.headers.indexOf('filename'), answer=table.headers.indexOf('answer'), group=table.headers.indexOf('group');
   if(filename<0 || answer<0) throw new Error('The label CSV needs filename and answer columns; group is optional.');
   rows.forEach(row=>{ row.label=''; });
   const mapped=new Set<number>();
