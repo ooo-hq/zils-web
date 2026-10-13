@@ -17,6 +17,7 @@ const LINK_GROUPS = [
     { href: 'https://github.com/ooo-hq/zils', label: 'Model source' },
   ] },
   { label: 'Keep in touch', links: [
+    { href: `${docsUrl}/changelog`, label: 'Changelog' },
     { href: discordUrl, label: 'Discord' },
     { href: 'https://x.com/zils_ai', label: 'X' },
     { href: '/contact', label: 'Contact' },

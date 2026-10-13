@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { notFound } from 'next/navigation';
+import recordedExamples from '@/data/decision-examples.json';
 import { z } from 'zod';
 import { BitcastExamples } from '@/components/bitcast-examples';
 import { SiteHeader } from '@/components/site-header';
@@ -28,7 +26,7 @@ const position = z.object({
   && row.moves.some(move => move.uci === row.jev && !move.mate)
   && row.moves.some(move => move.uci === row.before)
   && new Set(row.moves.map(move => move.uci)).size === row.moves.length);
-const localData = z.object({
+const exampleData = z.object({
   examples: z.array(z.object({
     id: z.string(), title: z.string(), brand: z.string(), tag: z.string(),
     summary: z.string(), analysis: z.string(), brief: z.string(), content: z.string(),
@@ -51,15 +49,8 @@ const localData = z.object({
   }).refine(row => Object.values(row.scores).every(score => score <= row.total)),
 });
 
-export default async function ExamplesPage() {
-  // Customer examples are authorized for this local preview only.
-  if (process.env.NODE_ENV !== 'development') notFound();
-  const raw = await readFile(join(process.cwd(), '.private', 'bitcast-examples.json'), 'utf8').catch(error => {
-    if (error.code === 'ENOENT') return null;
-    throw error;
-  });
-  if (raw === null) notFound();
-  const data = localData.parse(JSON.parse(raw));
+export default function ExamplesPage() {
+  const data = exampleData.parse(recordedExamples);
 
   return (
     <div className="min-h-screen bg-page font-sans text-ink antialiased">
