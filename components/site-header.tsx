@@ -9,6 +9,7 @@ import { AccountMenu } from '@/components/account-menu';
  * one place. The current page's link renders lit instead of vanishing.
  */
 const LINKS = [
+  { href: '/examples', label: 'examples' },
   { href: '/model', label: 'research', id: 'model' },
   { href: '/bittensor', label: 'bittensor' },
   { href: '/playground', label: 'playground' },

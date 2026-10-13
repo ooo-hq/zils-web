@@ -427,6 +427,18 @@ customer cash receipts and a twelve-month cash forecast. All model months have
 30 days. Negative balances represent a funding gap, not spendable cash. Print
 styles include all scenario inputs for saving an investor discussion as a PDF.
 
+## Recorded decision examples
+
+`/examples` presents interactive replays for chess, creator-post review, and sales
+reply routing. The page leads with selected cases where Zils matches the reference
+and JEV does not, and shows the complete test scores below each demo. These are
+recorded research results, not live model calls or production reliability claims.
+
+`data/decision-examples.json` contains only the 13 selected examples and their
+recorded results. It is bundled for deployment; the page does not read the private
+research folders. Chess choices were checked against the archived independent
+audit. Reply actions are illustrations and do not send messages or change contacts.
+
 ## Checks and GitHub deployment
 
 ```sh

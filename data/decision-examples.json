@@ -1,0 +1,255 @@
+{
+  "examples": [
+    {
+      "id": "T0792",
+      "title": "Recognize a real review",
+      "brand": "TAO Wallet",
+      "tag": "Agrees with Bitcast",
+      "summary": "A creator describes initial doubts, tries the wallet, and ends with a positive assessment.",
+      "analysis": "The creator describes real wallet usage and ends with a positive assessment. Zils accepts the post, matching Bitcast; supplied JEV rejects it. This is an example of agreement with Bitcast, not a decision changed by training.",
+      "brief": "Brand: tao.com (@taodotcom). Product: chrome extension wallet for bittensor/tao/alpha/subnets",
+      "content": "The blue-color-themed extension popped up when connecting to taostats, at first it was a \"what the hell is this? did I click some phishing link\" moment. but found out, it is legit.\n\nprev. version bittensor wallet was $TAO themed black-n-white and once or twice I had complained for its slowness and poor UX.\n\nNow that wallet is completely rebranded to TAO Wallet @taodotcom. After confirming this wallet is legit, I signed it and used it for a transaction, staking and swap feature.\n\nAll smooth. The new branding looks vibrant and energetic. Gonna keep it wallet as one of the main.\n\nHow do you rate this relaunch? I would give 7 out of 10.",
+      "productionReasoning": "",
+      "decisions": {
+        "production": "pass",
+        "jev": "fail",
+        "base": "pass",
+        "zils": "pass"
+      }
+    },
+    {
+      "id": "T1381",
+      "title": "Where the rule gets tricky",
+      "brand": "Green Compute",
+      "tag": "Needs human review",
+      "summary": "A personal story about wasted gas leads into the sponsor\u2019s methane-powered computing.",
+      "analysis": "Zils matches Bitcast\u2019s fail; JEV passes it. Production judged the post below the X v2 rule\u2019s 80% relevance threshold. A human may see the opening story as relevant context, so matching this rejection is not necessarily a better decision.",
+      "brief": "Brand: Green Compute (@green_compute_). Product: Green Compute",
+      "content": "Back when I was a geologist I spent a lot of time on oil, gas and landfill sites where the gas had nowhere to go.\n\nToo remote to pipe anywhere, so it just got flared off. \n\nBitcoin miners were the ones who actually showed up to harness it.\n\nCompanies like @CrusoeAI are doing the same thing now with portable AI data centers.\n\n@green_compute_ is executing on the same idea on Bittensor. \n\nSN110's new site is running 240 5090s powered with methane from pig waste, digested right on the farm it sits on. \n\nThat's ~$3M of compute running on pure waste all because @green_compute_ was creative enough to turn it into a competitive resource.",
+      "productionReasoning": "The tweet is only ~30% about Green Compute, failing the 80% threshold requirement for sponsor focus.",
+      "decisions": {
+        "production": "fail",
+        "jev": "pass",
+        "base": "pass",
+        "zils": "fail"
+      }
+    },
+    {
+      "id": "T0353",
+      "title": "Look beyond a brand mention",
+      "brand": "Probly",
+      "tag": "Learned through training",
+      "summary": "The campaign asks for content about personal prediction markets. This reply only tags the brand.",
+      "analysis": "Before training, Zils accepted the reply. After learning from Bitcast\u2019s examples, Zils rejected it, matching Bitcast\u2019s label. A brand mention alone does not discuss the product.",
+      "brief": "Brand: Probly (@ProblyHQ). Product: personal prediction markets",
+      "content": "@Web3warrior @ProblyHQ bet",
+      "productionReasoning": "The tweet mentions the sponsor's handle but contains insufficient content (only \"bet 3\") to meet the 80% relevance threshold for the sponsor or their topic.",
+      "decisions": {
+        "production": "fail",
+        "base": "pass",
+        "jev": "fail",
+        "zils": "fail"
+      }
+    },
+    {
+      "id": "T0526",
+      "title": "Keep the sponsor in focus",
+      "brand": "Hyperstack",
+      "tag": "Learned through training",
+      "summary": "The post tags Hyperstack but discusses other trading programs and challenges.",
+      "analysis": "Training changed Zils\u2019 decision from pass to fail, matching Bitcast. The post names the sponsor, but its discussion centers on other trading programs. This shows why recognizing a brand name is only part of the task.",
+      "brief": "Brand: Hyperstack (@hyper_stack). Product: scale trading without leaving Hyperliquid",
+      "content": "@HypernovaX @HyperliquidX @ProprXYZ @HyperPNL @hyper_stack \ud83e\udd1d\nyeah, I've seen those challenges, but they aren't available yet\nfor example, Propr also teased $200k challenges, but they aren't live either, so I think it's only fair to exclude them from the comparison for now",
+      "productionReasoning": "The tweet fails to meet the requirement that 80% or more of its content must focus on the sponsor (Hyperstack) or their topic, as it primarily discusses other brands' challenges instead.",
+      "decisions": {
+        "production": "fail",
+        "base": "pass",
+        "jev": "fail",
+        "zils": "fail"
+      }
+    },
+    {
+      "id": "T0449",
+      "title": "A mistake worth showing",
+      "brand": "Niome",
+      "tag": "Zils misses the label",
+      "summary": "The sponsor appears in a list inside a much longer post about another company.",
+      "analysis": "Zils passes the post; JEV agrees with Bitcast\u2019s fail. Most of the post concerns Yuma, while the campaign brief asks about Niome\u2019s genomic data and applications.",
+      "brief": "Brand: Niome (@NiomeAI). Product: genomic data and applications",
+      "content": "BRIEF PROJECT SPOTLIGHT!!!   EP1 (first of its kind)\n\n\u2713 Yuma AI - @YumaGroup \n\nStumbled on Yuma while researching new subnets and almost thought it was one of the subnets on Bittensor. But I was astonished\n\n\u2192 Yuma is a DCG (Digital Currency Group) subsidiary that is building institutional rails into Bittensor, they invests in, builds, and scales computational infrastructure in the Bittensor ecosystem.\n\n\u2192 Yuma offers four major services:\n\n1/ Accelerator/Incubator\n\u2022 capital + GTM for subnet teams. \n\u2022 Track records: \n> @NiomeAI (SN55), \n> @_redteam_ (SN61), \n> @babelbit (SN59), \n> @webuildscore (SN44), \n> @bitsecai (SN60),  \n> @numinous_ai (SN6), \n> @b1m_ai (SN105),  \n> @trishoolai (SN23)\n> @yanez__ai (SN54)\n> Streetvision by @NATIXNetwork (SN72)\n\n2/ Validator\n\u2022 3rd largest on the network. \n\u2022 Onboarded 8 institutional validator partners this year (BitGo, Copper, Crypto_com) and supported 8 subnet launches\n\n3/ Asset Management\n\u2022 $10M DCG anchor. \n\u2022 Two funds: Subnet Composite (market-cap weighted, all subnets) and Large Cap Subnet Fund. \n\u2022 First real institutional on-ramp to subnet tokens as an asset class\n\n4/ Mining \nIn-house AI/ML expertise deployed to help subnets compete at scale\n\u2022 Subnet-specific mining support\n\u2022 Reliable trust score & high-quality outputs for subnet owners\n\u2022 Base miner development or advisory\n\n>>>>> \nYuma's State of Bittensor report shows that subnet tokens now make up 27% of TAO's total market cap.\n\nThis indicates that real value is returning to subnet tokens instead of just coming from emissions.\n\n>>>>>\nWhy does Yuma matter?\n\nYuma is a key player in connecting money, support, and information on Bittensor. \n\nTheir list of supported projects is a good sign of which subnets have real financial backing. \n\nIf big investors choose to invest in subnet tokens, YCX is the first pathway for that money.",
+      "productionReasoning": "The tweet fails to meet the 80% relevance threshold to the sponsor (Niomie's genomic data/applications), as it primarily discusses Yuma AI's Bittensor initiatives.",
+      "decisions": {
+        "production": "fail",
+        "jev": "fail",
+        "base": "pass",
+        "zils": "pass"
+      }
+    }
+  ],
+  "scores": [
+    {
+      "name": "Zils",
+      "note": "Trained on Bitcast examples",
+      "matches": 139,
+      "total": 155
+    },
+    {
+      "name": "TypeSafe JEV",
+      "note": "Supplied verdicts",
+      "matches": 132,
+      "total": 155
+    },
+    {
+      "name": "Zils before training",
+      "note": "Without task training",
+      "matches": 116,
+      "total": 155
+    }
+  ],
+  "replies": [
+    {
+      "id": "reserve/wrong-finance",
+      "content": "I'm in finance, so this isn't really for me.",
+      "previous": null,
+      "intent": "wrong_person",
+      "expected": "wrong_person",
+      "before": "wrong_person",
+      "jev": "negative"
+    },
+    {
+      "id": "reserve/meeting-open-call",
+      "content": "I'd be open to a quick call to see if this fits.",
+      "previous": null,
+      "intent": "meeting_acceptance",
+      "expected": "meeting_acceptance",
+      "before": "meeting_acceptance",
+      "jev": "meeting_acceptance"
+    },
+    {
+      "id": "reserve/not-now-reorg",
+      "content": "We're in the middle of a reorg. Check back in February.",
+      "previous": null,
+      "intent": "not_now",
+      "expected": "not_now",
+      "before": "not_now",
+      "jev": "not_now"
+    },
+    {
+      "id": "reserve/referral-copied",
+      "content": "You'll want to talk to Hannah Cole, our Head of Sales Ops. I've copied her here.",
+      "previous": null,
+      "intent": "referral",
+      "expected": "referral",
+      "before": "referral",
+      "jev": "referral"
+    },
+    {
+      "id": "reserve/optout-mixed-price",
+      "content": "What do you charge? Either way, stop the follow-ups.",
+      "previous": null,
+      "intent": "opt_out",
+      "expected": "opt_out",
+      "before": "opt_out",
+      "jev": "opt_out"
+    }
+  ],
+  "chess": {
+    "examples": [
+      {
+        "id": "15Odm",
+        "title": "The rook finish",
+        "side": "white",
+        "board": ".....k.........R.....K.......P....p.......................r.....",
+        "moves": [
+          {
+            "uci": "h7h8",
+            "label": "White rook from h7 to h8",
+            "fromSquare": "h7",
+            "toSquare": "h8",
+            "board": ".....k.R.............K.......P....p.......................r.....",
+            "mate": true
+          },
+          {
+            "uci": "h7f7",
+            "label": "White rook from h7 to f7",
+            "fromSquare": "h7",
+            "toSquare": "f7",
+            "board": ".....k.......R.......K.......P....p.......................r.....",
+            "mate": false
+          }
+        ],
+        "zils": "h7h8",
+        "jev": "h7f7",
+        "before": "h7h8"
+      },
+      {
+        "id": "0ZEc6",
+        "title": "Turn the tables",
+        "side": "black",
+        "board": ".............R.p.......k.....p.P.......K......P......r..........",
+        "moves": [
+          {
+            "uci": "f2h2",
+            "label": "Black rook from f2 to h2",
+            "fromSquare": "f2",
+            "toSquare": "h2",
+            "board": ".............R.p.......k.....p.P.......K......P........r........",
+            "mate": true
+          },
+          {
+            "uci": "f2f4",
+            "label": "Black rook from f2 to f4",
+            "fromSquare": "f2",
+            "toSquare": "f4",
+            "board": ".............R.p.......k.....p.P.....r.K......P.................",
+            "mate": false
+          }
+        ],
+        "zils": "f2h2",
+        "jev": "f2f4",
+        "before": "f2h2"
+      },
+      {
+        "id": "0JSXW",
+        "title": "The winning pawn",
+        "side": "white",
+        "board": "...r.......b...R.....k....b..B.......KP.........P...............",
+        "moves": [
+          {
+            "uci": "g4g5",
+            "label": "White pawn from g4 to g5",
+            "fromSquare": "g4",
+            "toSquare": "g5",
+            "board": "...r.......b...R.....k....b..BP......K..........P...............",
+            "mate": true
+          },
+          {
+            "uci": "h7f7",
+            "label": "White rook from h7 to f7",
+            "fromSquare": "h7",
+            "toSquare": "f7",
+            "board": "...r.......b.R.......k....b..B.......KP.........P...............",
+            "mate": false
+          },
+          {
+            "uci": "h7h6",
+            "label": "White rook from h7 to h6",
+            "fromSquare": "h7",
+            "toSquare": "h6",
+            "board": "...r.......b.........k.R..b..B.......KP.........P...............",
+            "mate": false
+          }
+        ],
+        "zils": "g4g5",
+        "jev": "h7f7",
+        "before": "h7f7"
+      }
+    ],
+    "scores": {
+      "trained": 260,
+      "shared": 220,
+      "jev": 223
+    },
+    "total": 512
+  }
+}
