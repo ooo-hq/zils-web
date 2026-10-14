@@ -35,6 +35,14 @@ test('completed, qualified, and non-qualifying results stay distinct', () => {
   assert.equal(rejected.stage, TRAINING_STAGES.length);
   assert.equal(rejected.tone, 'done');
 });
+
+test('qualification runs parse and read as worker grading, not a customer model', () => {
+  const row = { ...job('completed'), result: { delivery: { status: 'qualification_complete' }, baseline: { accuracy: 0.9, brier: 0.1, skill: 0.5 }, miners: [], weights: {} } };
+  assert.ok(jobSchema.safeParse(row).success);
+  const state = trainingProgress(row);
+  assert.match(state.label, /Qualification/);
+  assert.doesNotMatch(state.title, /ready to download/);
+});
 test('a stale result cannot turn a running job into a completed one', () => {
   const state = trainingProgress({ ...job('running'), result: { delivery: { status: 'accepted' } } });
   assert.equal(state.stage, 1);

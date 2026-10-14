@@ -41,7 +41,7 @@ export const jobSchema = z.object({
   data_expires_at: z.string().nullable().optional(),
   workflow: z.object({ state: z.string(), message: z.string().optional(), model_id: z.string().optional(), model_alias: z.string().optional(), model_name: z.string().min(1).max(128).optional(), fingerprint: z.string().optional() }).nullable().optional(),
   result: z.object({
-    delivery: z.object({ status: z.enum(['accepted', 'no_qualifying_model']), uid: z.number().optional(), sha256: z.string().optional(), brier_improvement: z.number().optional(), acceptance: imageAcceptanceSchema }),
+    delivery: z.object({ status: z.enum(['accepted', 'no_qualifying_model', 'qualification_complete']), uid: z.number().optional(), sha256: z.string().optional(), brier_improvement: z.number().optional(), acceptance: imageAcceptanceSchema.optional() }),
     image_metrics_version: z.literal('zils-image-metrics/v1').optional(),
     baseline: metrics.extend(imageMetricFields),
     miners: z.array(z.object({ uid: z.number(), status: z.string(), accuracy: z.number().optional(), brier: z.number().optional(), skill: z.number().optional(), ...imageMetricFields })),
