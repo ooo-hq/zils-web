@@ -19,6 +19,8 @@ import { TrainingRunStatus } from '@/components/training-run-status';
 import { useAuthSession } from '@/components/auth-session';
 import { signInWithGoogle } from '@/lib/training-auth';
 import { currentTrainingJob, trainingProgress } from '@/lib/training-status';
+import { runToasts, type RunToast } from '@/lib/run-toasts';
+import { RunToasts } from '@/components/run-toasts';
 import { ImageDecisionPanel } from '@/components/image-decision-panel';
 import { imageApi, type ImageModels } from '@/lib/images';
 import { ImageTrainingResults, PrivateImageTest } from '@/components/image-training-results';
@@ -111,6 +113,10 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     return () => controller.abort();
   }, [config.decisionApiUrl, config.storage, imageToken]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [toasts, setToasts] = useState<RunToast[]>([]);
+  const seenJobs = useRef<Job[] | null>(null);
+  const announce = (next: Job[]) => { const fresh = runToasts(seenJobs.current, next); seenJobs.current = next; if (fresh.length) setToasts(previous => [...previous, ...fresh]); };
+  const dismissToast = useCallback((id: string) => setToasts(previous => previous.filter(toast => toast.id !== id)), []);
   const [availableModels, setAvailableModels] = useState<Job[]>([]);
   const [panelOpen, setPanelOpen] = useState(bulkImport);
   const [downloadJobId, setDownloadJobId] = useState('');
@@ -156,7 +162,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
       try {
         const { jobs, models } = await loadJobs(controller.signal);
         if (controller.signal.aborted) return;
-        setJobs(jobs); setAvailableModels(models ?? jobs); if (runId) setError(''); setLoading(false); setCheckedAt(Date.now()); setRefreshError(false);
+        setJobs(jobs); announce(jobs); setAvailableModels(models ?? jobs); if (runId) setError(''); setLoading(false); setCheckedAt(Date.now()); setRefreshError(false);
         setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || jobs.find(job => job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || '');
         timer = setTimeout(poll, jobs.some(job => !terminal(job)) ? 10_000 : 30_000);
       } catch (error) { if (!controller.signal.aborted) { if (error instanceof TrainingApiError && error.status === 401) errorHandler.current(error); if (runId) { setJobs([]); setError(error instanceof TrainingApiError && [403, 404].includes(error.status) ? 'This run is not available to this account.' : message(error)); } setLoading(false); setRefreshError(true); timer = setTimeout(poll, 30_000); } }
@@ -170,7 +176,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     try {
       const { jobs, models } = await loadJobs(life.current?.signal);
       if (!life.current?.signal.aborted) {
-        setJobs(jobs); setAvailableModels(models ?? jobs); setCheckedAt(Date.now()); setRefreshError(false);
+        setJobs(jobs); announce(jobs); setAvailableModels(models ?? jobs); setCheckedAt(Date.now()); setRefreshError(false);
         setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || jobs.find(job => job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || '');
       }
     } catch (error) { if (!life.current?.signal.aborted) { if (error instanceof TrainingApiError && error.status === 401) handleError(error); if (runId) { setJobs([]); setError(error instanceof TrainingApiError && [403, 404].includes(error.status) ? 'This run is not available to this account.' : message(error)); } setRefreshError(true); } }
@@ -323,6 +329,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     {busy && cancellable && <button type="button" className={styles.secondary} onClick={() => operation.current?.abort()}>Stop upload</button>}
     {refreshError && !runId && history.length > 0 && !selected && <p role="status" className={styles.notice}>Connection interrupted. Showing your last loaded runs; we’ll retry automatically.</p>}
     {!runId && !loading && <TrainedModelLibrary jobs={availableModels} />}
+    <RunToasts toasts={toasts} onDismiss={dismissToast} />
     <div className={styles.workspace}>
       {loading ? <WorkspaceLoading label={runId ? "Loading your training run" : "Loading your models and runs"} /> : !selected && (runId || !history.length) ? <section className={styles.emptyWorkspace}>
         <h2>{runId ? 'Run unavailable' : refreshError ? 'Your runs could not be loaded.' : 'Train your first model.'}</h2>
