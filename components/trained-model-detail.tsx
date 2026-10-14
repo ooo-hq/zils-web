@@ -95,6 +95,7 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
       </div>
       <div className={styles.headingAside}><ZilsDecisionMark className={styles.mark} /><div className={styles.actions}>
         <button className={training.secondary} onClick={refresh}>Refresh</button>
+        {ready && !image && <Link className={training.secondary} href={`/train?upgrade=${job.id}`}>Train a replacement<LinkLoading /></Link>}
         {ready && <a href="#model-access" className={training.button}>Use this model</a>}
       </div></div>
     </header>
@@ -132,7 +133,7 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
             <ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={signOut} />
             <div className={styles.imageTest}><PrivateImageTest job={job} owner={owner} token={token} apiUrl={config.decisionApiUrl} storage={config.storage} /></div>
           </> : <p>The API address is not configured here. Contact Zils for connection details.</p>}
-        </> : <TrainedModelQuickstart modelId={job.workflow.model_id} modelName={job.workflow.model_name} apiUrl={config.decisionApiUrl} apiKeys={<ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={signOut} />} />}
+        </> : <TrainedModelQuickstart modelId={job.workflow.model_id} modelName={job.workflow.model_name} modelAlias={job.workflow.model_alias} apiUrl={config.decisionApiUrl} apiKeys={<ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={signOut} />} />}
       </section>
     </>}
 
@@ -141,6 +142,7 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
       <dl>
         {job.workflow?.model_id && <div><dt>Full API model ID</dt><dd><code>{job.workflow.model_id}</code></dd></div>}
         {job.workflow?.model_name && <div><dt>API model name</dt><dd><code>{job.workflow.model_name}</code></dd></div>}
+        {job.workflow?.model_alias && <div><dt>Task alias</dt><dd><code>{job.workflow.model_alias}</code> · follows this task across replacements</dd></div>}
         {job.model && <div><dt>Starting model</dt><dd>{job.model.name}</dd></div>}
         <div><dt>Training run</dt><dd><Link href={`/train?run=${job.id}`}>View full run<LinkLoading /></Link><code className={styles.identifier}>{job.id}</code></dd></div>
         {job.selection?.previous && <div><dt>Previous version</dt><dd><Link href={`/train/models/${job.selection.previous.job_id}`}>{job.selection.previous.model_id}</Link></dd></div>}

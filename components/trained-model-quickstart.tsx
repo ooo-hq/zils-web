@@ -38,9 +38,9 @@ function CopyField({ label, value, language }: { label: string; value: string; l
   </div>;
 }
 
-export function TrainedModelQuickstart({ modelId, modelName, apiUrl, apiKeys }: { modelId: string; modelName?: string; apiUrl: string | null; apiKeys: ReactNode }) {
+export function TrainedModelQuickstart({ modelId, modelName, modelAlias, apiUrl, apiKeys }: { modelId: string; modelName?: string; modelAlias?: string; apiUrl: string | null; apiKeys: ReactNode }) {
   const [language, setLanguage] = useState<ExampleLanguage>('Python');
-  const requestModel = modelName || modelId;
+  const requestModel = modelAlias || modelName || modelId;
   const example = apiUrl ? modelQuickstart(requestModel, apiUrl, language) : null;
   function download() {
     if (!example) return;
@@ -51,8 +51,8 @@ export function TrainedModelQuickstart({ modelId, modelName, apiUrl, apiKeys }: 
   return <section className={styles.quickstart} aria-label="Use your model">
     <h3>Use your model</h3>
     <p className={styles.intro}>Your model is hosted by Zils. Copy its {modelName ? 'name' : 'ID'} into your app, or make your first request with the example below.</p>
-    <CopyField key={requestModel} label={modelName ? 'API model name' : 'API model ID'} value={requestModel} />
-    {modelName && <p className={styles.intro}>Use this name in your request’s <code>model</code> field. The full model ID still works and is saved in technical details.</p>}
+    <CopyField key={requestModel} label={modelAlias ? 'Task alias' : modelName ? 'API model name' : 'API model ID'} value={requestModel} />
+    {modelAlias ? <p className={styles.intro}>Use this alias in your request’s <code>model</code> field. It stays the same when you train a replacement, so an accepted upgrade reaches your app without a code change. The run’s own name and ID still work and are saved in technical details.</p> : modelName && <p className={styles.intro}>Use this name in your request’s <code>model</code> field. The full model ID still works and is saved in technical details.</p>}
     {example ? <ol className={styles.steps}>
       <li>
         <h4>Get your API key</h4>

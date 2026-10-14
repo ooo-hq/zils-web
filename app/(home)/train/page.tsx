@@ -16,14 +16,15 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function TrainPage({ searchParams }: { searchParams: Promise<{ run?: string | string[]; setup?: string | string[] }> }) {
-  const { run, setup } = await searchParams;
+export default async function TrainPage({ searchParams }: { searchParams: Promise<{ run?: string | string[]; setup?: string | string[]; upgrade?: string | string[] }> }) {
+  const { run, setup, upgrade } = await searchParams;
   if (run !== undefined && !jobSchema.shape.id.safeParse(run).success) notFound();
+  if (upgrade !== undefined && !jobSchema.shape.id.safeParse(upgrade).success) notFound();
   const config = trainingConfig();
   return <div className={`${styles.page} ${styles.workspacePage}`}><div className={`${styles.container} ${styles.workspaceContainer}`}>
     <SiteHeader tone="light" current="train" />
     <main id="main-content" tabIndex={-1} className={styles.workspaceMain}>
-      {config ? <TrainingDashboard runId={typeof run === 'string' ? run : undefined} bulkImport={run === undefined && setup === 'bulk'} config={{ ...config, assistantConfigured: setupConfigured() }} /> : <><div className={styles.workspaceHeading}><h1>Training</h1></div><section id="training-workspace" className={styles.panel} aria-labelledby="offline-title"><h2 id="offline-title">Training is not configured here yet.</h2><p>Sign-in, uploads, and job submission become available once this environment is connected to Supabase and the training coordinator. No jobs are simulated.</p><div className={styles.actions}><Link href="/" className={styles.button}>Back to Zils</Link><Link href="/model" className={styles.secondary}>Explore the research</Link></div></section><details className={styles.signInGuide}><summary>What examples should I bring?</summary><TrainingGuide /></details></>}
+      {config ? <TrainingDashboard runId={typeof run === 'string' ? run : undefined} bulkImport={run === undefined && setup === 'bulk'} upgradeOf={run === undefined && typeof upgrade === 'string' ? upgrade : undefined} config={{ ...config, assistantConfigured: setupConfigured() }} /> : <><div className={styles.workspaceHeading}><h1>Training</h1></div><section id="training-workspace" className={styles.panel} aria-labelledby="offline-title"><h2 id="offline-title">Training is not configured here yet.</h2><p>Sign-in, uploads, and job submission become available once this environment is connected to Supabase and the training coordinator. No jobs are simulated.</p><div className={styles.actions}><Link href="/" className={styles.button}>Back to Zils</Link><Link href="/model" className={styles.secondary}>Explore the research</Link></div></section><details className={styles.signInGuide}><summary>What examples should I bring?</summary><TrainingGuide /></details></>}
     </main>
     <TrainingFooter />
   </div></div>;
