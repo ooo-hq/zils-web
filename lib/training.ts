@@ -6,7 +6,7 @@ export type Split = typeof SPLITS[number];
 export const MAX_DATASET_BYTES = 128 * 1024 * 1024;
 /** Text adapters train on the pinned H2O profile, which accepts up to 255 outcomes per question; image questions stay at 16. */
 export const MAX_TEXT_OUTCOMES = 255;
-export const acceptanceSchema = z.object({ min_accuracy: z.number().min(0).max(1), min_brier_improvement: z.number().min(0).max(2) });
+export const acceptanceSchema = z.object({ min_accuracy: z.number().min(0).max(1), min_brier_improvement: z.number().min(0).max(2), previous_job_id: z.string().uuid().optional() });
 export const submissionSchema = z.object({
   name: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/, 'Use 1–64 lowercase letters, digits, or hyphens; start with a letter or digit.'),
   acceptance: acceptanceSchema,

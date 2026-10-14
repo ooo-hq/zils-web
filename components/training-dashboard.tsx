@@ -34,7 +34,7 @@ type Config = { assistantConfigured?: boolean; storage: StorageLocations; url: s
 const message = (error: unknown) => error instanceof Error ? error.message : 'Something went wrong. Please try again.';
 const metric = (value: number | undefined, percent = false) => value === undefined ? '—' : percent ? `${(value * 100).toFixed(2)}%` : value.toFixed(4);
 
-export function TrainingDashboard({ config, runId, bulkImport = false }: { config: Config; runId?: string; bulkImport?: boolean }) {
+export function TrainingDashboard({ config, runId, bulkImport = false, upgradeOf }: { config: Config; runId?: string; bulkImport?: boolean; upgradeOf?: string }) {
   const { client, session, error: sessionError } = useAuthSession(config);
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -75,7 +75,7 @@ export function TrainingDashboard({ config, runId, bulkImport = false }: { confi
   return <>
     {(error || sessionError) && <p role="alert" className={styles.error}>{error || sessionError}</p>}
     {session && client ? <div id="training-workspace">
-      <SignedInDashboard key={`${session.user.id}:${runId || (bulkImport ? "bulk" : "index")}`} runId={runId} bulkImport={bulkImport} owner={session.user.id} client={client} config={config} onExpired={signOut} />
+      <SignedInDashboard key={`${session.user.id}:${runId || (upgradeOf ? `upgrade:${upgradeOf}` : bulkImport ? "bulk" : "index")}`} runId={runId} bulkImport={bulkImport} upgradeOf={upgradeOf} owner={session.user.id} client={client} config={config} onExpired={signOut} />
     </div> : <>
       <div className={styles.workspaceHeading}><h1>Training</h1><p>Teach Zils a decision using examples your team has reviewed.</p></div>
       <section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}>
@@ -96,8 +96,8 @@ export function TrainingDashboard({ config, runId, bulkImport = false }: { confi
   </>;
 }
 
-function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport }: { runId?: string; bulkImport: boolean; owner: string; client: SupabaseClient; config: Config; onExpired: () => Promise<void> }) {
-  const [intakeMode, setIntakeMode] = useState<'choose' | 'text' | 'images'>('choose');
+function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport, upgradeOf }: { runId?: string; bulkImport: boolean; upgradeOf?: string; owner: string; client: SupabaseClient; config: Config; onExpired: () => Promise<void> }) {
+  const [intakeMode, setIntakeMode] = useState<'choose' | 'text' | 'images'>(upgradeOf ? 'text' : 'choose');
   const [imagesAvailable, setImagesAvailable] = useState(false);
   const [imageProfile, setImageProfile] = useState<ImageModels['training_profile']>();
   const imageToken = useCallback(async () => {
@@ -121,7 +121,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     for (const change of fresh) toast(change.name, { id: change.id, description: change.title, duration: change.sticky ? 15_000 : 8_000, action: { label: 'View run', onClick: () => router.push(`/train?run=${change.jobId}`) } });
   };
   const [availableModels, setAvailableModels] = useState<Job[]>([]);
-  const [panelOpen, setPanelOpen] = useState(bulkImport);
+  const [panelOpen, setPanelOpen] = useState(bulkImport || Boolean(upgradeOf));
   const [downloadJobId, setDownloadJobId] = useState('');
   const focusSubmitted = useRef(false);
   const [loading, setLoading] = useState(true);
@@ -296,6 +296,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
         {job.workflow?.state === 'ready' && job.workflow.model_id && <p className={styles.hash}>Full API model ID<br /><code>{job.workflow.model_id}</code></p>}
         {job.created_at && <p>Submitted {new Date(job.created_at).toLocaleString()}</p>}
         {job.model && <p>Starting model: <strong>{job.model.name}</strong></p>}
+        {job.selection?.previous && <p>Replaces: <Link href={`/train/models/${job.selection.previous.job_id}`}>{job.selection.previous.model_id}<LinkLoading /></Link>. The new model goes live only if it beats that version on your test examples.</p>}
         {job.status === 'completed' && !job.result && <p>Result details are not available yet. Refresh to try again.</p>}
         {job.result && job.model?.id !== 'imajev-4b-v1' && <>
           <p className={styles.help}>Measured on examples held aside from training. Results are not a guarantee on future inputs.</p>
@@ -362,7 +363,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
       </div>
     </SheetContent>}
     {imageProfile && imageService && <ImageTrainingIntake active={intakeMode === 'images'} onChooseType={() => setIntakeMode('choose')} assistantConfigured={config.assistantConfigured} owner={owner} token={imageToken} trainingApi={api} imageApi={imageService} profile={imageProfile} resumeJob={jobs.find(job => job.model?.id === 'imajev-4b-v1' && job.status === 'uploading')} onSubmitted={replaceJob} />}
-    <TrainingIntake active={intakeMode === 'text'} onChooseType={() => setIntakeMode('choose')} assistantConfigured={config.assistantConfigured} key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={error} needsCredit={needsCredit} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
+    <TrainingIntake active={intakeMode === 'text'} upgrade={upgradeOf ? { id: upgradeOf, name: jobs.find(job => job.id === upgradeOf)?.name } : undefined} onChooseType={() => setIntakeMode('choose')} assistantConfigured={config.assistantConfigured} key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={error} needsCredit={needsCredit} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
       if (focusSubmitted.current) { event.preventDefault(); focusSubmitted.current = false; statusMessage.current?.focus(); }
     }} />
   </Sheet>;

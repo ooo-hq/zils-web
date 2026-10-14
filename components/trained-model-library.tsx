@@ -10,7 +10,7 @@ import training from '@/app/(home)/train/train.module.css';
 import styles from './trained-model-library.module.css';
 
 function ModelRow({ job }: { job: Job }) {
-  const name = job.workflow!.model_name || job.workflow!.model_id!;
+  const name = job.workflow!.model_alias || job.workflow!.model_name || job.workflow!.model_id!;
   const field = useRef<HTMLElement>(null);
   const [notice, setNotice] = useState('');
   const [copied, setCopied] = useState(false);
@@ -30,10 +30,11 @@ function ModelRow({ job }: { job: Job }) {
     <div className={styles.identity}>
       <h3><Link href={`/train/models/${job.id}`}>{job.name}<LinkLoading /></Link></h3>
       <code ref={field} tabIndex={0} aria-label={`API name for ${job.name}`}>{name}</code>
+      {job.selection?.previous && <span className={styles.ready}>Replaces an earlier version</span>}
       <span className={styles.ready}>Ready to use{job.created_at && <time dateTime={job.created_at}>Trained {new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time>}</span>
     </div>
     <div className={styles.controls}>
-      <button type="button" className={training.secondary} onClick={copy}>{copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}{copied ? 'Copied' : job.workflow!.model_name ? 'Copy name' : 'Copy ID'}</button>
+      <button type="button" className={training.secondary} onClick={copy}>{copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}{copied ? 'Copied' : job.workflow!.model_alias ? 'Copy alias' : job.workflow!.model_name ? 'Copy name' : 'Copy ID'}</button>
       <Link className={training.button} href={`/train/models/${job.id}`}>View model<LinkLoading /></Link>
       <span role="status" className={styles.notice}>{notice}</span>
     </div>
