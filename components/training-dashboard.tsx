@@ -289,7 +289,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
         {job.result && job.model?.id !== 'imajev-4b-v1' && <>
           <p className={styles.help}>Measured on examples held aside from training. Results are not a guarantee on future inputs.</p>
           <div className={styles.metrics}><div><span>Base model accuracy</span><strong>{metric(job.result.baseline.accuracy, true)}</strong></div><div><span>Base model Brier loss</span><strong>{metric(job.result.baseline.brier)}</strong></div></div>
-          <p className={styles.help}>Required: {metric(job.result.delivery.acceptance.min_accuracy, true)} accuracy; {metric(job.result.delivery.acceptance.min_brier_improvement)} absolute Brier improvement.</p>
+          {job.result.delivery.acceptance && <p className={styles.help}>Required: {metric(job.result.delivery.acceptance.min_accuracy, true)} accuracy; {metric(job.result.delivery.acceptance.min_brier_improvement)} absolute Brier improvement.</p>}
           <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Candidate evaluations"><table><thead><tr><th>Candidate</th><th>Status</th><th>Accuracy</th><th>Brier loss</th></tr></thead><tbody>{job.result.miners.map(miner => <tr key={miner.uid}><th>{miner.uid}{job.result?.delivery.uid === miner.uid ? ' · selected' : ''}</th><td>{miner.status}</td><td>{metric(miner.accuracy, true)}</td><td>{metric(miner.brier)}</td></tr>)}</tbody></table></div>
           {job.result.delivery.sha256 && <p className={styles.hash}>Checkpoint SHA-256<br /><code>{job.result.delivery.sha256}</code></p>}
           {canDownload(job) && <p className={styles.help}>Download links expire. Files: {downloadFiles(job).join(', ')}.</p>}

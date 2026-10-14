@@ -13,7 +13,7 @@ const percent = (value: number | null | undefined) => value == null ? 'Not measu
 const decimal = (value: number | undefined) => value === undefined ? 'Not measured' : value.toFixed(3);
 export function ImageTrainingResults({ job }: { job: Job }) {
   if (!job.result) return null;
-  const result = job.result, policy = result.delivery.acceptance;
+  const result = job.result, policy = result.delivery.acceptance ?? job.acceptance ?? { min_accuracy: 0, min_brier_improvement: 0 };
   const previous = job.selection?.previous;
   const baselineLabel = previous ? 'Previous client model' : 'Stock Imajev';
   const rows = [{ ...result.baseline, uid: 'baseline', status: 'evaluated' }, ...result.miners];
