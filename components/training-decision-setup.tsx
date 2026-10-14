@@ -38,7 +38,7 @@ export function TrainingDecisionSetup({ kind, question, answers, onQuestion, onA
     if (busy || !question.trim()) return;
     const controller = new AbortController(); operation.current = controller;
     const timer = setTimeout(() => controller.abort('timeout'), 35000);
-    const messages: SetupMessage[] = answer ? [...history.current, { role: 'user', content: answer }] : [{ role: 'user', content: `Help me set up ${kind === 'images' ? 'image' : 'text'} training. Create exactly one choice question with 2–16 short, self-contained answer labels. Ask a clarification if needed. Do not invent training examples or correct answers. My goal: ${question}${answers.trim() ? `\nPossible answers: ${answers.slice(0, 3000)}` : ''}` }];
+    const messages: SetupMessage[] = answer ? [...history.current, { role: 'user', content: answer }] : [{ role: 'user', content: `Help me set up ${kind === 'images' ? 'image' : 'text'} training. Create exactly one choice question with ${kind === 'images' ? '2–16' : '2–255'} short, self-contained answer labels. Ask a clarification if needed. Do not invent training examples or correct answers. My goal: ${question}${answers.trim() ? `\nPossible answers: ${answers.slice(0, 3000)}` : ''}` }];
     setBusy(true); setError(''); setNote('');
     try {
       const response = await fetch('/api/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: messages.length > 11 ? [messages[0], ...messages.slice(-10)] : messages }), signal: controller.signal });

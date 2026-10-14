@@ -1,5 +1,5 @@
 import { splitGroups, type ColumnMapping, type CsvData } from './training-csv';
-import { SPLITS, submissionSchema, validateDatasets, type Split } from './training';
+import { MAX_TEXT_OUTCOMES, SPLITS, submissionSchema, validateDatasets, type Split } from './training';
 
 export type TeachingTask = { kind: 'sort' | 'write' | 'extract'; goal: string; rules: string; answers: string[] };
 export type TeachingSplit = 'train' | 'calibration' | 'test';
@@ -27,7 +27,7 @@ export function inspectTeachingExamples(task: TeachingTask, examples: TeachingEx
   const seen = new Map<string, TeachingExample>();
   if (!task.goal.trim()) gaps.push('Describe the task you want the model to learn.');
   if (!included.length) gaps.push('Add at least one example to start teaching.');
-  if (task.kind === 'sort' && (task.answers.length < 2 || task.answers.length > 16 || new Set(task.answers).size !== task.answers.length || task.answers.some(answer => !answer.trim() || answer.length > 100))) gaps.push('Choose 2–16 different possible answers, up to 100 characters each.');
+  if (task.kind === 'sort' && (task.answers.length < 2 || task.answers.length > MAX_TEXT_OUTCOMES || new Set(task.answers).size !== task.answers.length || task.answers.some(answer => !answer.trim() || answer.length > 100))) gaps.push(`Choose 2–${MAX_TEXT_OUTCOMES} different possible answers, up to 100 characters each.`);
   for (const example of included) {
     const issue = (message: string) => issues.push({ id: example.id, message });
     if (!example.input.trim()) issue('Add the information the model receives.');

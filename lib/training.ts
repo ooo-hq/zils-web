@@ -4,6 +4,8 @@ import { uploadSchema, uploadDescriptor, storageUrl, type StorageLocations } fro
 export const SPLITS = ['train', 'calibration', 'test'] as const;
 export type Split = typeof SPLITS[number];
 export const MAX_DATASET_BYTES = 128 * 1024 * 1024;
+/** Text adapters train on the pinned H2O profile, which accepts up to 255 outcomes per question; image questions stay at 16. */
+export const MAX_TEXT_OUTCOMES = 255;
 export const acceptanceSchema = z.object({ min_accuracy: z.number().min(0).max(1), min_brier_improvement: z.number().min(0).max(2) });
 export const submissionSchema = z.object({
   name: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/, 'Use 1–64 lowercase letters, digits, or hyphens; start with a letter or digit.'),
@@ -92,7 +94,7 @@ export async function validateDatasets(files: Record<Split, Blob>, signal?: Abor
       const choices = q.type === 'noul' ? ['false', 'true'] : q.type === 'score' && Array.isArray(q.criteria) ? q.criteria.map((_, i) => String(i)) : q.type === 'choice' && q.criteria && typeof q.criteria === 'object' && !Array.isArray(q.criteria) ? Object.keys(q.criteria) : [];
       if (q.type === 'noul' && q.criteria != null && (typeof q.criteria !== 'object' || Array.isArray(q.criteria) || Object.keys(q.criteria).some(key => !['true', 'false'].includes(key)))) throw new Error(`${split}, line ${line}: noul criteria must use true/false keys.`);
       if (new TextEncoder().encode(JSON.stringify(input)).length > 128 * 1024) throw new Error(`${split}, line ${line}: case exceeds 128 KiB.`);
-      if (choices.length < 2 || choices.length > 16 || choices.some(key => !key) || !choices.includes(row.label)) throw new Error(`${split}, line ${line}: question needs 2–16 outcomes and a label matching an outcome.`);
+      if (choices.length < 2 || choices.length > MAX_TEXT_OUTCOMES || choices.some(key => !key) || !choices.includes(row.label)) throw new Error(`${split}, line ${line}: question needs 2–${MAX_TEXT_OUTCOMES} outcomes and a label matching an outcome.`);
       if (ids.has(row.id)) throw new Error(`${split}, line ${line}: duplicate case ID across the datasets.`);
       ids.add(row.id);
       if (groups.has(row.group_id) && groups.get(row.group_id) !== split) throw new Error(`${split}, line ${line}: related source group crosses dataset splits.`);

@@ -128,7 +128,8 @@ test('mapping suggestions recognize business headers and never select contact fi
   assert.deepEqual(suggestMapping(table), { inputs: ['Subject','Message'], answer: 'Correct Answer', group: 'Ticket ID' });
   assert.deepEqual(suggestAnswers(table, 'Correct Answer'), ['Billing']);
   assert.equal(suggestMapping({ headers: ['Unknown', 'Outcome'], rows: [['abc','Yes']] }).inputs.length, 0);
-  assert.deepEqual(suggestAnswers({ headers:['Answer'], rows:Array.from({length:17},(_,i)=>[String(i)]) }, 'Answer'), []);
+  assert.equal(suggestAnswers({ headers:['Answer'], rows:Array.from({length:255},(_,i)=>[String(i)]) }, 'Answer').length, 255);
+  assert.deepEqual(suggestAnswers({ headers:['Answer'], rows:Array.from({length:256},(_,i)=>[String(i)]) }, 'Answer'), []);
 });
 test('readiness identifies all missing answers, conflicts, and empty input rows with source references', () => {
   const table = csv();

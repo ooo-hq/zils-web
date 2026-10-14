@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { prepareTraining, type ColumnMapping, type CsvData, type PreparedTraining } from '@/lib/training-csv';
 import { readSpreadsheet, type SpreadsheetSheet } from '@/lib/training-spreadsheet';
 import { reviewData, suggestAnswers, suggestMapping, type ReviewEdits } from '@/lib/training-review';
-import { MAX_DATASET_BYTES, SPLITS, submissionSchema, validateDatasets, type Split, type Submission } from '@/lib/training';
+import { MAX_DATASET_BYTES, MAX_TEXT_OUTCOMES, SPLITS, submissionSchema, validateDatasets, type Split, type Submission } from '@/lib/training';
 import { TrainingDecisionSetup } from '@/components/training-decision-setup';
 import { TrainingExampleSetup } from '@/components/training-example-setup';
 import { TrainingExampleReview } from '@/components/training-example-review';
@@ -72,7 +72,7 @@ export function TrainingIntake({ active = true, onChooseType, assistantConfigure
   }
   function nextDecision(event: FormEvent) {
     event.preventDefault();
-    if (outcomes.length && (outcomes.length < 2 || outcomes.length > 16 || new Set(outcomes).size !== outcomes.length || outcomes.some(value => value.length > 100))) { setError('Enter 2–16 different possible answers, or leave this blank to use answers from your data.'); return; }
+    if (outcomes.length && (outcomes.length < 2 || outcomes.length > MAX_TEXT_OUTCOMES || new Set(outcomes).size !== outcomes.length || outcomes.some(value => value.length > 100))) { setError(`Enter 2–${MAX_TEXT_OUTCOMES} different possible answers, or leave this blank to use answers from your data.`); return; }
     if (!name) setName(question.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 64) || 'decision-training');
     go(1);
   }
@@ -107,7 +107,7 @@ export function TrainingIntake({ active = true, onChooseType, assistantConfigure
     if (!csv || !mapping.answer || !mapping.inputs.length) { setError('Choose the information your model should read and the field containing the correct answer.'); return; }
     if (mapping.inputs.includes(mapping.answer) || (mapping.group && mapping.inputs.includes(mapping.group)) || mapping.group === mapping.answer) { setError('Keep the answer and case reference separate from the information the model reads.'); return; }
     if (!mapping.group && !independent) { setError('Choose a shared case reference or confirm that each example is a separate case.'); return; }
-    if (outcomes.length < 2 || outcomes.length > 16 || new Set(outcomes).size !== outcomes.length || outcomes.some(value => value.length > 100)) { setError('Add 2–16 different possible answers, one per line, up to 100 characters each.'); return; }
+    if (outcomes.length < 2 || outcomes.length > MAX_TEXT_OUTCOMES || new Set(outcomes).size !== outcomes.length || outcomes.some(value => value.length > 100)) { setError(`Add 2–${MAX_TEXT_OUTCOMES} different possible answers, one per line, up to 100 characters each.`); return; }
     go(2);
   }
   async function prepare(event: FormEvent) {

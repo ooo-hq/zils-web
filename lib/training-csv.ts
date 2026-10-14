@@ -1,4 +1,4 @@
-import { SPLITS, type Split } from './training';
+import { MAX_TEXT_OUTCOMES, SPLITS, type Split } from './training';
 
 export const MAX_CSV_BYTES = 10 * 1024 * 1024;
 export const MAX_CSV_ROWS = 20_000;
@@ -110,7 +110,7 @@ export async function prepareTraining(csv: CsvData, mapping: ColumnMapping, deci
   const outcomes = decision.outcomes.map(value => value.trim());
   if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(decision.name)) throw new Error('Use a project name with 1–64 lowercase letters, numbers, or hyphens.');
   if (!decision.question.trim() || decision.question.length > 1000) throw new Error('Describe the decision in 1–1,000 characters.');
-  if (outcomes.length < 2 || outcomes.length > 16 || outcomes.some(value => !value || value.length > 100) || new Set(outcomes).size !== outcomes.length) throw new Error('Add 2–16 different possible answers, one per line (up to 100 characters each).');
+  if (outcomes.length < 2 || outcomes.length > MAX_TEXT_OUTCOMES || outcomes.some(value => !value || value.length > 100) || new Set(outcomes).size !== outcomes.length) throw new Error(`Add 2–${MAX_TEXT_OUTCOMES} different possible answers, one per line (up to 100 characters each).`);
   if (!mapping.answer || !csv.headers.includes(mapping.answer)) throw new Error('Choose which part of your example is the correct answer.');
   if (!mapping.inputs.length || mapping.inputs.some(name => !csv.headers.includes(name)) || new Set(mapping.inputs).size !== mapping.inputs.length) throw new Error('Choose at least one piece of information Zils should read before deciding.');
   if (mapping.inputs.includes(mapping.answer) || (mapping.group && mapping.inputs.includes(mapping.group)) || mapping.group === mapping.answer) throw new Error('Keep the answer and case reference separate from the information Zils reads to make the decision.');

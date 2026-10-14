@@ -1,4 +1,5 @@
 import type { ColumnMapping, CsvData } from './training-csv';
+import { MAX_TEXT_OUTCOMES } from './training';
 
 export type ReviewEdit = { answer?: string; excluded?: boolean; confirmed?: boolean; needsReview?: boolean };
 export type ReviewEdits = Record<number, ReviewEdit>;
@@ -19,7 +20,7 @@ export function suggestAnswers(data: CsvData, answer: string): string[] {
   const index = data.headers.indexOf(answer);
   if (index < 0) return [];
   const values = [...new Set(data.rows.map(row => row[index].trim()).filter(Boolean))];
-  return values.length <= 16 && values.every(value => value.length <= 100) ? values : [];
+  return values.length <= MAX_TEXT_OUTCOMES && values.every(value => value.length <= 100) ? values : [];
 }
 
 /** Corrections are a separate draft; the original data is never changed. */
@@ -36,7 +37,7 @@ export function reviewData(data: CsvData, mapping: ColumnMapping, outcomes: stri
   let excluded = 0, confirmed = 0;
   if (answerIndex < 0) blockers.push('Choose the field containing the correct answer.');
   if (!inputIndices.length || inputIndices.includes(-1)) blockers.push('Choose the information available before the decision.');
-  if (outcomes.length < 2 || outcomes.length > 16 || new Set(outcomes).size !== outcomes.length || outcomes.some(answer => !answer || answer.length > 100)) blockers.push('Add 2–16 different possible answers, up to 100 characters each.');
+  if (outcomes.length < 2 || outcomes.length > MAX_TEXT_OUTCOMES || new Set(outcomes).size !== outcomes.length || outcomes.some(answer => !answer || answer.length > 100)) blockers.push(`Add 2–${MAX_TEXT_OUTCOMES} different possible answers, up to 100 characters each.`);
   for (const [index, original] of data.rows.entries()) {
     const edit = edits[index] || {};
     if (edit.excluded) { excluded++; continue; }

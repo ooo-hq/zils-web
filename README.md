@@ -404,7 +404,7 @@ lists of objects; selecting a list excludes fields outside it.
 Older `.xls` files must be saved as `.xlsx` or CSV first. Workbooks offer a sheet
 selector; an instructions tab does not prevent importing a valid examples tab.
 Recognized business headers suggest the input, answer, and related-case columns.
-Unrecognized fields remain unselected. Customers can supply 2–16 possible answers
+Unrecognized fields remain unselected. Customers can supply 2–255 possible answers
 or use answers found in the selected column. These are editable suggestions,
 not AI-generated labels. A CSV template and synthetic example are included.
 

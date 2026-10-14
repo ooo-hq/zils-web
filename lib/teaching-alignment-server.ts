@@ -2,8 +2,9 @@ import { z } from 'zod';
 import { infer, InferenceError, playgroundConfig, readLimited } from './playground-server';
 import { setupConfigured } from './decision-setup-server';
 import type { TeachingPrediction } from './teach-by-example';
+import { MAX_TEXT_OUTCOMES } from './training';
 
-const taskSchema = z.object({ kind: z.literal('sort'), goal: z.string().trim().min(1).max(1000), rules: z.string().max(3000), answers: z.array(z.string().trim().min(1).max(100)).min(2).max(16).refine(a => new Set(a).size === a.length) }).strict();
+const taskSchema = z.object({ kind: z.literal('sort'), goal: z.string().trim().min(1).max(1000), rules: z.string().max(3000), answers: z.array(z.string().trim().min(1).max(100)).min(2).max(MAX_TEXT_OUTCOMES).refine(a => new Set(a).size === a.length) }).strict();
 const exampleSchema = z.object({ id: z.string().min(1).max(100), input: z.string().trim().min(1).max(16000) }).strict();
 const inputSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('evaluate'), task: taskSchema, examples: z.array(exampleSchema).min(1).max(24) }).strict(),
@@ -22,7 +23,7 @@ export async function handleTeachingAlignment(request: Request): Promise<Respons
   catch { return fail('Keep this review request under 128 KiB.', 413); }
   let input;
   try { input = inputSchema.parse(JSON.parse(text)); }
-  catch { return fail('Use a decision with 2–16 different answers and 1–24 examples. Only reviewed learning examples can inform rules.', 400); }
+  catch { return fail(`Use a decision with 2–${MAX_TEXT_OUTCOMES} different answers and 1–24 examples. Only reviewed learning examples can inform rules.`, 400); }
   if (new Set(input.examples.map(row => row.id)).size !== input.examples.length) return fail('Each example needs a distinct ID.', 400);
   const signal = AbortSignal.any([request.signal, AbortSignal.timeout(110_000)]);
   try {
