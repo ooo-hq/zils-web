@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { ArrowRight, Ban, Calendar, Check, ChevronRight, Clock, Gamepad2, Inbox, Mail, Play, RotateCcw, ShieldCheck, ShoppingBag, Trophy, UserRound } from 'lucide-react';
 import s from './bitcast-examples.module.css';
 import { OroDemo, OroStudyDetails } from './oro-examples';
@@ -48,6 +48,8 @@ const postNotes: Record<string, { title: string; reason: string }> = {
   T1381: { title: 'A tricky judgment call', reason: 'The reference label judged the post off-topic. A human might read it differently.' },
   T0449: { title: 'A decision Zils missed', reason: 'Zils accepted this post, but most of it is about another company.' },
 };
+const demoFromHash = (): Demo => { const key = window.location.hash.slice(1); return demos.some(row => row.key === key) ? key as Demo : 'doom'; };
+const subscribeToHash = (onChange: () => void) => { window.addEventListener('hashchange', onChange); return () => window.removeEventListener('hashchange', onChange); };
 const routeFor = (intent: keyof typeof routes) => routes[intent];
 const verdictLabel = (value: Verdict) => value === 'pass' ? 'Approve' : 'Do not approve';
 
@@ -162,7 +164,9 @@ function ChessPosition({ position, index, total, onNext }: { position: Position;
 }
 
 export function BitcastExamples({ data }: { data: ExamplesData }) {
-  const [demo, setDemo] = useState<Demo>('doom');
+  // The chosen demo lives in the URL hash so each one can be linked directly: /examples#oro, #content, #inbox, #chess, #doom.
+  const demo = useSyncExternalStore(subscribeToHash, demoFromHash, () => 'doom' as Demo);
+  const choose = (key: Demo) => { history.replaceState(null, '', `#${key}`); window.dispatchEvent(new HashChangeEvent('hashchange')); };
   const result = demo === 'doom'
     ? { correct: successes(doomExamples.outcomes.zils), jev: successes(doomExamples.outcomes.jev), before: successes(doomExamples.outcomes.base), total: doomExamples.total, unit: 'games', caveat: 'Correct means it collected the armor and reached the exit. 100 held-out starts on one map, every replay audited.', scores: [{ name: 'Zils', note: 'Trained H2O Lightning 4B adapter', matches: successes(doomExamples.outcomes.zils), total: doomExamples.total }, { name: 'TypeSafe JEV', note: `Live API run · ${doomExamples.jevModel}`, matches: successes(doomExamples.outcomes.jev), total: doomExamples.total }, { name: 'Zils before training', note: 'Untrained H2O base', matches: successes(doomExamples.outcomes.base), total: doomExamples.total }, { name: 'Scripted reference', note: 'The program Zils learned from', matches: successes(doomExamples.outcomes.reference), total: doomExamples.total }] }
     : demo === 'oro'
@@ -174,7 +178,7 @@ export function BitcastExamples({ data }: { data: ExamplesData }) {
       : { correct: data.chess.scores.trained, jev: data.chess.scores.jev, before: data.chess.scores.shared, total: data.chess.total, unit: 'positions', caveat: 'Correct means it picked a checkmate among the legal checks. A narrow puzzle task, not full-game strength.', scores: [{ name: 'Zils', note: 'Chess adapter from October 7', matches: data.chess.scores.trained, total: data.chess.total }, { name: 'TypeSafe JEV', note: 'Recorded study results', matches: data.chess.scores.jev, total: data.chess.total }, { name: 'Zils before training', note: 'Without chess training', matches: data.chess.scores.shared, total: data.chess.total }] };
   return <main id="main-content" tabIndex={-1} className={s.page}>
     <header className={s.intro}><div><h1>See what Zils decides.</h1><p>Survive a corridor. Review a post. Find a winning move.<br className={s.desktopBreak} /> Small models, trained for the decisions your app makes.</p><p className={s.versus}>Every demo puts Zils beside <strong>TypeSafe JEV</strong>, the hosted decision model we benchmark against. Same inputs, real recorded answers.</p></div><span className={s.preview}>Real results, replayed</span></header>
-    <nav className={s.demoTabs} aria-label="Choose a demo">{demos.map(({ key, name, description, icon: Icon }) => <button type="button" key={key} aria-pressed={demo === key} aria-controls="decision-demo" onClick={() => setDemo(key)}><Icon size={22} /><span><strong>{name}</strong><span>{description}</span></span><ChevronRight size={17} /></button>)}</nav>
+    <nav className={s.demoTabs} aria-label="Choose a demo">{demos.map(({ key, name, description, icon: Icon }) => <button type="button" key={key} aria-pressed={demo === key} aria-controls="decision-demo" onClick={() => choose(key)}><Icon size={22} /><span><strong>{name}</strong><span>{description}</span></span><ChevronRight size={17} /></button>)}</nav>
     <section id="decision-demo" aria-label={`${demos.find(row => row.key === demo)!.name} example`} className={s.demo} key={demo}>
       {demo === 'doom' ? <DoomDemo /> : demo === 'oro' ? <OroDemo /> : demo === 'content' ? <ContentDemo examples={data.examples} /> : demo === 'inbox' ? <InboxDemo replies={data.replies} /> : <ChessDemo positions={data.chess.examples} />}
     </section>
