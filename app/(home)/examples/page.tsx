@@ -7,7 +7,7 @@ import { SiteFooter } from '@/components/site-footer';
 
 export const metadata: Metadata = {
   title: 'Examples · Zils',
-  description: 'Compare recorded Zils and JEV decisions: guide a shopper, review creator posts, sort sales replies, and find winning chess moves.',
+  description: 'Compare recorded Zils and JEV decisions: survive a Doom corridor, review creator posts, find winning chess moves, sort sales replies, and referee a shopping AI.',
   robots: { index: false, follow: false },
 };
 

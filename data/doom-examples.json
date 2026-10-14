@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-13",
+  "scenario": "Deadly Corridor",
+  "fps": 35,
+  "total": 100,
+  "seed": 100001,
+  "initialFrameSha256": "235aa51b99087f6df2445ccc9c70db218a4076c3bacfc18f1584814c0768f369",
+  "initialObservationSha256": "92fa0a36b5ff80d7f511a6c516005cfe325c373fdba6e5ba5f2335e4f502464a",
+  "clips": {
+    "zils": {
+      "src": "/examples/doom-zils-100001.mp4",
+      "outcome": "success",
+      "gameTics": 339,
+      "health": 76,
+      "decisions": 162
+    },
+    "jev": {
+      "src": "/examples/doom-jev-100001.mp4",
+      "outcome": "death",
+      "gameTics": 76,
+      "health": -8,
+      "decisions": 19
+    }
+  },
+  "poster": "/examples/doom-100001-start.jpg",
+  "outcomes": {
+    "zils": {
+      "success": 97,
+      "timeout": 2,
+      "death": 1
+    },
+    "jev": {
+      "death": 99,
+      "technical_failure": 1
+    },
+    "base": {
+      "death": 100
+    },
+    "reference": {
+      "success": 100
+    }
+  },
+  "zilsModel": "h2o-lightning-4b-v1.2.3",
+  "jevModel": "jev-1.13.0",
+  "trainingExamples": 2048,
+  "audit": {
+    "replaysVerified": 399,
+    "matchedStarts": 100,
+    "eligibleHighlights": 96,
+    "reverseHighlights": 0
+  },
+  "zilsSuccessWilson95": [
+    0.915,
+    0.99
+  ],
+  "pairedDifference": {
+    "points": 97,
+    "bootstrap95": [
+      93,
+      100
+    ]
+  },
+  "interruptedSeed": 100085,
+  "evidence": {
+    "report": "/examples/doom/report.md",
+    "seeds": "/examples/doom/all-100-seeds.csv",
+    "results": "/examples/doom/results.json"
+  }
+}

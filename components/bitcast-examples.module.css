@@ -7,7 +7,8 @@
 .versus { margin-top: 12px; max-width: 62ch; font-size: 14px; line-height: 1.7; color: var(--zils-muted); }
 .versus strong { font-weight: 550; color: var(--zils-ink); }
 .preview { color: var(--zils-muted); font-size: 12px; border: 1px solid var(--zils-edge); border-radius: 5px; padding: 5px 9px; white-space: nowrap; margin-top: 6px; }
-.demoTabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
+.demoTabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
+.demoTabs button > span > span { display: block; font-size: 11px; line-height: 1.5; }
 .demoTabs button { display: flex; align-items: center; gap: 13px; border: 1px solid var(--zils-edge); border-radius: 8px; text-align: left; padding: 17px 18px; color: var(--zils-muted); min-height: 78px; transition: background .15s, border-color .15s; }
 .demoTabs button:hover { background: var(--zils-surface); }
 .demoTabs button[aria-pressed=true] { color: var(--zils-accent); background: var(--zils-soft); border-color: var(--zils-accent); }
