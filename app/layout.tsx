@@ -1,6 +1,7 @@
 import './global.css';
 import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google';
 import { ThemeSync } from '@/components/theme';
+import { Toaster } from '@/components/ui/sonner';
 import { themeScript } from '@/lib/theme';
 
 // Plex Mono carries the headings and navigation; Plex Sans keeps longer
@@ -24,7 +25,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
       suppressHydrationWarning
     >
       <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
-      <body className="flex flex-col min-h-screen"><ThemeSync />{children}</body>
+      <body className="flex flex-col min-h-screen"><ThemeSync /><Toaster position="bottom-right" />{children}</body>
     </html>
   );
 }
