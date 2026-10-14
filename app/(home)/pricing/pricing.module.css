@@ -7,6 +7,9 @@
 }
 
 .container { max-width: 1152px; margin: auto; padding: 0 32px; }
+.heroStage { position: relative; isolation: isolate; overflow: hidden; }
+.heroStage > * { position: relative; }
+.heroStage > [aria-hidden] { position: absolute; }
 .hero { padding: 54px 0 44px; }
 .status { display: inline-block; margin: 0 0 22px; border-radius: 5px; background: var(--zils-soft); padding: 7px 11px; color: var(--zils-accent); font-size: 12px; font-weight: 500; }
 .hero h1 { margin: 0; font-size: clamp(46px, 6.5vw, 76px); font-weight: 600; line-height: 1.02; letter-spacing: -.06em; }

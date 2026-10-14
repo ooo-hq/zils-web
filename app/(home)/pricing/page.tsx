@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { PricingEstimate } from './pricing-estimate';
+import { HeroBackdrop } from '@/components/hero-backdrop';
 import { BETA_PRICING as PRICING } from '@/lib/pricing';
 import home from '../home.module.css';
 import s from './pricing.module.css';
@@ -26,15 +27,19 @@ export const metadata: Metadata = {
 export default function PricingPage() {
   return (
     <div className={`${home.home} ${s.page}`}>
-      <div className={s.container}>
-        <SiteHeader tone="light" current="pricing" />
-        <main id="main-content" tabIndex={-1}>
+      <div className={s.heroStage}>
+        <HeroBackdrop variant="pricing" />
+        <div className={s.container}>
+          <SiteHeader tone="light" current="pricing" />
           <header className={s.hero}>
             <p className={s.status}>Beta launch pricing</p>
             <h1>Your model.<br />Pay as you go.</h1>
             <p className={s.intro}>Train on your examples. Pay for the decisions you use.<br className={s.desktopBreak} /> No subscriptions, tiers, or fees for model slots.</p>
           </header>
-
+        </div>
+      </div>
+      <div className={s.container}>
+        <main id="main-content" tabIndex={-1}>
           <section className={s.plan} aria-labelledby="plan-heading">
             <div className={s.start}>
               <h2 id="plan-heading">One plan. Start with ${PRICING.startingCredit}.</h2>

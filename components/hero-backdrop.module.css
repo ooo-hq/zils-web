@@ -35,10 +35,36 @@
   background: repeating-linear-gradient(0deg, rgb(50 43 92 / 2.4%) 0 1px, transparent 1px 3px);
 }
 
-/* An open horizon frames the centered wordmark and decision instrument. */
+/* An open horizon frames the centered wordmark and decision instrument.
+   The pointer sets --px/--py (-1..1) and --hx/--hy (halo position); the light
+   leans toward it, outer rings lean further than inner ones, and the halo trails. */
 .home {
+  --px: 0;
+  --py: 0;
+  --hx: 50%;
+  --hy: 40%;
+  --glow: #c3b9f3;
   bottom: auto;
   height: min(100%, 1060px);
+}
+
+.home .light {
+  transform: translate(calc(var(--px) * 56px), calc(var(--py) * 30px)) scale(1.1);
+  will-change: transform;
+}
+
+.home .drawing ellipse {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: translate(calc(var(--px) * var(--d, 0) * 7px), calc(var(--py) * var(--d, 0) * -2.6px));
+}
+
+.halo {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle 440px at var(--hx) var(--hy), var(--glow) 0%, transparent 72%);
+  opacity: .62;
+  mix-blend-mode: multiply;
 }
 
 .home .light {
@@ -83,6 +109,33 @@
   stroke-width: 1.6;
 }
 
+/* A meter at the right of the pricing hero. The needle rests near zero and only
+   flicks when the pointer moves quickly, then settles again. */
+.pricing {
+  --needle: 2deg;
+}
+
+.pricing .light {
+  background:
+    radial-gradient(ellipse 30% 70% at 88% 40%, var(--violet) 0%, transparent 100%),
+    radial-gradient(ellipse 22% 50% at 62% 100%, var(--ice) 0%, transparent 100%),
+    radial-gradient(ellipse 16% 40% at 100% 90%, var(--rose) 0%, transparent 100%);
+}
+
+.pricing .drawing {
+  top: auto;
+  bottom: -330px;
+  opacity: 0.26;
+  mask-image: linear-gradient(90deg, transparent 44%, #000 66%);
+}
+
+.meter .needle {
+  stroke-width: 1.8;
+  transform-box: view-box;
+  transform-origin: 1150px 430px;
+  transform: rotate(var(--needle));
+}
+
 :global([data-theme=dark]) .backdrop {
   --ice: #2c94a9;
   --violet: #8564de;
@@ -90,6 +143,8 @@
   --rose: #a75295;
 }
 :global([data-theme=dark]) .light { opacity: 0.24; }
+:global([data-theme=dark]) .home { --glow: #6d5ddc; }
+:global([data-theme=dark]) .halo { opacity: .45; mix-blend-mode: screen; }
 :global([data-theme=dark]) .drawing { color: #b7b1f4; opacity: 0.18; }
 :global([data-theme=dark]) .grain { mix-blend-mode: screen; opacity: 0.1; }
 :global([data-theme=dark]) .scanlines {
