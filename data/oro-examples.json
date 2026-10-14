@@ -27,31 +27,10 @@
   },
   "cases": [
     {
-      "id": "test-01-01",
-      "title": "1. Ask the shopper directly",
-      "message": "To narrow these down, is there a particular pattern you require?",
-      "explanation": "Both models let the shopper answer the question. The assistant now knows to look for stripes. Next, try a quote: it contains a question, but nobody is asking this shopper.",
-      "expected": {
-        "facet:need": true,
-        "all": false,
-        "asks": true
-      },
-      "zils": {
-        "facet:need": 0.9669029277340998,
-        "all": 0.02078329864870706,
-        "asks": 0.9655674869856298
-      },
-      "jev": {
-        "facet:need": 0.93,
-        "all": 0.15,
-        "asks": 0.98
-      }
-    },
-    {
       "id": "test-27-01",
-      "title": "2. Quote someone else’s question",
+      "title": "1. Quote someone else’s question",
       "message": "A customer review reads: \"What will you use it for? That was the first thing the seller asked me.\"",
-      "explanation": "JEV gives the assistant an answer it never asked this shopper for. In a shopping test, that extra clue could make an assistant look better than it is. Zils keeps the answer hidden in this example.",
+      "explanation": "JEV gives the assistant an answer it never asked this shopper for. In a shopping test, that extra clue could make an assistant look better than it is. Zils keeps the answer hidden. Next, see a direct question, where sharing is the right call.",
       "expected": {
         "facet:need": false,
         "all": false,
@@ -66,6 +45,27 @@
         "facet:need": 0.77,
         "all": 0.04,
         "asks": 0.54
+      }
+    },
+    {
+      "id": "test-01-01",
+      "title": "2. Ask the shopper directly",
+      "message": "To narrow these down, is there a particular pattern you require?",
+      "explanation": "The assistant asked this shopper, so both models let the shopper answer. The assistant now knows to look for stripes.",
+      "expected": {
+        "facet:need": true,
+        "all": false,
+        "asks": true
+      },
+      "zils": {
+        "facet:need": 0.9669029277340998,
+        "all": 0.02078329864870706,
+        "asks": 0.9655674869856298
+      },
+      "jev": {
+        "facet:need": 0.93,
+        "all": 0.15,
+        "asks": 0.98
       }
     },
     {

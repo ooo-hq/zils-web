@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { LayoutGroup, motion, useReducedMotion } from 'motion/react';
 import { ArrowRight, Check, LockKeyhole, MessageCircle, Play, RotateCcw, ShoppingBag, UnlockKeyhole, UserRound } from 'lucide-react';
 import { disclosureAction, oroExamples, oroJudgment } from '@/lib/oro-examples';
 import base from './bitcast-examples.module.css';
@@ -31,7 +32,7 @@ export function OroDemo() {
     setReplayed(false);
   }
   return <>
-    <div className={base.appHeader}><div><ShoppingBag size={18} /><strong>Testing a shopping AI</strong><span>ORO example</span></div><span className={base.recorded}>Recorded synthetic examples</span></div>
+    <div className={base.appHeader}><div><ShoppingBag size={18} /><strong>Testing a shopping AI</strong><span>ORO · shopping-AI testing</span></div><span className={base.recorded}>Real results, replayed</span></div>
     <div className={base.demoToolbar}>
       <div className={s.intro}><h2>Did the assistant actually ask?</h2><p>ORO tests shopping AIs with a simulated shopper. The AI must ask questions to learn what the shopper wants. <strong>Zils or JEV decides when the shopper can share its answer.</strong></p></div>
       <label className={base.picker}>Try a situation<select value={index} onChange={event => selectExample(Number(event.target.value))}>{oroExamples.cases.map((row, i) => <option key={row.id} value={i}>{row.title}</option>)}</select></label>
@@ -53,23 +54,14 @@ export function OroDemo() {
         <span>Recorded model decisions; shopper dialogue is illustrative.</span>
       </div>
       <div className={s.conversations} aria-live="polite" aria-atomic="true">
-        {replayed && (['zils', 'jev'] as const).map(model => {
-          const action = disclosureAction(example[model]);
-          const { title, reply, icon: Icon } = actions[action];
-          const matches = action === expected;
-          const disclosed = action === 'reveal';
-          return <section key={model} className={`${s.conversation} ${s.ready}`} aria-label={`${model === 'zils' ? 'Zils' : 'TypeSafe JEV'} shopper outcome`}>
-            <header><span className={model === 'zils' ? s.zilsMark : s.jevMark}>{model === 'zils' ? 'Z' : 'J'}</span><h3>Using {model === 'zils' ? 'Zils' : 'TypeSafe JEV'}</h3><span className={matches ? base.match : base.caution}>{matches ? <Check size={14} /> : <span aria-hidden="true">!</span>}{matches ? 'Correct' : 'Incorrect'}</span></header>
-            <div className={s.outcome}>
-              <h4><Icon size={21} />{title}</h4><p>{reply}</p>
-            </div>
-            <div className={`${s.preference} ${disclosed ? s.disclosed : ''}`}>
-              {disclosed ? <UnlockKeyhole size={17} /> : <LockKeyhole size={17} />}<span>What the assistant learns</span><strong>{disclosed ? 'Pattern: stripes' : 'Nothing yet'}</strong>
-            </div>
-          </section>;
-        })}
+        {replayed && (() => {
+          const zils = disclosureAction(example.zils), jev = disclosureAction(example.jev);
+          return zils === jev
+            ? <Leak key="both" model="both" action={zils} matches={zils === expected} />
+            : (['zils', 'jev'] as const).map(model => { const action = disclosureAction(example[model]); return <Leak key={model} model={model} action={action} matches={action === expected} />; });
+        })()}
       </div>
-      {replayed && <div className={s.takeaway}><p><strong>{expected === 'no_disclosure' ? 'Why the difference matters' : 'What this shows'}</strong>{example.explanation}</p>{index < oroExamples.cases.length - 1 && <button type="button" className={base.primary} onClick={() => { selectExample(index + 1); compareButton.current?.focus(); }}>{index === 0 ? 'Try the quoted review' : 'Try two questions at once'}<ArrowRight size={16} /></button>}</div>}
+      {replayed && <div className={s.takeaway}><p><strong>{expected === 'no_disclosure' ? 'Why the difference matters' : 'What this shows'}</strong>{example.explanation}</p>{index < oroExamples.cases.length - 1 && <button type="button" className={base.primary} onClick={() => { selectExample(index + 1); compareButton.current?.focus(); }}>{index === 0 ? 'Try a direct question' : 'Try two questions at once'}<ArrowRight size={16} /></button>}</div>}
     </div>
     <details className={base.exampleDetails} key={example.id}><summary>Behind this decision</summary><div>
       <p>Each model evaluated the same message and three ORO questions. The table shows recorded probabilities of “yes”; the action above follows ORO’s disclosure rule.</p>
@@ -79,6 +71,48 @@ export function OroDemo() {
       <details><summary>Exact questions sent to both models</summary>{decisions.map(({ key }) => <p key={key}>{oroExamples.questions[key]}</p>)}</details>
     </div></details>
   </>;
+}
+
+// Phase 0: secret locked with the shopper. 1: lock opens (or holds). 2: the
+// answer travels to the assistant. 3: verdict. Reduced motion jumps to 3.
+const phaseTimes = [450, 950, 1800];
+function Leak({ model, action, matches }: { model: 'zils' | 'jev' | 'both'; action: keyof typeof actions; matches: boolean }) {
+  const reduced = useReducedMotion();
+  const [phase, setPhase] = useState(reduced ? 3 : 0);
+  useEffect(() => {
+    if (reduced) return;
+    const timers = phaseTimes.map((ms, i) => setTimeout(() => setPhase(i + 1), ms));
+    return () => timers.forEach(clearTimeout);
+  }, [reduced]);
+  const disclosed = action === 'reveal';
+  const open = disclosed && phase >= 1;
+  const moved = disclosed && phase >= 2;
+  const done = phase >= 3;
+  const { title, reply, icon: Icon } = actions[action];
+  const name = model === 'zils' ? 'Zils' : model === 'jev' ? 'TypeSafe JEV' : 'Zils and JEV';
+  const token = <motion.span layoutId={`${model}-token`} className={`${s.token} ${moved && !matches ? s.leaked : ''}`} transition={{ type: 'spring', stiffness: 170, damping: 22 }}>stripes</motion.span>;
+  return <section className={`${s.conversation} ${model === 'both' ? s.agree : ''}`} aria-label={`${name} shopper outcome`}>
+    <header>{model !== 'jev' && <span className={s.zilsMark}>Z</span>}{model !== 'zils' && <span className={s.jevMark}>J</span>}<h3>{model === 'both' ? 'Zils and JEV agree' : `Using ${name}`}</h3><motion.span className={matches ? base.match : base.caution} initial={false} animate={{ opacity: done ? 1 : 0 }}>{matches ? <Check size={14} /> : <span aria-hidden="true">!</span>}{matches ? 'Correct' : 'Incorrect'}</motion.span></header>
+    <LayoutGroup id={model}>
+      <div className={s.leak}>
+        <div className={s.secret}>
+          <span className={s.swatch} aria-hidden="true" />
+          <span className={s.slotLabel}>Shopper’s answer</span>
+          <div className={s.slot}>{!moved && token}</div>
+          <motion.span className={s.lock} aria-hidden="true" initial={false} animate={open ? { rotate: -12, scale: 1.15, color: matches ? '#1c7055' : '#8c5613' } : phase >= 1 ? { x: [0, -3, 3, -2, 0] } : {}} transition={{ duration: .4 }}>{open ? <UnlockKeyhole size={18} /> : <LockKeyhole size={18} />}</motion.span>
+        </div>
+        <div className={s.channel} aria-hidden="true"><motion.span className={`${s.wire} ${matches ? '' : s.leaked}`} initial={false} animate={{ scaleX: moved ? 1 : 0 }} transition={{ duration: .5 }} /></div>
+        <div className={`${s.assistant} ${moved ? (matches ? s.learned : s.leaked) : ''}`}>
+          <UserRound size={18} />
+          <span className={s.slotLabel}>What the assistant learns</span>
+          <div className={s.slot}>{moved ? <>{token}<strong>Pattern: stripes</strong></> : <strong>Nothing yet</strong>}</div>
+        </div>
+      </div>
+    </LayoutGroup>
+    <motion.div className={s.outcome} initial={false} animate={{ opacity: done ? 1 : .35 }}>
+      <h4><Icon size={21} />{title}</h4><p>{reply}</p>
+    </motion.div>
+  </section>;
 }
 
 export function OroStudyDetails() {

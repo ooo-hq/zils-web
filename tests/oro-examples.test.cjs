@@ -22,12 +22,12 @@ test('ORO disclosure boundaries preserve multiple-question precedence and uncert
   assert.deepEqual([.3, .3001, .6999, .7].map(oroJudgment), ['No', 'Unsure', 'Unsure', 'Yes']);
 });
 
-test('recorded cases show the quoted-message disagreement and two agreement cases', () => {
+test('recorded cases open on the quoted-message disagreement, then two agreement cases', () => {
   assert.deepEqual(Array.from(oroExamples.cases, row => [disclosureAction(row.zils), disclosureAction(row.jev)]), [
-    ['reveal', 'reveal'], ['no_disclosure', 'reveal'], ['one_at_a_time', 'one_at_a_time'],
+    ['no_disclosure', 'reveal'], ['reveal', 'reveal'], ['one_at_a_time', 'one_at_a_time'],
   ]);
-  assert.equal(oroExamples.cases[1].id, 'test-27-01');
-  assert.equal(oroExamples.cases[1].jev['facet:need'], .77);
+  assert.equal(oroExamples.cases[0].id, 'test-27-01');
+  assert.equal(oroExamples.cases[0].jev['facet:need'], .77);
 });
 
 test('invalid recorded probabilities, counts and empty examples fail validation', () => {
