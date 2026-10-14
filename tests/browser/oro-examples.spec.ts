@@ -1,52 +1,54 @@
 import { test, expect } from '@playwright/test';
 
-test('shopper story teaches a direct question before comparing the quoted-question mistake', async ({ page }) => {
+test('shopper story opens on the quoted-question disagreement, then shows two agreements', async ({ page }) => {
   const inferenceRequests: string[] = [];
   page.on('request', req => { if (/systemone|chat\/completions/.test(req.url())) inferenceRequests.push(req.url()); });
   await page.goto('/examples');
+  await page.getByRole('button', { name: /Referee a shopping AI/ }).click();
   const zils = page.getByRole('region', { name: 'Zils shopper outcome', exact: true });
   const jev = page.getByRole('region', { name: 'TypeSafe JEV shopper outcome', exact: true });
+  const both = page.getByRole('region', { name: 'Zils and JEV shopper outcome', exact: true });
   const compare = page.getByRole('button', { name: 'Compare Zils and JEV', exact: true });
-  await expect(page.getByRole('button', { name: /Guide a shopper/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: /Referee a shopping AI/ })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByText(/ORO tests shopping AIs with a simulated shopper/)).toBeVisible();
   await expect(page.getByLabel('Try a situation')).toHaveValue('0');
+  await expect(page.getByText(/This is somebody else’s question inside a review/)).toBeVisible();
   await expect(zils).toHaveCount(0);
   await compare.focus();
   await page.keyboard.press('Enter');
-  for (const model of [zils, jev]) {
-    await expect(model).toContainText('Shopper shares the answer');
-    await expect(model).toContainText('Correct');
-    await expect(model).toContainText('Pattern: stripes');
-  }
-  await page.getByRole('button', { name: 'Try the quoted review' }).click();
-  await expect(compare).toBeFocused();
-  await expect(zils).toHaveCount(0);
-  await expect(page.getByLabel('Try a situation')).toHaveValue('1');
-  await expect(page.getByText(/This is somebody else’s question inside a review/)).toBeVisible();
-  await page.keyboard.press('Enter');
   await expect(zils).toContainText('Shopper keeps the answer hidden');
   await expect(zils).toContainText('Nothing yet');
+  await expect(zils).toContainText('Correct');
+  await expect(jev).toContainText('Shopper shares the answer');
   await expect(jev).toContainText('Incorrect');
   await expect(jev).toContainText('Pattern: stripes');
+  await expect(both).toHaveCount(0);
   await expect(page.getByText(/JEV gives the assistant an answer it never asked/)).toBeVisible();
   await page.getByText('Behind this decision', { exact: true }).click();
   await expect(page.getByRole('table').first()).toContainText('77.0% yes');
+  await page.getByRole('button', { name: 'Try a direct question' }).click();
+  await expect(compare).toBeFocused();
+  await expect(zils).toHaveCount(0);
+  await expect(page.getByLabel('Try a situation')).toHaveValue('1');
+  await page.keyboard.press('Enter');
+  await expect(both).toContainText('Shopper shares the answer');
+  await expect(both).toContainText('Correct');
+  await expect(both).toContainText('Pattern: stripes');
+  await expect(zils).toHaveCount(0);
   await page.getByRole('button', { name: 'Try two questions at once' }).click();
   await compare.click();
-  for (const model of [zils, jev]) {
-    await expect(model).toContainText('Shopper asks for one question');
-    await expect(model).toContainText('Correct');
-    await expect(model).toContainText('Nothing yet');
-  }
+  await expect(both).toContainText('Shopper asks for one question');
+  await expect(both).toContainText('Correct');
+  await expect(both).toContainText('Nothing yet');
   await page.getByRole('button', { name: 'Reset comparison' }).click();
-  await expect(zils).toHaveCount(0);
+  await expect(both).toHaveCount(0);
   await page.getByLabel('Try a situation').selectOption('0');
   await compare.click();
-  await expect(zils).toContainText('Shopper shares the answer');
-  await page.getByRole('button', { name: /Play a move/ }).click();
+  await expect(jev).toContainText('Shopper shares the answer');
+  await page.getByRole('button', { name: /Find the mate/ }).click();
   await expect(page.getByText('One move to win', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: /Guide a shopper/ }).click();
-  await expect(zils).toHaveCount(0);
+  await page.getByRole('button', { name: /Referee a shopping AI/ }).click();
+  await expect(jev).toHaveCount(0);
   expect(inferenceRequests).toEqual([]);
 });
 
@@ -54,8 +56,9 @@ test('shopper story and evidence fit a narrow screen with reduced motion', async
   await page.setViewportSize({ width: 375, height: 812 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/examples');
+  await page.getByRole('button', { name: /Referee a shopping AI/ }).click();
   await page.getByRole('button', { name: 'Compare Zils and JEV', exact: true }).click();
-  await page.getByRole('button', { name: 'Try the quoted review' }).click();
+  await page.getByRole('button', { name: 'Try a direct question' }).click();
   await page.getByRole('button', { name: 'Compare Zils and JEV', exact: true }).click();
   await page.getByText('Behind this decision', { exact: true }).click();
   await page.getByText('Compare scores and read study details', { exact: true }).click();
