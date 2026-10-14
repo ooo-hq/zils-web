@@ -5,7 +5,7 @@ export const chessStudy = study;
 export const chessProtocol = protocol;
 export const chessComparisons = [
   { key: 'trained', name: 'After training', note: 'Fresh adapter · 2,048 training positions', adapted: true },
-  { key: 'jev', name: 'TypeSafe Jev 1.13.0', note: 'Regular Jev · same test inputs', adapted: false },
+  { key: 'jev', name: 'TypeSafe JEV 1.13.0', note: 'Regular JEV · same test inputs', adapted: false },
   { key: 'shared', name: 'Before training', note: 'No chess-specific adapter', adapted: false },
 ].map(row => ({
   ...row,

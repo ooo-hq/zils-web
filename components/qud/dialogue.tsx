@@ -19,7 +19,7 @@ const OPTIONS: { q: string; a?: string; end?: boolean }[] = [
   },
   {
     q: 'Who decides which agent answers?',
-    a: 'Jev, a small judgment model built by TypeSafe. It picks the agent, checks whether the work is done, and decides whether a reply is needed. Under a second, for a fraction of a cent.',
+    a: 'JEV, a small judgment model built by TypeSafe. It picks the agent, checks whether the work is done, and decides whether a reply is needed. Under a second, for a fraction of a cent.',
   },
   {
     q: 'What does nostr have to do with it?',

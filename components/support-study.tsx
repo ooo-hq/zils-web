@@ -37,9 +37,9 @@ export function AccuracyComparison({ includeJev = false }: { includeJev?: boolea
       <div aria-hidden="true" className="mt-5 flex justify-between text-[11px] tabular-nums text-subtle"><span>0%</span><span>100%</span></div>
       <p className="mt-6 border-t border-edge pt-5 text-sm leading-6">
         <strong className="font-semibold text-accent">+{includeJev ? jevGain : supportGain} percentage points</strong>
-        <span className="text-muted"> vs {includeJev ? 'TypeSafe Jev' : 'before training'}</span>
+        <span className="text-muted"> vs {includeJev ? 'TypeSafe JEV' : 'before training'}</span>
       </p>
-      {includeJev && <p className="mt-2 text-xs leading-5 text-muted">Jev was tested live; Zils scores reuse verified predictions from the same frozen test set.</p>}
+      {includeJev && <p className="mt-2 text-xs leading-5 text-muted">JEV was tested live; Zils scores reuse verified predictions from the same frozen test set.</p>}
     </figure>
   );
 }
@@ -52,7 +52,7 @@ export function SupportStudySummary() {
           <h2 id="support-evidence-heading" className="max-w-[18ch] text-balance text-[clamp(2rem,4.4vw,3.25rem)] font-semibold leading-[1.04] tracking-[-0.055em]">See what training changed.</h2>
           <p className="mt-5 max-w-[45ch] text-[15px] leading-7 text-muted">We trained a model to choose the next action in a customer-support conversation, then tested it on conversations it had not trained on.</p>
           <p className="mt-5 max-w-[45ch] text-[15px] leading-7 text-muted">
-            On {supportBase.count} test conversations from the public ABCD dataset, our trained model chose the recorded answer {percent(jevTrained.accuracy)} of the time, compared with {percent(jevMetrics.accuracy)} for TypeSafe Jev, another decision model.
+            On {supportBase.count} test conversations from the public ABCD dataset, our trained model chose the recorded answer {percent(jevTrained.accuracy)} of the time, compared with {percent(jevMetrics.accuracy)} for TypeSafe JEV, another decision model.
             That is <strong className="font-semibold text-ink">{jevErrorReduction}% fewer mistakes</strong> on the same next-action task.
           </p>
           <p className="mt-5 text-sm text-muted">{number(supportStudy.splits.training_conversations)} training conversations. Separate development and test sets.</p>
@@ -61,7 +61,7 @@ export function SupportStudySummary() {
         </div>
         <AccuracyComparison includeJev />
       </div>
-      <p className="mt-7 max-w-[80ch] text-xs leading-6 text-muted">One research experiment, not a guarantee for your task. It tested the choice of the next action, not success at resolving a whole conversation. Jev was more accurate on its smaller set of high-confidence answers; Zils still overstates its confidence. The research model shown here is not deployed in the shared playground.</p>
+      <p className="mt-7 max-w-[80ch] text-xs leading-6 text-muted">One research experiment, not a guarantee for your task. It tested the choice of the next action, not success at resolving a whole conversation. JEV was more accurate on its smaller set of high-confidence answers; Zils still overstates its confidence. The research model shown here is not deployed in the shared playground.</p>
     </section>
   );
 }

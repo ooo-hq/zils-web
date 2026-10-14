@@ -11,7 +11,7 @@ const original = record('abcd-002.json');
 const { cases, actions } = record('abcd-002-jev-predictions.json');
 const close = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-10, `${actual} != ${expected}`);
 
-test('Jev comparison preserves its evidence and the original frozen training selection', () => {
+test('JEV comparison preserves its evidence and the original frozen training selection', () => {
   for (const [name, hash] of Object.entries(study.sources)) {
     assert.equal(createHash('sha256').update(file(name)).digest('hex'), hash, name);
     assert.doesNotMatch(file(name).toString(), /\/Users\/|\.private\/|Bearer /);

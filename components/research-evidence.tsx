@@ -5,7 +5,7 @@ export function ResearchEvidence() {
   const outcomes = [
     { label: 'Both correct', count: jevPaired.both_correct, style: s.bothCorrect },
     { label: 'Only trained model correct', count: jevPaired.trained_correct_other_wrong, style: s.trainedOnly },
-    { label: 'Only Jev correct', count: jevPaired.other_correct_trained_wrong, style: s.jevOnly },
+    { label: 'Only JEV correct', count: jevPaired.other_correct_trained_wrong, style: s.jevOnly },
     { label: 'Both incorrect', count: jevPaired.both_wrong, style: s.bothWrong },
   ];
   let offset = 0;
@@ -13,7 +13,7 @@ export function ResearchEvidence() {
     <figure className={s.evidenceFigure} aria-labelledby="paired-results-title">
       <figcaption id="paired-results-title" className={s.figureTitle}>
         <span>One test. {jevTrained.n} support decisions.</span>
-        <span>Trained with Zils compared with TypeSafe Jev</span>
+        <span>Trained with Zils compared with TypeSafe JEV</span>
       </figcaption>
       <svg className={s.evidenceMatrix} viewBox="0 0 398 198" aria-hidden="true">
         {outcomes.map(outcome => {

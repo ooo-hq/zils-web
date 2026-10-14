@@ -16,7 +16,7 @@ import { benchmark, readComparison, percent, decimal, milliseconds, comparisonHe
 
 export const metadata: Metadata = {
   title: 'zils — tuned open models can compete',
-  description: 'Task-tuned open JevK5 4B models outperformed official hosted TypeSafe Jev 1.13.0 on our support and mate-in-one tests. Explore the evidence and B300 miner follow-ups.',
+  description: 'Task-tuned open JevK5 4B models outperformed official hosted TypeSafe JEV 1.13.0 on our support and mate-in-one tests. Explore the evidence and B300 miner follow-ups.',
   alternates: { canonical: 'https://zils.ai/model' },
 };
 

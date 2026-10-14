@@ -70,7 +70,7 @@ export default function AppPage() {
                   </p>
                   <p>
                     In Fez that job belongs to the room. Every message goes to a judgment model,
-                    <span className="text-neutral-200"> Jev</span>, built by TypeSafe. It doesn&apos;t
+                    <span className="text-neutral-200"> JEV</span>, built by TypeSafe. It doesn&apos;t
                     write. It decides, with a calibrated probability, in under a second, for a
                     fraction of a cent. Chat models run only when there&apos;s real work.
                   </p>

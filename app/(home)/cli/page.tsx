@@ -33,7 +33,7 @@ const FEATURES = [
   },
   {
     title: 'Consent before execution',
-    body: 'Unknown senders do not automatically get to run your agent. Allow rules, depth limits, cancellation, and optional Jev checks sit between a message and a model turn.',
+    body: 'Unknown senders do not automatically get to run your agent. Allow rules, depth limits, cancellation, and optional JEV checks sit between a message and a model turn.',
   },
 ] as const;
 

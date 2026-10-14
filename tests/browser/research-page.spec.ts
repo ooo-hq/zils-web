@@ -13,7 +13,7 @@ test('research readers can move from findings to evidence and the metric referen
   const comparison = page.locator('#jev-comparison');
   await expect(comparison.getByRole('heading').first()).toBeInViewport();
   await comparison.getByText('All scores, API checks, and method', { exact: true }).click();
-  await expect(page.getByRole('region', { name: 'Jev comparison full test scores' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'JEV comparison full test scores' })).toBeVisible();
   await comparison.getByRole('link', { name: 'Original training study', exact: true }).click();
   await page.getByText('Training protocol, checkpoint selection, and full evaluation', { exact: true }).click();
   await expect(page.getByRole('region', { name: 'Support study final test scores' })).toBeVisible();
@@ -74,7 +74,7 @@ test('research hero separates full-test accuracy from a recorded correction', as
   await expect(page.getByRole('heading', { name: 'How the support model learned.', exact: true })).toBeInViewport();
 });
 
-test('detailed Jev comparison accounts for all paired support decisions', async ({ page }) => {
+test('detailed JEV comparison accounts for all paired support decisions', async ({ page }) => {
   await page.goto('/model');
   const figure = page.locator('#jev-comparison').getByRole('figure', { name: /One test. 500 support decisions/ });
   await expect(figure.locator('rect')).toHaveCount(study.test.metrics.trained_jevk5.n);
@@ -82,7 +82,7 @@ test('detailed Jev comparison accounts for all paired support decisions', async 
   for (const [label, count] of Object.entries({
     'Both correct': paired.both_correct,
     'Only trained model correct': paired.trained_correct_other_wrong,
-    'Only Jev correct': paired.other_correct_trained_wrong,
+    'Only JEV correct': paired.other_correct_trained_wrong,
     'Both incorrect': paired.both_wrong,
   })) {
     await expect(figure.locator(`g[data-outcome="${label}"] rect`)).toHaveCount(count);

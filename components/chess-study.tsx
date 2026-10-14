@@ -44,7 +44,7 @@ export function ChessStudySummary() {
           <p className="mt-5 max-w-[48ch] text-[15px] leading-7 text-muted">
             A fresh chess adapter selected a checkmating move in <strong className="font-semibold text-ink">260 of 512 held-out positions</strong>.
             Accuracy improved by {chessPoints(chessStudy.paired_comparisons.trained_minus_shared.accuracy.right_minus_left)} percentage points over the model before training
-            and {chessPoints(chessStudy.paired_comparisons.trained_minus_jev.accuracy.right_minus_left)} over TypeSafe Jev.
+            and {chessPoints(chessStudy.paired_comparisons.trained_minus_jev.accuracy.right_minus_left)} over TypeSafe JEV.
           </p>
           <Link href="/model/chess-study" className="mt-7 inline-flex min-h-11 items-center rounded-md bg-action px-5 py-3 text-sm font-medium text-on-action hover:bg-action-hover">Read the chess study</Link>
         </div>
@@ -79,7 +79,7 @@ export function ChessStudyDetails() {
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {([
             ['shared', 'Compared with before training'],
-            ['jev', 'Compared with TypeSafe Jev'],
+            ['jev', 'Compared with TypeSafe JEV'],
           ] as const).map(([key, label]) => {
             const difference = chessStudy.paired_comparisons[`trained_minus_${key}`].accuracy;
             return <div key={key} className="rounded-md border border-edge p-6"><h3 className="text-sm text-muted">{label}</h3><p className="mt-3 text-3xl font-semibold tracking-tight text-accent tabular-nums">{chessPoints(difference.right_minus_left)} <span className="text-sm font-normal text-muted">percentage points</span></p><p className="mt-3 text-xs leading-6 text-muted">Paired 95% interval: {difference.paired_game_bootstrap_95pct.map(chessPoints).join(' to ')} points.</p></div>;
@@ -116,7 +116,7 @@ export function ChessStudyDetails() {
             <p><strong className="font-medium text-ink">Data selection.</strong> The first 200,000 records of the pinned Lichess archive supplied the pool; this is not a uniform sample of the full database. Positions with fewer than two or more than sixteen checking moves, or where every candidate mated, were excluded. Source-game separation and exact/mirror deduplication still allow related tactical patterns and possible overlap with public pretraining data.</p>
             <p><strong className="font-medium text-ink">Model foundation.</strong> The base model uses the published JevK5 4B weights. The trained model adds the chess adapter from this study.</p>
             <p><strong className="font-medium text-ink">Training.</strong> One fresh rank-16 adapter, one epoch, seed 557, and 512 optimizer steps. The final saved checkpoint was used without test-directed tuning. Training and saving took {(chessStudy.training.training_seconds / 60).toFixed(2)} minutes on an RTX 4090, excluding loading and input preparation. Peak training tensor allocation was {(chessStudy.training.peak_gpu_allocated_bytes / 2 ** 30).toFixed(2)} GiB. Both smoke and full adapters passed independent fresh-process reload checks. Native temperatures were retained; calibration data was unused.</p>
-            <p><strong className="font-medium text-ink">API reliability.</strong> Jev returned valid answers on the first attempt for 506/512 positions. Six rejected responses were retained and recovered within the three-attempt limit: five probability-sum failures and one inconsistent choice. The reported scores use validated responses after retries. All three model runs completed; no failed or missing positions were dropped.</p>
+            <p><strong className="font-medium text-ink">API reliability.</strong> JEV returned valid answers on the first attempt for 506/512 positions. Six rejected responses were retained and recovered within the three-attempt limit: five probability-sum failures and one inconsistent choice. The reported scores use validated responses after retries. All three model runs completed; no failed or missing positions were dropped.</p>
             <p><strong className="font-medium text-ink">Additional measures.</strong> First-listed move accuracy was {chessPercent(chessStudy.baselines.first_option)}. A confident choice assigns at least 90% probability to the selected move. The table’s mating probability is the total probability assigned to all correct moves. NLL is the negative log of that total, with a floor for zero probability.</p>
           </div>
         </div>
