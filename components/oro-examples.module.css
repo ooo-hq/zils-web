@@ -17,13 +17,13 @@
 .controls > span { color: var(--zils-muted); font-size: 11px; line-height: 1.6; }
 .conversations { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .agree { grid-column: 1 / -1; max-width: 560px; }
-.agree header > span + span { margin-left: -4px; }
 .conversation { min-width: 0; border: 1px solid var(--zils-edge-strong); border-radius: 8px; overflow: hidden; }
 .conversation header { display: flex; gap: 10px; padding: 16px 20px; align-items: center; border-bottom: 1px solid var(--zils-edge); }
 .conversation h3 { font-size: 14px; font-weight: 550; }
 .conversation header > span:last-child { margin-left: auto; }
-.zilsMark, .jevMark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 6px; font-weight: 600; font-size: 17px; }
-.zilsMark { background: var(--zils-soft); color: var(--zils-accent); }
+.wordmark { display: flex; align-items: center; gap: 8px; min-height: 32px; }
+.logo { font-size: 30px; color: var(--zils-accent); }
+.jevMark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 6px; font-weight: 600; font-size: 17px; }
 .jevMark { background: var(--zils-surface); color: var(--zils-muted); }
 .outcome { padding: 20px; min-height: 110px; }
 .outcome h4 { display: flex; align-items: center; gap: 9px; font-size: 18px; letter-spacing: -.025em; font-weight: 550; line-height: 1.4; }

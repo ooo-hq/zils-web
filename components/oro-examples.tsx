@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { LayoutGroup, motion, useReducedMotion } from 'motion/react';
 import { ArrowRight, Check, LockKeyhole, MessageCircle, Play, RotateCcw, ShoppingBag, UnlockKeyhole, UserRound } from 'lucide-react';
 import { disclosureAction, oroExamples, oroJudgment } from '@/lib/oro-examples';
+import { ZilsWordmark } from './zils-wordmark';
 import base from './bitcast-examples.module.css';
 import s from './oro-examples.module.css';
 
@@ -92,7 +93,7 @@ function Leak({ model, action, matches }: { model: 'zils' | 'jev' | 'both'; acti
   const name = model === 'zils' ? 'Zils' : model === 'jev' ? 'TypeSafe JEV' : 'Zils and JEV';
   const token = <motion.span layoutId={`${model}-token`} className={`${s.token} ${moved && !matches ? s.leaked : ''}`} transition={{ type: 'spring', stiffness: 170, damping: 22 }}>stripes</motion.span>;
   return <section className={`${s.conversation} ${model === 'both' ? s.agree : ''}`} aria-label={`${name} shopper outcome`}>
-    <header>{model !== 'jev' && <span className={s.zilsMark}>Z</span>}{model !== 'zils' && <span className={s.jevMark}>J</span>}<h3>{model === 'both' ? 'Zils and JEV agree' : `Using ${name}`}</h3><motion.span className={matches ? base.match : base.caution} initial={false} animate={{ opacity: done ? 1 : 0 }}>{matches ? <Check size={14} /> : <span aria-hidden="true">!</span>}{matches ? 'Correct' : 'Incorrect'}</motion.span></header>
+    <header>{model === 'zils' ? <h3 className={s.wordmark}>Using <ZilsWordmark className={s.logo} /></h3> : model === 'jev' ? <><span className={s.jevMark}>J</span><h3>Using {name}</h3></> : <h3 className={s.wordmark}><ZilsWordmark className={s.logo} /> and <span className={s.jevMark}>J</span> JEV agree</h3>}<motion.span className={matches ? base.match : base.caution} initial={false} animate={{ opacity: done ? 1 : 0 }}>{matches ? <Check size={14} /> : <span aria-hidden="true">!</span>}{matches ? 'Correct' : 'Incorrect'}</motion.span></header>
     <LayoutGroup id={model}>
       <div className={s.leak}>
         <div className={s.secret}>

@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, Gamepad2, Play, RotateCcw } from 'lucide-react';
 import { doomExamples, gameSeconds } from '@/lib/doom-examples';
+import { ZilsWordmark } from './zils-wordmark';
 import base from './bitcast-examples.module.css';
 import s from './doom-examples.module.css';
 
-const models = { zils: { name: 'Zils', mark: 'Z' }, jev: { name: 'TypeSafe JEV', mark: 'J' } } as const;
+const models = { zils: { name: 'Zils' }, jev: { name: 'TypeSafe JEV', mark: 'J' } } as const;
 const outcomeText = { success: 'Collected the armor', death: 'Died', timeout: 'Ran out of time' } as const;
 const seconds = (tics: number) => `${gameSeconds(tics).toFixed(1)} s`;
 
@@ -37,7 +38,7 @@ export function DoomDemo() {
         const clip = doomExamples.clips[model];
         const done = ended[model];
         return <section key={model} className={s.screen} aria-label={`${models[model].name} recording`}>
-          <header><span className={model === 'zils' ? s.zilsMark : s.jevMark}>{models[model].mark}</span><h3>{models[model].name}</h3><span className={done ? (clip.outcome === 'success' ? base.match : base.caution) : s.pending} aria-live="polite">{done ? <>{clip.outcome === 'success' ? <Check size={14} /> : <span aria-hidden="true">!</span>}{outcomeText[clip.outcome]} at {seconds(clip.gameTics)}</> : playing ? 'Playing' : 'Ready'}</span></header>
+          <header>{model === 'zils' ? <h3 className={s.wordmark}><ZilsWordmark className={s.logo} /></h3> : <><span className={s.jevMark}>J</span><h3>{models[model].name}</h3></>}<span className={done ? (clip.outcome === 'success' ? base.match : base.caution) : s.pending} aria-live="polite">{done ? <>{clip.outcome === 'success' ? <Check size={14} /> : <span aria-hidden="true">!</span>}{outcomeText[clip.outcome]} at {seconds(clip.gameTics)}</> : playing ? 'Playing' : 'Ready'}</span></header>
           <div className={s.frame}>
             <video ref={videos[model]} src={clip.src} poster={doomExamples.poster} muted playsInline preload="metadata" onPlay={() => setPlaying(true)} onEnded={() => setEnded(prev => ({ ...prev, [model]: true }))} aria-label={`${models[model].name} on test seed ${doomExamples.seed}`} />
             {done && <p className={`${s.stamp} ${clip.outcome === 'success' ? s.stampWin : s.stampLoss}`}>{outcomeText[clip.outcome]}</p>}

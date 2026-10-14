@@ -46,7 +46,7 @@
 .fullPost p { margin-top: 14px; white-space: pre-wrap; font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; }
 .decisionColumn { min-width: 0; padding-top: 4px; }
 .decision { min-height: 208px; padding: 23px 25px; background: var(--zils-soft); border-radius: 10px; position: relative; }
-.modelMark { position: absolute; right: 22px; top: 21px; font-weight: 650; color: var(--zils-accent); font-size: 24px; }
+.modelMark { position: absolute; right: 22px; top: 18px; color: var(--zils-accent); font-size: 30px; }
 .decisionEyebrow { display: block; color: var(--zils-accent); font-size: 12px; padding-right: 30px; }
 .decision h3 { margin-top: 15px; font-size: 28px; line-height: 1.15; letter-spacing: -.045em; font-weight: 550; }
 .decision p { color: var(--zils-muted); font-size: 13px; line-height: 1.65; margin-top: 13px; max-width: 38ch; }

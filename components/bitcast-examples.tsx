@@ -7,6 +7,7 @@ import { OroDemo, OroStudyDetails } from './oro-examples';
 import { oroExamples } from '@/lib/oro-examples';
 import { DoomDemo, DoomStudyDetails } from './doom-examples';
 import { doomExamples, successes } from '@/lib/doom-examples';
+import { ZilsWordmark } from './zils-wordmark';
 
 type Verdict = 'pass' | 'fail';
 type Example = {
@@ -89,7 +90,7 @@ function ContentReview({ example, index, examples, onSelect }: { example: Exampl
       </div>
       <div className={s.decisionColumn}>
         <div className={`${s.decision} ${revealed ? s.decisionRevealed : ''}`} aria-live="polite" aria-atomic="true">
-          <span className={s.modelMark}>Z</span>
+          <span className={s.modelMark}><ZilsWordmark /></span>
           {revealed ? <><span className={s.decisionEyebrow}>Zils’s decision</span><h3>{approved ? 'Approve this post' : 'Don’t approve this post'}</h3><p>{reason}</p><span className={matches ? s.match : s.caution}>{matches ? <Check size={15} /> : <FlagIcon />}{matches ? 'Matches Bitcast’s label' : 'Differs from Bitcast’s label'}</span></> : <><span className={s.decisionEyebrow}>Your rules. Zils’s decision.</span><h3>More than a<br />brand mention.</h3><p>Does the creator actually discuss the campaign’s product?</p></>}
         </div>
         {revealed && <ChoiceComparison zils={verdictLabel(example.decisions.zils)} jev={verdictLabel(example.decisions.jev)} zilsMatches={matches} jevMatches={example.decisions.jev === example.decisions.production} reference="Bitcast’s label" />}
