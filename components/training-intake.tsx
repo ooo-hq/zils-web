@@ -44,6 +44,11 @@ export function TrainingIntake({ active = true, onChooseType, assistantConfigure
   const [sheetIndex, setSheetIndex] = useState(0);
   const [edits, setEdits] = useState<ReviewEdits>({});
   const [dragging, setDragging] = useState(false);
+  const [draggingSplit, setDraggingSplit] = useState<Split | null>(null);
+  function setSplitFile(split: Split, file: File | undefined) {
+    const files = { ...advancedFiles, [split]: file }; setAdvancedFiles(files); onFiles(files);
+    if (file && file.size > MAX_DATASET_BYTES) setError(`${split}: maximum file size is 128 MiB.`);
+  }
   const [filename, setFilename] = useState('');
   const [pasted, setPasted] = useState('');
   const [mapping, setMapping] = useState<ColumnMapping>({ inputs: [], answer: '', group: '' });
@@ -189,10 +194,11 @@ export function TrainingIntake({ active = true, onChooseType, assistantConfigure
       {advanced ? <form onSubmit={submit} onInvalid={event => { const details = (event.target as HTMLElement).closest('details'); if (details) details.open = true; }}><fieldset disabled={locked}>
         <p className={styles.intakeIntro}>For prepared training, calibration, and evaluation files. Keep related cases within one set.</p>
         <label htmlFor="advanced-name">Run name</label><input id="advanced-name" required pattern="[a-z0-9]([a-z0-9]|-){0,63}" maxLength={64} placeholder="support-routing-v1" value={name} onChange={event => setName(event.target.value)} />
-        {SPLITS.map(split => <div key={split} className={styles.file}><label htmlFor={`dataset-${split}`}>{splitNames[split]} file</label><input id={`dataset-${split}`} type="file" accept=".jsonl,application/jsonl,application/x-ndjson" required={!advancedFiles[split]} onChange={event => {
-          const file = event.target.files?.[0]; const files = { ...advancedFiles, [split]: file }; setAdvancedFiles(files); onFiles(files);
-          if (file && file.size > MAX_DATASET_BYTES) setError(`${split}: maximum file size is 128 MiB.`);
-        }} /><small>{advancedFiles[split]?.name || 'JSONL · 128 MiB maximum'}</small></div>)}
+        {SPLITS.map(split => <div key={split} className={`${styles.file} ${styles.spreadsheetDrop}`} data-dragging={draggingSplit === split} onDragOver={event => { event.preventDefault(); if (!locked) setDraggingSplit(split); }} onDragLeave={event => { if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) setDraggingSplit(null); }} onDrop={event => {
+          event.preventDefault(); setDraggingSplit(null); if (locked) return;
+          if (event.dataTransfer.files.length !== 1) { setError('Choose one file at a time.'); return; }
+          setSplitFile(split, event.dataTransfer.files[0]);
+        }}><label htmlFor={`dataset-${split}`}>Drop the {splitNames[split].toLowerCase()} file here or choose a file</label><input id={`dataset-${split}`} type="file" accept=".jsonl,application/jsonl,application/x-ndjson" required={!advancedFiles[split]} onChange={event => { setSplitFile(split, event.target.files?.[0]); }} /><small>{advancedFiles[split]?.name || 'JSONL · 128 MiB maximum'}</small></div>)}
         <details className={styles.details}><summary>JSONL format</summary><p>Each line requires id, group_id, family, state, question, and label. IDs must be unique across all files. Calibration and test must share the same families, all present in training.</p><pre>{'{"id":"ticket-001","group_id":"conversation-001","family":"support-routing","state":{"message":"Please send my invoice."},"question":{"type":"choice","criteria":{"billing":"Billing","technical":"Technical support"}},"label":"billing"}'}</pre></details>
         {criteria}<div className={styles.wizardActions}><button type="button" className={styles.secondary} onClick={switchMode}>Guided setup</button><button className={styles.button} disabled={locked || pending}>{busy ? 'Sending…' : 'Send for training'}</button></div>
       </fieldset></form> : <>
