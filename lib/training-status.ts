@@ -1,4 +1,4 @@
-import { terminal, type Job } from './training';
+import { isImageJob, terminal, type Job } from './training';
 
 export const TRAINING_STAGES = ['Examples', 'Training', 'Evaluation', 'Result'];
 
@@ -34,5 +34,5 @@ export function trainingProgress(job: Job): Progress {
 }
 
 export function isImageReady(job: Job): boolean {
- return job.model?.id === 'imajev-4b-v1' && job.status === 'completed' && job.result?.delivery.status === 'accepted' && job.workflow?.state === 'ready' && Boolean(job.workflow.model_id);
+ return isImageJob(job) && job.status === 'completed' && job.result?.delivery.status === 'accepted' && job.workflow?.state === 'ready' && Boolean(job.workflow.model_id);
 }

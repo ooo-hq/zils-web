@@ -5,8 +5,8 @@ import { uploadSchema, uploadDescriptor, type StorageLocations } from './storage
 const probability = z.number().finite().min(0).max(1);
 const criteria = z.record(z.string().trim().min(1).max(100), z.json()).refine(value => {
   const keys = Object.keys(value);
-  return keys.length >= 2 && keys.length <= 16 && !keys.includes('__unknown__');
-}, 'Use 2–16 distinct answers.');
+  return keys.length >= 2 && keys.length <= 255 && !keys.includes('__unknown__');
+}, 'Use 2–255 distinct answers.');
 export const imageQuestionSchema = z.object({ type: z.literal('choice'), instructions: z.json().optional(), criteria }).strict();
 export type ImageQuestion = z.infer<typeof imageQuestionSchema>;
 const requestSchema = z.object({
@@ -25,7 +25,7 @@ export type ImageResponse = z.infer<typeof responseSchema>;
 export type ImageAnswer = z.infer<typeof answerSchema>;
 const assetSchema = z.object({ id: z.string().uuid(), state: z.enum(['uploading', 'verifying', 'ready', 'failed', 'expired', 'deleted']), sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(), width: z.number().int().positive().optional(), height: z.number().int().positive().optional(), expires_at: z.string().datetime({ offset: true }) });
 export type ImageAsset = z.infer<typeof assetSchema>;
-const modelsSchema = z.object({ models: z.array(z.object({ name: z.string(), stock: z.boolean(), capabilities: z.object({ modalities: z.array(z.string()) }), task: z.object({ question: imageQuestionSchema, outcome_order: z.array(z.string()) }).optional() })), training_enabled: z.boolean(), training_profile: z.object({ model: z.literal('imajev-4b-v1'), max_train: z.number().int().positive(), max_calibration: z.number().int().positive(), max_test: z.number().int().positive(), max_source_bytes: z.number().int().positive(), max_pixels: z.number().int().positive(), max_edge: z.number().int().positive() }).optional() });
+const modelsSchema = z.object({ models: z.array(z.object({ name: z.string(), stock: z.boolean(), capabilities: z.object({ modalities: z.array(z.string()) }), task: z.object({ question: imageQuestionSchema, outcome_order: z.array(z.string()) }).optional() })), training_enabled: z.boolean(), training_profile: z.object({ model: z.string().min(1), capabilities: z.object({ max_options: z.number().int().positive().optional() }).optional(), max_train: z.number().int().positive(), max_calibration: z.number().int().positive(), max_test: z.number().int().positive(), max_source_bytes: z.number().int().positive(), max_pixels: z.number().int().positive(), max_edge: z.number().int().positive() }).optional() });
 export type ImageModels = z.infer<typeof modelsSchema>;
 export type ImageAssetInput = { purpose: 'prediction' | 'training'; job_id?: string; filename: string; source_bytes: number; source_sha256: string };
 export class ImageApiError extends Error {
@@ -40,11 +40,11 @@ export function parseImageResponse(value: unknown, request: ImageRequest): Image
   return result;
 }
 export function imageAnswerLabel(answer: ImageAnswer): string { return answer.abstained ? 'Needs review' : answer.choice; }
-export function imageQuestion(instructions: string, answers: string): ImageQuestion {
+export function imageQuestion(instructions: string, answers: string, maxAnswers = 16): ImageQuestion {
   const values = answers.split('\n').map(value => value.trim()).filter(Boolean);
   if (new Set(values).size !== values.length) throw new Error('Use each possible answer only once.');
   const parsed = imageQuestionSchema.safeParse({ type: 'choice', instructions: instructions.trim(), criteria: Object.fromEntries(values.map(value => [value, null])) });
-  if (!parsed.success) throw new Error('Use 2–16 different answers, each 1–100 characters. The answer __unknown__ is reserved.');
+  if (!parsed.success || values.length > maxAnswers) throw new Error(`Use 2–${maxAnswers} different answers, each 1–100 characters. The answer __unknown__ is reserved.`);
   return parsed.data;
 }
 export async function imageDigest(file: Blob): Promise<string> {

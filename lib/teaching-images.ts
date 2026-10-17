@@ -27,7 +27,7 @@ export function prepareImageTeachingDraft(rows:TeachingImage[], instructions:str
   if (new Set(rows.map(row=>row.sha256)).size!==rows.length) throw new Error('The same image is included more than once. Keep one copy before preparing the draft.');
   const question=imageQuestion(instructions,answers);
   const prepared=prepareImageTraining(rows,question,Object.keys(question.criteria),'image-split-v1');
-  return {version:1,previewOnly:true,imagesIncluded:false,model:'imajev-4b-v1',question,
+  return {version:1,previewOnly:true,imagesIncluded:false,question,
     counts:{total:rows.length,...prepared.counts}, distribution:prepared.distribution,
     splits:Object.fromEntries(SPLITS.map(split=>[split,prepared.splits[split].map(row=>({id:row.id,filename:row.filename,group_id:row.groupId,label:row.label,state:row.state,sha256:rows.find(photo=>photo.id===row.id)!.sha256}))]))};
 }

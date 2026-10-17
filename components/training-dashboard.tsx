@@ -5,7 +5,7 @@ import type { StorageLocations } from '@/lib/storage';
 import { type SupabaseClient } from '@supabase/supabase-js';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { canDownload, downloadFiles, SPLITS, submissionSchema, terminal, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
+import { canDownload, downloadFiles, isImageJob, SPLITS, submissionSchema, terminal, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
 import Link from 'next/link';
 import { WorkspaceLoading, LinkLoading } from '@/components/workspace-loading';
 import { TrainingGuide } from '@/components/training-guide';
@@ -168,7 +168,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
         const { jobs, models } = await loadJobs(controller.signal);
         if (controller.signal.aborted) return;
         setJobs(jobs); announcer.current(jobs); setAvailableModels(models ?? jobs); if (runId) setError(''); setLoading(false); setCheckedAt(Date.now()); setRefreshError(false);
-        setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || jobs.find(job => job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || '');
+        setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading' && !isImageJob(job))?.id || jobs.find(job => job.status === 'uploading' && !isImageJob(job))?.id || '');
         timer = setTimeout(poll, jobs.some(job => !terminal(job)) ? 10_000 : 30_000);
       } catch (error) { if (!controller.signal.aborted) { if (error instanceof TrainingApiError && error.status === 401) errorHandler.current(error); if (runId) { setJobs([]); setError(error instanceof TrainingApiError && [403, 404].includes(error.status) ? 'This run is not available to this account.' : message(error)); } setLoading(false); setRefreshError(true); timer = setTimeout(poll, 30_000); } }
     }
@@ -182,7 +182,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
       const { jobs, models } = await loadJobs(life.current?.signal);
       if (!life.current?.signal.aborted) {
         setJobs(jobs); announcer.current(jobs); setAvailableModels(models ?? jobs); setCheckedAt(Date.now()); setRefreshError(false);
-        setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || jobs.find(job => job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1')?.id || '');
+        setPendingUpload(previous => jobs.find(job => job.id === previous && job.status === 'uploading' && !isImageJob(job))?.id || jobs.find(job => job.status === 'uploading' && !isImageJob(job))?.id || '');
       }
     } catch (error) { if (!life.current?.signal.aborted) { if (error instanceof TrainingApiError && error.status === 401) handleError(error); if (runId) { setJobs([]); setError(error instanceof TrainingApiError && [403, 404].includes(error.status) ? 'This run is not available to this account.' : message(error)); } setRefreshError(true); } }
     finally { setRefreshing(false); }
@@ -265,19 +265,19 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     return <>
       <TrainingRunStatus job={job} />
       {canDownload(job) && <Link className={styles.secondary} href={`/train/models/${job.id}`}>View model stats and access</Link>}
-      {job.model?.id === 'imajev-4b-v1' && <>
+      {isImageJob(job) && <>
         {job.data_expires_at && <p>Training photos expire {new Date(job.data_expires_at).toLocaleString()}. Saved evaluation results remain available.</p>}
-        <ImageTrainingResults job={job} />
+        {job.model?.id === 'imajev-4b-v1' && <ImageTrainingResults job={job} />}
         {job.status === 'uploading' && imageProfile && <button className={styles.secondary} onClick={() => { setIntakeMode('images'); setPanelOpen(true); }}>Continue image setup</button>}
         {config.decisionApiUrl && <div id={`use-model-${job.id}`} tabIndex={-1}><PrivateImageTest key={`${owner}:${job.id}`} job={job} owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storage={config.storage} /></div>}
       </>}
       {job.error && <p role="alert" className={styles.error}>{job.error}</p>}
-      {job.status === 'uploading' && job.model?.id !== 'imajev-4b-v1' && <div className={styles.actions}>
+      {job.status === 'uploading' && !isImageJob(job) && <div className={styles.actions}>
         <button className={styles.secondary} disabled={busy} onClick={() => retrySubmit(job)}>Retry submission</button>
         <button className={styles.secondary} disabled={busy} onClick={() => resumeUploads(job)}>Resume missing uploads</button>
         <button className={styles.textButton} disabled={busy} onClick={() => cancelJob(job)}>Cancel this run</button>
       </div>}
-      {job.model?.id !== 'imajev-4b-v1' && canDownload(job) && job.workflow?.state === 'ready' && job.workflow.model_id && <div id={`use-model-${job.id}`} tabIndex={-1}><TrainedModelQuickstart
+      {!isImageJob(job) && canDownload(job) && job.workflow?.state === 'ready' && job.workflow.model_id && <div id={`use-model-${job.id}`} tabIndex={-1}><TrainedModelQuickstart
         key={job.workflow.model_id}
         modelId={job.workflow.model_id}
         modelName={job.workflow.model_name}
@@ -362,7 +362,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
         </div><p className={styles.localNote}>Your examples are uploaded only when you start training.</p>
       </div>
     </SheetContent>}
-    {imageProfile && imageService && <ImageTrainingIntake active={intakeMode === 'images'} onChooseType={() => setIntakeMode('choose')} assistantConfigured={config.assistantConfigured} owner={owner} token={imageToken} trainingApi={api} imageApi={imageService} profile={imageProfile} resumeJob={jobs.find(job => job.model?.id === 'imajev-4b-v1' && job.status === 'uploading')} onSubmitted={replaceJob} />}
+    {imageProfile && imageService && <ImageTrainingIntake active={intakeMode === 'images'} onChooseType={() => setIntakeMode('choose')} assistantConfigured={config.assistantConfigured} owner={owner} token={imageToken} trainingApi={api} imageApi={imageService} profile={imageProfile} resumeJob={jobs.find(job => isImageJob(job) && job.status === 'uploading')} onSubmitted={replaceJob} />}
     <TrainingIntake active={intakeMode === 'text'} upgrade={upgradeOf ? { id: upgradeOf, name: jobs.find(job => job.id === upgradeOf)?.name } : undefined} onChooseType={() => setIntakeMode('choose')} assistantConfigured={config.assistantConfigured} key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={error} needsCredit={needsCredit} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
       if (focusSubmitted.current) { event.preventDefault(); focusSubmitted.current = false; statusMessage.current?.focus(); }
     }} />

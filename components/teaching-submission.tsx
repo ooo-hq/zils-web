@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthSession } from '@/components/auth-session';
 import { imageApi, ImageApiError, type ImageQuestion } from '@/lib/images';
 import { uploadImageTraining, type ImageDraft, type PreparedImageTraining } from '@/lib/image-training';
-import { SPLITS, imageAcceptanceSchema, submissionSchema, trainingApi, TrainingApiError, validateDatasets, type Split, type Submission } from '@/lib/training';
+import { SPLITS, submissionSchema, trainingApi, TrainingApiError, validateDatasets, type Split, type Submission } from '@/lib/training';
 import type { TrainingConfig } from '@/lib/training-config';
 import s from './teach-by-example.module.css';
 
@@ -25,7 +25,6 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
   const { client, session, error: sessionError } = useAuthSession(config ?? undefined);
   const router = useRouter(), id = useId();
   const [name, setName] = useState(initialName), [accuracy, setAccuracy] = useState(initialAccuracy), [improvement, setImprovement] = useState(initialImprovement);
-  const [positive, setPositive] = useState(''), [recall, setRecall] = useState('95'), [alarms, setAlarms] = useState('20');
   const [consent, setConsent] = useState(false), [comparison, setComparison] = useState(false);
   const [busy, setBusy] = useState(false), [frozen, setFrozen] = useState(false), [uncertain, setUncertain] = useState(false);
   const [error, setError] = useState(''), [progress, setProgress] = useState(''), [needsCredit, setNeedsCredit] = useState(false);
@@ -33,7 +32,6 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
   const draft = useRef<ImageDraft>({ assets: {} });
   const snapshot = useRef<{ owner: string; input: Submission; data: TeachingTrainingData } | null>(null);
   const operation = useRef<AbortController | null>(null), attemptedCreate = useRef(false);
-  const binary = imageAnswers?.length === 2;
   const accountChanged = Boolean(savedOwner && session?.user.id !== savedOwner);
   useEffect(() => () => operation.current?.abort(), []);
   useEffect(() => { if (accountChanged) operation.current?.abort(); }, [accountChanged]);
@@ -54,10 +52,6 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
     try {
       if (!snapshot.current) {
         const input = submissionSchema.parse({ name, acceptance: { min_accuracy: accuracy.trim() ? Number(accuracy) / 100 : NaN, min_brier_improvement: improvement.trim() ? Number(improvement) : NaN }, allow_training_data_export: true, ...(comparison && !imageAnswers ? { allow_jev_comparison: true } : {}) });
-        if (binary) {
-          if (!imageAnswers.includes(positive)) throw new Error('Choose the answer your image model must catch.');
-          input.acceptance = imageAcceptanceSchema.parse({ ...input.acceptance, positive_class: positive, min_positive_recall: recall.trim() ? Number(recall) / 100 : NaN, max_false_positive_rate: alarms.trim() ? Number(alarms) / 100 : NaN });
-        }
         setProgress('Checking your training data locally…');
         const data = await prepare(input.name);
         if (data.kind === 'text') await validateDatasets(data.files, controller.signal);
@@ -90,7 +84,7 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
             if (!valid) throw new Error(`${row.filename} exceeds the current photo dimensions.`);
           }
         }
-        job = await uploadImageTraining(data.prepared, data.question, input, {
+        job = await uploadImageTraining(data.prepared, data.question, { ...input, model: profile.model }, {
           ...api, createImage: async (...args) => { attemptedCreate.current = true; return api.createImage(...args); },
         }, images, draft.current, controller.signal, update);
       } else {
@@ -156,7 +150,6 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
         <label htmlFor={`${id}-name`}>Training run name</label><input id={`${id}-name`} required maxLength={64} pattern="[a-z0-9][a-z0-9-]{0,63}" placeholder="support-routing-v1" value={name} onChange={event => setName(event.target.value)} />
         <div className={s.pairFields}><div><label htmlFor={`${id}-accuracy`}>Required accuracy (%)</label><input id={`${id}-accuracy`} type="number" required min="0" max="100" step="any" value={accuracy} onChange={event => setAccuracy(event.target.value)} /></div><div><label htmlFor={`${id}-improvement`}>Required Brier improvement</label><input id={`${id}-improvement`} type="number" required min="0" max="2" step="any" value={improvement} onChange={event => setImprovement(event.target.value)} /></div></div>
         <p className={s.hint}>The trained model must meet these targets on held-out data. Lower Brier loss means better probability estimates. Training does not guarantee an approved model.</p>
-        {binary && <><label htmlFor={`${id}-positive`}>Answer the model must catch</label><select id={`${id}-positive`} value={positive} required onChange={event => setPositive(event.target.value)}><option value="">Choose an answer</option>{imageAnswers.map(answer => <option key={answer}>{answer}</option>)}</select><div className={s.pairFields}><div><label htmlFor={`${id}-recall`}>Minimum recall (%)</label><input id={`${id}-recall`} type="number" required min="0" max="100" step="any" value={recall} onChange={event => setRecall(event.target.value)} /></div><div><label htmlFor={`${id}-alarms`}>Maximum false alarms (%)</label><input id={`${id}-alarms`} type="number" required min="0" max="100" step="any" value={alarms} onChange={event => setAlarms(event.target.value)} /></div></div></>}
         <label className={s.checkLabel}><input type="checkbox" required checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I am authorized to share these examples. Approved workers can read and retain the training data. Calibration and test labels stay with Zils. This is not confidential compute.</span></label>
         {!imageAnswers && <label className={s.checkLabel}><input type="checkbox" checked={comparison} onChange={event => setComparison(event.target.checked)} /><span>Also compare against TypeSafe JEV. Send final-evaluation inputs and questions to TypeSafe; correct answers stay with Zils. Optional.</span></label>}
       </fieldset>
