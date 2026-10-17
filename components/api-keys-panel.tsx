@@ -33,6 +33,7 @@ export function KeyControls({ client, apiUrl, onExpired, onPending = () => {}, p
   const [keys, setKeys] = useState<ApiKey[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
+  const [creating, setCreating] = useState(false);
   const [secret, setSecret] = useState<CreatedApiKey | null>(null);
   const [busy, setBusy] = useState('');
   const [confirmId, setConfirmId] = useState('');
@@ -76,7 +77,7 @@ export function KeyControls({ client, apiUrl, onExpired, onPending = () => {}, p
         const result = await api.create(name, signal);
         if (signal.aborted) return;
         const { key: fullKey, ...item } = result;
-        setKeys(previous => [item, ...(previous || [])]); setSecret({ ...item, key: fullKey }); setName(''); setCopied(false); setCopyError(false); setConfirmId('');
+        setKeys(previous => [item, ...(previous || [])]); setSecret({ ...item, key: fullKey }); setName(''); setCreating(false); setCopied(false); setCopyError(false); setConfirmId('');
       } else if (id) {
         const result = await api.revoke(id, signal);
         if (signal.aborted) return;
@@ -110,8 +111,11 @@ export function KeyControls({ client, apiUrl, onExpired, onPending = () => {}, p
   const revoked = keys?.filter(key => key.revoked_at) || [];
 
   if (!api) return <div className={training.sheetBody}><p className={training.error} role="alert">API keys are not configured in this environment.</p></div>;
-  return <div className={page ? styles.body : `${training.sheetBody} ${styles.body}`}>
-    <p className={styles.intro}>A key lets your app make predictions with models available to your account. Choose the model in each request.</p>
+  return <div className={page ? `${styles.body} ${styles.pageBody}` : `${training.sheetBody} ${styles.body}`}>
+    {page ? <div className={training.workspaceHeading}>
+      <div><h1>API keys</h1><p>A key lets your app call models available to your account. Choose the model in each request.</p></div>
+      {!secret && !creating && <button className={training.button} disabled={keys === null || Boolean(busy)} onClick={() => { setCreating(true); requestAnimationFrame(() => nameInput.current?.focus()); }}><Plus size={16} aria-hidden="true" />Create key</button>}
+    </div> : <p className={styles.intro}>A key lets your app make predictions with models available to your account. Choose the model in each request.</p>}
     {error && <p className={training.error} role="alert">{error}</p>}
     {notice && <p className={training.notice} role="status">{notice}</p>}
     {secret ? <section className={styles.secret} aria-labelledby="new-key-heading">
@@ -126,18 +130,19 @@ export function KeyControls({ client, apiUrl, onExpired, onPending = () => {}, p
       </div>
       <p role="status" className={styles.copyStatus}>{copyError ? 'Copy was blocked. Select the key above and copy it manually.' : copied ? 'Key copied to your clipboard.' : ''}</p>
       <p id="key-storage-note" className={styles.storageNote}>Keep it in your app’s server settings. Don’t put it in browser code or share it publicly.</p>
-    </section> : <form className={styles.create} onSubmit={create}>
+    </section> : (!page || creating) && <form className={page ? `${styles.create} ${styles.createPanel}` : styles.create} onSubmit={create}>
       <h3>Create a key</h3>
       <label htmlFor="api-key-name">Key name</label>
       <p id="key-name-help" className={styles.hint}>A name to help you recognize where it’s used.</p>
       <div className={styles.createRow}>
         <input ref={nameInput} id="api-key-name" required maxLength={80} autoComplete="off" placeholder="e.g. Flight app — production" aria-describedby="key-name-help" value={name} onChange={event => setName(event.target.value)} disabled={Boolean(busy)} />
         <button className={training.button} disabled={Boolean(busy) || loading || keys === null || !name.trim()}><Plus size={16} aria-hidden="true" />{busy === 'create' ? 'Creating…' : 'Create key'}</button>
+        {page && <button type="button" className={training.secondary} disabled={Boolean(busy)} onClick={() => { setCreating(false); setName(''); }}>Cancel</button>}
       </div>
     </form>}
     <section className={styles.keySection} aria-labelledby="active-keys-heading" aria-busy={loading}>
       <div className={styles.sectionHeading}><h3 id="active-keys-heading">Active keys{keys && <span>{active.length}</span>}</h3><button className={training.textButton} disabled={loading || Boolean(busy)} onClick={() => { setError(''); setLoading(true); if (life.current) void load(life.current.signal); }}>{loading ? 'Refreshing…' : 'Refresh'}</button></div>
-      {keys === null ? <p className={styles.empty} role="status">{loading ? 'Loading your keys…' : 'Your keys could not be loaded. Refresh to try again.'}</p> : active.length === 0 ? <div className={styles.empty}><KeyRound size={22} aria-hidden="true" /><p>No active keys yet.</p><span>Create one above to connect your app.</span></div> : <KeyTable label="Active keys">{active.map(key => <Fragment key={key.id}>
+      {keys === null ? <p className={styles.empty} role="status">{loading ? 'Loading your keys…' : 'Your keys could not be loaded. Refresh to try again.'}</p> : active.length === 0 ? <div className={styles.empty}><KeyRound size={22} aria-hidden="true" /><p>No active keys yet.</p><span>{page ? 'Create one to connect your app.' : 'Create one above to connect your app.'}</span></div> : <KeyTable label="Active keys">{active.map(key => <Fragment key={key.id}>
         <tr><th scope="row">{key.name}</th><td><span className={styles.active}>Active</span></td><td><code>{key.prefix}…</code></td><td>{date(key.created_at)}</td><td><button className={training.textButton} aria-label={`Revoke ${key.name}`} disabled={Boolean(busy) || loading || Boolean(secret)} onClick={() => setConfirmId(key.id)}>Revoke</button></td></tr>
         {confirmId === key.id && <tr><td colSpan={5}><div className={styles.confirm} role="group" aria-label={`Confirm revocation of ${key.name}`}><p>Revoke <strong>{key.name}</strong>?</p><p>Requests using this key will stop working. This can’t be undone.</p><div><button className={training.secondary} disabled={Boolean(busy)} onClick={() => setConfirmId('')}>Keep key</button><button className={styles.revoke} disabled={Boolean(busy) || loading} onClick={() => void mutate('revoke', key.id)}>{busy === key.id ? 'Revoking…' : 'Revoke key'}</button></div></div></td></tr>}
       </Fragment>)}</KeyTable>}
@@ -158,6 +163,6 @@ function KeyTable({ label, revoked = false, children }: { label: string; revoked
 export function ApiKeysPage({ auth, apiUrl }: { auth: { url: string; key: string }; apiUrl: string | null }) {
   const { client, session } = useAuthSession(auth);
   if (session === undefined) return <WorkspaceLoading label="Loading your keys" />;
-  if (!session || !client) return <section className={training.panel}><h2>Sign in to manage API keys</h2><p>Keys connect your app to models available to your account.</p><Link href="/train" className={training.button}>Sign in to Zils</Link></section>;
+  if (!session || !client) return <><div className={training.workspaceHeading}><h1>API keys</h1></div><section className={training.panel}><h2>Sign in to manage API keys</h2><p>Keys connect your app to models available to your account.</p><Link href="/train" className={training.button}>Sign in to Zils</Link></section></>;
   return <KeyControls page key={session.user.id} client={client} apiUrl={apiUrl} onExpired={async () => { await client.auth.signOut({ scope: 'local' }); }} />;
 }

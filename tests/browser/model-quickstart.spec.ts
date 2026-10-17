@@ -177,6 +177,12 @@ test('the API keys page lists active keys in a table and hides revoked ones', as
   await expect(active.getByRole('rowheader', { name: 'Flight app — production' })).toBeVisible();
   await expect(active.getByRole('row')).toHaveCount(2);
   await expect(page.getByText('Show 1 revoked key', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Key name')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Create key', exact: true }).click();
+  await expect(page.getByLabel('Key name')).toBeFocused();
+  await page.screenshot({ path: '.private/api-keys-page-create.png', fullPage: true });
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(page.getByLabel('Key name')).toHaveCount(0);
   await page.screenshot({ path: '.private/api-keys-page-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 375, height: 812 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
