@@ -6,13 +6,15 @@ const job = { id: '3a752a1b-8857-4822-9b13-c7d283e0dd54', name: 'routing', statu
 const model = { id: 'jevk5-4b-v0.3', name: 'JevK5 4B', base: 'alibiserikbay/JevK5', base_revision: 'c4f7fdb3aeab5582336406e78d3bef11bf98833d' };
 
 const h2oModel = { id: 'h2o-lightning-4b-v1.2.3', name: 'H2O Lightning 4B', base: 'h2oai/h2o-lightning-4b', base_revision: 'acaf0d4ea251e54de928c75ef4352670d33192d3' };
+const d3Model = { id: 'd3-mini-4.5b-v1', name: 'd3-mini 4.5B', base: 'zils-ai/d3-mini-4.5b-v1', base_revision: 'bcaf0d4ea251e54de928c75ef4352670d33192d4' };
 
 test('preserves per-job model identity and supports old jobs without it', () => {
-  for (const currentModel of [model, h2oModel]) {
+  for (const currentModel of [model, h2oModel, d3Model]) {
     const parsed = jobSchema.parse({ ...job, model: currentModel });
     assert.deepEqual(parsed.model, currentModel);
     assert.deepEqual(downloadFiles(parsed), ['adapter_config.json', 'adapter_model.safetensors', 'model.json', 'release.json']);
   }
+  assert.deepEqual(downloadFiles(jobSchema.parse({ ...job, model: d3Model })), downloadFiles(jobSchema.parse({ ...job, model: h2oModel })));
   assert.ok(downloadFiles(jobSchema.parse(job)).includes('head.pt'));
   assert.ok(downloadFiles(jobSchema.parse({ ...job, model })).includes('model.json'));
   assert.equal(jobSchema.safeParse({ ...job, model: { ...model, id: 'unrecognized-model' } }).success, false);
@@ -26,7 +28,7 @@ test('loads H2O jobs in the run list and job detail', async () => {
   assert.deepEqual(await api.get(job.id), { job: current });
 });
 
-for (const currentModel of [model, h2oModel]) {
+for (const currentModel of [model, h2oModel, d3Model]) {
   test(`${currentModel.id} only downloads the expected text adapter files`, async () => {
     const current = { ...job, model: currentModel };
     let names = ['adapter_config.json', 'adapter_model.safetensors', 'model.json', 'release.json'];
