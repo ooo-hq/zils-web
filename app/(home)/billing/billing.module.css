@@ -2,7 +2,7 @@
 .page :focus-visible { outline:2px solid var(--zils-accent); outline-offset:4px; }
 .container { max-width:1152px; margin:auto; padding:0 32px; }
 .main { padding:36px 0 88px; }
-.heading { display:flex; justify-content:space-between; align-items:center; gap:24px; margin-bottom:24px; }
+.heading { display:flex; justify-content:space-between; align-items:center; gap:24px; padding-top:24px; margin-bottom:24px; }
 .heading h1 { font-size:38px; font-weight:500; letter-spacing:-.045em; line-height:1.15; margin:0; }
 .heading p { color:var(--zils-muted); font-size:14px; margin:10px 0 0; }
 .heading>a,.pricingLink,.detailLink { color:var(--zils-accent); font-size:13px; text-decoration:underline; text-underline-offset:4px; }

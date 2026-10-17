@@ -91,8 +91,8 @@ test('account usage is independent of transaction history and models keep unknow
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await report.screenshot({ path: '.private/usage-report-mobile.png' });
   await page.goto('/train');
-  await page.getByRole('link', { name: 'Usage & billing', exact: true }).click();
-  await expect(page).toHaveURL(/\/billing#usage$/);
+  await page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'Usage', exact: true }).click();
+  await expect(page).toHaveURL(/\/billing$/);
   expect(errors).toEqual([]);
 });
 
@@ -117,7 +117,7 @@ test('unavailable billing keeps the valid workspace session and never asks for a
   await expect(page.locator('main').getByRole('alert')).toHaveText('Billing is not connected on this site yet. Please try again later.');
   await expect(page.getByRole('link', { name: 'Sign in again', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Add $5', exact: true })).toHaveCount(0);
-  await page.getByRole('link', { name: 'Your workspace', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'Home', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Train a model', exact: true })).toBeVisible();
   expect(requests).not.toContain('/auth/v1/logout');
 });
@@ -133,7 +133,7 @@ test('billing shows exact server balances, reservations, allowance, receipts and
   const { errors } = await billing(page);
   await page.goto('/billing');
   await expect(page.getByRole('heading', { name: 'Test mode', exact: true })).toBeVisible();
-  await expect(page.getByText('$1.00', { exact: true })).toBeVisible();
+  await expect(page.getByRole('main').getByText('$1.00', { exact: true })).toBeVisible();
   await expect(page.getByText('$0.50', { exact: true })).toBeVisible();
   await expect(page.getByText('1 standard run available', { exact: true })).toBeVisible();
   await expect(page.getByText('Low credit', { exact: true })).toBeVisible();
@@ -141,8 +141,7 @@ test('billing shows exact server balances, reservations, allowance, receipts and
   await expect(page.getByRole('link', { name: 'Receipt' })).toHaveAttribute('href', 'https://pay.stripe.com/receipts/payment/test');
   for (const amount of [5, 20, 50, 100]) await expect(page.getByRole('button', { name: `Add $${amount}`, exact: true })).toBeEnabled();
   await page.screenshot({ path: '.private/billing-desktop.png', fullPage: true });
-  await page.getByRole('button', { name: 'Account', exact: true }).click();
-  await expect(page.getByRole('link', { name: 'Billing', exact: true })).toHaveAttribute('href', '/billing');
+  await expect(page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'Usage', exact: true })).toHaveAttribute('aria-current', 'page');
   expect(errors).toEqual([]);
 });
 
@@ -151,12 +150,12 @@ test('returning from checkout does not invent credit and mobile layout stays wit
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/billing?checkout=success');
   await expect(page.getByText(/Credit is added only after payment is confirmed/)).toBeVisible();
-  await expect(page.getByText('$1.00', { exact: true })).toBeVisible();
+  await expect(page.getByRole('main').getByText('$1.00', { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: '.private/billing-mobile.png', fullPage: true });
   await page.goto('/billing?checkout=cancelled');
   await expect(page.getByText(/Checkout was cancelled/)).toBeVisible();
-  await expect(page.getByText('$1.00', { exact: true })).toBeVisible();
+  await expect(page.getByRole('main').getByText('$1.00', { exact: true })).toBeVisible();
 });
 
 test('uncertain checkout reuses persisted idempotency key after reload and locks other amounts', async ({ page }) => {

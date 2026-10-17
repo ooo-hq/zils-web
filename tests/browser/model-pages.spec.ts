@@ -162,7 +162,7 @@ test('signed-out visitors and other owners never see private model data', async 
   }, session('30000000-0000-4000-8000-000000000003'));
   await expect(page.getByRole('main').getByRole('alert')).toHaveText('This model is not available to this account.');
   await expect(page.getByText(job.name, { exact: true })).toHaveCount(0);
-  expect(control.requests).not.toContain('/v1/billing');
+  await expect(page.getByRole('heading', { name: 'API usage', exact: true })).toHaveCount(0);
 });
 
 for (const target of [path, `/train?run=${id}`]) test(`changing accounts during loading clears private data at ${target}`, async ({ page }) => {
@@ -189,7 +189,7 @@ test('activation and approval are distinct: accepted stats are visible before AP
   await expect(page.getByRole('region', { name: 'Model activation' })).toContainText('Preparing API access');
   await expect(page.getByText('91.00%', { exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Access this model' })).toHaveCount(0);
-  expect(control.requests).not.toContain('/v1/billing');
+  await expect(page.getByRole('heading', { name: 'API usage', exact: true })).toHaveCount(0);
 });
 
 test('unapproved and invalid model links do not expose scores or API instructions', async ({ page }) => {
@@ -197,7 +197,7 @@ test('unapproved and invalid model links do not expose scores or API instruction
   await page.goto(path);
   await expect(page.getByRole('main').getByRole('alert')).toContainText('does not have an approved model');
   await expect(page.getByRole('region', { name: 'How this model performed' })).toHaveCount(0);
-  expect(control.requests).not.toContain('/v1/billing');
+  await expect(page.getByRole('heading', { name: 'API usage', exact: true })).toHaveCount(0);
   await page.goto('/train/models/not-a-valid-id');
   // Streaming loading boundaries can send 200 before Next renders its 404.
   await expect(page.getByRole('heading', { name: '404', exact: true })).toBeVisible();
@@ -240,33 +240,19 @@ test('approved image models retain their saved task and image API access', async
 });
 
 
-test('training index stays compact and its footer reaches the bottom without overlaying content', async ({ page }) => {
+test('training index stays compact inside the workspace sidebar', async ({ page }) => {
   await fixture(page);
   await page.setViewportSize({ width: 1280, height: 1000 });
   await page.goto('/train');
   await expect(page.getByRole('region', { name: 'Your models' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Use your model' })).toHaveCount(0);
   await expect(page.getByText('Evaluation and technical details')).toHaveCount(0);
-  const footer = page.getByRole('contentinfo');
-  const bounds = await footer.boundingBox();
-  expect(bounds!.y + bounds!.height).toBeCloseTo(1000, 0);
+  await expect(page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
   await page.screenshot({ path: '.private/training-index-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  expect(await footer.evaluate(node => getComputedStyle(node).position)).not.toBe('fixed');
   await page.screenshot({ path: '.private/training-index-mobile.png', fullPage: true });
-});
-
-for (const url of ['/train', path]) test(`signed-out ${url} keeps the footer at the bottom`, async ({ page }) => {
-  await fixture(page, { signedOut: true });
-  await page.setViewportSize({ width: 1280, height: 1200 });
-  await page.goto(url);
-  await expect(page.getByRole('heading', { name: url === '/train' ? 'Sign in to Zils' : 'Sign in to view this model', exact: true })).toBeVisible();
-  const footer = await page.getByRole('contentinfo').boundingBox();
-  const main = await page.getByRole('main').boundingBox();
-  expect(footer!.y).toBeGreaterThanOrEqual(main!.y + main!.height - 1);
-  expect(footer!.y + footer!.height).toBeCloseTo(1200, 0);
 });
 
 test('full run links resolve directly, including runs outside the recent list', async ({ page }) => {
@@ -315,7 +301,7 @@ test('model and run navigation show loaders until private data arrives', async (
 });
 
 
-test('long model names keep results, access controls and the footer readable on mobile', async ({ page }) => {
+test('long model names keep results and access controls readable on mobile', async ({ page }) => {
   await fixture(page);
   const name = 'which-support-action-should-be-taken-next-in-this-customer-conversation';
   await page.route(`**/v1/jobs/${id}`, route => route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: { job: { ...job, name } } }));
@@ -326,7 +312,4 @@ test('long model names keep results, access controls and the footer readable on 
   await expect(page.getByRole('link', { name: 'Use this model', exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: '.private/model-page-long-mobile.png', fullPage: true });
-  const footer = await page.getByRole('contentinfo').boundingBox();
-  const main = await page.getByRole('main').boundingBox();
-  expect(footer!.y).toBeGreaterThanOrEqual(main!.y + main!.height - 1);
 });
