@@ -1,16 +1,15 @@
 import { parseResponse, type DecisionRequest, type ModelOption } from './playground';
 
 export const MAX_BODY_BYTES = 32_768;
-const SHARED_MODEL = 'zils-jevk5-v0.3-r1';
 
+// The shared model is deployment configuration: no release ID is built into the site.
 export function playgroundConfig(): { configured: boolean; models: ModelOption[] } {
-  const model = (process.env.ZILS_DECISION_MODEL ?? process.env.FEZ_DECISION_MODEL) || SHARED_MODEL;
-  const defaultLabel = model === SHARED_MODEL ? 'Zils shared · JevK5 4B'
-    : model === 'fez-0.8b-experimental' ? 'Zils 0.8B · experimental' : model;
+  const model = (process.env.ZILS_DECISION_MODEL ?? process.env.FEZ_DECISION_MODEL) || '';
+  const defaultLabel = model === 'fez-0.8b-experimental' ? 'Zils 0.8B · experimental' : model || 'Zils shared';
   const endpoint = process.env.ZILS_DECISION_API_URL ?? process.env.FEZ_DECISION_API_URL;
   const key = process.env.ZILS_DECISION_API_KEY ?? process.env.FEZ_DECISION_API_KEY;
   return {
-    configured: Boolean(endpoint && key),
+    configured: Boolean(endpoint && key && model),
     models: [{ id: model, label: (process.env.ZILS_DECISION_LABEL ?? process.env.FEZ_DECISION_LABEL) || defaultLabel }],
   };
 }
