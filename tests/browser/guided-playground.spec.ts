@@ -58,6 +58,7 @@ test('running uses edited questions and actual response; editing an example clea
   await open(page);
   let sent: Record<string, unknown> | undefined;
   await page.route('**/api/playground', async route => {
+    if (route.request().method() !== 'POST') return route.fallback();
     sent = route.request().postDataJSON();
     return route.fulfill({ json: { model: sent!.model, answers: { refund: { type: 'noul', noul: .88 } }, usage: { input_tokens: 45, output_tokens: 0 } } });
   });

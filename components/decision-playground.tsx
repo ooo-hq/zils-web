@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { sessionHeaders } from '@/components/auth-session';
+import { curlCommand } from '@/lib/model-quickstart';
 import { editorRequest, parseResponse, PRESETS, type Answer, type DecisionRequest, type DecisionResponse, type ModelOption } from '@/lib/playground';
 import s from '@/components/light.module.css';
 
@@ -38,17 +40,16 @@ function AnswerCard({ id, question, answer }: { id: string; question: DecisionRe
   </article>;
 }
 
-export function DecisionPlayground({ configured, models, initialRequest }: { configured: boolean; models: ModelOption[]; initialRequest?: DecisionRequest }) {
+export function DecisionPlayground({ configured, model: selected, apiKey, apiUrl, initialRequest }: { configured: boolean; model: ModelOption; apiKey: string; apiUrl: string | null; initialRequest?: DecisionRequest }) {
   const [preset, setPreset] = useState(initialRequest ? -1 : 0);
   const [state, setState] = useState(asText(initialRequest?.state ?? PRESETS[0].state));
   const [questions, setQuestions] = useState(asText(initialRequest?.questions ?? PRESETS[0].questions));
-  const [model, setModel] = useState(models[0].id);
+  const model = selected.id;
   const [run, setRun] = useState<Run | null>(null);
   const [view, setView] = useState<'Answers' | 'JSON' | 'API'>('Answers');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
-  const [origin, setOrigin] = useState('https://zils.ai');
   const active = useRef<AbortController | null>(null);
 
   useEffect(() => () => { active.current?.abort(); }, []);
@@ -65,12 +66,13 @@ export function DecisionPlayground({ configured, models, initialRequest }: { con
       input = editorRequest(state, questions, model);
       if (new TextEncoder().encode(JSON.stringify(input)).length > 32_768) throw new Error('Keep state and questions under 32 KB.');
     } catch (e) { setError((e as Error).message); return; }
+    if (selected.own && !apiKey) { setError('Paste one of your API keys to run your own model.'); return; }
     const controller = new AbortController(); active.current = controller;
     setBusy(true); setError(''); setRun(null); setView('Answers'); setCopied(false);
     const start = performance.now();
     try {
       const response = await fetch('/api/playground', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input),
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...await sessionHeaders(), ...(selected.own ? { 'X-Zils-Api-Key': apiKey } : {}) }, body: JSON.stringify(input),
         signal: AbortSignal.any([controller.signal, AbortSignal.timeout(65_000)]),
       });
       const result = await response.json();
@@ -81,11 +83,9 @@ export function DecisionPlayground({ configured, models, initialRequest }: { con
     } finally { if (active.current === controller) { active.current = null; setBusy(false); } }
   }
 
-  let requestCode = 'Fix the questions JSON to generate an API request.';
-  try {
-    const json = JSON.stringify(editorRequest(state, questions, model), null, 2);
-    requestCode = `curl ${origin}/api/playground \\\n  -H 'Content-Type: application/json' \\\n  --data '${json.replace(/'/g, "'\\''")}'`;
-  } catch { /* The editor error is shown when Run is pressed. */ }
+  let requestCode = apiUrl ? 'Fix the questions JSON to generate an API request.' : 'The Zils API address is not configured for this site.';
+  try { if (apiUrl) requestCode = curlCommand(apiUrl, editorRequest(state, questions, model)); }
+  catch { /* The editor error is shown when Run is pressed. */ }
   const code = view === 'API' ? requestCode : run ? JSON.stringify(run.response, null, 2) : '';
 
   async function copy() {
@@ -108,10 +108,8 @@ export function DecisionPlayground({ configured, models, initialRequest }: { con
     <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.1fr]">
       <form className="rounded-2xl bg-page p-5 ring-1 ring-edge sm:p-6" onSubmit={e => { e.preventDefault(); void decide(); }} onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); void decide(); } }}>
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface px-4 py-3 text-xs ring-1 ring-edge">
-          <span className="flex items-center gap-2"><span className={`size-1.5 rounded-full ${configured ? 'bg-emerald-500' : 'bg-[#FF6A00]'}`} aria-hidden="true" /><strong className="font-medium">{models[0].label}</strong></span>
-          <label className="flex items-center gap-2 text-subtle">Model<select value={model} disabled={busy} onChange={e => { changed(); setModel(e.target.value); }} className="rounded-md bg-page px-2 py-1 text-ink ring-1 ring-edge">
-            {models.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
-          </select></label>
+          <span className="flex items-center gap-2"><span className={`size-1.5 rounded-full ${configured ? 'bg-emerald-500' : 'bg-[#FF6A00]'}`} aria-hidden="true" /><strong className="font-medium">{selected.label}</strong></span>
+          <span className="text-subtle">{selected.own ? 'Your model · runs with your API key' : 'Shared model'}</span>
         </div>
         <fieldset disabled={busy} className="space-y-5">
           <div>
@@ -140,7 +138,7 @@ export function DecisionPlayground({ configured, models, initialRequest }: { con
 
       <section aria-label="Decision results" aria-busy={busy} className="flex min-w-0 flex-col rounded-[22px] bg-page/60 p-2.5 ring-1 ring-edge">
         <div className="flex flex-wrap items-center justify-between gap-2 px-3 pb-2 pt-1">
-          <div role="tablist" aria-label="Result view" className="flex gap-1">{(['Answers', 'JSON', 'API'] as const).map(tab => <button type="button" role="tab" key={tab} aria-selected={view === tab} onClick={() => { setView(tab); setCopied(false); setOrigin(window.location.origin); }}
+          <div role="tablist" aria-label="Result view" className="flex gap-1">{(['Answers', 'JSON', 'API'] as const).map(tab => <button type="button" role="tab" key={tab} aria-selected={view === tab} onClick={() => { setView(tab); setCopied(false); }}
             className={view === tab ? 'rounded-full bg-action px-3.5 py-1 text-xs font-medium text-on-action' : 'rounded-full px-3.5 py-1 text-xs text-muted hover:text-ink'}>{tab}</button>)}</div>
           {code && view !== 'Answers' ? <button type="button" className="text-xs text-muted hover:text-accent" onClick={() => void copy()}>{copied ? 'Copied' : 'Copy'}</button>
             : <span className="font-mono text-[10px] tracking-[0.14em] text-subtle">ZILS · DECISION INSTRUMENT</span>}
@@ -152,7 +150,7 @@ export function DecisionPlayground({ configured, models, initialRequest }: { con
               <span className={`size-1.5 rounded-full ${busy ? `bg-[#FFB070] ${s.cursor}` : configured ? 'bg-[#9ee89e]' : 'bg-[#FF6A00]'}`} aria-hidden="true" />{status}
             </p>
             {view === 'API' ? <>
-              <p className="mb-3 text-[#9ee89e]/70">Send the same context and typed decisions from your own code. This request uses the Zils endpoint on this website.</p>
+              <p className="mb-3 text-[#9ee89e]/70">Send the same context and typed decisions from your own code. Set <code>ZILS_API_KEY</code> to one of your API keys.</p>
               <pre className="overflow-x-auto whitespace-pre text-[#c9f5c9]"><code>{requestCode}</code></pre>
             </> : run ? <>
               <p className="mb-5 flex flex-wrap gap-x-4 gap-y-1 text-[10px] tracking-[0.08em] text-[#9ee89e]/60">

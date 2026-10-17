@@ -6,7 +6,8 @@ const metadata = z.object({
   id: z.string().uuid(), name: z.string(), prefix: z.string(),
   created_at: timestamp, revoked_at: timestamp.nullable(),
 });
-const created = metadata.extend({ key: z.string().regex(/^zils_sk_[0-9a-f]{32}_[A-Za-z0-9_-]{43}$/) });
+export const API_KEY_PATTERN = /^zils_sk_[0-9a-f]{32}_[A-Za-z0-9_-]{43}$/;
+const created = metadata.extend({ key: z.string().regex(API_KEY_PATTERN) });
 export type ApiKey = z.infer<typeof metadata>;
 export type CreatedApiKey = z.infer<typeof created>;
 
