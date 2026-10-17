@@ -28,22 +28,25 @@ function ModelRow({ job }: { job: Job }) {
   }
   return <li className={styles.model}>
     <div className={styles.identity}>
-      <h3><Link href={`/train/models/${job.id}`}>{job.name}<LinkLoading /></Link></h3>
+      <h3><Link href={`/models/${job.id}`}>{job.name}<LinkLoading /></Link></h3>
       <code ref={field} tabIndex={0} aria-label={`API name for ${job.name}`}>{name}</code>
       {job.selection?.previous && <span className={styles.ready}>Replaces an earlier version</span>}
       <span className={styles.ready}>Ready to use{job.created_at && <time dateTime={job.created_at}>Trained {new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time>}</span>
     </div>
     <div className={styles.controls}>
       <button type="button" className={training.secondary} onClick={copy}>{copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}{copied ? 'Copied' : job.workflow!.model_alias ? 'Copy alias' : job.workflow!.model_name ? 'Copy name' : 'Copy ID'}</button>
-      <Link className={training.button} href={`/train/models/${job.id}`}>View model<LinkLoading /></Link>
+      <Link className={training.button} href={`/models/${job.id}`}>View model<LinkLoading /></Link>
       <span role="status" className={styles.notice}>{notice}</span>
     </div>
   </li>;
 }
 
-export function TrainedModelLibrary({ jobs }: { jobs: Job[] }) {
-  const models = jobs.filter(job => canDownload(job) && job.workflow?.state === 'ready' && job.workflow.model_id);
+export const readyModels = (jobs: Job[]) => jobs.filter(job => canDownload(job) && job.workflow?.state === 'ready' && job.workflow.model_id);
+
+export function TrainedModelLibrary({ jobs, bare = false }: { jobs: Job[]; bare?: boolean }) {
+  const models = readyModels(jobs);
   if (!models.length) return null;
+  if (bare) return <section className={`${styles.library} ${styles.bare}`} aria-label="Your models"><ul>{models.map(job => <ModelRow key={job.id} job={job} />)}</ul></section>;
   return <section className={styles.library} aria-labelledby="your-models-title">
     <header><div><h2 id="your-models-title">Your models <span>{models.length}</span></h2><p>Trained on your examples. Ready for your next decision.</p></div><ZilsDecisionMark className={styles.mark} /></header>
     <ul>{models.map(job => <ModelRow key={job.id} job={job} />)}</ul>

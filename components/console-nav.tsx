@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, ChartLine, FlaskConical, House, KeyRound, LogOut, SquareArrowOutUpRight } from 'lucide-react';
+import { BookOpen, Boxes, ChartLine, FlaskConical, GraduationCap, House, KeyRound, LogOut, SquareArrowOutUpRight } from 'lucide-react';
 import { useAuthSession } from '@/components/auth-session';
 import { ThemeToggle } from '@/components/theme';
 import { ZilsWordmark } from '@/components/zils-wordmark';
@@ -12,7 +12,9 @@ import { docsUrl } from '@/lib/shared';
 import styles from './console-shell.module.css';
 
 const LINKS = [
-  { href: '/train', label: 'Home', icon: House },
+  { href: '/dashboard', label: 'Home', icon: House },
+  { href: '/train', label: 'Train', icon: GraduationCap },
+  { href: '/models', label: 'Models', icon: Boxes },
   { href: '/playground', label: 'Playground', icon: FlaskConical },
   { href: '/billing', label: 'Usage', icon: ChartLine },
   { href: '/keys', label: 'API keys', icon: KeyRound },

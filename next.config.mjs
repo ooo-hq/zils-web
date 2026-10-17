@@ -15,6 +15,8 @@ const config = {
       { source: '/cli/:path((?!authorize$).*)', destination: 'https://fez.chat/cli/:path', permanent: true },
       // The Sidecar/agent-network page is the CLI page now.
       { source: '/network', destination: '/cli', permanent: true },
+      // Model pages moved out of Training into the workspace's Models section.
+      { source: '/train/models/:jobId', destination: '/models/:jobId', permanent: false },
       // Retired pages: the front page carries the pitch now. Temporary, so
       // an old link lands somewhere useful without freezing the decision.
       ...['/bazaar', '/whitepaper', '/mine', '/roadmap'].map((source) => ({ source, destination: '/', permanent: false })),

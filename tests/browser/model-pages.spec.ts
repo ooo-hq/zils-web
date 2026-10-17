@@ -3,7 +3,7 @@ import { test, expect, type Page } from '@playwright/test';
 const id = '10000000-0000-4000-8000-000000000001';
 const owner = '20000000-0000-4000-8000-000000000002';
 const modelId = 'support-version-immutable';
-const path = `/train/models/${id}`;
+const path = `/models/${id}`;
 const policy = { min_accuracy: .8, min_brier_improvement: .01 };
 const job = {
   id, name: 'support-routing', status: 'completed', created_at: '2026-10-09T12:00:00Z',
@@ -70,7 +70,7 @@ test('workspace links to private model stats, exact-version usage, and runnable 
   await page.setViewportSize({ width: 1280, height: 1050 });
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const control = await fixture(page);
-  await page.goto('/train');
+  await page.goto('/models');
   await page.getByRole('region', { name: 'Your models' }).getByRole('link', { name: 'View model', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`${path}$`));
   await expect(page.getByRole('heading', { name: job.name, level: 1 })).toBeVisible();
@@ -198,7 +198,7 @@ test('unapproved and invalid model links do not expose scores or API instruction
   await expect(page.getByRole('main').getByRole('alert')).toContainText('does not have an approved model');
   await expect(page.getByRole('region', { name: 'How this model performed' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'API usage', exact: true })).toHaveCount(0);
-  await page.goto('/train/models/not-a-valid-id');
+  await page.goto('/models/not-a-valid-id');
   // Streaming loading boundaries can send 200 before Next renders its 404.
   await expect(page.getByRole('heading', { name: '404', exact: true })).toBeVisible();
   await expect(page.locator('meta[name=robots]').first()).toHaveAttribute('content', /noindex/);
@@ -244,10 +244,11 @@ test('training index stays compact inside the workspace sidebar', async ({ page 
   await fixture(page);
   await page.setViewportSize({ width: 1280, height: 1000 });
   await page.goto('/train');
-  await expect(page.getByRole('region', { name: 'Your models' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Run history' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Your models' })).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Use your model' })).toHaveCount(0);
   await expect(page.getByText('Evaluation and technical details')).toHaveCount(0);
-  await expect(page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'Train' })).toHaveAttribute('aria-current', 'page');
   await page.screenshot({ path: '.private/training-index-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
@@ -286,7 +287,7 @@ test('run links cannot expose another account or accept invalid IDs', async ({ p
 
 test('model and run navigation show loaders until private data arrives', async ({ page }) => {
   const control = await fixture(page, { hold: true });
-  await page.goto('/train');
+  await page.goto('/models');
   await page.getByRole('region', { name: 'Your models' }).getByRole('link', { name: 'View model' }).click();
   await expect(page.getByRole('status', { name: 'Loading your model', exact: true })).toBeVisible();
   await page.screenshot({ path: '.private/model-transition-loading.png' });
