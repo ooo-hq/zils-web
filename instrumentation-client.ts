@@ -12,7 +12,7 @@ if (
       try {
         const url = new URL(payload.u);
         // Keep private model IDs, internal tools, and shared artifacts out of analytics.
-        if (/^\/(?:admin|pricing-lab|a|train\/models)(?:\/|$)/.test(url.pathname)) return null;
+        if (/^\/(?:admin|pricing-lab|a|train\/models|models)(?:\/|$)/.test(url.pathname)) return null;
 
         return {
           ...payload,

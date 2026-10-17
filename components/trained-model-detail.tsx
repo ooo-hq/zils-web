@@ -145,7 +145,7 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
         {job.workflow?.model_alias && <div><dt>Task alias</dt><dd><code>{job.workflow.model_alias}</code> · follows this task across replacements</dd></div>}
         {job.model && <div><dt>Starting model</dt><dd>{job.model.name}</dd></div>}
         <div><dt>Training run</dt><dd><Link href={`/train?run=${job.id}`}>View full run<LinkLoading /></Link><code className={styles.identifier}>{job.id}</code></dd></div>
-        {job.selection?.previous && <div><dt>Previous version</dt><dd><Link href={`/train/models/${job.selection.previous.job_id}`}>{job.selection.previous.model_id}</Link></dd></div>}
+        {job.selection?.previous && <div><dt>Previous version</dt><dd><Link href={`/models/${job.selection.previous.job_id}`}>{job.selection.previous.model_id}</Link></dd></div>}
         {result.delivery.sha256 && <div><dt>Checkpoint SHA-256</dt><dd><code>{result.delivery.sha256}</code></dd></div>}
       </dl>
     </details>

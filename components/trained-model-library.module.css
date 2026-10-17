@@ -1,4 +1,7 @@
 .library { margin-bottom:40px; min-width:0; background:var(--workspace-wash,var(--zils-soft)); border-radius:12px 12px 30px 12px; padding:28px 30px 8px; }
+.library.bare { background:none; border-radius:0; padding:0; }
+.bare .model { border-top-color:var(--zils-edge); }
+.bare .model:last-child { border-bottom:1px solid var(--zils-edge); }
 .library header { display:flex; justify-content:space-between; gap:24px; align-items:center; }
 .library h2 { display:flex; align-items:center; gap:10px; font-size:26px; font-weight:500; letter-spacing:-.035em; margin:0; }
 .library h2 span { font-size:13px; font-weight:400; color:var(--zils-muted); letter-spacing:0; }

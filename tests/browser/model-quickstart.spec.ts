@@ -90,6 +90,7 @@ test('activation in progress does not offer a usable model prematurely', async (
 test('available models list keeps different tasks separate and links to each model page', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const writes = await workspace(page, 'ready', true, true);
+  await page.goto('/models');
   const library = page.getByRole('region', { name: 'Your models' });
   await expect(library.getByRole('listitem')).toHaveCount(2);
   await expect(library.getByText('still-activating')).toHaveCount(0);
@@ -98,7 +99,7 @@ test('available models list keeps different tasks separate and links to each mod
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('invoice-checking-20000000');
   await library.screenshot({ path: '.private/model-library-desktop.png' });
   await invoice.getByRole('link', { name: 'View model' }).click();
-  await expect(page).toHaveURL(/\/train\/models\/20000000-0000-4000-8000-000000000001$/);
+  await expect(page).toHaveURL(/\/models\/20000000-0000-4000-8000-000000000001$/);
   const example = page.getByRole('region', { name: 'Use your model' });
   await expect(example.getByLabel('API model name')).toHaveText('invoice-checking-20000000');
   await expect(example.getByLabel('Example code')).toContainText('invoice-checking-20000000');
@@ -108,10 +109,12 @@ test('available models list keeps different tasks separate and links to each mod
 test('multiple named models fit on mobile and preserve full IDs in technical details', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await workspace(page, 'ready', true, true);
+  await page.goto('/models');
   const library = page.getByRole('region', { name: 'Your models' });
   await expect(library.getByRole('link', { name: 'View model' })).toHaveCount(2);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await library.screenshot({ path: '.private/model-library-mobile.png' });
+  await page.goto('/train');
   await page.getByRole('region', { name: 'Run history' }).getByRole('link', { name: /support-actions/ }).click();
   await page.getByText('Evaluation and technical details', { exact: true }).click();
   await expect(page.locator('details').filter({ has: page.locator('summary', { hasText: 'Evaluation and technical details' }) }).getByText(modelId, { exact: true })).toBeVisible();
@@ -130,6 +133,7 @@ test('completed runs stay out of the index and open through permanent links', as
   await expect(page.locator('#current-run-title')).toHaveText('support-actions');
   await page.getByRole('link', { name: 'Back to Training', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Use your model' })).toHaveCount(0);
+  await page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'Models', exact: true }).click();
   await page.getByRole('region', { name: 'Your models' }).getByRole('link', { name: 'View model' }).click();
   await expect(page.getByRole('heading', { name: 'support-actions', level: 1 })).toBeVisible();
   expect(writes).toEqual([]);
@@ -187,4 +191,21 @@ test('the API keys page lists active keys in a table and hides revoked ones', as
   await page.setViewportSize({ width: 375, height: 812 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: '.private/api-keys-page-mobile.png', fullPage: true });
+});
+
+test('home shows the quickstart, latest models and usage; old model links redirect', async ({ page }) => {
+  await workspace(page, 'ready', true, true);
+  await page.goto('/dashboard');
+  await expect(page.getByRole('heading', { name: 'Quickstart', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Request as curl')).toContainText('/v1/systemone');
+  const latest = page.getByRole('region', { name: 'Latest models' });
+  await expect(latest.getByRole('listitem')).toHaveCount(2);
+  await expect(page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
+  await page.screenshot({ path: '.private/workspace-home-desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: '.private/workspace-home-mobile.png', fullPage: true });
+  await page.goto(`/train/models/${id}`);
+  await expect(page).toHaveURL(new RegExp(`/models/${id}$`));
+  await expect(page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'Models' })).toHaveAttribute('aria-current', 'page');
 });

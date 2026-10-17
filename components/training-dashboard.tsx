@@ -12,7 +12,6 @@ import { TrainingGuide } from '@/components/training-guide';
 import { TrainingIntake } from '@/components/training-intake';
 import { ApiKeysPanel } from '@/components/api-keys-panel';
 import { TrainedModelQuickstart } from '@/components/trained-model-quickstart';
-import { TrainedModelLibrary } from '@/components/trained-model-library';
 import { Plus, ArrowUpRight, ArrowRight, ImageIcon, MessageSquareText } from 'lucide-react';
 import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { TrainingRunStatus } from '@/components/training-run-status';
@@ -264,7 +263,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
   function runDetails(job: Job) {
     return <>
       <TrainingRunStatus job={job} />
-      {canDownload(job) && <Link className={styles.secondary} href={`/train/models/${job.id}`}>View model stats and access</Link>}
+      {canDownload(job) && <Link className={styles.secondary} href={`/models/${job.id}`}>View model stats and access</Link>}
       {isImageJob(job) && <>
         {job.data_expires_at && <p>Training photos expire {new Date(job.data_expires_at).toLocaleString()}. Saved evaluation results remain available.</p>}
         {job.model?.id === 'imajev-4b-v1' && <ImageTrainingResults job={job} />}
@@ -296,7 +295,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
         {job.workflow?.state === 'ready' && job.workflow.model_id && <p className={styles.hash}>Full API model ID<br /><code>{job.workflow.model_id}</code></p>}
         {job.created_at && <p>Submitted {new Date(job.created_at).toLocaleString()}</p>}
         {job.model && <p>Starting model: <strong>{job.model.name}</strong></p>}
-        {job.selection?.previous && <p>Replaces: <Link href={`/train/models/${job.selection.previous.job_id}`}>{job.selection.previous.model_id}<LinkLoading /></Link>. The new model goes live only if it beats that version on your test examples.</p>}
+        {job.selection?.previous && <p>Replaces: <Link href={`/models/${job.selection.previous.job_id}`}>{job.selection.previous.model_id}<LinkLoading /></Link>. The new model goes live only if it beats that version on your test examples.</p>}
         {job.status === 'completed' && !job.result && <p>Result details are not available yet. Refresh to try again.</p>}
         {job.result && job.model?.id !== 'imajev-4b-v1' && <>
           <p className={styles.help}>Measured on examples held aside from training. Results are not a guarantee on future inputs.</p>
@@ -321,7 +320,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
   return <Sheet open={panelOpen} onOpenChange={open => { if (open) focusSubmitted.current = false; setPanelOpen(open); }}>
     {runId && <Link href="/train" className={styles.textButton}>Back to Training<LinkLoading /></Link>}
     <div className={styles.workspaceHeading}>
-      <div><h1>{runId ? 'Training run' : 'Training'}</h1><p>{runId ? 'The progress, evaluation, and files for this run.' : 'Your examples. Your models. Your way of deciding.'}</p></div>
+      <div><h1>{runId ? 'Training run' : 'Training'}</h1><p>{runId ? 'The progress, evaluation, and files for this run.' : 'Start a training run and follow it until your model is ready.'}</p></div>
       <div className={styles.workspaceActions}>
         {!runId && <Link className={styles.button} href="/train/teach"><Plus size={16} aria-hidden="true" />Train a model</Link>}
       </div>
@@ -332,7 +331,6 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     {progress && <p role="status" className={styles.notice}>{progress}</p>}
     {busy && cancellable && <button type="button" className={styles.secondary} onClick={() => operation.current?.abort()}>Stop upload</button>}
     {refreshError && !runId && history.length > 0 && !selected && <p role="status" className={styles.notice}>Connection interrupted. Showing your last loaded runs; we’ll retry automatically.</p>}
-    {!runId && !loading && <TrainedModelLibrary jobs={availableModels} />}
     <div className={styles.workspace}>
       {loading ? <WorkspaceLoading label={runId ? "Loading your training run" : "Loading your models and runs"} /> : !selected && (runId || !history.length) ? <section className={styles.emptyWorkspace}>
         <h2>{runId ? 'Run unavailable' : refreshError ? 'Your runs could not be loaded.' : 'Train your first model.'}</h2>
