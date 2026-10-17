@@ -78,6 +78,9 @@ export default async function MinersPage() {
   const [base, network] = await Promise.all([currentBase(), networkMiners()]);
   const latest = base?.channels.latest;
   const now = network ? Date.parse(network.as_of) : 0;
+  // Miners keep qualification rows for retired bases; show only bases Zils trains on today.
+  const current = base ? new Set([base.channels.stable.id, base.channels.latest?.id].filter(Boolean)) : null;
+  const trainable = (models: string[]) => current ? models.filter(id => current.has(id)) : models;
   return <div className="min-h-screen bg-page font-sans text-ink antialiased selection:bg-[#4942c7] selection:text-white">
     <div className="mx-auto max-w-6xl px-6 sm:px-8"><SiteHeader tone="light" /></div>
     <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl px-6 pb-20 sm:px-8">
@@ -106,7 +109,7 @@ export default async function MinersPage() {
               <td className={s.num}>{miner.uid}</td>
               <th scope="row"><code title={miner.hotkey}>{short(miner.hotkey)}</code></th>
               <td><span className={s.status} data-status={miner.status}><span className={s.lamp} aria-hidden="true" />{STATUS[miner.status]}</span></td>
-              <td>{miner.models.length ? miner.models.map(id => MODEL_NAMES[id] ?? id).join(', ') : '—'}</td>
+              <td>{trainable(miner.models).length ? trainable(miner.models).map(id => MODEL_NAMES[id] ?? id).join(', ') : '—'}</td>
               <td className={s.num}>{miner.training.assigned}</td>
               <td className={s.num}>{miner.training.evaluated}</td>
               <td className={s.num}>{miner.training.selected}</td>
