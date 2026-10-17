@@ -26,7 +26,7 @@ async function workspace(page: Page, start = true) {
     const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, PUT, OPTIONS' };
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
     if (url.pathname.startsWith('/auth/v1/')) return route.fulfill({ json: user, headers });
-    if (url.pathname === '/v1/image-models') return route.fulfill({ headers, json: { models: [{ name: 'image-stock', stock: true, capabilities: { modalities: ['image', 'text'] } }], training_enabled: true, training_profile: { model: 'imajev-4b-v1', max_train: 1024, max_calibration: 256, max_test: 512, max_source_bytes: 10485760, max_pixels: 16000000, max_edge: 8192 } } });
+    if (url.pathname === '/v1/image-models') return route.fulfill({ headers, json: { models: [{ name: 'image-stock', stock: true, capabilities: { modalities: ['image', 'text'] } }], training_enabled: true, training_profile: { model: 'd3-mini-4.5b-v1', capabilities: { modalities: ['text', 'image', 'video'], question_types: ['noul', 'choice', 'score'], max_images: 4, max_videos: 1, max_questions: 8, max_options: 255, max_input_tokens: 4096, unknown_key: null }, images_per_example: 1, max_train: 1024, max_calibration: 256, max_test: 512, max_source_bytes: 10485760, max_pixels: 16000000, max_edge: 8192 } } });
     if (request.method() !== 'GET') mutations.push(`${request.method()} ${url.pathname}`);
     if (request.method() === 'PUT' && url.pathname.startsWith('/storage/v1/object/')) {
       uploads[url.pathname.split('/').at(-1)!.replace(/\.jsonl$/, '')] = request.postDataBuffer()!.toString('utf8');
@@ -175,6 +175,7 @@ for (const kind of ['text', 'images'] as const) test(`guided ${kind} setup clari
   await page.getByRole('button', { name: 'I have training data', exact: true }).click();
   await page.getByRole('link', { name: 'Import labeled examples', exact: true }).click();
   await expect(page.getByRole('tablist', { name: 'Decision capability' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'What will your model learn from?' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Images', exact: true })).toBeEnabled();
   if (kind === 'text') await page.screenshot({ path: '.private/training-chooser-desktop.png', fullPage: true, animations: 'disabled' });
   await page.getByRole('button', { name: kind === 'text' ? 'Text examples' : 'Images', exact: true }).click();

@@ -27,6 +27,7 @@ function Intake({active=true,onChooseType,assistantConfigured,trainingApi:traini
   const draft=useRef<ImageDraft>({assets:{}}),operation=useRef<AbortController|null>(null),urls=useRef<string[]>([]),life=useRef({active:true});
   const locked=busy||frozen;
   const outcomes=answers.split('\n').map(s=>s.trim()).filter(Boolean);
+  const maxAnswers=profile.capabilities?.max_options??255, imajev=profile.model==='imajev-4b-v1', binary=outcomes.length===2&&imajev;
   useEffect(()=>{const state=life.current;state.active=true;const localUrls=urls.current;return()=>{state.active=false;operation.current?.abort();localUrls.forEach(url=>URL.revokeObjectURL(url));};},[]);
   function changed(){setPrepared(null);setReviewed(false);setConsent(false);setError('');}
   async function choose(files:FileList|null){
@@ -61,9 +62,8 @@ function Intake({active=true,onChooseType,assistantConfigured,trainingApi:traini
       if(!reviewed)throw new Error('Review the answers and confirm which photos show the same item.');
       const included=rows.filter(row=>!excluded[row.id]);
       if(included.some(row=>problems[row.id]))throw new Error('Replace or leave out unreadable photos before continuing.');
-      const decision=imageQuestion(question,answers);if(!question.trim())throw new Error('Describe the image decision.');
-      const data=prepareImageTraining(included,decision,outcomes,resumeJob?.image_intake?.seed||'image-split-v1');
-      for(const split of ['train','calibration','test'] as const)if(data.counts[split]>profile[`max_${split}`])throw new Error(`${split} exceeds the available photo limit.`);
+      const decision=imageQuestion(question,answers,maxAnswers);if(!question.trim())throw new Error('Describe the image decision.');
+      const data=prepareImageTraining(included,decision,outcomes,resumeJob?.image_intake?.seed||'image-split-v1',{train:profile.max_train,calibration:profile.max_calibration,test:profile.max_test});
       setPrepared(data);setConsent(false);go(3);
     }catch(error){setError(error instanceof Error?error.message:'Check the photos and answers.');}
   }
@@ -71,15 +71,15 @@ function Intake({active=true,onChooseType,assistantConfigured,trainingApi:traini
     if(!prepared||busy)return;setError('');setNeedsCredit(false);setSubmitted(false);
     if(!consent){setError('Confirm permission to share the training photos.');return;}
     if(!/^[a-z0-9][a-z0-9-]{0,63}$/.test(name)){setError('Use a run name with 1–64 lowercase letters, numbers or hyphens.');return;}
-    if([accuracy,improvement,...(outcomes.length===2?[recall,alarms]:[])].some(value=>!value.trim())){setError('Enter each required quality target.');return;}
-    const decision=imageQuestion(question,answers),binary=outcomes.length===2;
+    if([accuracy,improvement,...(binary?[recall,alarms]:[])].some(value=>!value.trim())){setError('Enter each required quality target.');return;}
+    const decision=imageQuestion(question,answers,maxAnswers);
     if(binary&&!outcomes.includes(positive)){setError('Choose the positive class for your quality targets.');return;}
     const acceptance={min_accuracy:Number(accuracy)/100,min_brier_improvement:Number(improvement),...(binary?{positive_class:positive,min_positive_recall:Number(recall)/100,max_false_positive_rate:Number(alarms)/100}:{})};
     if(Object.entries(acceptance).some(([k,v])=>typeof v==='number'&&(!Number.isFinite(v)||v<0||v>(k==='min_brier_improvement'?2:1)))){setError('Use percentages between 0 and 100, and a Brier improvement from 0 to 2.');return;}
     const controller=new AbortController();operation.current=controller;setBusy(true);
     if(!draft.current.job&&resumeJob)draft.current.job=resumeJob;
     try{
-      const job=await uploadImageTraining(prepared,decision,{name,acceptance,allow_training_data_export:true},training,images,draft.current,controller.signal,text=>{if(!controller.signal.aborted){setProgress(text);setFrozen(Boolean(draft.current.job));setSavedJob(draft.current.job);}});
+      const job=await uploadImageTraining(prepared,decision,{name,model:profile.model,acceptance,allow_training_data_export:true},training,images,draft.current,controller.signal,text=>{if(!controller.signal.aborted){setProgress(text);setFrozen(Boolean(draft.current.job));setSavedJob(draft.current.job);}});
       if(!controller.signal.aborted){onSubmitted(job);setSubmitted(true);setProgress('');setFrozen(true);}
     }catch(error){if(!controller.signal.aborted){setNeedsCredit((error instanceof TrainingApiError || error instanceof ImageApiError) && error.status===402);setError(error instanceof Error?error.message:'Upload interrupted. Retry to resume missing photos.');}}
     finally{if(life.current.active){setBusy(false);setFrozen(Boolean(draft.current.job));setSavedJob(draft.current.job);}operation.current=null;}
@@ -89,13 +89,13 @@ function Intake({active=true,onChooseType,assistantConfigured,trainingApi:traini
   }
   if(!active)return null;
   return <SheetContent className={`${styles.page} ${styles.trainingSheet}`} onOpenAutoFocus={event=>{event.preventDefault();heading.current?.focus();}}>
-    <div className={styles.sheetHeader}><SheetTitle>Train a model</SheetTitle><SheetDescription>Images · Teach Imajev 4B from reviewed photos.</SheetDescription>{onChooseType&&<button type="button" className={styles.textButton} disabled={locked} onClick={onChooseType}>Change example type</button>}</div>
+    <div className={styles.sheetHeader}><SheetTitle>Train a model</SheetTitle><SheetDescription>Images · Teach a model from reviewed photos.</SheetDescription>{onChooseType&&<button type="button" className={styles.textButton} disabled={locked} onClick={onChooseType}>Change example type</button>}</div>
     <div className={styles.sheetBody}><section className={photoStyles.body} aria-label="Train your image model">
       <ol className={styles.steps} aria-label="Training setup progress">{['Describe','Examples','Review','Train'].map((title,index)=><li key={title} aria-current={step===index?'step':undefined}><span>{index+1}</span>{title}</li>)}</ol>
       <h3 className={styles.stepTitle} ref={heading} tabIndex={-1}>{['What should your model see?','Bring examples of your work.','Check what your model will learn.','Your photos are ready for an experiment.'][step]}</h3>
       {resumeJob&&!savedJob&&<p className={styles.notice}>A saved image draft is available. Choose its original photos, labels and settings to resume it.</p>}
-      {step===0&&<form onSubmit={event=>{event.preventDefault();try{imageQuestion(question,answers);if(!question.trim())throw new Error('Describe the image decision.');go(1);}catch(error){setError(error instanceof Error?error.message:'Check the decision and answers.');}}}><fieldset disabled={locked}>
-        <TrainingDecisionSetup kind="images" question={question} answers={answers} assistantConfigured={assistantConfigured} onQuestion={value=>{setQuestion(value);changed();}} onAnswers={value=>{setAnswers(value);changed();}} />
+      {step===0&&<form onSubmit={event=>{event.preventDefault();try{imageQuestion(question,answers,maxAnswers);if(!question.trim())throw new Error('Describe the image decision.');go(1);}catch(error){setError(error instanceof Error?error.message:'Check the decision and answers.');}}}><fieldset disabled={locked}>
+        <TrainingDecisionSetup kind="images" maxAnswers={maxAnswers} question={question} answers={answers} assistantConfigured={assistantConfigured} onQuestion={value=>{setQuestion(value);changed();}} onAnswers={value=>{setAnswers(value);changed();}} />
         <div className={styles.wizardActions}><span/><button className={styles.button}>Continue</button></div>
       </fieldset></form>}
       {step===1&&<>
@@ -120,7 +120,7 @@ function Intake({active=true,onChooseType,assistantConfigured,trainingApi:traini
       </>}
       {step===3&&prepared&&<div className={photoStyles.ready}><p>{prepared.counts.train} training · {prepared.counts.calibration} calibration · {prepared.counts.test} evaluation photos. Whole items stay together.</p>
         <div className={styles.tableWrap}><table><thead><tr><th>Answer</th><th>Training</th><th>Calibration</th><th>Evaluation</th></tr></thead><tbody>{prepared.distribution.map(row=><tr key={row.outcome}><th>{row.outcome}</th><td>{row.train}</td><td>{row.calibration}</td><td>{row.test}</td></tr>)}</tbody></table></div>
-        <fieldset disabled={locked} className={photoStyles.fields}><label>Run name<input value={name} onChange={e=>setName(e.target.value)} pattern="[a-z0-9][a-z0-9-]{0,63}"/></label>{outcomes.length===2&&<><label>Positive class<select aria-label="Positive class" value={positive} onChange={e=>setPositive(e.target.value)}><option value="">Choose the outcome you need to detect</option>{outcomes.map(v=><option key={v}>{v}</option>)}</select></label><label>Minimum positive recall (%)<input type="number" min="0" max="100" value={recall} onChange={e=>setRecall(e.target.value)}/></label><label>Maximum false alarms (%)<input type="number" min="0" max="100" value={alarms} onChange={e=>setAlarms(e.target.value)}/></label></>}
+        <fieldset disabled={locked} className={photoStyles.fields}><label>Run name<input value={name} onChange={e=>setName(e.target.value)} pattern="[a-z0-9][a-z0-9-]{0,63}"/></label>{binary&&<><label>Positive class<select aria-label="Positive class" value={positive} onChange={e=>setPositive(e.target.value)}><option value="">Choose the outcome you need to detect</option>{outcomes.map(v=><option key={v}>{v}</option>)}</select></label><label>Minimum positive recall (%)<input type="number" min="0" max="100" value={recall} onChange={e=>setRecall(e.target.value)}/></label><label>Maximum false alarms (%)<input type="number" min="0" max="100" value={alarms} onChange={e=>setAlarms(e.target.value)}/></label></>}
           <label>Minimum accuracy (%)<input type="number" min="0" max="100" value={accuracy} onChange={e=>setAccuracy(e.target.value)}/></label><label>Minimum Brier improvement<input type="number" min="0" max="2" step="0.01" value={improvement} onChange={e=>setImprovement(e.target.value)}/></label></fieldset>
         <p>Only training photos go to approved workers. Calibration and evaluation photos stay private to evaluation. Draft uploads expire after 24 hours; submitted photos are retained until 30 days after the run finishes.</p>
         {(savedJob?.data_expires_at||resumeJob?.data_expires_at)&&<p>Current draft expires: {new Date((savedJob?.data_expires_at||resumeJob?.data_expires_at)!).toLocaleString()}.</p>}

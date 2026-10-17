@@ -78,6 +78,8 @@ test('image readiness requires accepted completion and verified activation; stal
   const image={...job('completed'),model:{id:'imajev-4b-v1'},result:{delivery:{status:'accepted'}}};
   for(const state of ['activating','activation_failed','needs_review']) assert.equal(isImageReady({...image,workflow:{state,model_id:'must-not-be-shown'}}),false);
   assert.equal(isImageReady({...image,workflow:{state:'ready',model_id:'verified-image'}}),true);
+  assert.equal(isImageReady({...image,model:{id:'d3-mini-4.5b-v1',inputs:{images:4,video:true}},workflow:{state:'ready',model_id:'verified-image'}}),true);
+  assert.equal(isImageReady({...image,model:{id:'d3-mini-4.5b-v1'},workflow:{state:'ready',model_id:'text-model'}}),false);
   assert.equal(isImageReady({...image,status:'running',workflow:{state:'ready',model_id:'verified-image'}}),false);
   const stale=trainingProgress({...image,workflow:{state:'needs_review'}});
   assert.match(stale.label,/Needs review/);

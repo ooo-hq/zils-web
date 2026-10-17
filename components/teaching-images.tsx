@@ -64,7 +64,7 @@ export function TeachingImages({onDocuments,config,locked=false,onLock}:{onDocum
     setNotice('Draft download requested. Keep your original photos; the draft contains references, not image files.');
   }
   return <section aria-label="Image teaching" aria-busy={busy}>
-    <div className={s.progressLine}><span>Image training</span><span>Imajev · Review before uploading</span></div>
+    <div className={s.progressLine}><span>Image training</span><span>Review before uploading</span></div>
     <h1>Show the model what to look for.</h1>
     <p className={s.intro}>Bring photos and their correct answers. Teach a visual decision, such as whether an item is normal or damaged.</p>
     {config && !locked && <p className={s.intro}><Link href="/train?setup=bulk" className={s.textButton}>Import labeled photos</Link> for larger batches with a labels CSV.</p>}

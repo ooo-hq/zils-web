@@ -9,7 +9,7 @@ import { useAuthSession } from '@/components/auth-session';
 import { ApiKeysPanel } from '@/components/api-keys-panel';
 import { TrainedModelQuickstart } from '@/components/trained-model-quickstart';
 import { ImageTrainingResults, PrivateImageTest } from '@/components/image-training-results';
-import { canDownload, trainingApi, TrainingApiError, type Job } from '@/lib/training';
+import { canDownload, isImageJob, trainingApi, TrainingApiError, type Job } from '@/lib/training';
 import { trainingProgress } from '@/lib/training-status';
 import { billingApi, formatCredit, type BillingSummary } from '@/lib/billing';
 import type { TrainingConfig } from '@/lib/training-config';
@@ -78,7 +78,7 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
   const result = job.result!;
   const selected = result.miners.find(candidate => candidate.uid === result.delivery.uid);
   const ready = job.workflow?.state === 'ready' && Boolean(job.workflow.model_id);
-  const image = job.model?.id === 'imajev-4b-v1';
+  const image = isImageJob(job);
   const baselineLabel = job.selection?.previous ? 'Previous version' : 'Starting model';
   const jev = job.jev_comparison;
   const comparison = !image && jev?.status === 'completed' && jev.checkpoint_sha256 === result.delivery.sha256 && jev.trained_accuracy === selected?.accuracy ? jev : null;
@@ -119,7 +119,7 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
       {!image && <p className={styles.note}>{baselineLabel} accuracy: {percent(result.baseline.accuracy)}. Model approval uses this baseline; JEV is a separate comparison.</p>}
       {!selected && <p className={training.notice}>The selected model’s detailed scores were not included in this result. No other candidate’s scores are substituted.</p>}
       {result.delivery.acceptance && <p className={styles.note}>Approval targets: at least {percent(result.delivery.acceptance.min_accuracy)} accuracy and {decimal(result.delivery.acceptance.min_brier_improvement)} improvement in Brier loss. These results do not guarantee accuracy on future inputs.</p>}
-      {image && <details className={training.details}><summary>Image evaluation details</summary><ImageTrainingResults job={job} /></details>}
+      {job.model?.id === 'imajev-4b-v1' && <details className={training.details}><summary>Image evaluation details</summary><ImageTrainingResults job={job} /></details>}
     </section>
 
     {ready && job.workflow?.model_id && <>
