@@ -13,7 +13,8 @@ for (const starter of starters) {
     let requests = 0;
     await signIn(page);
     await page.route('**/api/setup', route => { requests++; return route.abort(); });
-    await page.route('**/api/playground', route => { requests++; return route.abort(); });
+    // Loading the model list is a GET; only a POST runs a model.
+    await page.route('**/api/playground', route => { if (route.request().method() === 'POST') requests++; return route.abort(); });
     await page.goto(`/playground?starter=${starter.id}`);
     await expect(page.getByRole('heading', { name: 'Make these questions yours.' })).toBeVisible();
     await expect(page.getByLabel('Question 1', { exact: true })).toHaveValue(starter.question);

@@ -1,8 +1,11 @@
 'use client';
 
 import { sessionHeaders } from '@/components/auth-session';
+import Link from 'next/link';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ArrowRight, Check, MessageSquare, ListFilter, SlidersHorizontal, Bookmark, Code2 } from 'lucide-react';
+import { curlCommand } from '@/lib/model-quickstart';
+import { CopyField } from './trained-model-quickstart';
 import { parseResponse, type DecisionRequest, type DecisionResponse, type ModelOption } from '@/lib/playground';
 import { parseSetup, parseSetupReply, setupRequest, STARTERS, type SetupDraft, type SetupMessage, type SetupReply } from '@/lib/decision-setup';
 import { DecisionPlayground } from './decision-playground';
@@ -15,7 +18,13 @@ import s from './guided-playground.module.css';
 const SAVED = 'zils-saved-decision-setup-v1';
 const STAGES = ['Describe', 'Review questions', 'Try an example'];
 
-export function GuidedPlayground({ configured, assistantConfigured, models, initialStarterId }: { configured: boolean; assistantConfigured: boolean; models: ModelOption[]; initialStarterId?: string }) {
+export function GuidedPlayground({ configured, assistantConfigured, models: shared, apiUrl, initialStarterId }: { configured: boolean; assistantConfigured: boolean; models: ModelOption[]; apiUrl: string | null; initialStarterId?: string }) {
+  const [models, setModels] = useState(shared);
+  const [modelId, setModelId] = useState(shared[0].id);
+  // The customer's own key lives only in this component's memory: never stored, logged or put in a URL.
+  const [apiKey, setApiKey] = useState('');
+  const [ran, setRan] = useState<DecisionRequest | null>(null);
+  const model = models.find(m => m.id === modelId) ?? models[0];
   const initialStarter = STARTERS.find(starter => starter.id === initialStarterId);
   const [stage, setStage] = useState(initialStarter ? 1 : 0);
   const [goal, setGoal] = useState(initialStarter?.goal ?? '');
@@ -37,6 +46,17 @@ export function GuidedPlayground({ configured, assistantConfigured, models, init
   const heading = useRef<HTMLHeadingElement>(null);
   const visited = useRef(false);
   useEffect(() => () => active.current?.abort(), []);
+  useEffect(() => {
+    const controller = new AbortController();
+    void (async () => {
+      try {
+        const result = await fetch('/api/playground', { headers: await sessionHeaders(), signal: controller.signal });
+        const body = await result.json();
+        if (result.ok && Array.isArray(body.models) && body.models.length) setModels(body.models);
+      } catch { /* The shared model stays available. */ }
+    })();
+    return () => controller.abort();
+  }, []);
   useEffect(() => { if (visited.current) heading.current?.focus(); visited.current = true; }, [stage]);
 
   function move(next: number) { setStage(next); setError(''); setNotice(''); }
@@ -108,27 +128,28 @@ export function GuidedPlayground({ configured, assistantConfigured, models, init
     event.preventDefault();
     if (active.current || !configured) return;
     let input;
-    try { input = setupRequest(draft, example, models[0].id); }
+    try { input = setupRequest(draft, example, model.id); }
     catch (e) { setError((e as Error).message); return; }
+    if (model.own && !apiKey) { setError('Paste one of your API keys to run your own model.'); return; }
     const controller = new AbortController(); active.current = controller;
     setBusy('model'); setError(''); setNotice(''); setResponse(null);
     try {
       const result = await fetch('/api/playground', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', ...await sessionHeaders() }, body: JSON.stringify(input),
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...await sessionHeaders(), ...(model.own ? { 'X-Zils-Api-Key': apiKey } : {}) }, body: JSON.stringify(input),
         signal: AbortSignal.any([controller.signal, AbortSignal.timeout(65_000)]),
       });
       const body = await result.json();
       if (!result.ok) throw new Error(typeof body.error === 'string' ? body.error : 'The model could not finish. Try again.');
       if (body.model !== input.model) throw new Error('The connected model returned a different model identifier. Try again later.');
       const resultData = parseResponse(body, input);
-      if (!controller.signal.aborted) { setResponse(resultData); setNotice('Your example is ready to review.'); }
+      if (!controller.signal.aborted) { setResponse(resultData); setRan(input); setNotice('Your example is ready to review.'); }
     } catch (e) {
       if (!controller.signal.aborted) setError(e instanceof Error && e.name === 'TimeoutError' ? 'The model took too long. Try a shorter example.' : e instanceof Error ? e.message : 'The model could not finish. Try again.');
     } finally { if (active.current === controller) { active.current = null; setBusy(null); } }
   }
   function openAdvanced() {
     try {
-      const request = draft ? setupRequest(draft, example || 'Paste your example here.', models[0].id) : undefined;
+      const request = draft ? setupRequest(draft, example || 'Paste your example here.', model.id) : undefined;
       setAdvancedInput({ version: Date.now(), request }); setAdvanced(true); setError('');
     } catch (e) { setError((e as Error).message); }
   }
@@ -137,6 +158,15 @@ export function GuidedPlayground({ configured, assistantConfigured, models, init
     <div className={s.workspaceBar}>
       <span className={s.workspaceTitle}><span className={s.zilMark}><ZilsSymbol /></span>{advanced ? 'Advanced playground' : 'Build a decision'}</span>
       <button type="button" disabled={Boolean(busy)} className={s.quietButton} onClick={advanced ? () => setAdvanced(false) : openAdvanced}><Code2 size={16} />{advanced ? 'Back to guided setup' : 'Advanced editor'}</button>
+    </div>
+    <div className={s.modelBar}>
+      <div><label className={s.label} htmlFor="playground-model">Model</label>
+        <select id="playground-model" className={s.input} value={model.id} disabled={Boolean(busy)} onChange={e => { setModelId(e.target.value); setResponse(null); setError(''); }}>
+          {models.map(m => <option key={m.id} value={m.id}>{m.own ? `${m.label} · your model` : m.label}</option>)}
+        </select></div>
+      {model.own && <div><label className={s.label} htmlFor="playground-key">Your API key</label>
+        <input id="playground-key" className={s.input} type="password" autoComplete="off" spellCheck={false} placeholder="zils_sk_…" value={apiKey} disabled={Boolean(busy)} onChange={e => setApiKey(e.target.value.trim())} />
+        <p className={s.helper}>Used for this tab only and never saved. <Link href="/keys">Create a key</Link></p></div>}
     </div>
     <div hidden={advanced}>
       <nav aria-label="Setup progress" className={s.steps}>{STAGES.map((label, i) => <button type="button" key={label} aria-current={stage === i ? 'step' : undefined} disabled={Boolean(busy) || i > stage && (!draft || i === 2)} onClick={() => move(i)}>
@@ -193,12 +223,13 @@ export function GuidedPlayground({ configured, assistantConfigured, models, init
             <form onSubmit={run}>
               <label className={s.label} htmlFor="setup-example">Example to read</label>
               <textarea id="setup-example" className={`${s.input} ${s.example}`} rows={7} maxLength={32768} disabled={Boolean(busy)} value={example} placeholder="Paste a customer message or another real situation…" onChange={e => { setExample(e.target.value); setResponse(null); setError(''); setNotice(''); }} />
-              <div className={s.exampleMeta}><span className={s.helper}>{models[0].label}</span>{sample && <button type="button" disabled={Boolean(busy)} className={s.textButton} onClick={() => { setExample(sample); setResponse(null); setError(''); }}>Use sample message</button>}</div>
+              <div className={s.exampleMeta}><span className={s.helper}>{model.label}</span>{sample && <button type="button" disabled={Boolean(busy)} className={s.textButton} onClick={() => { setExample(sample); setResponse(null); setError(''); }}>Use sample message</button>}</div>
               {!configured && <p className={s.connection}>Live predictions are not connected in this preview. You can edit and save your setup.</p>}
               <div className={s.actions}><button className={s.primary} disabled={!configured || Boolean(busy) || !example.trim()}>{busy === 'model' ? 'Reading your example…' : 'Run example'}<ArrowRight size={17} /></button><button type="button" disabled={Boolean(busy)} className={s.quietButton} onClick={() => move(1)}>Edit questions</button></div>
               <p className={s.helper}>Running sends this example and your questions to Zils. Use a non-sensitive example.</p>
             </form>
-            {response && <><SetupResults draft={draft} response={response} /><div className={s.actions}><button type="button" className={s.primary} onClick={save}>Looks right · Save setup<Check size={17} /></button><button type="button" className={s.secondary} onClick={() => move(1)}>Adjust setup</button></div></>}
+            {response && <><SetupResults draft={draft} response={response} />
+              {ran && apiUrl && <div className={s.curl}><h3>Call this from your code</h3><p className={s.helper}>The same request against the Zils API. Set <code>ZILS_API_KEY</code> to one of your API keys.</p><CopyField label="Request as curl" value={curlCommand(apiUrl, ran)} language="bash" /></div>}<div className={s.actions}><button type="button" className={s.primary} onClick={save}>Looks right · Save setup<Check size={17} /></button><button type="button" className={s.secondary} onClick={() => move(1)}>Adjust setup</button></div></>}
           </>}
           {busy && <button type="button" className={s.textButton} onClick={cancel}>Cancel request</button>}
           {error && <p role="alert" aria-label="Setup error" className={s.error}>{error}</p>}
@@ -219,7 +250,7 @@ export function GuidedPlayground({ configured, assistantConfigured, models, init
     </div>
     {advancedInput && <div hidden={!advanced} className={s.advanced}>
       <p className={s.helper}>This editor starts with your guided questions. Changes here stay in the advanced editor until you open it again from guided setup.</p>
-      <DecisionPlayground key={advancedInput.version} configured={configured} models={models} initialRequest={advancedInput.request} />
+      <DecisionPlayground key={advancedInput.version} configured={configured} model={model} apiKey={apiKey} apiUrl={apiUrl} initialRequest={advancedInput.request} />
     </div>}
   </div>;
 }

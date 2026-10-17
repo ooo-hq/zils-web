@@ -132,3 +132,8 @@
   .stageTitle { font-size: 26px; }
 }
 @media (prefers-reduced-motion: reduce) { .composer { transition: none; } }
+
+.modelBar { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--zils-edge); }
+.modelBar .helper { margin-top: 6px; }
+.curl { margin-top: 28px; }
+.curl h3 { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
