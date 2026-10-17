@@ -68,7 +68,7 @@ Set the same values in the appropriate Vercel environment before building.
 | `ZILS_DECISION_API_URL` | Complete server-side inference endpoint URL |
 | `ZILS_DECISION_API_KEY` | Server-only inference bearer credential |
 | `ZILS_DECISION_MODEL` | Exact model identifier expected by the inference server |
-| `ZILS_DECISION_LABEL` | Public display label, such as `Zils shared · JevK5 4B` |
+| `ZILS_DECISION_LABEL` | Public display label, such as `Zils shared` |
 | `RESEND_API_KEY` | Server-only sending credential for the contact form |
 | `ZILS_CONTACT_FROM` | Bare sender email address on a Resend-verified domain |
 | `ZILS_CONTACT_TO` | Fixed inbox receiving contact inquiries |
@@ -122,14 +122,16 @@ The Google button image is an unmodified asset from Google's
 
 ### Shared playground
 
-The playground defaults to the shared JevK5 4B release `zils-jevk5-v0.3-r1`.
-Connect it to `https://training.zils.ai/decision/v1/systemone` with a server-only
-API key authorized to use that model. Both endpoint and key are required to enable
+The playground has no built-in model: set `ZILS_DECISION_MODEL` to the shared
+d3-mini release registered on the inference server (the retired JevK5 release
+`zils-jevk5-v0.3-r1` is no longer served). Connect it to
+`https://training.zils.ai/decision/v1/systemone` with a server-only API key
+authorized to use that model. Model, endpoint and key are all required to enable
 Run. Pin the exact release ID rather than the `zils-shared` alias: the proxy checks
 that the returned model matches the requested release and rejects incomplete answers.
 The shared API does not report model latency; the playground measures total request
 time and shows model timing only when a connected runtime actually supplies it.
-Explicit older model settings remain supported and are not relabeled as JevK5.
+Explicit older model settings remain supported and keep their own labels.
 When migrating an existing deployment, update the endpoint, API key, model ID,
 and label together; changing the source defaults does not override deployed settings.
 

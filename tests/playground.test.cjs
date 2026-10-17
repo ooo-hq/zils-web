@@ -2,7 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { playgroundConfig, infer } = require('../.private/test-build/playground-server.js');
 
-const MODEL = 'zils-jevk5-v0.3-r1';
+const MODEL = 'zils-shared-fixture-release';
 
 async function isolated(run) {
   const before = { ...process.env };
@@ -17,8 +17,12 @@ async function isolated(run) {
   }
 }
 
-test('the shared JevK5 playground requires both its endpoint and a server-side key', () => isolated(async () => {
-  assert.deepEqual(playgroundConfig(), { configured: false, models: [{ id: MODEL, label: 'Zils shared · JevK5 4B' }] });
+test('the shared playground requires its model, endpoint and a server-side key from the environment', () => isolated(async () => {
+  assert.deepEqual(playgroundConfig(), { configured: false, models: [{ id: '', label: 'Zils shared' }] });
+  process.env.ZILS_DECISION_MODEL = MODEL;
+  assert.deepEqual(playgroundConfig(), { configured: false, models: [{ id: MODEL, label: MODEL }] });
+  process.env.ZILS_DECISION_LABEL = 'Zils shared';
+  assert.equal(playgroundConfig().models[0].label, 'Zils shared');
   process.env.ZILS_DECISION_API_URL = 'https://shared.example/v1/systemone';
   assert.equal(playgroundConfig().configured, false);
   global.fetch = () => { throw new Error('Must not send without credentials'); };
@@ -27,7 +31,7 @@ test('the shared JevK5 playground requires both its endpoint and a server-side k
   assert.equal(playgroundConfig().configured, true);
 }));
 
-test('explicit legacy or custom models are not labeled as the shared JevK5 release', () => isolated(async () => {
+test('explicit legacy or custom models keep their own labels', () => isolated(async () => {
   process.env.FEZ_DECISION_MODEL = 'fez-0.8b-experimental';
   assert.equal(playgroundConfig().models[0].label, 'Zils 0.8B · experimental');
   process.env.ZILS_DECISION_MODEL = 'custom-release';
@@ -35,7 +39,8 @@ test('explicit legacy or custom models are not labeled as the shared JevK5 relea
 }));
 
 test('shared inference validates choice, yes/no and score answers and rejects a different model', () => isolated(async () => {
-  Object.assign(process.env, { ZILS_DECISION_API_URL: 'https://shared.example/v1/systemone', ZILS_DECISION_API_KEY: 'server-only-fixture' });
+  Object.assign(process.env, { ZILS_DECISION_MODEL: MODEL, ZILS_DECISION_API_URL: 'https://shared.example/v1/systemone', ZILS_DECISION_API_KEY: 'server-only-fixture' });
+  assert.equal(playgroundConfig().configured, true);
   const request = { model: MODEL, state: 'A synthetic shipping question.', questions: {
     team: { type: 'choice', criteria: { shipping: 'Shipping', billing: 'Billing' } },
     urgent: { type: 'noul' },
