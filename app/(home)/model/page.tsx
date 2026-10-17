@@ -16,7 +16,7 @@ import { benchmark, readComparison, percent, decimal, milliseconds, comparisonHe
 
 export const metadata: Metadata = {
   title: 'zils — tuned open models can compete',
-  description: 'Task-tuned open JevK5 4B models outperformed official hosted TypeSafe JEV 1.13.0 on our support and mate-in-one tests. Explore the evidence and B300 miner follow-ups.',
+  description: 'Task-tuned open JevK5 4B models outperformed official hosted TypeSafe JEV 1.13.0 on our support and mate-in-one tests. Also: B300 miner follow-ups, how the base-model competition works (no public round yet), and recorded d3-mini evidence.',
   alternates: { canonical: 'https://zils.ai/model' },
 };
 
@@ -27,12 +27,41 @@ const LINK = 'underline decoration-edge-strong underline-offset-4 hover:text-acc
 const CELL = 'border-t border-edge px-3 py-3 text-right tabular-nums sm:px-5';
 const HEAD = 'border-t border-edge px-3 py-3 text-left font-normal text-ink sm:px-5';
 const CARD = 'rounded-2xl bg-page ring-1 ring-edge';
+const TEXT = 'border-t border-edge px-3 py-3 text-left align-top sm:px-5';
+const DOCS = 'https://docs.zils.ai';
+const PROMOTION_RULES = [
+  ['Sealed score', 'Validators score the submitted weights on a sealed holdout, against the incumbent.'],
+  ['Eligibility', 'Skill is positive, accuracy is not below the incumbent’s, and Brier improves by at least 0.01 with a paired-bootstrap 95% lower bound above zero.'],
+  ['Round weight', 'Eligible candidates share the round’s weight in proportion to skill.'],
+  ['Confirmation', 'The best eligible candidate is re-scored on a second, disjoint sealed draw at least 12 hours later and must stay eligible.'],
+  ['Regression suite', 'Before promotion, a fixed suite of reference adapter jobs is retrained on the incumbent and on the candidate. The candidate must be no worse than 0.005 Brier on every job and better on at least one.'],
+] as const;
+const CHANNELS = [
+  ['latest', 'Advances on each confirmed winner.', 'Opt-in, per job.'],
+  ['stable', 'Advances at most quarterly, to a base that held latest through a full window without rollback.', 'The default for new customer jobs.'],
+] as const;
+const D3_PROFILE = [
+  ['Profile', 'd3-mini-4.5b-v1'],
+  ['Vendor model', 'vllm-sr/d3-mini · 4.54B parameters · Apache-2.0'],
+  ['Backbone', 'Qwen3.5-4B (the same as H2O and Imajev), plus a 0.33B vision tower'],
+  ['Inputs', 'Text, up to four images, and one video'],
+  ['Answers', 'Yes/no, choice (up to 255 outcomes), and score'],
+  ['Pinned by Zils', 'A byte-identical mirror, zils-ai/d3-mini-4.5b-v1, and a 4,096-token cap with no truncation'],
+] as const;
+const D3_EVIDENCE = [
+  ['Stock model, round-one sealed holdout, validator decision rule', 'Brier 0.184 · 87.7% accuracy', 'Brier 0.142 · 89.8% accuracy', 'Eligible'],
+  ['Adapter on the 500-case ABCD test cohort (frozen production recipe, 4,096 training examples, two seeds)', '83.0%', '83.4%', 'A tie: the interval includes zero'],
+  ['Adapter on the historical ABCD cohort', '83.6%', '86.6%', 'd3-mini ahead; interval +0.6 to +5.4 points'],
+  ['Exam prompt length, median input tokens', '528', '568', 'd3-mini prompts are about 40 tokens longer'],
+] as const;
 const SECTIONS = [
   { id: 'findings', title: 'Findings' },
   { id: 'approach', title: 'Approach' },
   { id: 'jev-comparison', title: 'Support' },
   { id: 'chess-study', title: 'Chess' },
   { id: 'flight-study', title: 'Flights' },
+  { id: 'base-tier', title: 'Base tier' },
+  { id: 'd3-mini', title: 'd3-mini evidence' },
   { id: 'quality', title: 'Earlier benchmark' },
   { id: 'metrics', title: 'Metric guide' },
 ] as const;
@@ -47,6 +76,20 @@ function time(value: string) {
     day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit',
     timeZone: 'UTC', hourCycle: 'h23',
   }).format(new Date(value))} UTC`;
+}
+
+function Table({ label, head, rows, wide }: { label: string; head: readonly string[]; rows: readonly (readonly string[])[]; wide?: boolean }) {
+  return (
+    <div className={`mt-6 ${CARD}`}>
+      <div role="region" aria-label={label} tabIndex={0} className="overflow-x-auto overscroll-x-contain">
+        <table className={`w-full ${wide ? 'min-w-[640px]' : 'min-w-[420px]'} border-collapse text-sm`}>
+          <caption className="sr-only">{label}</caption>
+          <thead className="bg-surface text-xs text-muted"><tr>{head.map(name => <th key={name} scope="col" className={HEAD}>{name}</th>)}</tr></thead>
+          <tbody>{rows.map(([name, ...cells]) => <tr key={name}><th scope="row" className={`${TEXT} font-normal text-ink`}>{name}</th>{cells.map((cell, i) => <td key={i} className={`${TEXT} text-muted`}>{cell}</td>)}</tr>)}</tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
 
 function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: string; children: ReactNode }) {
@@ -109,6 +152,31 @@ export default function ModelPage() {
           <SupportStudyDetails />
           <ChessStudySummary />
           <FlightStudyDetails />
+
+          <Section id="base-tier" eyebrow="Base tier · status as of 17 October 2026" title="A competition for the base model itself.">
+            <p className="max-w-[70ch] text-[15px] leading-7 text-muted">Customer adapters train on a pinned base model, and H2O Lightning 4B v1.2.3 remains the default. The base tier is the competition that decides when that base changes. Miners submit a full-weight replacement for the pinned base of a text profile. Validators score it on a sealed holdout against the incumbent, and a candidate is promoted only if it passes every step below.</p>
+            <Table label="How a candidate base is scored and promoted" head={['Step', 'Rule']} rows={PROMOTION_RULES} />
+            <h3 className="mt-10 text-xl font-semibold tracking-[-0.035em]">Two channels</h3>
+            <Table label="Base channels" head={['Channel', 'Advances', 'Who gets it']} rows={CHANNELS} />
+            <p className="mt-4 max-w-[70ch] text-sm leading-7 text-muted">New customer jobs default to <code className="font-mono text-xs">stable</code>; <code className="font-mono text-xs">latest</code> is opt-in per job. Existing releases keep serving on their base.</p>
+            <div className="mt-8 rounded-md bg-surface p-5 text-sm leading-7 text-muted sm:p-6">
+              <p><strong className="font-medium text-ink">Status, 17 October 2026.</strong> Implemented in the subnet repository. Open admission is off by default, and no public round has run.</p>
+              <p className="mt-3">Round one’s sealed holdout has 1,458 teacher-authored cases in six families. The incumbent, stock H2O Lightning 4B v1.2.3, scores Brier 0.184 and 87.7% accuracy on it.</p>
+            </div>
+            <p className="mt-6 text-sm leading-7 text-muted">Want to compete? Read the <a href={DOCS} className={LINK}>miner guide</a> in the Zils docs.</p>
+          </Section>
+
+          <Section id="d3-mini" eyebrow="d3-mini · recorded 16 October 2026 · one rented B300" title="d3-mini, tested as a base.">
+            <p className="max-w-[70ch] text-[15px] leading-7 text-muted">d3-mini is a candidate base profile. It is not promoted and not live: it is not the default for new jobs, it is not deployed, and its promotion under the competition’s own rules is pending. Its first sealed draw cleared on 16 October 2026; the confirmation draw and the regression suite are still to run.</p>
+            <Table label="d3-mini profile" head={['Property', 'Value']} rows={D3_PROFILE} />
+            <p className="mt-4 max-w-[70ch] text-sm leading-7 text-muted">Merged on 16–17 October 2026 in the subnet and platform repositories: the profile, runtime, node qualification, images and video, platform routing, a <code className="font-mono text-xs">latest</code> channel that can point at d3-mini, and cross-profile upgrades. An existing task on H2O can be upgraded to a d3-mini adapter when its acceptance policy sets <code className="font-mono text-xs">&quot;base_change&quot;: true</code>; the frozen previous release is scored on its own base and compared on the same test data.</p>
+            <h3 className="mt-10 text-xl font-semibold tracking-[-0.035em]">What we measured</h3>
+            <Table label="d3-mini compared with the H2O incumbent, 16 October 2026" head={['Measure', 'H2O Lightning 4B v1.2.3', 'd3-mini', 'Reading']} rows={D3_EVIDENCE} wide />
+            <p className="mt-4 max-w-[70ch] text-sm leading-7 text-muted">A feature probe answered yes/no, score, multi-question, JSON-state, one-, two- and four-image, and short-video requests correctly. It refused a 13,414-token state at the runtime’s 8,192-token limit.</p>
+            <div className="mt-8 rounded-md bg-surface p-5 text-sm leading-7 text-muted sm:p-6">
+              <p><strong className="font-medium text-ink">Limits.</strong> One card, one day. Nothing above 4,096 tokens was tested. The holdout is teacher-authored, not customer data. Passing the sealed-holdout decision rule makes a candidate eligible; it does not promote it.</p>
+            </div>
+          </Section>
 
           <Section id="overview" eyebrow="Earlier research · Kev 0.8B" title="Previous experiments, preserved.">
             <p className="max-w-[70ch] text-[15px] leading-7 text-muted">This earlier experiment fine-tuned Kev 0.8B and tested it on the public JevBench items. Accuracy tied the unchanged checkpoint, while probability quality worsened. Its model, tasks, and scoring rules differ from the studies above. Checkpoint and dataset identities are preserved in the method below.</p>

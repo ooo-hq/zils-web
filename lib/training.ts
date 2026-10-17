@@ -26,7 +26,7 @@ const metrics = z.object({ accuracy: z.number().min(0).max(1), brier: z.number()
 const count = z.number().int().nonnegative();
 const rate = z.number().min(0).max(1);
 const imageMetricFields = { count: count.optional(), cases: count.optional(), nll: z.number().nonnegative().optional(), unknown_rate: rate.optional(), unknown_count: count.optional(), outcome_order: z.array(z.string()).optional(), confusion: z.record(z.string(), z.record(z.string(), count)).optional(), per_class: z.record(z.string(), z.object({ support: count, true_positives: count, false_negatives: count, false_positives: count, negatives: count, recall: rate.nullable(), false_positive_rate: rate.nullable() })).optional() };
-const modelSchema = z.object({ id: z.enum(['kev-0.8b-v1', 'jevk5-4b-v0.3', 'h2o-lightning-4b-v1.2.3', 'imajev-4b-v1']), name: z.string(), base: z.string(), base_revision: z.string().regex(/^[a-f0-9]{40}$/) });
+const modelSchema = z.object({ id: z.enum(['kev-0.8b-v1', 'jevk5-4b-v0.3', 'h2o-lightning-4b-v1.2.3', 'imajev-4b-v1', 'd3-mini-4.5b-v1']), name: z.string(), base: z.string(), base_revision: z.string().regex(/^[a-f0-9]{40}$/) });
 const jevComparisonSchema = z.discriminatedUnion('status', [
   z.object({ status: z.literal('completed'), model: z.string().min(1), accuracy: rate, brier: z.number().min(0).max(2), trained_accuracy: rate, count: count.positive(), evaluated_at: z.string().datetime({ offset: true }), test_sha256: z.string().regex(/^[a-f0-9]{64}$/), checkpoint_sha256: z.string().regex(/^[a-f0-9]{64}$/) }),
   z.object({ status: z.enum(['pending', 'running', 'failed', 'skipped']), model: z.string().min(1), count: count.optional(), completed_cases: count.optional() }),
@@ -54,7 +54,7 @@ export const canDownload = (job: Job) => job.status === 'completed' && job.resul
 export const DOWNLOAD_FILES = ['adapter_config.json', 'adapter_model.safetensors', 'head.pt', 'release.json'] as const;
 const TEXT_ADAPTER_DOWNLOAD_FILES = ['adapter_config.json', 'adapter_model.safetensors', 'model.json', 'release.json'] as const;
 const IMAGE_DOWNLOAD_FILES = ['adapter_config.json', 'adapter_model.safetensors', 'decision_readout.json', 'decision_readout.safetensors', 'model.json', 'release.json'] as const;
-export const downloadFiles = (job: Job) => job.model?.id === 'imajev-4b-v1' ? IMAGE_DOWNLOAD_FILES : (job.model?.id === 'jevk5-4b-v0.3' || job.model?.id === 'h2o-lightning-4b-v1.2.3') ? TEXT_ADAPTER_DOWNLOAD_FILES : DOWNLOAD_FILES;
+export const downloadFiles = (job: Job) => job.model?.id === 'imajev-4b-v1' ? IMAGE_DOWNLOAD_FILES : (job.model?.id === 'jevk5-4b-v0.3' || job.model?.id === 'h2o-lightning-4b-v1.2.3' || job.model?.id === 'd3-mini-4.5b-v1') ? TEXT_ADAPTER_DOWNLOAD_FILES : DOWNLOAD_FILES;
 
 export function serviceUrl(raw: string): string {
   const url = new URL(raw);
