@@ -1,6 +1,10 @@
-.hero { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(280px,1fr); gap:40px; align-items:end; padding:48px 0 40px; }
-.hero h1 { margin:0; max-width:15ch; font-size:clamp(34px,5vw,56px); font-weight:600; line-height:1.04; letter-spacing:-.05em; }
-.hero > div > p { max-width:56ch; margin:18px 0 0; font-size:16px; line-height:1.65; color:var(--zils-muted); }
+.hero { --ice:#d0eff4; --lilac:#ded0f6; --rose:#f3d3e9; position:relative; isolation:isolate; overflow:hidden; display:grid; grid-template-columns:minmax(0,1.15fr) minmax(280px,1fr); gap:40px; align-items:center; margin:16px 0 40px; padding:40px 36px; border:1px solid var(--zils-edge); border-radius:14px;
+  background: radial-gradient(60% 90% at 10% 0%, var(--lilac) 0%, transparent 70%), radial-gradient(55% 80% at 90% 100%, var(--ice) 0%, transparent 70%), radial-gradient(40% 60% at 70% 10%, var(--rose) 0%, transparent 75%), var(--zils-page); }
+:global([data-theme=dark]) .hero { --ice:#1d3640; --lilac:#2a2350; --rose:#3b2340; }
+.texture { position:absolute; inset:0; z-index:-1; pointer-events:none; }
+.heroCopy { min-width:0; }
+.hero h1 { margin:0; font-size:clamp(52px,7vw,84px); font-weight:600; line-height:.95; letter-spacing:-.01em; color:var(--zils-accent); }
+.heroCopy > p { max-width:52ch; margin:16px 0 0; font-size:16px; line-height:1.65; color:var(--zils-muted); }
 
 /* The live card is the one place with the brand's iridescent light. */
 .current { position:relative; overflow:hidden; padding:22px; border:1px solid var(--zils-edge); border-radius:14px;
@@ -54,8 +58,9 @@
 [data-best] .fill { opacity:1; }
 .note { margin:8px 0 0 144px; max-width:68ch; font-size:12px; line-height:1.6; color:var(--zils-muted); }
 
+@media (prefers-reduced-motion:reduce) { [data-status=online] .lamp { animation:none; } }
 @media (max-width:860px) {
-  .hero { grid-template-columns:minmax(0,1fr); gap:28px; padding-top:28px; }
+  .hero { grid-template-columns:minmax(0,1fr); gap:24px; padding:28px 20px; }
   .how ol { grid-template-columns:minmax(0,1fr); gap:14px; }
   .timeline > li { grid-template-columns:minmax(0,1fr); gap:4px; padding-left:24px; }
   .timeline > li::before { left:4px; top:10px; }
@@ -64,12 +69,8 @@
   .note { margin-left:24px; }
 }
 
-.hero .testnet { max-width:56ch; margin-top:16px; font-size:13px; line-height:1.6; }
+.heroCopy .testnet { margin-top:18px; font-size:13px; line-height:1.6; }
 .badge { display:inline-block; margin-right:8px; padding:1px 8px; border-radius:999px; background:color-mix(in srgb,var(--zils-accent) 14%,transparent); color:var(--zils-accent); font-size:11px; font-weight:500; vertical-align:1px; }
-.summary { margin:0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
-.summary > div { padding:16px; border:1px solid var(--zils-edge); border-radius:10px; background:var(--zils-surface); }
-.summary dt { font-size:12px; color:var(--zils-muted); }
-.summary dd { margin:4px 0 0; font-size:34px; font-weight:600; letter-spacing:-.04em; font-variant-numeric:tabular-nums; }
 .board { padding:8px 0 40px; }
 .tableWrap { overflow-x:auto; border:1px solid var(--zils-edge); border-radius:10px; }
 .table { width:100%; min-width:860px; border-collapse:collapse; font-size:13px; }
@@ -79,14 +80,34 @@
 .table tbody th { font-weight:400; }
 .table code { font-family:var(--font-plex-mono),monospace; font-size:12px; }
 .table .num { text-align:right; font-variant-numeric:tabular-nums; }
-.status { display:inline-flex; align-items:center; gap:7px; }
-.status::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--zils-edge-strong); }
-.status[data-status=online]::before { background:#1f9d55; box-shadow:0 0 0 3px #1f9d5526; }
-.status[data-status=stale]::before { background:#d08a12; }
+.status { display:inline-flex; align-items:center; gap:8px; }
+
+/* Lamps: one status light per miner, shared by the lamp board and the table. */
+.lamp { flex-shrink:0; width:8px; height:8px; border-radius:50%; background:var(--zils-edge-strong); }
+[data-status=online] .lamp { background:#1f9d55; box-shadow:0 0 0 3px #1f9d5530, 0 0 10px #1f9d5599; animation:glow 2.4s ease-in-out infinite; }
+[data-status=stale] .lamp { background:#d08a12; box-shadow:0 0 0 3px #d08a1226; }
+@keyframes glow { 50% { box-shadow:0 0 0 4px #1f9d5520, 0 0 16px #1f9d55cc; } }
+
+/* The lamp board: each miner a small unit on a rack panel, like an old switchboard. */
+.lampBoard { margin:0; padding:18px; border:1px solid var(--zils-edge); border-radius:12px; background:color-mix(in srgb,var(--zils-page) 72%,transparent); backdrop-filter:blur(6px); }
+.lampBoard ul { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(64px,1fr)); gap:10px; }
+.unit { position:relative; display:grid; place-items:end start; aspect-ratio:1; max-width:88px; padding:8px 10px; border:1px solid var(--zils-edge); border-radius:7px; background:var(--zils-surface); box-shadow:inset 0 1px 0 #ffffff80; }
+:global([data-theme=dark]) .unit { box-shadow:inset 0 1px 0 #ffffff10; }
+.unit .lamp { position:absolute; top:9px; right:9px; }
+.unit[data-status=disabled], .unit[data-status=unseen] { opacity:.55; }
+.unitId { font-size:15px; font-weight:500; font-variant-numeric:tabular-nums; color:var(--zils-ink); }
+.lampBoard figcaption { margin-top:14px; font-size:13px; color:var(--zils-muted); }
+.lampBoard figcaption strong { color:var(--zils-ink); font-weight:600; }
+
+.skill { display:inline-grid; grid-template-columns:72px auto; gap:10px; align-items:center; }
+.skill .track { grid-column:auto; }
+.skill .fill { opacity:1; }
+.skill .value { font-variant-numeric:tabular-nums; }
+.none { color:var(--zils-muted); }
 .legend { max-width:80ch; margin:12px 0 0; font-size:12px; line-height:1.65; color:var(--zils-muted); }
 .legend strong { color:var(--zils-ink); font-weight:500; }
 .unavailable { padding:20px; border:1px dashed var(--zils-edge-strong); border-radius:10px; color:var(--zils-muted); font-size:14px; }
 .baseTier { padding-top:40px; border-top:1px solid var(--zils-edge); }
 .baseIntro { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(280px,1fr); gap:40px; align-items:start; margin-bottom:28px; }
 .baseIntro > div > p { max-width:60ch; margin:0; font-size:15px; line-height:1.65; color:var(--zils-muted); }
-@media (max-width:860px) { .baseIntro { grid-template-columns:minmax(0,1fr); gap:20px; } .summary dd { font-size:26px; } }
+@media (max-width:860px) { .baseIntro { grid-template-columns:minmax(0,1fr); gap:20px; } }

@@ -4,6 +4,8 @@ import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { currentBase } from '@/lib/base-model';
 import { networkMiners, type Miner } from '@/lib/network-miners';
+import { blackletter } from '@/components/blackletter';
+import texture from '@/components/light.module.css';
 import s from './miners.module.css';
 
 export const metadata: Metadata = {
@@ -80,16 +82,19 @@ export default async function MinersPage() {
     <div className="mx-auto max-w-6xl px-6 sm:px-8"><SiteHeader tone="light" /></div>
     <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl px-6 pb-20 sm:px-8">
       <header className={s.hero}>
-        <div>
-          <h1>Miners</h1>
+        <div aria-hidden="true" className={`${s.texture} ${texture.scanlines}`} />
+        <div aria-hidden="true" className={`${s.texture} ${texture.grain}`} />
+        <div className={s.heroCopy}>
+          <h1 className={blackletter.className}>Miners</h1>
           <p>Every miner on the Zils subnet: whether it is online, which base models it can train, and how its candidates did on customer training jobs.</p>
           <p className={s.testnet}><span className={s.badge}>Testnet</span>Subnet 579 on the Bittensor testnet. All miners are currently run by Zils; outside miners can join once the subnet moves to mainnet.</p>
         </div>
-        {network && <dl className={s.summary}>
-          <div><dt>Miners</dt><dd>{network.summary.miners}</dd></div>
-          <div><dt>Online</dt><dd>{network.summary.online}</dd></div>
-          <div><dt>Offline</dt><dd>{network.summary.offline + network.summary.unseen}</dd></div>
-        </dl>}
+        {network && <figure className={s.lampBoard}>
+          <ul aria-label="Miners by UID">{network.miners.map(miner => <li key={miner.hotkey} className={s.unit} data-status={miner.status} title={`UID ${miner.uid}, ${STATUS[miner.status].toLowerCase()}, ${miner.hotkey}`}>
+            <span className={s.lamp} aria-hidden="true" /><span className={s.unitId}>{miner.uid}</span><span className="sr-only">{STATUS[miner.status]}</span>
+          </li>)}</ul>
+          <figcaption><strong>{network.summary.online} of {network.summary.miners}</strong> online now{network.summary.stale ? `, ${network.summary.stale} seen in the last hour` : ''}</figcaption>
+        </figure>}
       </header>
 
       <section className={s.board} aria-labelledby="board-heading">
@@ -100,12 +105,12 @@ export default async function MinersPage() {
             <tbody>{network.miners.map(miner => <tr key={miner.hotkey}>
               <td className={s.num}>{miner.uid}</td>
               <th scope="row"><code title={miner.hotkey}>{short(miner.hotkey)}</code></th>
-              <td><span className={s.status} data-status={miner.status}>{STATUS[miner.status]}</span></td>
+              <td><span className={s.status} data-status={miner.status}><span className={s.lamp} aria-hidden="true" />{STATUS[miner.status]}</span></td>
               <td>{miner.models.length ? miner.models.map(id => MODEL_NAMES[id] ?? id).join(', ') : '—'}</td>
               <td className={s.num}>{miner.training.assigned}</td>
               <td className={s.num}>{miner.training.evaluated}</td>
               <td className={s.num}>{miner.training.selected}</td>
-              <td className={s.num}>{miner.training.median_skill === null ? '—' : miner.training.median_skill.toFixed(2)}</td>
+              <td>{miner.training.median_skill === null ? <span className={s.none}>—</span> : <span className={s.skill}><span aria-hidden="true" className={s.track}><span className={s.fill} style={{ width: `${miner.training.median_skill * 100}%` }} /></span><span className={s.value}>{miner.training.median_skill.toFixed(2)}</span></span>}</td>
               <td>{ago(miner.last_seen, now)}</td>
             </tr>)}</tbody>
           </table></div>
