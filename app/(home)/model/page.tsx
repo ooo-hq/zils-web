@@ -158,16 +158,16 @@ export default function ModelPage() {
           <FlightStudyDetails />
 
           <Section id="base-tier" eyebrow="Base tier · status as of 17 October 2026" title="A competition for the base model itself.">
-            <p className="max-w-[70ch] text-[15px] leading-7 text-muted">Customer adapters train on a pinned base model, and H2O Lightning 4B v1.2.3 remains the default. The base tier is the competition that decides when that base changes. Miners submit a full-weight replacement for the pinned base of a text profile. Validators score it on a sealed holdout against the incumbent, and a candidate is promoted only if it passes every step below.</p>
+            <p className="max-w-[70ch] text-[15px] leading-7 text-muted">Customer adapters train on a pinned base model. Since 17 October 2026 that base is d3-mini 4.5B (below); before that it was H2O Lightning 4B v1.2.3. The base tier is the competition that decides when that base changes. Miners submit a full-weight replacement for the pinned base of a text profile. Validators score it on a sealed holdout against the incumbent, and a candidate is promoted only if it passes every step below.</p>
             <Table label="How a candidate base is scored and promoted" head={['Step', 'Rule']} rows={PROMOTION_RULES} />
             <h3 className="mt-10 text-xl font-semibold tracking-[-0.035em]">Two channels</h3>
             <Table label="Base channels" head={['Channel', 'Advances', 'Who gets it']} rows={CHANNELS} />
             <p className="mt-4 max-w-[70ch] text-sm leading-7 text-muted">New customer jobs default to <code className="font-mono text-xs">stable</code>; <code className="font-mono text-xs">latest</code> is opt-in per job. Existing releases keep serving on their base.</p>
             <div className="mt-8 rounded-md bg-surface p-5 text-sm leading-7 text-muted sm:p-6">
               <p><strong className="font-medium text-ink">Status, 17 October 2026.</strong> Implemented in the subnet repository. Open admission is off by default, and no public round has run.</p>
-              <p className="mt-3">Round one’s sealed holdout has 1,458 teacher-authored cases in six families. The incumbent, stock H2O Lightning 4B v1.2.3, scores Brier 0.184 and 87.7% accuracy on it. No latest base is configured, and H2O remains the incumbent after d3-mini’s confirmation draw did not confirm a winner (see below).</p>
+              <p className="mt-3">Round one’s sealed holdout has 1,458 teacher-authored cases in six families. The incumbent, stock H2O Lightning 4B v1.2.3, scores Brier 0.184 and 87.7% accuracy on it. d3-mini’s confirmation draw did not confirm a winner, but d3-mini became the base by decision on 17 October (see below), so both channels now point at it and stock d3-mini is the incumbent for round two.</p>
             </div>
-            <p className="mt-6 text-sm leading-7 text-muted">Want to compete? Read the <a href={DOCS} className={LINK}>miner guide</a> in the Zils docs.</p>
+            <p className="mt-6 text-sm leading-7 text-muted">Want to compete? Read the <a href={DOCS} className={LINK}>miner guide</a> in the Zils docs. For every attempt so far, in order, see the <Link href="/miners" className={LINK}>miners page</Link>.</p>
           </Section>
 
           <Section id="d3-mini" eyebrow="d3-mini · recorded 16–17 October 2026 · one rented B300" title="d3-mini, tested as a base.">
