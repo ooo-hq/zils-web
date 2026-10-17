@@ -15,7 +15,7 @@ import s from './workspace-home.module.css';
 
 const day = (value?: string | null) => value ? new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
 
-export function WorkspaceHome({ config, sharedModel }: { config: TrainingConfig; sharedModel: string | null }) {
+export function WorkspaceHome({ config, sharedModel, baseName }: { config: TrainingConfig; sharedModel: string | null; baseName: string | null }) {
   const { client, session, models, error } = useWorkspaceModels(config);
   const [summary, setSummary] = useState<BillingSummary | null>(null);
   const owner = session?.user.id;
@@ -60,6 +60,12 @@ export function WorkspaceHome({ config, sharedModel }: { config: TrainingConfig;
         <div><dt>Spend, last 30 days</dt><dd>{usage ? formatCredit((BigInt(usage.inference_spend_nanos) + BigInt(usage.training_spend_nanos)).toString()) : '—'}</dd></div>
       </dl>
     </aside>
+
+    <section className={s.base} aria-labelledby="base-title">
+      <div className={s.cardHeading}><h2 id="base-title">Base model</h2><Link href="/miners">How it improves</Link></div>
+      <p className={s.baseName}>{baseName ?? 'd3-mini 4.5B'}</p>
+      <p>Every model you train is an adapter on this base. When a better base wins, you can upgrade your models to it.</p>
+    </section>
 
     <section className={s.models} aria-labelledby="latest-models-title">
       <div className={s.cardHeading}><h2 id="latest-models-title">Latest models</h2><Link href="/models">View all</Link></div>

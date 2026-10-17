@@ -1,10 +1,7 @@
 import Link from 'next/link';
-import { Grenze_Gotisch } from 'next/font/google';
+import { blackletter } from './blackletter';
 import texture from './light.module.css';
 import s from './workspace-hero.module.css';
-
-// The brand's blackletter, used for the greeting only (SIL OFL 1.1).
-const blackletter = Grenze_Gotisch({ subsets: ['latin'], weight: '600', display: 'swap' });
 
 const greeting = (hour: number) => hour < 5 ? 'Up late' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 

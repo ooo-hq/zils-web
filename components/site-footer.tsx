@@ -13,6 +13,7 @@ const LINK_GROUPS = [
   ] },
   { label: 'Explore', links: [
     { href: '/model', label: 'Research' },
+    { href: '/miners', label: 'Miners' },
     { href: '/bittensor', label: 'Bittensor' },
     { href: 'https://github.com/ooo-hq/zils', label: 'Model source' },
   ] },

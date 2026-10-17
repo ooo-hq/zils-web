@@ -3,6 +3,7 @@ import { ConsoleShell } from '@/components/console-shell';
 import { WorkspaceHome } from '@/components/workspace-home';
 import { playgroundConfig } from '@/lib/playground-server';
 import { trainingConfig } from '@/lib/training-config';
+import { currentBase } from '@/lib/base-model';
 import styles from '../train/train.module.css';
 
 export const dynamic = 'force-dynamic';
@@ -12,12 +13,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
   const config = trainingConfig();
+  const base = await currentBase();
   const shared = playgroundConfig();
   return <ConsoleShell className={styles.page}>
     <div className={styles.workspaceHeading}><div><h1>Home</h1></div></div>
-    {config ? <WorkspaceHome config={config} sharedModel={shared.configured ? shared.models[0]?.id ?? null : null} />
+    {config ? <WorkspaceHome config={config} baseName={base?.channels.stable.name ?? null} sharedModel={shared.configured ? shared.models[0]?.id ?? null : null} />
       : <section className={styles.panel}><h2>The workspace is not configured here yet.</h2><p>This environment is not connected to the training service.</p></section>}
   </ConsoleShell>;
 }

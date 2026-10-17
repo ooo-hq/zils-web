@@ -20,6 +20,8 @@
 .usage dd { margin:2px 0 0; font-size:16px; font-weight:500; font-variant-numeric:tabular-nums; }
 .usage dd.figure { font-size:30px; letter-spacing:-.04em; line-height:1.15; }
 .models { padding:20px; }
+.base { min-width:0; padding:20px; border:1px solid var(--zils-edge); border-radius:8px; background:var(--zils-page); }
+.base .baseName { margin:10px 0 0; font-size:20px; font-weight:600; letter-spacing:-.03em; color:var(--zils-accent); }
 .models ul { list-style:none; margin:12px 0 0; padding:0; }
 .models li { padding:10px 0; border-top:1px solid var(--zils-edge); font-size:12px; color:var(--zils-muted); }
 .models li a { display:block; color:var(--zils-ink); text-decoration:none; }
