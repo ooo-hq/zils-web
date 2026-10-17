@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ConsoleShell } from '@/components/console-shell';
 import { TeachByExample } from '@/components/teach-by-example';
 import { trainingConfig } from '@/lib/training-config';
 
@@ -9,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function TeachPage() {
-  return <TeachByExample config={trainingConfig()} />;
+  return <ConsoleShell><TeachByExample config={trainingConfig()} /></ConsoleShell>;
 }

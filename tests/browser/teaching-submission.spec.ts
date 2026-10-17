@@ -159,6 +159,12 @@ for (const failure of ['upload', 'credit', 'lost-submit'] as const) test(`prepar
   await expect(page.getByLabel('Training run name', { exact: true })).toBeDisabled();
   if (failure === 'credit') {
     await expect(page.getByRole('link', { name: 'Add credit', exact: true })).toHaveAttribute('target', '_blank');
+    const before = page.url();
+    const popup = page.waitForEvent('popup');
+    await page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'Models', exact: true }).click();
+    expect(new URL((await popup).url()).pathname).toBe('/models');
+    expect(page.url()).toBe(before);
+    await expect(page.getByRole('button', { name: 'Resume training submission', exact: true })).toBeVisible();
     state.credit = false;
   }
   await page.getByRole('button', { name: 'Resume training submission', exact: true }).click();
@@ -176,6 +182,16 @@ for (const lostCreate of [true, 400, 409] as const) test(`an uncertain create re
   await expect(page.getByRole('button', { name: 'Resume training submission' })).toBeDisabled();
   await expect(page.getByRole('link', { name: 'Check my runs' })).toHaveAttribute('href', '/train');
   expect(state.creates).toBe(1); expect(state.putAttempts).toEqual([]);
+});
+
+test('the teach flow sits inside the workspace with Train selected', async ({ page }) => {
+  await workspace(page, {});
+  await expect(page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'Train', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('link', { name: 'Back to training' })).toHaveAttribute('href', '/train');
+  await page.screenshot({ path: '.private/teach-in-console-desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: '.private/teach-in-console-mobile.png', fullPage: true });
 });
 
 test('anonymous preparation stays local and sign-in opens separately to preserve files', async ({ page }) => {
