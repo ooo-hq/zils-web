@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { signIn } from './signed-in';
 
 const storyTitle = 'Show it what a good answer looks like.';
 const starters = [
@@ -10,6 +11,7 @@ const starters = [
 for (const starter of starters) {
   test(`saved ${starter.title} links still open editable questions without running a model`, async ({ page }) => {
     let requests = 0;
+    await signIn(page);
     await page.route('**/api/setup', route => { requests++; return route.abort(); });
     await page.route('**/api/playground', route => { requests++; return route.abort(); });
     await page.goto(`/playground?starter=${starter.id}`);
@@ -42,12 +44,12 @@ test('the illustrated story shows input and answer, separates training from shar
   await expect(newMessage).toContainText('My invoice page keeps crashing.');
   await expect(story.getByText(/Illustrated workflow, not live predictions/)).toBeVisible();
   await expect(story.getByRole('link', { name: 'Request early access' })).toHaveAttribute('href', '/early-access');
-  await story.getByRole('link', { name: 'Try the playground' }).click();
-  await expect(page.getByLabel('Question 1', { exact: true })).toHaveValue(starters[0].question);
+  await expect(story.getByRole('link', { name: 'See examples' })).toHaveAttribute('href', '/examples');
   expect(requests).toBe(0);
 });
 
 test('unknown and ambiguous starter links open the ordinary describe flow', async ({ page }) => {
+  await signIn(page);
   for (const query of ['starter=not-a-template', 'starter=customer-routing&starter=refund-request']) {
     await page.goto(`/playground?${query}`);
     await expect(page.getByRole('heading', { name: 'Tell us what you have in mind.' })).toBeVisible();

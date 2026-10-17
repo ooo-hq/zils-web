@@ -12,7 +12,6 @@ const LINKS = [
   { href: '/examples', label: 'examples' },
   { href: '/model', label: 'research', id: 'model' },
   { href: '/bittensor', label: 'bittensor' },
-  { href: '/playground', label: 'playground' },
   { href: '/pricing', label: 'pricing' },
 ] as const;
 

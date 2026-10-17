@@ -1,5 +1,6 @@
 'use client';
 
+import { sessionHeaders } from '@/components/auth-session';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ArrowRight, Check, MessageSquare, ListFilter, SlidersHorizontal, Bookmark, Code2 } from 'lucide-react';
 import { parseResponse, type DecisionRequest, type DecisionResponse, type ModelOption } from '@/lib/playground';
@@ -85,7 +86,7 @@ export function GuidedPlayground({ configured, assistantConfigured, models, init
     setBusy('assistant'); setError(''); setNotice('');
     try {
       const result = await fetch('/api/setup', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...await sessionHeaders() },
         body: JSON.stringify({ messages: next, ...(currentDraft ? { draft: currentDraft } : {}) }),
         signal: AbortSignal.any([controller.signal, AbortSignal.timeout(35_000)]),
       });
@@ -113,7 +114,7 @@ export function GuidedPlayground({ configured, assistantConfigured, models, init
     setBusy('model'); setError(''); setNotice(''); setResponse(null);
     try {
       const result = await fetch('/api/playground', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input),
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...await sessionHeaders() }, body: JSON.stringify(input),
         signal: AbortSignal.any([controller.signal, AbortSignal.timeout(65_000)]),
       });
       const body = await result.json();

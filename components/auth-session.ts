@@ -43,3 +43,9 @@ export function useAuthSession(config?: AuthConfig) {
   }, [client]);
   return { client, session, error };
 }
+
+/** Authorization header for this site's own API routes; empty when signed out. */
+export async function sessionHeaders(): Promise<Record<string, string>> {
+  const token = (await authClient()?.auth.getSession())?.data.session?.access_token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}

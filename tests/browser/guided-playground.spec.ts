@@ -1,6 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
+import { signIn } from './signed-in';
 
 async function open(page: Page) {
+  await signIn(page);
   await page.route('**/api/setup', route => route.fulfill({ status: 503, json: { error: 'Assistant unavailable for this test.' } }));
   await page.route('**/api/playground', route => route.fulfill({ status: 503, json: { error: 'Model unavailable for this test.' } }));
   await page.goto('/playground');
@@ -115,4 +117,17 @@ test('canceled suggestions cannot replace an existing draft', async ({ page }) =
   await expect(page.getByRole('status')).toContainText('Canceled');
   await expect(page.getByLabel('Question 1', { exact: true })).toHaveValue('Is the customer explicitly asking for their money back?');
   await expect(page.getByRole('heading', { name: 'Make these questions yours.' })).toBeVisible();
+});
+
+test('signed-out visitors are sent to sign in or examples, and the model routes refuse them', async ({ page }) => {
+  await page.goto('/playground');
+  await expect(page.getByRole('heading', { name: 'Sign in to use the playground', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'See examples', exact: true })).toHaveAttribute('href', '/examples');
+  await expect(page.getByLabel('What would you like Zils to help with?')).toHaveCount(0);
+  for (const path of ['/api/playground', '/api/setup']) {
+    const response = await page.request.post(path, { data: {} });
+    expect(response.status()).toBe(401);
+    const forged = await page.request.post(path, { data: {}, headers: { authorization: 'Bearer not-a-session' } });
+    expect(forged.status()).toBe(401);
+  }
 });

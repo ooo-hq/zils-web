@@ -119,7 +119,7 @@ export default function HomePage() {
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
               <Link href="/early-access" className="inline-flex min-h-11 items-center justify-center rounded-md bg-white px-5 py-3 text-[13px] font-medium text-black hover:bg-[#eceafa]">Request early access</Link>
-              <Link href="/playground?starter=customer-routing" className="inline-flex min-h-11 items-center text-[13px] text-white underline decoration-white/40 underline-offset-4 hover:decoration-white">Try the playground</Link>
+              <Link href="/examples" className="inline-flex min-h-11 items-center text-[13px] text-white underline decoration-white/40 underline-offset-4 hover:decoration-white">See examples</Link>
             </div>
           </div>
         </section>
