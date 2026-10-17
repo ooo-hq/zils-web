@@ -3,19 +3,18 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Check, CheckCheck, ChevronRight, FileSpreadsheet, FileText, FolderInput, HelpCircle, Layers3, LockKeyhole, MessageSquareText, Plus, Sparkles, TriangleAlert, Upload, X } from 'lucide-react';
-import { ZilsWordmark } from '@/components/zils-wordmark';
 import { TeachingDocuments } from '@/components/teaching-documents';
 import { TeachingImages } from '@/components/teaching-images';
 import { TeachingAlignment } from '@/components/teaching-alignment';
 import { PreparedTrainingPreview } from '@/components/prepared-training-preview';
 import { TeachingSubmission } from '@/components/teaching-submission';
 import type { TrainingConfig } from '@/lib/training-config';
-import { ThemeToggle } from '@/components/theme';
 import { readSpreadsheet, type SpreadsheetSheet } from '@/lib/training-spreadsheet';
 import { suggestMapping } from '@/lib/training-review';
 import type { ColumnMapping } from '@/lib/training-csv';
 import { importTeachingExamples, inspectTeachingExamples, prepareTeachingDraft, teachingTrainingFiles, type TeachingExample, type TeachingTask } from '@/lib/teach-by-example';
 import s from './teach-by-example.module.css';
+import training from '@/app/(home)/train/train.module.css';
 
 const steps = ['Describe the task', 'Bring examples', 'Show what’s good', 'Check the gaps', 'Review and train'];
 const starters = {
@@ -68,6 +67,18 @@ export function TeachByExample({ config }: { config?: TrainingConfig | null }) {
   const active = examples.find(example => example.id === activeId) || examples[0];
   const currentSheet = sheets[sheetIndex];
   const reviewed = report.reviewed;
+  useEffect(() => {
+    if (!locked) return;
+    // Leaving mid-upload would lose the run, so any link opens in a new tab until it finishes.
+    function keepPage(event: MouseEvent) {
+      const link = (event.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null;
+      if (!link || link.target === '_blank' || event.defaultPrevented) return;
+      event.preventDefault(); event.stopPropagation();
+      window.open(link.href, '_blank', 'noopener,noreferrer');
+    }
+    document.addEventListener('click', keepPage, true);
+    return () => document.removeEventListener('click', keepPage, true);
+  }, [locked]);
   useEffect(() => {
     exampleList.current?.querySelector('[aria-pressed="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }, [activeId, step]);
@@ -163,28 +174,20 @@ export function TeachByExample({ config }: { config?: TrainingConfig | null }) {
   const testExample = draft?.splits.test[previewIndex];
 
   return <div className={s.page}>
-    <header className={s.header}>
-      <Link href="/" aria-label="Zils home" target={locked ? '_blank' : undefined} rel={locked ? 'noopener noreferrer' : undefined}><ZilsWordmark className="text-[40px]" /></Link>
-      <span className={s.headerTitle}>Teach a model</span>
-      <div className={s.headerEnd}><span className={s.previewBadge}>{config ? 'Training workspace' : 'Teaching preview'}</span><ThemeToggle /></div>
-    </header>
-    <div className={s.layout}>
-      <aside className={s.sidebar}>
-        <Link href="/train" className={s.backLink} target={locked ? '_blank' : undefined} rel={locked ? 'noopener noreferrer' : undefined}><ArrowLeft size={14} /> Training home</Link>
-        <nav aria-label="Teaching progress" hidden={path !== 'guided'}><ol>{steps.map((title, index) => <li key={title} data-active={step === index} data-done={step > index}>
+    <Link href="/train" className={s.backLink} target={locked ? '_blank' : undefined} rel={locked ? 'noopener noreferrer' : undefined}><ArrowLeft size={14} /> Back to training</Link>
+    <div className={training.workspaceHeading}><div><h1>Train a model</h1><p>Teach Zils one task from examples your team has reviewed.</p></div></div>
+    <div className={s.main}>
+        <div className={s.entryPaths} aria-label="Choose your starting point"><button type="button" disabled={locked} aria-pressed={path === 'guided'} onClick={() => setPath('guided')}>Guide me</button><button type="button" disabled={locked} aria-pressed={path === 'prepared'} onClick={() => setPath('prepared')}>I have training data</button><button type="button" disabled={locked} aria-pressed={path === 'images'} onClick={() => setPath('images')}>Images</button></div>
+        {path === 'prepared' && <p className={s.pathNote}><strong>Prepared training.</strong> Your labels and dataset splits stay as supplied. Check the files, set your success criteria, and review the run.</p>}
+        {path === 'images' && <p className={s.pathNote}><strong>Teach with images.</strong> Describe a visual decision, label your photos, and keep related views of the same item together.</p>}
+        <nav aria-label="Teaching progress" className={s.steps} hidden={path !== 'guided'}><ol>{steps.map((title, index) => <li key={title} data-active={step === index} data-done={step > index}>
           <button type="button" aria-label={title} aria-current={step === index ? 'step' : undefined} disabled={locked || index > step} onClick={() => go(index)}><span className={s.stepNumber}>{step > index ? <Check size={13} /> : index + 1}</span><span>{title}</span></button>
         </li>)}</ol></nav>
-        {path === 'prepared' && <div className={s.directNote}><FileText size={21} /><strong>Prepared training</strong><p>Your labels and dataset splits stay as supplied. Check the files, set your success criteria, and review the run.</p></div>}
-        {path === 'images' && <div className={s.directNote}><FileText size={21} /><strong>Teach with images</strong><p>Describe a visual decision, label your photos, and keep related views of the same item together.</p></div>}
-        <div className={s.sidebarNote}><LockKeyhole size={17} /><p>You control when examples leave this tab.</p><span>Import and manual review stay local. Assisted review and training upload examples only when you choose those actions. Save your draft before closing.</span></div>
-      </aside>
-      <main className={s.main} id="main-content">
-        <div className={s.entryPaths} aria-label="Choose your starting point"><button type="button" disabled={locked} aria-pressed={path === 'guided'} onClick={() => setPath('guided')}>Guide me</button><button type="button" disabled={locked} aria-pressed={path === 'prepared'} onClick={() => setPath('prepared')}>I have training data</button><button type="button" disabled={locked} aria-pressed={path === 'images'} onClick={() => setPath('images')}>Images</button></div>
         <div hidden={path !== 'prepared'}><PreparedTrainingPreview config={config} locked={locked} onLock={setLocked} onGuided={() => { setPath('guided'); setMode('file'); go(0); }} /></div>
         <div hidden={path !== 'images'}><TeachingImages config={config} locked={locked} onLock={setLocked} onDocuments={() => {setPath('guided');if(!examples.length)selectStarter('extract');setMode('documents');go(1);}} /></div>
         <div hidden={path !== 'guided'}>
         <div className={s.progressLine}><span>Step {step + 1} of 5</span><span>{step === 0 ? 'Start with something you know' : `${examples.length} ${examples.length === 1 ? 'example' : 'examples'} added`}</span></div>
-        <h1 ref={heading} tabIndex={-1}>{['What would you like to teach?', 'Start with work you already have.', 'Teach Zils what you mean.', 'A few checks before you train.', 'Decide how you’ll measure success.'][step]}</h1>
+        <h2 ref={heading} tabIndex={-1} className={s.stepTitle}>{['What would you like to teach?', 'Start with work you already have.', 'Teach Zils what you mean.', 'A few checks before you train.', 'Decide how you’ll measure success.'][step]}</h2>
         <p className={s.intro}>{[
           'Pick a task you do repeatedly. One clear job is a good place to start.',
           'Bring what you received and what a good result looked like. One example is enough to start.',
@@ -272,8 +275,7 @@ export function TeachByExample({ config }: { config?: TrainingConfig | null }) {
           <details className={s.details}><summary>View or copy the prepared draft</summary><label htmlFor="draft-json">Prepared draft data</label><textarea id="draft-json" rows={8} readOnly spellCheck={false} value={JSON.stringify(draft, null, 2)} /><p className={s.hint}>A portable preparation draft. It is not a file for direct submission to the current training service.</p></details>
         </>}
         </div>
-        <footer className={s.footer}><span><LockKeyhole size={13} /> Teach and train</span><span>Assisted review is optional.</span></footer>
-      </main>
+        <footer className={s.footer}><LockKeyhole size={13} aria-hidden="true" /><span>You control when examples leave this tab. Import and manual review stay local; assisted review and training upload examples only when you choose. Save your draft before closing.</span></footer>
     </div>
   </div>;
 }
