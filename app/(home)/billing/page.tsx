@@ -8,7 +8,7 @@ import styles from './billing.module.css';
 
 export const metadata: Metadata = {
   title: 'Zils — billing',
-  description: 'Your Zils account usage, model activity, credit, and payment history.',
+  description: 'Your Zils credit, top-ups, and payment history.',
   robots: { index: false, follow: false },
 };
 
@@ -26,7 +26,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
     }
   } catch { /* Unconfigured environments keep billing unavailable. */ }
   return <ConsoleShell className={styles.page}>
-        <header className={styles.heading}><div><h1>Usage & billing</h1><p>See what you use and manage your shared account balance.</p></div></header>
+        <header className={styles.heading}><div><h1>Billing</h1><p>Your shared credit balance, top-ups, and receipts.</p></div></header>
         {apiUrl ? <BillingDashboard config={{ url, key, apiUrl }} testPreview={process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test'} checkoutReturn={checkoutReturn} />
           : <section className={styles.empty}><h2>Billing is not configured here yet.</h2><p>Account balances and top-ups are unavailable in this environment. Real payments are not open.</p><Link href="/pricing" className={styles.button}>View planned pricing</Link></section>}
   </ConsoleShell>;

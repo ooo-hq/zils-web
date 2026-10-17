@@ -169,7 +169,7 @@ function ModelUsage({ modelId, apiUrl, token }: { modelId: string; apiUrl: strin
   const model = usage?.models.find(row => row.model_id === modelId);
   const count = (value: string) => BigInt(value).toLocaleString();
   return <section id="model-usage" className={styles.section} aria-labelledby="model-usage-heading">
-    <div className={styles.sectionHeading}><div><h2 id="model-usage-heading">API usage</h2><p>For this model version only{summary?.mode === 'test' ? ' (Test mode)' : ''}.</p></div><Link href="/billing#usage" className={training.textButton}>Account billing</Link></div>
+    <div className={styles.sectionHeading}><div><h2 id="model-usage-heading">API usage</h2><p>For this model version only{summary?.mode === 'test' ? ' (Test mode)' : ''}.</p></div><Link href="/usage" className={training.textButton}>Account usage</Link></div>
     {loading ? <p role="status">Loading usage…</p> : error ? <p role="status">{error}</p> : !usage ? <p>Usage reporting is not available for this model yet.</p> : <>
       <p className={styles.note}>{date(usage.since)} – {date(usage.until)}</p>
       {!model ? <p>No recorded API usage for this model in this period.</p> : <dl className={styles.stats}>

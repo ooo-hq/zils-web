@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, Boxes, ChartLine, FlaskConical, GraduationCap, House, KeyRound, LogOut, SquareArrowOutUpRight } from 'lucide-react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { BookOpen, Boxes, ChartLine, ChevronsUpDown, CreditCard, FlaskConical, GraduationCap, House, KeyRound, LogOut, SquareArrowOutUpRight } from 'lucide-react';
 import { useAuthSession } from '@/components/auth-session';
 import { ThemeToggle } from '@/components/theme';
 import { ZilsWordmark } from '@/components/zils-wordmark';
@@ -16,7 +16,7 @@ const LINKS = [
   { href: '/train', label: 'Train', icon: GraduationCap },
   { href: '/models', label: 'Models', icon: Boxes },
   { href: '/playground', label: 'Playground', icon: FlaskConical },
-  { href: '/billing', label: 'Usage', icon: ChartLine },
+  { href: '/usage', label: 'Usage', icon: ChartLine },
   { href: '/keys', label: 'API keys', icon: KeyRound },
 ] as const;
 
@@ -26,6 +26,18 @@ export function ConsoleNav({ auth, billingUrl }: { auth?: { url: string; key: st
   const [balance, setBalance] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [signOutError, setSignOutError] = useState('');
+  const [menu, setMenu] = useState(false);
+  const menuId = useId();
+  const profile = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!menu) return;
+    const outside = (event: PointerEvent) => { if (!profile.current?.contains(event.target as Node)) setMenu(false); };
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') { setMenu(false); trigger.current?.focus(); } };
+    document.addEventListener('pointerdown', outside);
+    document.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape); };
+  }, [menu]);
   const owner = session?.user.id;
   const api = useMemo(() => client && billingUrl && owner ? billingApi(billingUrl, async () => {
     const { data } = await client.auth.getSession();
@@ -58,11 +70,18 @@ export function ConsoleNav({ auth, billingUrl }: { auth?: { url: string; key: st
     <div className={styles.bottom}>
       {session && <Link href="/billing" className={styles.balance}><span>Balance</span><strong>{balance ?? '—'}</strong></Link>}
       <div className={styles.account}>
-        {session ? <>
-          <span className={styles.avatar} aria-hidden="true">{email[0].toUpperCase()}</span>
-          <span className={styles.who} title={email}><strong>{email.split('@')[0]}</strong><span className={styles.email}>{email}</span></span>
-          <button type="button" className={styles.iconButton} onClick={signOut} disabled={busy} aria-label="Sign out" title="Sign out"><LogOut size={15} aria-hidden="true" /></button>
-        </> : <span className={styles.email}>Not signed in</span>}
+        {session ? <div ref={profile} className={styles.profile}>
+          <button ref={trigger} type="button" className={styles.profileButton} aria-expanded={menu} aria-controls={menuId} aria-label={`Account menu for ${email}`} onClick={() => setMenu(!menu)}>
+            <span className={styles.avatar} aria-hidden="true">{email[0].toUpperCase()}</span>
+            <span className={styles.who}><strong>{email.split('@')[0]}</strong><span className={styles.email}>{email}</span></span>
+            <ChevronsUpDown size={14} aria-hidden="true" className={styles.chevron} />
+          </button>
+          {menu && <div id={menuId} role="group" aria-label="Your account" className={styles.menu}>
+            <p className={styles.menuEmail}>{email}</p>
+            <Link href="/billing" className={styles.menuItem} aria-current={path === '/billing' ? 'page' : undefined} onClick={() => setMenu(false)}><CreditCard size={15} aria-hidden="true" />Billing</Link>
+            <button type="button" className={styles.menuItem} onClick={() => { setMenu(false); void signOut(); }} disabled={busy}><LogOut size={15} aria-hidden="true" />Sign out</button>
+          </div>}
+        </div> : <span className={styles.email}>Not signed in</span>}
         <ThemeToggle />
       </div>
       {signOutError && <p role="alert" className={styles.alert}>{signOutError}</p>}
