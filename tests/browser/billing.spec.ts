@@ -73,11 +73,12 @@ test('signed-out billing offers existing sign-in and never requests private bala
 
 test('account usage is independent of transaction history and models keep unknown history visible', async ({ page }) => {
   const { errors } = await billing(page);
-  await page.goto('/billing');
+  await page.goto('/usage');
+  await expect(page.getByRole('button', { name: 'Add $5', exact: true })).toHaveCount(0);
   const report = page.getByRole('region', { name: 'Account usage', exact: true });
   await expect(report.getByText('1,200', { exact: true })).toBeVisible();
   await expect(report.getByText('1,000,000', { exact: true })).toBeVisible();
-  await expect(report.getByText('$4.042', { exact: true })).toBeVisible();
+  await expect(report.getByRole('img', { name: '$4.042', exact: true })).toBeVisible();
   await expect(report.getByText('Token counts unavailable for 10 earlier calls')).toBeVisible();
   const modelReport = page.getByRole('region', { name: 'API usage by model', exact: true });
   const row = modelReport.getByRole('row').filter({ hasText: 'support-routing' });
@@ -86,27 +87,29 @@ test('account usage is independent of transaction history and models keep unknow
   await expect(modelReport.getByRole('rowheader', { name: /Model not recorded/ })).toBeVisible();
   await modelReport.getByText('About this report', { exact: true }).click();
   await expect(modelReport.getByText(/One batch item counts as one API call/)).toBeVisible();
+  await page.waitForTimeout(1000);
   await page.screenshot({ path: '.private/usage-report-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 375, height: 812 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await report.screenshot({ path: '.private/usage-report-mobile.png' });
   await page.goto('/train');
   await page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'Usage', exact: true }).click();
-  await expect(page).toHaveURL(/\/billing$/);
+  await expect(page).toHaveURL(/\/usage$/);
   expect(errors).toEqual([]);
 });
 
 test('missing usage does not invent zero totals or hide billing', async ({ page }) => {
   await billing(page, { usageMissing: true });
-  await page.goto('/billing');
+  await page.goto('/usage');
   await expect(page.getByText(/Usage reporting is not available yet/)).toBeVisible();
   await expect(page.getByText('Completed API calls', { exact: true })).toHaveCount(0);
+  await page.goto('/billing');
   await expect(page.getByText('Available credit', { exact: true })).toBeVisible();
 });
 
 test('empty usage reports actual zero totals and explains how models appear', async ({ page }) => {
   await billing(page, { usageEmpty: true });
-  await page.goto('/billing');
+  await page.goto('/usage');
   await expect(page.getByText(/No recorded API usage in this period/)).toBeVisible();
   await expect(page.getByRole('region', { name: 'Account usage', exact: true }).getByRole('definition').filter({ hasText: /^0$/ })).toHaveCount(3);
 });
@@ -140,8 +143,10 @@ test('billing shows exact server balances, reservations, allowance, receipts and
   await expect(page.getByText('−$0.000000042', { exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Receipt' })).toHaveAttribute('href', 'https://pay.stripe.com/receipts/payment/test');
   for (const amount of [5, 20, 50, 100]) await expect(page.getByRole('button', { name: `Add $${amount}`, exact: true })).toBeEnabled();
+  await expect(page.getByRole('region', { name: 'Account usage', exact: true })).toHaveCount(0);
   await page.screenshot({ path: '.private/billing-desktop.png', fullPage: true });
-  await expect(page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'Usage', exact: true })).toHaveAttribute('aria-current', 'page');
+  await page.getByRole('button', { name: /Account menu for/ }).click();
+  await expect(page.getByRole('group', { name: 'Your account' }).getByRole('link', { name: 'Billing', exact: true })).toHaveAttribute('aria-current', 'page');
   expect(errors).toEqual([]);
 });
 

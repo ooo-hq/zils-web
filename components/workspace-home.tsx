@@ -53,7 +53,7 @@ export function WorkspaceHome({ config, sharedModel, baseName }: { config: Train
 
     <div className={s.side}>
     <aside className={s.usage} aria-labelledby="usage-title">
-      <div className={s.cardHeading}><h2 id="usage-title">Usage</h2><Link href="/billing">View</Link></div>
+      <div className={s.cardHeading}><h2 id="usage-title">Usage</h2><Link href="/usage">View</Link></div>
       <dl>
         <div><dt>Available credit</dt><dd className={s.figure}>{summary ? formatCredit(summary.available_nanos) : '—'}</dd></div>
         <div><dt>API calls, last 30 days</dt><dd>{usage ? Number(usage.calls).toLocaleString() : '—'}</dd></div>

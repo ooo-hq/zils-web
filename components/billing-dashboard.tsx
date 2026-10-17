@@ -6,11 +6,13 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { ArrowRight, ArrowUpRight, FlaskConical, RefreshCw, LockKeyhole } from 'lucide-react';
 import { useAuthSession } from '@/components/auth-session';
 import { BillingUsage, BillingUsageDetails } from '@/components/billing-usage';
+import { ZilsSymbol } from '@/components/zils-symbol';
+import texture from '@/components/light.module.css';
 import { billingApi, BillingError, TOPUP_AMOUNTS_CENTS, formatCredit, checkoutIntent, pendingCheckout, attachCheckout, settleCheckout, clearCheckout, type BillingSummary, type CheckoutIntent } from '@/lib/billing';
 import styles from '@/app/(home)/billing/billing.module.css';
 
 type Config = { url: string; key: string; apiUrl: string };
-type Props = { config: Config; testPreview: boolean; checkoutReturn: 'success' | 'cancelled' | null };
+type Props = { config: Config; testPreview: boolean; checkoutReturn: 'success' | 'cancelled' | null; view?: 'billing' | 'usage' };
 const date = (value: string) => new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 const labels = { topup: 'Credit added', inference: 'Model usage', training: 'Training run', refund: 'Refund' };
 
@@ -18,14 +20,14 @@ export function BillingDashboard(props: Props) {
   const { client, session, error } = useAuthSession(props.config);
   if (session === undefined) return <p className={styles.loading} role="status">Checking your session…</p>;
   if (!session || !client) return <section className={styles.empty}>
-    <h2>Sign in to view billing</h2><p>Check your credit, manage top-ups, and view receipts for your account.</p>
+    {props.view === 'usage' ? <><h2>Sign in to view usage</h2><p>See your API calls, training runs, and spend by model.</p></> : <><h2>Sign in to view billing</h2><p>Check your credit, manage top-ups, and view receipts for your account.</p></>}
     {error && <p role="alert" className={styles.error}>{error}</p>}
     <Link href="/train" className={styles.button}>Sign in to Zils</Link>
   </section>;
   return <AccountBilling key={session.user.id} {...props} client={client} owner={session.user.id} />;
 }
 
-function AccountBilling({ config, client, owner, testPreview, checkoutReturn }: Props & { client: SupabaseClient; owner: string }) {
+function AccountBilling({ config, client, owner, testPreview, checkoutReturn, view = 'billing' }: Props & { client: SupabaseClient; owner: string }) {
   const [summary, setSummary] = useState<BillingSummary | null>(null);
   const [pending, setPending] = useState<CheckoutIntent | null>(null);
   const [refreshing, setRefreshing] = useState(true);
@@ -95,6 +97,15 @@ function AccountBilling({ config, client, owner, testPreview, checkoutReturn }: 
     } finally { mutation.current = false; if (!signal.aborted) setBusy(false); }
   }
 
+  if (view === 'usage') return <>
+    {error && <p className={styles.error} role="alert">{error}{expired && <> <Link href="/train">Sign in again</Link>.</>}</p>}
+    <div className={styles.refreshRow}><span>{refreshing ? 'Updating usage…' : stale ? 'Usage could not be refreshed.' : summary?.mode === 'test' ? 'Test mode. All amounts in USD.' : 'All amounts in USD.'}</span><button type="button" className={styles.textButton} onClick={refresh} disabled={refreshing || busy}><RefreshCw size={14} aria-hidden="true" />{refreshing ? 'Refreshing…' : 'Refresh'}</button></div>
+    {!summary || expired ? <p className={styles.loading} role="status">{expired ? 'Sign in again to view your account.' : refreshing ? 'Loading your usage…' : 'Your usage is unavailable. Refresh to try again.'}</p> : <>
+      <BillingUsage usage={summary.usage} />
+      <BillingUsageDetails usage={summary.usage} />
+    </>}
+  </>;
+
   return <>
     {(summary?.mode === 'test' || (!summary && testPreview)) && <section className={styles.testNotice} aria-labelledby="test-mode-heading"><FlaskConical size={20} aria-hidden="true" /><div><h2 id="test-mode-heading">Test mode</h2><p>Use Stripe test payments only. This credit is for testing and is separate from real money. Real paid access is not open.</p></div></section>}
     {checkoutReturn && <p className={styles.returnNotice} role="status">{checkoutReturn === 'success'
@@ -104,13 +115,16 @@ function AccountBilling({ config, client, owner, testPreview, checkoutReturn }: 
     {notice && <p className={styles.returnNotice} role="status">{notice}</p>}
     <div className={styles.refreshRow}><span>{refreshing ? 'Updating billing…' : stale ? 'Billing details could not be refreshed.' : 'All amounts in USD.'}</span><button type="button" className={styles.textButton} onClick={refresh} disabled={refreshing || busy}><RefreshCw size={14} aria-hidden="true" />{refreshing ? 'Refreshing…' : 'Refresh'}</button></div>
     {!summary || expired ? <p className={styles.loading} role="status">{expired ? 'Sign in again to view your account.' : refreshing ? 'Loading your billing details…' : 'Your billing details are unavailable. Refresh to try again.'}</p> : <>
-      <div className={styles.overview}>
-        <div className={styles.wallet}>
-          <section className={styles.credit} aria-labelledby="credit-heading">
-            <h2 id="credit-heading">Available credit</h2>
-            <p className={styles.amount}>{formatCredit(summary.available_nanos)}</p>
+      <div className={styles.billingGrid}>
+          <section className={styles.cardSection} aria-labelledby="credit-heading">
+            <div className={styles.card}>
+              <div aria-hidden="true" className={`${styles.texture} ${texture.scanlines}`} />
+              <div className={styles.cardTop}><span className={styles.emblem} aria-hidden="true"><ZilsSymbol /></span>{summary.mode === 'test' && <span className={styles.stamp}>Test credit</span>}</div>
+              <h2 id="credit-heading">Available credit</h2>
+              <p className={styles.amount}>{formatCredit(summary.available_nanos)}</p>
+              <dl className={styles.balances}><div><dt>Total balance</dt><dd>{formatCredit(summary.balance_nanos)}</dd></div><div><dt>Reserved for work in progress</dt><dd>{formatCredit(summary.reserved_nanos)}</dd></div></dl>
+            </div>
             <p className={styles.balanceNote}>Shared across your models and API keys.</p>
-            <dl className={styles.balances}><div><dt>Total balance</dt><dd>{formatCredit(summary.balance_nanos)}</dd></div><div><dt>Reserved for work in progress</dt><dd>{formatCredit(summary.reserved_nanos)}</dd></div></dl>
             {summary.mode !== 'off' && BigInt(summary.available_nanos) < 2_000_000_000n && <p className={styles.lowBalance}><strong>{BigInt(summary.available_nanos) <= 0n ? 'No available credit' : 'Low credit'}</strong><span>{summary.free_training_runs > 0 ? 'Your included training is still available.' : 'Top up to cover new paid usage.'}</span></p>}
           </section>
           <section className={styles.topUp} aria-labelledby="topup-heading">
@@ -120,11 +134,8 @@ function AccountBilling({ config, client, owner, testPreview, checkoutReturn }: 
             {pending && <div className={styles.pending}><p>An unfinished ${pending.amount_cents / 100} checkout is saved. Continue it to avoid starting the same purchase twice.</p><button type="button" className={styles.button} onClick={() => void topUp(pending.amount_cents)} disabled={!canCheckout || busy || refreshing}>{busy ? 'Opening checkout…' : `Continue $${pending.amount_cents / 100} checkout`}</button></div>}
             <p className={styles.checkoutNote}><LockKeyhole size={14} aria-hidden="true" /><span>{busy ? 'Opening secure checkout…' : 'Secure checkout with Stripe.'} Credit is added after payment is confirmed.</span></p>
           </section>
-        </div>
-        <BillingUsage usage={summary.usage} />
       </div>
-      <section className={styles.allowance} aria-labelledby="allowance-heading"><div><h2 id="allowance-heading">Included training</h2><p>{summary.free_training_runs === 1 ? '1 standard run available' : `${summary.free_training_runs} standard runs available`}</p></div><p>Your first completed top-up includes one standard run without using your credit. Additional standard runs use $2 each.</p></section>
-      <BillingUsageDetails usage={summary.usage} />
+      <section className={styles.allowance} aria-labelledby="allowance-heading"><div><h2 id="allowance-heading">Included training</h2><p><span className={styles.lamp} data-on={summary.free_training_runs > 0 || undefined} aria-hidden="true" />{summary.free_training_runs === 1 ? '1 standard run available' : `${summary.free_training_runs} standard runs available`}</p></div><p>Your first completed top-up includes one standard run without using your credit. Additional standard runs use $2 each.</p></section>
       <div className={styles.histories}>
         <section className={styles.history} aria-labelledby="payments-heading"><h2 id="payments-heading">Payments & receipts</h2>
           {!summary.payments.length ? <p className={styles.emptyHistory}>No payments yet. Your completed top-ups and receipts will appear here.</p> : <ul className={styles.rows}>{summary.payments.map(payment => <li key={payment.id}><div><strong>${(payment.amount_cents / 100).toFixed(2)} top-up</strong><time dateTime={payment.created_at}>{date(payment.created_at)}</time></div><span className={styles.paymentStatus}>{payment.status === 'paid' ? 'Paid' : payment.status === 'refunded' ? 'Refunded' : payment.status === 'expired' ? 'Expired' : 'Pending'}</span>{payment.receipt_url ? <a href={payment.receipt_url} target="_blank" rel="noopener noreferrer" aria-label="Receipt">Receipt<ArrowUpRight size={13} aria-hidden="true" /></a> : <span className={styles.noReceipt}>{payment.status === 'pending' ? 'Awaiting payment' : 'No receipt'}</span>}</li>)}</ul>}

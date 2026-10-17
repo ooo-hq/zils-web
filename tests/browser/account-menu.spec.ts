@@ -51,6 +51,12 @@ test('account menu follows navigation and signing out clears both header and wor
   const sidebar = page.getByRole('complementary', { name: 'Workspace' });
   await expect(sidebar.getByText('client@example.com', { exact: true })).toBeVisible();
   await page.screenshot({ path: '.private/account-desktop.png' });
+  await sidebar.getByRole('button', { name: /Account menu for client@example\.com/ }).click();
+  await expect(sidebar.getByRole('link', { name: 'Billing', exact: true })).toHaveAttribute('href', '/billing');
+  await page.keyboard.press('Escape');
+  await expect(sidebar.getByRole('link', { name: 'Billing', exact: true })).toHaveCount(0);
+  await expect(sidebar.getByRole('button', { name: /Account menu for/ })).toBeFocused();
+  await sidebar.getByRole('button', { name: /Account menu for/ }).click();
   await sidebar.getByRole('button', { name: 'Sign out', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Sign in to Zils', exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Train a model', exact: true })).toHaveCount(0);
@@ -74,9 +80,12 @@ test('workspace account controls stay at the top on mobile', async ({ page }) =>
   await account(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/train');
-  const signOut = page.getByRole('complementary', { name: 'Workspace' }).getByRole('button', { name: 'Sign out', exact: true });
-  await expect(signOut).toBeVisible();
-  expect((await signOut.boundingBox())!.y).toBeLessThan(100);
+  const sidebar = page.getByRole('complementary', { name: 'Workspace' });
+  const profile = sidebar.getByRole('button', { name: /Account menu for/ });
+  await expect(profile).toBeVisible();
+  expect((await profile.boundingBox())!.y).toBeLessThan(100);
+  await profile.click();
+  await expect(sidebar.getByRole('button', { name: 'Sign out', exact: true })).toBeInViewport();
   await page.screenshot({ path: '.private/account-mobile.png' });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
