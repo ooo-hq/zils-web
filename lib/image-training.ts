@@ -25,10 +25,11 @@ export function mapImageExamples(files: File[], csv?: string | CsvData): ImageEx
   }
   return rows;
 }
-export function prepareImageTraining(examples: ImageExample[], question: object, outcomes: string[], seed: string): PreparedImageTraining {
+export function prepareImageTraining(examples: ImageExample[], question: object, outcomes: string[], seed: string, limits: Record<Split, number> = {train:1024,calibration:256,test:512}): PreparedImageTraining {
   const parsed=imageQuestionSchema.safeParse(question);
-  if(!parsed.success || JSON.stringify(Object.keys(parsed.data.criteria))!==JSON.stringify(outcomes)) throw new Error('Use one image question with 2–16 different answers.');
-  if(!seed || seed.length>100 || !examples.length || examples.length>1792) throw new Error('Choose up to 1,792 reviewed photos.');
+  if(!parsed.success || JSON.stringify(Object.keys(parsed.data.criteria))!==JSON.stringify(outcomes)) throw new Error('Use one image question with at least two different answers.');
+  const total=limits.train+limits.calibration+limits.test;
+  if(!seed || seed.length>100 || !examples.length || examples.length>total) throw new Error(`Choose up to ${total.toLocaleString()} reviewed photos.`);
   const ids=new Set<string>(), groups=new Map<string,{id:string;rows:ImageExample[];labels:Set<string>}>();
   for(const row of examples) {
     if(!outcomes.includes(row.label)) throw new Error(`Choose an answer for “${row.filename}”, or leave that photo out.`);
@@ -37,7 +38,7 @@ export function prepareImageTraining(examples: ImageExample[], question: object,
     if(!['image/jpeg','image/png'].includes(row.file.type) || !row.file.size || row.file.size>10*1024*1024) throw new Error(`“${row.filename}” must be a JPEG or PNG up to 10 MB.`);
     const key=orderKey(seed+'\0'+row.groupId)+'-'+row.groupId, group=groups.get(key)||{id:key,rows:[],labels:new Set<string>()};group.rows.push(row);group.labels.add(row.label);groups.set(key,group);
   }
-  const splits=splitGroups([...groups.values()],outcomes), limits={train:1024,calibration:256,test:512};
+  const splits=splitGroups([...groups.values()],outcomes);
   const counts=Object.fromEntries(SPLITS.map(split=>[split,splits[split].length])) as Record<Split,number>;
   for(const split of SPLITS) if(counts[split]>limits[split]) throw new Error(`${split} exceeds its ${limits[split]}-photo limit. Use fewer photos.`);
   return {splits,counts,seed,proportions:Object.fromEntries(SPLITS.map(s=>[s,counts[s]/examples.length])) as Record<Split,number>,distribution:outcomes.map(outcome=>({outcome,train:splits.train.filter(r=>r.label===outcome).length,calibration:splits.calibration.filter(r=>r.label===outcome).length,test:splits.test.filter(r=>r.label===outcome).length}))};
@@ -54,7 +55,7 @@ async function fingerprint(prepared:PreparedImageTraining, question:ImageQuestio
   return imageDigest(new Blob([JSON.stringify({question,seed:prepared.seed,splits:Object.fromEntries(SPLITS.map(s=>[s,prepared.splits[s].map(row=>({id:row.id,filename:row.filename,label:row.label,group:row.groupId,state:row.state,sha256:digests[row.id]}))]))})]));
 }
 export async function imageDraftFingerprint(prepared:PreparedImageTraining, question:ImageQuestion) {return fingerprint(prepared,question,await hashes(prepared));}
-export async function uploadImageTraining(prepared:PreparedImageTraining, question:ImageQuestion, input:Omit<ImageSubmission,'model'|'image_intake'>, training:ReturnType<typeof trainingApi>, images:ReturnType<typeof imageApi>, draft:ImageDraft, signal?:AbortSignal, progress:(text:string)=>void=()=>{}):Promise<Job> {
+export async function uploadImageTraining(prepared:PreparedImageTraining, question:ImageQuestion, input:Omit<ImageSubmission,'image_intake'>, training:ReturnType<typeof trainingApi>, images:ReturnType<typeof imageApi>, draft:ImageDraft, signal?:AbortSignal, progress:(text:string)=>void=()=>{}):Promise<Job> {
   const digests=await hashes(prepared,signal), snapshot=await fingerprint(prepared,question,digests);signal?.throwIfAborted();
   if(draft.job && draft.job.image_intake?.snapshot_sha256!==snapshot) throw new Error('These photos, labels or settings changed. Start a new run.');
   if(draft.job?.acceptance && JSON.stringify(Object.entries(draft.job.acceptance).sort()) !== JSON.stringify(Object.entries(input.acceptance || {}).sort())) throw new Error('Quality targets changed. Restore the saved targets or start a new run.');
@@ -63,7 +64,7 @@ export async function uploadImageTraining(prepared:PreparedImageTraining, questi
     draft.job=current;
     if(current.status!=='uploading')return current;
   }
-  if(!draft.job) {progress('Saving your reviewed training plan…');const created=await training.createImage({...input,model:'imajev-4b-v1',image_intake:{version:'zils-image-intake/v1',seed:prepared.seed,snapshot_sha256:snapshot}},signal);draft.job=created.job;}
+  if(!draft.job) {progress('Saving your reviewed training plan…');const created=await training.createImage({...input,image_intake:{version:'zils-image-intake/v1',seed:prepared.seed,snapshot_sha256:snapshot}},signal);draft.job=created.job;}
   const job=draft.job;
   const previous=await training.imageAssets(job.id,signal);
   const rows=SPLITS.flatMap(s=>prepared.splits[s]);

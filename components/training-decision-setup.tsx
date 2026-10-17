@@ -7,6 +7,7 @@ import styles from './training-onboarding.module.css';
 
 type Props = {
   kind: 'text' | 'images';
+  maxAnswers?: number;
   question: string;
   answers: string;
   onQuestion: (value: string) => void;
@@ -24,7 +25,7 @@ const starters = {
   ],
 };
 
-export function TrainingDecisionSetup({ kind, question, answers, onQuestion, onAnswers, assistantConfigured = false }: Props) {
+export function TrainingDecisionSetup({ kind, maxAnswers = kind === 'images' ? 16 : 255, question, answers, onQuestion, onAnswers, assistantConfigured = false }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
@@ -38,7 +39,7 @@ export function TrainingDecisionSetup({ kind, question, answers, onQuestion, onA
     if (busy || !question.trim()) return;
     const controller = new AbortController(); operation.current = controller;
     const timer = setTimeout(() => controller.abort('timeout'), 35000);
-    const messages: SetupMessage[] = answer ? [...history.current, { role: 'user', content: answer }] : [{ role: 'user', content: `Help me set up ${kind === 'images' ? 'image' : 'text'} training. Create exactly one choice question with ${kind === 'images' ? '2–16' : '2–255'} short, self-contained answer labels. Ask a clarification if needed. Do not invent training examples or correct answers. My goal: ${question}${answers.trim() ? `\nPossible answers: ${answers.slice(0, 3000)}` : ''}` }];
+    const messages: SetupMessage[] = answer ? [...history.current, { role: 'user', content: answer }] : [{ role: 'user', content: `Help me set up ${kind === 'images' ? 'image' : 'text'} training. Create exactly one choice question with 2–${maxAnswers} short, self-contained answer labels. Ask a clarification if needed. Do not invent training examples or correct answers. My goal: ${question}${answers.trim() ? `\nPossible answers: ${answers.slice(0, 3000)}` : ''}` }];
     setBusy(true); setError(''); setNote('');
     try {
       const response = await fetch('/api/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: messages.length > 11 ? [messages[0], ...messages.slice(-10)] : messages }), signal: controller.signal });
@@ -77,7 +78,7 @@ export function TrainingDecisionSetup({ kind, question, answers, onQuestion, onA
     <div className={styles.answers}>
       <label htmlFor={`${kind}-answers`}>{kind === 'images' ? 'Image training answers' : 'Possible answers (optional)'}</label>
       <textarea id={`${kind}-answers`} required={kind === 'images'} rows={3} disabled={busy} value={answers} onChange={event => onAnswers(event.target.value)} placeholder={kind === 'images' ? 'Normal\nDamaged' : 'Billing\nTechnical support\nAccount changes'} />
-      <small>{kind === 'images' ? 'Add 2–16 answers, one per line. Your photos will use these labels.' : 'One answer per line. Leave blank to use answers from your data.'}</small>
+      <small>{kind === 'images' ? `Add 2–${maxAnswers} answers, one per line. Your photos will use these labels.` : 'One answer per line. Leave blank to use answers from your data.'}</small>
     </div>
     <aside className={styles.preview} aria-label="What your model will learn"><div className={styles.previewTitle}>{kind === 'images' ? <ImageIcon size={18} aria-hidden="true" /> : <MessageSquareText size={18} aria-hidden="true" />}What your model will learn</div><p>{question || 'Your decision goes here.'}</p><div className={styles.previewFlow}><span>{kind === 'images' ? 'A photo' : 'A text example'}</span><ArrowRight size={16} aria-hidden="true" /><span>One of your answers</span></div>{options.length > 0 && <div className={styles.answerChips}>{options.slice(0, 16).map((option, index) => <span key={index}>{option}</span>)}</div>}<small>You provide examples with correct answers in the next step. Zils learns from those examples.</small></aside>
 

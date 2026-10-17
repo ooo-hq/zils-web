@@ -13,7 +13,7 @@ async function workspace(page: Page, options: { signedIn?: boolean; failUpload?:
   }, { user, expires });
   let created: Record<string, unknown> | undefined, status = 'uploading', failUpload = options.failUpload;
   const state = { credit: options.credit, creates: 0, submits: 0, uploads: {} as Record<string, string>, putAttempts: [] as string[], mutations: [] as string[], assets: [] as { id: string; filename: string; source_sha256: string }[] };
-  const job = () => ({ id: jobId, name: created?.name || 'teaching-run', status, acceptance: created?.acceptance, ...(created?.model ? { model: { id: 'imajev-4b-v1', name: 'Imajev 4B', base: 'Qwen/Qwen3.5-4B', base_revision: '8'.repeat(40) }, image_intake: created.image_intake } : {}) });
+  const job = () => ({ id: jobId, name: created?.name || 'teaching-run', status, acceptance: created?.acceptance, ...(created?.model ? { model: { id: 'd3-mini-4.5b-v1', name: 'd3-mini 4.5B', base: 'zils-ai/d3-mini-4.5b-v1', base_revision: '8'.repeat(40), inputs: { images: 4, video: true } }, image_intake: created.image_intake } : {}) });
   const grant = (path: string) => ({ url: `http://127.0.0.1:8998/storage/v1/object/upload/sign/${path}`, method: 'PUT', headers: { 'Content-Type': 'application/octet-stream', 'x-upsert': 'false' } });
   const uploads = () => Object.fromEntries(splits.map(split => [split, state.uploads[split] ? { uploaded: true } : grant(`fez-training-data/${jobId}/inputs/${split}.jsonl`)]));
   await page.route('**/*', async route => {
@@ -27,7 +27,7 @@ async function workspace(page: Page, options: { signedIn?: boolean; failUpload?:
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
     if (request.method() !== 'GET') state.mutations.push(`${request.method()} ${path}`);
     if (path.startsWith('/auth/v1/')) return route.fulfill({ headers, json: user });
-    if (path === '/v1/image-models') return route.fulfill({ headers, json: { models: [], training_enabled: options.imagesEnabled !== false, training_profile: { model: 'imajev-4b-v1', max_train: 1024, max_calibration: 256, max_test: 512, max_source_bytes: 10485760, max_pixels: 16000000, max_edge: 8192 } } });
+    if (path === '/v1/image-models') return route.fulfill({ headers, json: { models: [], training_enabled: options.imagesEnabled !== false, training_profile: { model: 'd3-mini-4.5b-v1', capabilities: { modalities: ['text', 'image', 'video'], question_types: ['noul', 'choice', 'score'], max_images: 4, max_videos: 1, max_questions: 8, max_options: 255, max_input_tokens: 4096, unknown_key: null }, images_per_example: 1, max_train: 1024, max_calibration: 256, max_test: 512, max_source_bytes: 10485760, max_pixels: 16000000, max_edge: 8192 } } });
     if (path === '/v1/jobs' && request.method() === 'GET') return route.fulfill({ headers, json: { jobs: created ? [job()] : [] } });
     if (path === '/v1/jobs' && request.method() === 'POST') {
       state.creates++; created = request.postDataJSON();
@@ -198,7 +198,7 @@ for (const enabled of [true, false]) test(`image teaching respects service avail
   await page.getByLabel('I checked the included photos, answers, and item references.').check();
   await page.getByRole('button', { name: 'Preview image splits' }).click();
   await page.getByLabel('Training run name', { exact: true }).fill('image-live');
-  await page.getByLabel('Answer the model must catch').selectOption('Damaged');
+  await expect(page.getByLabel('Answer the model must catch')).toHaveCount(0);
   expect(state.mutations).toEqual([]);
   await consent(page);
   await page.screenshot({ path: '.private/teaching-live-review-mobile.png', fullPage: true });
@@ -210,7 +210,8 @@ for (const enabled of [true, false]) test(`image teaching respects service avail
     return;
   }
   await expect(page).toHaveURL(`/train?run=${jobId}`);
-  expect(created()).toMatchObject({ model: 'imajev-4b-v1', acceptance: { positive_class: 'Damaged', min_positive_recall: .95, max_false_positive_rate: .2 } });
+  expect(created()).toMatchObject({ model: 'd3-mini-4.5b-v1' });
+  expect(created()!.acceptance).toEqual({ min_accuracy: .8, min_brier_improvement: .01 });
   expect(state.assets).toHaveLength(6);
   const rows = Object.values(state.uploads).flatMap(file => file.trim().split('\n').map(line => JSON.parse(line)));
   expect(rows).toHaveLength(6);

@@ -7,7 +7,7 @@ for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,fa
   let needsCredit=insufficient;
   let created: Record<string,unknown>|undefined;
   const calls:string[]=[], complete=new Set<string>(), rows:Record<string,unknown>[]=[], assets:Record<string,{id:string;state:string;expires_at:string}>= {};
-  const job=()=>({id:jobId,name:'inspection',status:'uploading',created_at:'2026-10-08T12:00:00Z',model:{id:'imajev-4b-v1',name:'Imajev 4B',base:'Qwen/Qwen3.5-4B',base_revision:'8'.repeat(40)},image_intake:created?.image_intake});
+  const job=()=>({id:jobId,name:'inspection',status:'uploading',created_at:'2026-10-08T12:00:00Z',model:{id:'d3-mini-4.5b-v1',name:'d3-mini 4.5B',base:'zils-ai/d3-mini-4.5b-v1',base_revision:'8'.repeat(40),inputs:{images:4,video:true}},image_intake:created?.image_intake});
   const grant=(logical:string)=>spaces
     ? {url:`http://127.0.0.1:8996/objects/44444444-4444-4444-8444-444444444444/${logical}?uploadId=fixture&partNumber=1`,method:'PUT',provider:'spaces',expires_at:new Date(Date.now()+600_000).toISOString(),headers:{'Content-Type':'application/octet-stream'}}
     : {url:`http://127.0.0.1:8998/storage/v1/object/upload/sign/${logical}`,method:'PUT',headers:{'Content-Type':'application/octet-stream','x-upsert':'false'}};
@@ -19,14 +19,14 @@ for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,fa
     const headers={'access-control-allow-origin':'*','access-control-allow-headers':'*','access-control-allow-methods':'GET, POST, PUT, DELETE, OPTIONS'};
     if(req.method()==='OPTIONS') return route.fulfill({status:204,headers});
     calls.push(req.method()+' '+path);
-    if(path==='/v1/image-models') return route.fulfill({headers,json:{models:[{name:'image-stock',stock:true,capabilities:{modalities:['image','text']}}],training_enabled:true,training_profile:{model:'imajev-4b-v1',max_train:1024,max_calibration:256,max_test:512,max_source_bytes:10485760,max_pixels:16000000,max_edge:8192}}});
+    if(path==='/v1/image-models') return route.fulfill({headers,json:{models:[{name:'image-stock',stock:true,capabilities:{modalities:['image','text']}}],training_enabled:true,training_profile:{model:'d3-mini-4.5b-v1',capabilities:{modalities:['text','image','video'],question_types:['noul','choice','score'],max_images:4,max_videos:1,max_questions:8,max_options:255,max_input_tokens:4096,unknown_key:null},images_per_example:1,max_train:1024,max_calibration:256,max_test:512,max_source_bytes:10485760,max_pixels:16000000,max_edge:8192}}});
     if(path==='/v1/jobs' && req.method()==='GET') return route.fulfill({headers,json:{jobs:[]}});
     if(path==='/v1/jobs' && req.method()==='POST') {created=req.postDataJSON();return route.fulfill({headers,json:{job:job(),uploads:uploads()}});}
     if(path===`/v1/jobs/${jobId}`) return route.fulfill({headers,json:{job:job()}});
     if(path.endsWith('/resume')) {const id=path.split('/').at(-2)!;return route.fulfill({headers,json:{asset:assets[id],uploaded:true}});}
     if(path.endsWith('/uploads')) return route.fulfill({headers,json:{job:job(),uploads:uploads()}});
     if(path.endsWith('/image-assets') && path.includes('/jobs/')) return route.fulfill({headers,json:{assets:[]}});
-    if(path==='/v1/image-assets') {expect(created?.model).toBe('imajev-4b-v1'); const id=`20000000-0000-4000-8000-${String(Object.keys(assets).length+1).padStart(12,'0')}`;assets[id]={id,state:'uploading',expires_at:'2099-01-01T00:00:00Z'};return route.fulfill({headers,json:{asset:assets[id],upload:grant(`zils-images/${owner}/${id}/source`)}});}
+    if(path==='/v1/image-assets') {expect(created?.model).toBe('d3-mini-4.5b-v1'); const id=`20000000-0000-4000-8000-${String(Object.keys(assets).length+1).padStart(12,'0')}`;assets[id]={id,state:'uploading',expires_at:'2099-01-01T00:00:00Z'};return route.fulfill({headers,json:{asset:assets[id],upload:grant(`zils-images/${owner}/${id}/source`)}});}
     if(path.endsWith('/complete')) {const id=path.split('/').at(-2)!;complete.add(id);return route.fulfill({headers,json:{...assets[id],state:'ready',sha256:'a'.repeat(64),width:8,height:8}});}
     if(req.method()==='PUT') {expect(req.headers()['authorization']).toBeUndefined();expect(req.headers()['cookie']).toBeUndefined();if(path.endsWith('.jsonl')) for(const row of req.postData()!.trim().split('\n').map(s=>JSON.parse(s))) {expect(complete.has(row.image.asset_id)).toBe(true);rows.push(row);}return route.fulfill({headers,json:{}});}
     if(path.endsWith('/submit') && needsCredit) return route.fulfill({status:402,headers,json:{error:'Insufficient credit. Add credit in Billing.'}});
@@ -37,6 +37,7 @@ for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,fa
   await page.getByRole('button',{name:'Images',exact:true}).click();
   await expect(page.getByRole('link',{name:'Import labeled examples',exact:true})).not.toBeVisible();
   await page.getByRole('region',{name:'Image teaching',exact:true}).getByRole('link',{name:'Import labeled photos',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'What will your model learn from?'})).toBeVisible();
   await page.getByRole('button',{name:'Images',exact:true}).click();
   await expect(page.getByLabel('Training photos',{exact:true})).toHaveCount(0);
   await page.getByLabel('Image training decision',{exact:true}).fill('Is the item damaged?');
@@ -55,9 +56,7 @@ for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,fa
   await page.getByLabel('Answer for photo-0.png',{exact:true}).selectOption('Normal');
   await page.getByLabel('I have reviewed the labels and item groups',{exact:true}).check();
   await page.getByRole('button',{name:'Review image splits',exact:true}).click();
-  await page.getByLabel('Positive class',{exact:true}).selectOption('Damaged');
-  await page.getByLabel('Minimum positive recall (%)',{exact:true}).fill('95');
-  await page.getByLabel('Maximum false alarms (%)',{exact:true}).fill('20');
+  await expect(page.getByLabel('Positive class',{exact:true})).toHaveCount(0);
   await page.getByLabel('I have permission to share training images with approved workers',{exact:true}).check();
   await page.getByRole('button',{name:'Start image training',exact:true}).click();
   if(insufficient) {
@@ -69,6 +68,7 @@ for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,fa
     expect(calls.filter(c=>c==='POST /v1/jobs')).toHaveLength(1);
   }
   await expect(page.getByText('Image run submitted for validation.',{exact:true})).toBeVisible();
+  expect(created?.acceptance).toEqual({min_accuracy:.8,min_brier_improvement:.01});
   expect(await page.locator('body').evaluate(el=>el.scrollWidth<=window.innerWidth)).toBe(true);
   await page.screenshot({path:`.private/image-training-${mobile?'mobile':'desktop'}-${spaces?'spaces':'legacy'}.png`,fullPage:true});
   expect(rows).toHaveLength(insufficient?36:18);expect(complete.size).toBe(18);
@@ -80,7 +80,7 @@ test('saved image draft can be abandoned without selecting the original photos',
  const expires=Math.floor(Date.now()/1000)+3600;
  await page.addInitScript(({owner,expires})=>{const user={id:owner,email:'owner@example.com',aud:'authenticated',role:'authenticated',app_metadata:{},user_metadata:{},created_at:'2026-01-01T00:00:00Z'};localStorage.setItem('zils-training-auth',JSON.stringify({user,access_token:`${btoa('{"alg":"HS256"}')}.${btoa(JSON.stringify({sub:owner,exp:expires}))}.fixture`,refresh_token:'fixture',expires_at:expires,expires_in:3600,token_type:'bearer'}));},{owner,expires});
  let cancelled=false;const mutations:string[]=[];
- const job=()=>({id:jobId,name:'saved-inspection',status:cancelled?'failed':'uploading',model:{id:'imajev-4b-v1',name:'Imajev 4B',base:'Qwen/Qwen3.5-4B',base_revision:'8'.repeat(40)},image_intake:{version:'zils-image-intake/v1',seed:'saved',snapshot_sha256:'a'.repeat(64)}});
+ const job=()=>({id:jobId,name:'saved-inspection',status:cancelled?'failed':'uploading',model:{id:'d3-mini-4.5b-v1',name:'d3-mini 4.5B',base:'zils-ai/d3-mini-4.5b-v1',base_revision:'8'.repeat(40),inputs:{images:4,video:true}},image_intake:{version:'zils-image-intake/v1',seed:'saved',snapshot_sha256:'a'.repeat(64)}});
  await page.route('**/*',async route=>{
   const req=route.request(),url=new URL(req.url());
   if(url.origin==='http://127.0.0.1:3107')return route.continue();
@@ -88,7 +88,7 @@ test('saved image draft can be abandoned without selecting the original photos',
   if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});
   if(req.method()!=='GET')mutations.push(url.pathname);
   if(url.pathname==='/v1/jobs')return route.fulfill({headers,json:{jobs:[job()]}});
-  if(url.pathname==='/v1/image-models')return route.fulfill({headers,json:{models:[{name:'image-stock',stock:true,capabilities:{modalities:['image','text']}}],training_enabled:true,training_profile:{model:'imajev-4b-v1',max_train:1024,max_calibration:256,max_test:512,max_source_bytes:10485760,max_pixels:16000000,max_edge:8192}}});
+  if(url.pathname==='/v1/image-models')return route.fulfill({headers,json:{models:[{name:'image-stock',stock:true,capabilities:{modalities:['image','text']}}],training_enabled:true,training_profile:{model:'d3-mini-4.5b-v1',capabilities:{modalities:['text','image','video'],question_types:['noul','choice','score'],max_images:4,max_videos:1,max_questions:8,max_options:255,max_input_tokens:4096,unknown_key:null},images_per_example:1,max_train:1024,max_calibration:256,max_test:512,max_source_bytes:10485760,max_pixels:16000000,max_edge:8192}}});
   if(url.pathname===`/v1/jobs/${jobId}/cancel`){cancelled=true;return route.fulfill({headers,json:{job:job()}});}
   return route.fulfill({status:404,headers,json:{}});
  });
