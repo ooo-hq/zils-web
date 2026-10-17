@@ -28,7 +28,7 @@ const responseSchema = z.object({
 export type DecisionRequest = z.infer<typeof requestSchema>;
 export type DecisionResponse = z.infer<typeof responseSchema>;
 export type Answer = DecisionResponse['answers'][string];
-export type ModelOption = { id: string; label: string };
+export type ModelOption = { id: string; label: string; own?: boolean };
 
 export function parseRequest(value: unknown): DecisionRequest {
   const result = requestSchema.safeParse(value);

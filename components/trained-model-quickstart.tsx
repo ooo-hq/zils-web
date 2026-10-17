@@ -7,7 +7,7 @@ import { HighlightedCode, type CodeLanguage } from '@/components/highlighted-cod
 import training from '@/app/(home)/train/train.module.css';
 import styles from './trained-model-quickstart.module.css';
 
-function CopyField({ label, value, language }: { label: string; value: string; language?: CodeLanguage }) {
+export function CopyField({ label, value, language }: { label: string; value: string; language?: CodeLanguage }) {
   const id = useId();
   const field = useRef<HTMLElement>(null);
   const [copied, setCopied] = useState(false);

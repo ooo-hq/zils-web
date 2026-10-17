@@ -75,3 +75,9 @@ if (!response.ok) throw new Error("Zils returned " + response.status + ": " + aw
 console.log(JSON.stringify(await response.json(), null, 2));`,
   };
 }
+
+/** The playground request as a curl command against the public API; the key stays in an environment variable. */
+export function curlCommand(apiUrl: string, request: unknown) {
+  const body = JSON.stringify(request, null, 2).replace(/'/g, `'\\''`);
+  return `curl ${serviceUrl(apiUrl)}/v1/systemone \\\n  -H "Authorization: Bearer $ZILS_API_KEY" \\\n  -H 'Content-Type: application/json' \\\n  --data '${body}'`;
+}
