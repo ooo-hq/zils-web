@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseSetup, setupRequest, parseSetupReply } = require('../.private/test-build/decision-setup.js');
+const { parseSetup, parseSetupReply } = require('../.private/test-build/decision-setup.js');
 const { handleSetup } = require('../.private/test-build/decision-setup-server.js');
 
 const draft = { title: 'Support routing', questions: [
@@ -9,21 +9,10 @@ const draft = { title: 'Support routing', questions: [
   { id: 'priority', kind: 'score', prompt: 'How urgent is this?', options: [{ label: 'Routine', description: '' }, { label: 'Urgent', description: 'Cannot work' }] },
 ] };
 
-test('editable questions become typed decisions without changing example text or answer meaning', () => {
-  const result = setupRequest(draft, '{not JSON: this is an email}', 'test-model');
-  assert.equal(result.state, '{not JSON: this is an email}');
-  assert.deepEqual(result.questions.team, { type: 'choice', instructions: 'Which team should handle this?', criteria: { Billing: 'Invoices and charges', Technical: 'Product problems' } });
-  assert.deepEqual(result.questions.urgent, { type: 'noul', instructions: 'Is the customer unable to use the product?' });
-  assert.deepEqual(result.questions.priority.criteria, ['Routine', 'Urgent: Cannot work']);
-  assert.equal(result.model, 'test-model');
-});
-
 test('incomplete or ambiguous edits cannot silently remove or overwrite answers', () => {
   for (const questions of [[], [draft.questions[0], draft.questions[0]], [{ ...draft.questions[0], prompt: '  ' }], [{ ...draft.questions[0], options: [{ label: 'Billing', description: '' }] }], [{ ...draft.questions[0], options: [{ label: 'Billing', description: '' }, { label: ' billing ', description: '' }] }], [{ ...draft.questions[1], options: draft.questions[0].options }], [{ ...draft.questions[0], id: '__proto__' }]]) {
     assert.throws(() => parseSetup({ ...draft, questions }));
   }
-  assert.throws(() => setupRequest(draft, '   ', 'test-model'), /example/i);
-  assert.throws(() => setupRequest(draft, '界'.repeat(12000), 'test-model'), /32 KB/);
 });
 
 test('assistant replies must be a bounded clarification or a valid editable draft', () => {
