@@ -6,6 +6,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { SignInPrompt } from '@/components/signed-in-only';
 import { CopyField } from '@/components/trained-model-quickstart';
 import { useWorkspaceModels } from '@/components/workspace-models';
+import { WorkspaceHero } from '@/components/workspace-hero';
 import { WorkspaceLoading } from '@/components/workspace-loading';
 import { billingApi, formatCredit, type BillingSummary } from '@/lib/billing';
 import { curlCommand } from '@/lib/model-quickstart';
@@ -35,7 +36,9 @@ export function WorkspaceHome({ config, sharedModel }: { config: TrainingConfig;
   if (session === undefined) return <WorkspaceLoading label="Opening your workspace" />;
   if (!session) return <SignInPrompt title="Sign in to your workspace">Train models on your own examples, then call them from your app.</SignInPrompt>;
   const usage = summary?.usage;
-  return <div className={s.grid}>
+  return <>
+  <WorkspaceHero email={session.user.email} />
+  <div className={s.grid}>
     <section className={s.quickstart} aria-labelledby="quickstart-title">
       <h2 id="quickstart-title">Quickstart</h2>
       <ol className={s.steps}>
@@ -65,9 +68,10 @@ export function WorkspaceHome({ config, sharedModel }: { config: TrainingConfig;
         : !models.length ? <p className={s.muted}>No models yet. <Link href="/train/teach">Train your first model</Link> on examples your team has reviewed.</p>
         : <ul>{models.slice(0, 3).map(job => <li key={job.id}>
           <Link href={`/models/${job.id}`}><strong>{job.name}</strong><code>{job.workflow?.model_alias || job.workflow?.model_name || job.workflow?.model_id}</code></Link>
-          <span>Ready{job.created_at && ` · trained ${day(job.created_at)}`}</span>
+          <span>Ready{job.created_at && `, trained ${day(job.created_at)}`}</span>
         </li>)}</ul>}
     </section>
     </div>
-  </div>;
+  </div>
+  </>;
 }
