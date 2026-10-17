@@ -77,7 +77,7 @@ export function TrainingDashboard({ config, runId, bulkImport = false, upgradeOf
     {session && client ? <div id="training-workspace">
       <SignedInDashboard key={`${session.user.id}:${runId || (upgradeOf ? `upgrade:${upgradeOf}` : bulkImport ? "bulk" : "index")}`} runId={runId} bulkImport={bulkImport} upgradeOf={upgradeOf} owner={session.user.id} client={client} config={config} onExpired={signOut} />
     </div> : <>
-      <div className={styles.workspaceHeading}><h1>Training</h1><p>Teach Zils a decision using examples your team has reviewed.</p></div>
+      <div className={styles.workspaceHeading}><div><h1>Training</h1><p>Teach Zils a decision using examples your team has reviewed.</p></div></div>
       <section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}>
         <h2>Sign in to Zils</h2><p>Workspace access is by invitation. Sign in with the email address that was invited.</p>
         <p>New to Zils? <Link href="/early-access" className="underline underline-offset-4">Join the early-access list</Link>. Joining the list does not create an account.</p>
@@ -323,8 +323,6 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     <div className={styles.workspaceHeading}>
       <div><h1>{runId ? 'Training run' : 'Training'}</h1><p>{runId ? 'The progress, evaluation, and files for this run.' : 'Your examples. Your models. Your way of deciding.'}</p></div>
       <div className={styles.workspaceActions}>
-        <Link href="/billing#usage" className={styles.secondary}>Usage & billing</Link>
-        <ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={onExpired} />
         {!runId && <Link className={styles.button} href="/train/teach"><Plus size={16} aria-hidden="true" />Train a model</Link>}
       </div>
     </div>

@@ -46,13 +46,14 @@ test('account menu follows navigation and signing out clears both header and wor
   await expect(page.getByText('client@example.com', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Your workspace', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Train a model', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Account', exact: true }).click();
+  const sidebar = page.getByRole('complementary', { name: 'Workspace' });
+  await expect(sidebar.getByText('client@example.com', { exact: true })).toBeVisible();
   await page.screenshot({ path: '.private/account-desktop.png' });
-  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
-  await expect(page.locator('header').getByRole('link', { name: 'Early access', exact: true })).toBeVisible();
+  await sidebar.getByRole('button', { name: 'Sign out', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Sign in to Zils', exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Train a model', exact: true })).toHaveCount(0);
-  await page.reload();
+  await expect(sidebar.getByText('Not signed in', { exact: true })).toBeVisible();
+  await page.goto('/model');
   await expect(page.locator('header').getByRole('link', { name: 'Early access', exact: true })).toBeVisible();
   expect(requests.filter(request => request === 'POST /auth/v1/logout')).toHaveLength(1);
   expect(errors).toEqual([]);
@@ -67,22 +68,13 @@ test('server sign-out failure reports local sign-out honestly', async ({ page })
   await expect(page.locator('header').getByRole('link', { name: 'Early access', exact: true })).toBeVisible();
 });
 
-test('account controls stay at the top on mobile and support keyboard dismissal', async ({ page }) => {
+test('workspace account controls stay at the top on mobile', async ({ page }) => {
   await account(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/train');
-  const trigger = page.getByRole('button', { name: 'Account', exact: true });
-  await expect(trigger).toBeVisible();
-  expect((await trigger.boundingBox())!.y).toBeLessThan(100);
-  await trigger.focus();
-  await page.keyboard.press('Enter');
-  await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible();
+  const signOut = page.getByRole('complementary', { name: 'Workspace' }).getByRole('button', { name: 'Sign out', exact: true });
+  await expect(signOut).toBeVisible();
+  expect((await signOut.boundingBox())!.y).toBeLessThan(100);
   await page.screenshot({ path: '.private/account-mobile.png' });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  await page.keyboard.press('Escape');
-  await expect(trigger).toBeFocused();
-  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
-  await trigger.click();
-  await page.getByRole('heading', { name: 'Training', exact: true }).click({ position: { x: 5, y: 5 } });
-  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
 });

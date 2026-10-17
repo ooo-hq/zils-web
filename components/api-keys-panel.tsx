@@ -1,8 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { Check, Copy, KeyRound, Plus } from 'lucide-react';
+import Link from 'next/link';
+import { useAuthSession } from '@/components/auth-session';
+import { WorkspaceLoading } from '@/components/workspace-loading';
 import { apiKeysApi, ApiKeyError, type ApiKey, type CreatedApiKey } from '@/lib/api-keys';
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import training from '@/app/(home)/train/train.module.css';
@@ -26,7 +29,7 @@ export function ApiKeysPanel(props: Props) {
   </Sheet>;
 }
 
-function KeyControls({ client, apiUrl, onExpired, onPending }: Props & { onPending: (value: boolean) => void }) {
+export function KeyControls({ client, apiUrl, onExpired, onPending = () => {}, page = false }: Props & { onPending?: (value: boolean) => void; page?: boolean }) {
   const [keys, setKeys] = useState<ApiKey[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
@@ -107,7 +110,7 @@ function KeyControls({ client, apiUrl, onExpired, onPending }: Props & { onPendi
   const revoked = keys?.filter(key => key.revoked_at) || [];
 
   if (!api) return <div className={training.sheetBody}><p className={training.error} role="alert">API keys are not configured in this environment.</p></div>;
-  return <div className={`${training.sheetBody} ${styles.body}`}>
+  return <div className={page ? styles.body : `${training.sheetBody} ${styles.body}`}>
     <p className={styles.intro}>A key lets your app make predictions with models available to your account. Choose the model in each request.</p>
     {error && <p className={training.error} role="alert">{error}</p>}
     {notice && <p className={training.notice} role="status">{notice}</p>}
@@ -134,12 +137,27 @@ function KeyControls({ client, apiUrl, onExpired, onPending }: Props & { onPendi
     </form>}
     <section className={styles.keySection} aria-labelledby="active-keys-heading" aria-busy={loading}>
       <div className={styles.sectionHeading}><h3 id="active-keys-heading">Active keys{keys && <span>{active.length}</span>}</h3><button className={training.textButton} disabled={loading || Boolean(busy)} onClick={() => { setError(''); setLoading(true); if (life.current) void load(life.current.signal); }}>{loading ? 'Refreshing…' : 'Refresh'}</button></div>
-      {keys === null ? <p className={styles.empty} role="status">{loading ? 'Loading your keys…' : 'Your keys could not be loaded. Refresh to try again.'}</p> : active.length === 0 ? <div className={styles.empty}><KeyRound size={22} aria-hidden="true" /><p>No active keys yet.</p><span>Create one above to connect your app.</span></div> : <ul className={styles.keys}>{active.map(key => <li key={key.id}>
-        <div className={styles.keyRow}><div><strong>{key.name}</strong><code>{key.prefix}…</code><span>Created {date(key.created_at)}</span></div><button className={training.textButton} aria-label={`Revoke ${key.name}`} disabled={Boolean(busy) || loading || Boolean(secret)} onClick={() => setConfirmId(key.id)}>Revoke</button></div>
-        {confirmId === key.id && <div className={styles.confirm} role="group" aria-label={`Confirm revocation of ${key.name}`}><p>Revoke <strong>{key.name}</strong>?</p><p>Requests using this key will stop working. This can’t be undone.</p><div><button className={training.secondary} disabled={Boolean(busy)} onClick={() => setConfirmId('')}>Keep key</button><button className={styles.revoke} disabled={Boolean(busy) || loading} onClick={() => void mutate('revoke', key.id)}>{busy === key.id ? 'Revoking…' : 'Revoke key'}</button></div></div>}
-      </li>)}</ul>}
+      {keys === null ? <p className={styles.empty} role="status">{loading ? 'Loading your keys…' : 'Your keys could not be loaded. Refresh to try again.'}</p> : active.length === 0 ? <div className={styles.empty}><KeyRound size={22} aria-hidden="true" /><p>No active keys yet.</p><span>Create one above to connect your app.</span></div> : <KeyTable label="Active keys">{active.map(key => <Fragment key={key.id}>
+        <tr><th scope="row">{key.name}</th><td><span className={styles.active}>Active</span></td><td><code>{key.prefix}…</code></td><td>{date(key.created_at)}</td><td><button className={training.textButton} aria-label={`Revoke ${key.name}`} disabled={Boolean(busy) || loading || Boolean(secret)} onClick={() => setConfirmId(key.id)}>Revoke</button></td></tr>
+        {confirmId === key.id && <tr><td colSpan={5}><div className={styles.confirm} role="group" aria-label={`Confirm revocation of ${key.name}`}><p>Revoke <strong>{key.name}</strong>?</p><p>Requests using this key will stop working. This can’t be undone.</p><div><button className={training.secondary} disabled={Boolean(busy)} onClick={() => setConfirmId('')}>Keep key</button><button className={styles.revoke} disabled={Boolean(busy) || loading} onClick={() => void mutate('revoke', key.id)}>{busy === key.id ? 'Revoking…' : 'Revoke key'}</button></div></div></td></tr>}
+      </Fragment>)}</KeyTable>}
     </section>
-    {revoked.length > 0 && <details className={styles.revoked}><summary>Revoked keys <span>{revoked.length}</span></summary><ul className={styles.keys}>{revoked.map(key => <li key={key.id}><div className={styles.keyRow}><div><strong>{key.name}</strong><code>{key.prefix}…</code><span>Revoked {date(key.revoked_at!)}</span></div><span className={styles.inactive}>Inactive</span></div></li>)}</ul></details>}
+    {revoked.length > 0 && <details className={styles.revoked}><summary>Show {revoked.length} revoked {revoked.length === 1 ? 'key' : 'keys'}</summary><KeyTable label="Revoked keys" revoked>{revoked.map(key => <tr key={key.id}><th scope="row">{key.name}</th><td><span className={styles.inactive}>Revoked</span></td><td><code>{key.prefix}…</code></td><td>{date(key.revoked_at!)}</td><td /></tr>)}</KeyTable></details>}
     <footer className={styles.connection}><h3>Connect your app</h3><p>Use your key on your server to call the Zils API.</p><span>API base URL</span><code>{apiUrl}</code><a href="https://github.com/ooo-hq/zils/blob/main/docs/decision-api.md" target="_blank" rel="noreferrer">View API documentation <span aria-hidden="true">↗</span></a></footer>
   </div>;
+}
+
+function KeyTable({ label, revoked = false, children }: { label: string; revoked?: boolean; children: ReactNode }) {
+  return <div className={styles.tableWrap} role="region" aria-label={label} tabIndex={0}><table className={styles.table}>
+    <thead><tr><th scope="col">Name</th><th scope="col">Status</th><th scope="col">API key</th><th scope="col">{revoked ? 'Revoked' : 'Created'}</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead>
+    <tbody>{children}</tbody>
+  </table></div>;
+}
+
+/** The /keys page: the same controls as the sheet, given the full page. */
+export function ApiKeysPage({ auth, apiUrl }: { auth: { url: string; key: string }; apiUrl: string | null }) {
+  const { client, session } = useAuthSession(auth);
+  if (session === undefined) return <WorkspaceLoading label="Loading your keys" />;
+  if (!session || !client) return <section className={training.panel}><h2>Sign in to manage API keys</h2><p>Keys connect your app to models available to your account.</p><Link href="/train" className={training.button}>Sign in to Zils</Link></section>;
+  return <KeyControls page key={session.user.id} client={client} apiUrl={apiUrl} onExpired={async () => { await client.auth.signOut({ scope: 'local' }); }} />;
 }

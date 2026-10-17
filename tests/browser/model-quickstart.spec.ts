@@ -163,3 +163,22 @@ test('compact model names and highlighted examples preserve the exact copied cod
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await example.screenshot({ path: '.private/compact-examples-dark-mobile.png' });
 });
+
+test('the API keys page lists active keys in a table and hides revoked ones', async ({ page }) => {
+  await workspace(page, 'ready', false, true);
+  const keys = [
+    { id: '40000000-0000-4000-8000-000000000001', name: 'Flight app — production', prefix: 'zils_sk_ab12cd34', created_at: '2026-10-01T00:00:00Z', revoked_at: null },
+    { id: '40000000-0000-4000-8000-000000000002', name: 'Old test key', prefix: 'zils_sk_ef56ab78', created_at: '2026-09-01T00:00:00Z', revoked_at: '2026-09-20T00:00:00Z' },
+  ];
+  await page.route('http://127.0.0.1:8999/v1/keys', route => route.fulfill({ json: { keys }, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' } }));
+  await page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'API keys', exact: true }).click();
+  await expect(page).toHaveURL(/\/keys$/);
+  const active = page.getByRole('region', { name: 'Active keys' });
+  await expect(active.getByRole('rowheader', { name: 'Flight app — production' })).toBeVisible();
+  await expect(active.getByRole('row')).toHaveCount(2);
+  await expect(page.getByText('Show 1 revoked key', { exact: true })).toBeVisible();
+  await page.screenshot({ path: '.private/api-keys-page-desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: '.private/api-keys-page-mobile.png', fullPage: true });
+});
