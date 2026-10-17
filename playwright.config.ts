@@ -20,6 +20,8 @@ export default defineConfig({
       ZILS_SETUP_MODEL: 'browser-test-model',
       ZILS_DECISION_API_URL: 'http://127.0.0.1:8997/v1/systemone',
       ZILS_DECISION_API_KEY: 'browser-test-only',
+      ZILS_DECISION_MODEL: 'browser-test-release',
+      ZILS_DECISION_LABEL: 'Zils shared',
       NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:8998',
       NEXT_PUBLIC_ZILS_SPACES_URL: 'http://127.0.0.1:8996',
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'publishable-browser-test-key',
