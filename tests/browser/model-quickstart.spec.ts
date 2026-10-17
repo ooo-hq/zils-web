@@ -201,7 +201,11 @@ test('home shows the quickstart, latest models and usage; old model links redire
   const latest = page.getByRole('region', { name: 'Latest models' });
   await expect(latest.getByRole('listitem')).toHaveCount(2);
   await expect(page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
+  await page.waitForTimeout(1200);
   await page.screenshot({ path: '.private/workspace-home-desktop.png', fullPage: true });
+  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
+  await page.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
+  await page.screenshot({ path: '.private/workspace-home-dark.png' });
   await page.setViewportSize({ width: 375, height: 812 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: '.private/workspace-home-mobile.png', fullPage: true });
