@@ -1,4 +1,5 @@
 import { parseRequest } from '../../../lib/playground';
+import { signedIn, signInRequired } from '../../../lib/session-server';
 import { infer, InferenceError, MAX_BODY_BYTES, playgroundConfig, readLimited } from '../../../lib/playground-server';
 
 export const runtime = 'nodejs';
@@ -10,6 +11,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const headers = { 'Cache-Control': 'no-store' };
+  if (!(await signedIn(request))) return signInRequired(headers);
   try {
     const text = await readLimited(request, MAX_BODY_BYTES);
     let input;

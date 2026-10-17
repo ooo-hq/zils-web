@@ -1,5 +1,6 @@
 'use client';
 
+import { sessionHeaders } from '@/components/auth-session';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, ImageIcon, MessageSquareText, Sparkles } from 'lucide-react';
 import { parseSetupReply, type SetupMessage } from '@/lib/decision-setup';
@@ -42,7 +43,7 @@ export function TrainingDecisionSetup({ kind, maxAnswers = kind === 'images' ? 1
     const messages: SetupMessage[] = answer ? [...history.current, { role: 'user', content: answer }] : [{ role: 'user', content: `Help me set up ${kind === 'images' ? 'image' : 'text'} training. Create exactly one choice question with 2–${maxAnswers} short, self-contained answer labels. Ask a clarification if needed. Do not invent training examples or correct answers. My goal: ${question}${answers.trim() ? `\nPossible answers: ${answers.slice(0, 3000)}` : ''}` }];
     setBusy(true); setError(''); setNote('');
     try {
-      const response = await fetch('/api/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: messages.length > 11 ? [messages[0], ...messages.slice(-10)] : messages }), signal: controller.signal });
+      const response = await fetch('/api/setup', { method: 'POST', headers: { 'Content-Type': 'application/json', ...await sessionHeaders() }, body: JSON.stringify({ messages: messages.length > 11 ? [messages[0], ...messages.slice(-10)] : messages }), signal: controller.signal });
       const data = await response.json();
       if (!response.ok) throw new Error(typeof data.error === 'string' ? data.error : 'Setup help is unavailable. You can write your decision and answers below.');
       let result;

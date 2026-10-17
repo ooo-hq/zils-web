@@ -7,7 +7,7 @@ import s from '@/components/light.module.css';
 const LINK_GROUPS = [
   { label: 'Build', links: [
     { href: docsUrl, label: 'Docs' },
-    { href: '/playground', label: 'Playground' },
+    { href: '/examples', label: 'Examples' },
     { href: '/pricing', label: 'Pricing' },
     { href: '/early-access', label: 'Early access' },
   ] },
