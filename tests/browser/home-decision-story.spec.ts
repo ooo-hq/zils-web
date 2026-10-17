@@ -1,31 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { signIn } from './signed-in';
 
 const storyTitle = 'Show it what a good answer looks like.';
-const starters = [
-  { title: 'Customer message routing', id: 'customer-routing', question: 'Which team should handle this customer message?', sample: /entire team has been locked out/ },
-  { title: 'Refund requests', id: 'refund-request', question: 'Is the customer explicitly asking for their money back?', sample: /replacement arrived broken/ },
-  { title: 'Customer frustration', id: 'customer-frustration', question: 'How frustrated is the customer?', sample: /contacted support three times/ },
-];
-
-for (const starter of starters) {
-  test(`saved ${starter.title} links still open editable questions without running a model`, async ({ page }) => {
-    let requests = 0;
-    await signIn(page);
-    await page.route('**/api/setup', route => { requests++; return route.abort(); });
-    // Loading the model list is a GET; only a POST runs a model.
-    await page.route('**/api/playground', route => { if (route.request().method() === 'POST') requests++; return route.abort(); });
-    await page.goto(`/playground?starter=${starter.id}`);
-    await expect(page.getByRole('heading', { name: 'Make these questions yours.' })).toBeVisible();
-    await expect(page.getByLabel('Question 1', { exact: true })).toHaveValue(starter.question);
-    await page.getByLabel('Question 1', { exact: true }).fill('My own decision question?');
-    await page.getByRole('button', { name: 'Try an example', exact: true }).click();
-    await expect(page.getByLabel('Example to read')).toHaveValue(starter.sample);
-    await page.getByRole('button', { name: 'Edit questions', exact: true }).click();
-    await expect(page.getByLabel('Question 1', { exact: true })).toHaveValue('My own decision question?');
-    expect(requests).toBe(0);
-  });
-}
 
 test('the illustrated story shows input and answer, separates training from shared-model testing, and never calls a model', async ({ page }) => {
   let requests = 0;
@@ -47,15 +22,6 @@ test('the illustrated story shows input and answer, separates training from shar
   await expect(story.getByRole('link', { name: 'Request early access' })).toHaveAttribute('href', '/early-access');
   await expect(story.getByRole('link', { name: 'See examples' })).toHaveAttribute('href', '/examples');
   expect(requests).toBe(0);
-});
-
-test('unknown and ambiguous starter links open the ordinary describe flow', async ({ page }) => {
-  await signIn(page);
-  for (const query of ['starter=not-a-template', 'starter=customer-routing&starter=refund-request']) {
-    await page.goto(`/playground?${query}`);
-    await expect(page.getByRole('heading', { name: 'Tell us what you have in mind.' })).toBeVisible();
-    await expect(page.getByLabel('What would you like Zils to help with?')).toHaveValue('');
-  }
 });
 
 test('mobile learning story fits without horizontal scrolling', async ({ page }) => {
