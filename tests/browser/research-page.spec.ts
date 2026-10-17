@@ -93,7 +93,7 @@ test('detailed JEV comparison accounts for all paired support decisions', async 
 test('the miners page labels the testnet, survives an offline API and keeps the base-model timeline honest', async ({ page }) => {
   await page.goto('/miners');
   await expect(page.getByRole('heading', { name: 'Miners', level: 1 })).toBeVisible();
-  await expect(page.getByText(/Bittensor testnet, subnet 579\. All miners are currently run by Zils/)).toBeVisible();
+  await expect(page.getByText(/Subnet 579 on the Bittensor testnet\. All miners are currently run by Zils/)).toBeVisible();
   await expect(page.getByText(/Live miner data is unavailable right now/)).toBeVisible();
   await expect(page.getByText(/Live status is unavailable right now/)).toBeVisible();
   await expect(page.getByRole('heading', { level: 4 })).toHaveCount(6);

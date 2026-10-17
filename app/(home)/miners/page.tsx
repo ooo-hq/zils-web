@@ -83,7 +83,7 @@ export default async function MinersPage() {
         <div>
           <h1>Miners</h1>
           <p>Every miner on the Zils subnet: whether it is online, which base models it can train, and how its candidates did on customer training jobs.</p>
-          <p className={s.testnet}>Bittensor testnet, subnet 579. All miners are currently run by Zils; outside miners can join once the subnet moves to mainnet.</p>
+          <p className={s.testnet}><span className={s.badge}>Testnet</span>Subnet 579 on the Bittensor testnet. All miners are currently run by Zils; outside miners can join once the subnet moves to mainnet.</p>
         </div>
         {network && <dl className={s.summary}>
           <div><dt>Miners</dt><dd>{network.summary.miners}</dd></div>

@@ -64,7 +64,8 @@
   .note { margin-left:24px; }
 }
 
-.hero .testnet { display:inline-block; margin-top:16px; padding:6px 12px; border-radius:999px; background:color-mix(in srgb,var(--zils-accent) 10%,transparent); color:var(--zils-accent); font-size:13px; }
+.hero .testnet { max-width:56ch; margin-top:16px; font-size:13px; line-height:1.6; }
+.badge { display:inline-block; margin-right:8px; padding:1px 8px; border-radius:999px; background:color-mix(in srgb,var(--zils-accent) 14%,transparent); color:var(--zils-accent); font-size:11px; font-weight:500; vertical-align:1px; }
 .summary { margin:0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
 .summary > div { padding:16px; border:1px solid var(--zils-edge); border-radius:10px; background:var(--zils-surface); }
 .summary dt { font-size:12px; color:var(--zils-muted); }
