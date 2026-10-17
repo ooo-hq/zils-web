@@ -58,7 +58,7 @@ export function ConsoleNav({ auth, billingUrl }: { auth?: { url: string; key: st
       <div className={styles.account}>
         {session ? <>
           <span className={styles.avatar} aria-hidden="true">{email[0].toUpperCase()}</span>
-          <span className={styles.email} title={email}>{email}</span>
+          <span className={styles.who} title={email}><strong>{email.split('@')[0]}</strong><span className={styles.email}>{email}</span></span>
           <button type="button" className={styles.iconButton} onClick={signOut} disabled={busy} aria-label="Sign out" title="Sign out"><LogOut size={15} aria-hidden="true" /></button>
         </> : <span className={styles.email}>Not signed in</span>}
         <ThemeToggle />

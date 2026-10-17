@@ -13,8 +13,7 @@ export const metadata: Metadata = {
 export default function KeysPage() {
   const config = trainingConfig();
   return <ConsoleShell className={styles.page}>
-    <div className={styles.workspaceHeading}><div><h1>API keys</h1><p>Connect your app to Zils.</p></div></div>
     {config ? <ApiKeysPage auth={{ url: config.url, key: config.key }} apiUrl={config.decisionApiUrl} />
-      : <section className={styles.panel}><h2>API keys are not configured here yet.</h2><p>This environment is not connected to the key service.</p></section>}
+      : <><div className={styles.workspaceHeading}><h1>API keys</h1></div><section className={styles.panel}><h2>API keys are not configured here yet.</h2><p>This environment is not connected to the key service.</p></section></>}
   </ConsoleShell>;
 }
