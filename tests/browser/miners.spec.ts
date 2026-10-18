@@ -3,6 +3,8 @@ import { createServer, type Server } from 'node:http';
 import { readFileSync, rmSync } from 'node:fs';
 
 // networkMiners() runs on the Next server, so page.route cannot see it. A real listener stands in for the training API.
+// The port must match NEXT_PUBLIC_ZILS_TRAINING_API_URL in playwright.config.ts.
+const PORT = Number(process.env.ZILS_MINERS_TEST_PORT ?? 8999);
 let mode: 'ok' | 'fail' = 'ok';
 let server: Server;
 const stats = (assigned: number, selected: number, median_skill: number | null) => ({ assigned, submitted: assigned, evaluated: assigned, selected, median_skill });
@@ -27,10 +29,10 @@ test.beforeAll(async () => {
     res.setHeader('content-type', 'application/json');
     res.end(JSON.stringify(FIXTURE));
   });
-  await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(8999, '127.0.0.1', resolve); });
+  await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(PORT, '127.0.0.1', resolve); });
 });
 // networkMiners() caches for 60 s on disk; clear it so each test sees the mode it set.
-test.beforeEach(() => { rmSync('.next/dev/cache/fetch-cache', { recursive: true, force: true }); });
+test.beforeEach(() => { for (const dir of ['.next/dev/cache/fetch-cache', '.next/cache/fetch-cache']) rmSync(dir, { recursive: true, force: true }); });
 test.afterAll(() => new Promise<void>(resolve => { server.close(() => resolve()); server.closeAllConnections(); }));
 
 const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
@@ -64,7 +66,7 @@ test('the leaderboard sorts by Selected, re-sorts from the keyboard and dims off
   await expect(page.getByRole('columnheader', { name: 'Selected' })).toHaveAttribute('aria-sort', 'descending');
   const dim = page.locator('[role=row][data-dim]');
   await expect(dim).toHaveCount(2);
-  expect(await dim.first().evaluate(e => getComputedStyle(e).opacity)).toBe('0.45');
+  expect(await dim.first().locator('[data-status]').evaluate(e => getComputedStyle(e, '::before').opacity)).toBe('0.45');
   await expect(page.getByText('No candidates yet')).toBeVisible();
   await expect(page.getByRole('cell', { name: 'Never seen' })).toBeVisible();
   const skill = page.getByRole('button', { name: 'Median skill' });
@@ -81,11 +83,24 @@ test('the rehearsal row holds every sentence of the old /bittensor page', async 
   await page.goto('/miners');
   await page.getByText('Testnet rehearsal · 25 Sept 2026').click();
   const text = norm(await page.locator('main').innerText());
+  expect(text).toContain('How miners train decision models, validators evaluate them, and weights reach the chain.');
+  await expect(page.getByRole('link', { name: 'View the recorded round' })).toHaveAttribute('href', '#testnet');
+  await expect(page.getByRole('link', { name: 'Model research' })).toHaveAttribute('href', '/model');
   const missing = baseline.bittensor.text.split('. ').map(norm).filter(Boolean).filter(sentence => !text.includes(sentence));
   expect(missing).toEqual([]);
 });
 
+test('the timeline entries survive in the collapsed row', async ({ page }) => {
+  mode = 'ok';
+  await page.goto('/miners');
+  await page.getByText('What we have tried', { exact: true }).first().click();
+  await expect(page.getByRole('heading', { level: 4 })).toHaveCount(6);
+  await expect(page.getByText('A tie, so no winner', { exact: true })).toBeVisible();
+  await expect(page.getByText(/recorded as an override of the promotion rule, not a win under it/)).toBeVisible();
+});
+
 test('status wording is the approved copy', async ({ page }) => {
+  mode = 'ok';
   await page.goto('/miners');
   await page.getByText('How to read the leaderboard').click();
   for (const phrase of ['checked in within the last minute', 'registered but never checked in', 'gets no new jobs']) await expect(page.getByText(phrase)).toBeVisible();
@@ -106,3 +121,24 @@ test.describe('phone', () => {
     expect(await top('text=/^of \\d+ jobs$/')).toBeLessThan(await top('[data-status]')); // selected shares the first line
   });
 });
+
+for (const theme of ['dark', 'light']) {
+  test(`dimmed rows keep AA text contrast (${theme})`, async ({ page }) => {
+    mode = 'ok';
+    await page.addInitScript(t => localStorage.setItem('zils-theme', t), theme);
+    await page.goto('/miners');
+    const results = await page.locator('[role=row][data-dim]').first().evaluate(row => {
+      const parse = (c: string) => (c.match(/[\d.]+/g) ?? []).map(Number);
+      const lum = ([r, g, b]: number[]) => { const f = (v: number) => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }; return .2126 * f(r) + .7152 * f(g) + .0722 * f(b); };
+      const bg = parse(getComputedStyle(document.querySelector('.zs')!).backgroundColor).slice(0, 3);
+      return [...row.querySelectorAll('b, span, [role=cell]')].filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent!.trim())).map(e => {
+        const [r, g, b, a = 1] = parse(getComputedStyle(e).color);
+        const fg = [r, g, b].map((v, i) => v * a + bg[i] * (1 - a));
+        const [hi, lo] = [lum(fg), lum(bg)].sort((x, y) => y - x);
+        return { text: e.textContent!.trim(), ratio: (hi + .05) / (lo + .05) };
+      });
+    });
+    expect(results.length).toBeGreaterThan(3);
+    for (const r of results) expect(r.ratio, r.text).toBeGreaterThanOrEqual(4.5);
+  });
+}

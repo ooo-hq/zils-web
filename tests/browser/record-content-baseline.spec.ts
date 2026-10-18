@@ -22,6 +22,8 @@ test('record content baseline', async ({ page }) => {
   const privacy = await policy('/privacy');
   const terms = await policy('/terms');
   await page.goto('/bittensor');
+  // /bittensor redirects to /miners now; re-recording must capture the old page, not the new one.
+  if (new URL(page.url()).pathname !== '/bittensor') throw new Error(`/bittensor redirected to ${page.url()}; check out a commit before the redirect to re-record`);
   const text = await page.locator('main').innerText();
   const clean = (p: { h2: string[]; paragraphs: number }) => ({ h2: p.h2.map(norm), paragraphs: p.paragraphs });
   const data = {

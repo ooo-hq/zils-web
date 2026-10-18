@@ -44,6 +44,12 @@ function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string
 export function Rehearsal() {
   return (
     <div className={s.rh}>
+      <header className={s.rhHero}>
+        <p className={s.rhEyebrow}><span aria-hidden="true">✳</span> Bittensor · Recorded testnet research</p>
+        <h3 className={s.rhHeroTitle}>Bittensor mining.</h3>
+        <p className={s.rhBody}>How miners train decision models, validators evaluate them, and weights reach the chain. One testnet rehearsal, from 25 September 2026, is recorded here with its evidence and limitations, followed by the base tier, where miners compete to replace the base model itself.</p>
+        <div className={s.rhLinks}><a href="#testnet" className={s.rhLink}>View the recorded round</a><Link href="/model" className={s.rhInline}>Model research</Link></div>
+      </header>
       <nav aria-label="On this page" className={s.rhNav}>
         {SECTIONS.map(section => <a key={section.id} href={`#${section.id}`}>{section.title}</a>)}
       </nav>
