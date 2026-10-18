@@ -15,3 +15,13 @@
 .link:focus-visible, .signin:focus-visible, .theme:focus-visible, .logo:focus-visible { outline: 2px solid var(--zs-fg); outline-offset: 2px; }
 @media (max-width: 960px) { .nav { display: none; } }
 @media (max-width: 420px) { .hdr { padding: 0 12px; gap: 8px; } .right { gap: 8px; } .logo { font-size: 22px; } }
+.menu { display: none; }
+.menuBtn { height: 34px; padding: 0 10px; border: 1px solid rgba(var(--zs-fg-rgb), .2); background: none; color: var(--zs-fg); font: inherit; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
+.menuBtn:hover { border-color: var(--zs-peach); }
+.menuBtn:focus-visible, .menuLink:focus-visible { outline: 2px solid var(--zs-fg); outline-offset: 2px; }
+.menuPanel { position: absolute; left: 0; right: 0; top: 100%; display: grid; background: var(--zs-gutter); border-bottom: 1px solid var(--zs-line); padding: 8px 12px; }
+.menuLink { display: flex; align-items: center; min-height: 44px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-t2); text-decoration: none; border-left: 2px solid transparent; padding-left: 10px; }
+.menuLink:hover { color: var(--zs-fg); }
+.menuLink[aria-current=page] { color: var(--zs-fg); border-left-color: var(--zs-orange); }
+@media (max-width: 960px) { .menu { display: block; } }
+@media (max-width: 420px) { .menuBtn { padding: 0 8px; letter-spacing: .06em; } .theme { width: 32px; height: 32px; } }

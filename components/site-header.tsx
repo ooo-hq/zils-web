@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ZilsWordmark } from '@/components/zils-wordmark';
 import { ThemeToggle } from '@/components/theme';
+import { MobileMenu } from '@/components/mobile-menu';
 import { AccountMenu } from '@/components/account-menu';
 import css from '@/components/site-header.module.css';
 
@@ -28,6 +29,7 @@ export function SiteHeader({ current }: { current?: string; tone?: 'light' | 'da
         ))}
       </nav>
       <div className={css.right}>
+        <MobileMenu links={LINKS} current={current} />
         <ThemeToggle className={css.theme} />
         <AccountMenu />
       </div>

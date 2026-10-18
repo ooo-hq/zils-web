@@ -15,3 +15,6 @@
 .item:hover:not(:disabled) { background: rgba(var(--zs-fg-rgb), .06); }
 .item:disabled { opacity: .6; }
 .err { margin: 0; padding: 8px 12px; color: var(--zs-bad); }
+.wide { display: inline; }
+@media (max-width: 960px) { .wide { display: none; } }
+@media (max-width: 420px) { .btn { padding: 8px; letter-spacing: .04em; gap: 6px; font-size: 10.5px; } }

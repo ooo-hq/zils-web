@@ -53,3 +53,44 @@ test('wordmark is never uppercase', async ({ page }) => {
     expect(await mark.evaluate(el => getComputedStyle(el).textTransform)).toBe('none');
   }
 });
+
+test.describe('mobile menu', () => {
+  test.use({ viewport: { width: 375, height: 800 } });
+  test('opens, lists links, navigates, closes on Escape', async ({ page }) => {
+    await page.goto('/pricing');
+    const menu = page.getByRole('button', { name: 'Menu', exact: true });
+    await expect(menu).toBeVisible();
+    await menu.click();
+    await expect(menu).toHaveAttribute('aria-expanded', 'true');
+    const panel = page.getByRole('group', { name: 'Site menu' });
+    await expect(panel.getByRole('link')).toHaveText(['Examples', 'Research', 'Miners', 'Pricing', 'Sign in']);
+    await expect(panel.getByRole('link', { name: 'Pricing' })).toHaveAttribute('aria-current', 'page');
+    await page.keyboard.press('Escape');
+    await expect(panel).toHaveCount(0);
+    await expect(menu).toBeFocused();
+    await menu.click();
+    await page.getByRole('group', { name: 'Site menu' }).getByRole('link', { name: 'Research' }).click();
+    await expect(page).toHaveURL(/\/model$/);
+    await expect(page.getByRole('group', { name: 'Site menu' })).toHaveCount(0);
+  });
+  test('outside click closes it', async ({ page }) => {
+    await page.goto('/model');
+    await page.getByRole('button', { name: 'Menu', exact: true }).click();
+    await page.mouse.click(300, 600);
+    await expect(page.getByRole('group', { name: 'Site menu' })).toHaveCount(0);
+  });
+  for (const signedIn of [false, true]) test(`no horizontal overflow at 320px (${signedIn ? 'signed in' : 'signed out'})`, async ({ page }) => {
+    if (signedIn) await signIn(page);
+    await page.setViewportSize({ width: 320, height: 700 });
+    await page.goto('/model');
+    await expect(page.locator('header').getByRole(signedIn ? 'button' : 'link', { name: signedIn ? 'Account' : 'Early access', exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    const r = await page.locator('header.zs').evaluate(h => [h.scrollWidth, h.clientWidth]);
+    expect(r[0]).toBeLessThanOrEqual(r[1]);
+  });
+});
+
+test('Menu button is hidden at 1440px', async ({ page }) => {
+  await page.goto('/model');
+  await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeHidden();
+});
