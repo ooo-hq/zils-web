@@ -54,3 +54,10 @@ test('contact shows a confirmation once the message is sent', async ({ page }) =
   await expect(page.getByText('ada@example.com')).toBeVisible();
   await expect(page.getByRole('status')).toBeFocused();
 });
+
+test('the Company field shows Optional once and describes the input with it', async ({ page }) => {
+  await page.goto('/contact');
+  await expect(page.getByText('Optional', { exact: true })).toHaveCount(1);
+  await expect(page.getByText('Optional', { exact: true })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Company' })).toHaveAccessibleDescription('Optional');
+});

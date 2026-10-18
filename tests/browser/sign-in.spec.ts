@@ -75,3 +75,9 @@ test.describe('phones', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
   });
 });
+
+test('the empty status wrapper adds no height above the form', async ({ page }) => {
+  await page.goto('/sign-in');
+  await expect(page.getByRole('form', { name: 'Sign in to Zils' })).toBeVisible();
+  expect((await page.getByRole('main').getByRole('status').boundingBox())!.height).toBe(0);
+});

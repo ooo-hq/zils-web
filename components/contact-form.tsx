@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import styles from '@/components/site/form-page.module.css';
 
 function Label({ id, children, optional }: { id: string; children: string; optional?: boolean }) {
-  return <div className={styles.fpTop}><label htmlFor={id} className={styles.fpLabel}>{children}{optional && <span className={styles.fpLabel}> (optional)</span>}</label>{optional && <span className={styles.fpLabel} aria-hidden="true">Optional</span>}</div>;
+  return <div className={styles.fpTop}><label htmlFor={id} className={styles.fpLabel}>{children}</label>{optional && <span id={`${id}-optional`} className={styles.fpLabel}>Optional</span>}</div>;
 }
 
 export function ContactForm() {
@@ -61,7 +61,7 @@ export function ContactForm() {
       <div className={styles.fpField}><Label id="contact-name">Name</Label><input id="contact-name" name="name" autoComplete="name" maxLength={100} required disabled={off} /></div>
       <div className={styles.fpField}><Label id="contact-email">Email</Label><input id="contact-email" name="email" type="email" autoComplete="email" maxLength={254} required disabled={off} /></div>
     </div>
-    <div className={styles.fpField}><Label id="contact-company" optional>Company</Label><input id="contact-company" name="company" autoComplete="organization" maxLength={160} disabled={off} /></div>
+    <div className={styles.fpField}><Label id="contact-company" optional>Company</Label><input id="contact-company" name="company" autoComplete="organization" maxLength={160} aria-describedby="contact-company-optional" disabled={off} /></div>
     <div className={styles.fpField}><Label id="contact-message">How can we help?</Label><textarea id="contact-message" name="message" rows={6} maxLength={3000} required aria-describedby="message-help" disabled={off} placeholder="What are you building, and where could Zils help?" /><span id="message-help" className={styles.fpHint}>A short overview of your project or question is enough. No datasets or private customer information needed.</span></div>
     <input name="website" type="text" autoComplete="off" tabIndex={-1} aria-hidden="true" className={styles.fpHp} />
     {error && <p className={styles.fpError} role="alert">{error}</p>}
