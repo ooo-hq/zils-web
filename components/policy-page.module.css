@@ -9,7 +9,7 @@
 .section p { margin: 12px 0 0; font-size: 15px; line-height: 1.7; color: var(--zs-t2); overflow-wrap: anywhere; }
 .section a { color: var(--zs-fg); text-decoration: underline; text-underline-offset: 4px; }
 .section a:hover { color: var(--zs-orange); }
-@media (max-width: 899px) {
+@media (max-width: 959px) {
   .legal { grid-template-columns: 1fr; }
   .aside { display: none; }
   .article { padding: 44px 0 56px; }

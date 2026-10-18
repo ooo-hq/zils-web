@@ -18,3 +18,14 @@ test('unknown route is a 404 with a way back', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Go home' })).toHaveAttribute('href', '/');
   await expect(page.getByRole('link', { name: 'See examples' })).toHaveAttribute('href', '/examples');
 });
+
+test('at 930px the empty index column is gone and nothing overflows', async ({ page }) => {
+  await page.setViewportSize({ width: 930, height: 900 });
+  await page.goto('/privacy');
+  const article = page.locator('main article');
+  const box = (await article.boundingBox())!;
+  const main = (await page.locator('main').boundingBox())!;
+  expect(await page.locator('main aside').evaluate(el => getComputedStyle(el).display)).toBe('none');
+  expect(box.x).toBeLessThanOrEqual(main.x + 1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
