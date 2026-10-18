@@ -2,32 +2,22 @@
 
 import { useLayoutEffect } from 'react';
 import { Moon, Sun } from 'lucide-react';
-import { THEME_STORAGE_KEY } from '@/lib/theme';
+import { THEME_STORAGE_KEY, resolveTheme } from '@/lib/theme';
 
-function applyTheme(preference?: string | null) {
-  const root = document.documentElement;
-  const explicit = preference === 'light' || preference === 'dark';
-  if (explicit) root.dataset.themePreference = preference;
-  else delete root.dataset.themePreference;
-  root.dataset.theme = explicit ? preference : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+function applyTheme(saved?: string | null) {
+  document.documentElement.dataset.theme = resolveTheme(saved);
 }
 
 export function ThemeSync() {
   useLayoutEffect(() => {
-    const media = matchMedia('(prefers-color-scheme: dark)');
-    let preference = document.documentElement.dataset.themePreference;
-    try { preference = localStorage.getItem(THEME_STORAGE_KEY) ?? undefined; } catch { /* Storage can be disabled. */ }
-    applyTheme(preference);
-    const onSystemChange = () => applyTheme(document.documentElement.dataset.themePreference);
+    let saved: string | null = null;
+    try { saved = localStorage.getItem(THEME_STORAGE_KEY); } catch { /* Storage can be disabled. */ }
+    applyTheme(saved);
     const onStorage = (event: StorageEvent) => {
       if (event.key === THEME_STORAGE_KEY || event.key === null) applyTheme(event.newValue);
     };
-    media.addEventListener('change', onSystemChange);
     window.addEventListener('storage', onStorage);
-    return () => {
-      media.removeEventListener('change', onSystemChange);
-      window.removeEventListener('storage', onStorage);
-    };
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
   return null;
 }
