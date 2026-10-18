@@ -28,7 +28,7 @@ export function PostDemo({ examples }: { examples: Example[] }) {
     <StageHead title="Should this creator post be approved?"><button type="button" className={base.exBtn} onClick={() => setIndex((index + 1) % examples.length)}>Another post →</button></StageHead>
     <div className={s.post}>
       <p className={s.bubble} data-post-quote>“{quote}”<span className={s.src}>Creator post · {e.brand} campaign</span></p>
-      <Verdicts rows={{ zils: { answer: verdictLabel(e.decisions.zils), right: right(e.decisions.zils) }, jev: { answer: verdictLabel(e.decisions.jev), right: right(e.decisions.jev) } }} note="Right = matches Bitcast’s label" />
+      <Verdicts rows={{ zils: { answer: verdictLabel(e.decisions.zils), right: right(e.decisions.zils) }, jev: { answer: verdictLabel(e.decisions.jev), right: right(e.decisions.jev) } }} note="Right = matches Bitcast’s label" label={`Post ${index + 1} of ${examples.length}`} />
     </div>
     <DetailsRow summary="Behind this decision" key={e.id}>
       <div className={base.exBehind}>
@@ -77,6 +77,7 @@ export function ChessDemo({ positions }: { positions: Position[] }) {
           </button>)}
         </div>
         <p className={s.hint}>Tap a move to play it.</p>
+        <p role="status" className={base.exSr}>{move ? `${move.uci === position.zils ? 'Zils' : 'JEV'}: ${move.mate ? 'Checkmate' : 'Check, not mate'}` : ''}</p>
       </div>
     </div>
     <DetailsRow summary="Behind this move"><div className={base.exBehind}>
@@ -102,6 +103,7 @@ export function InboxDemo({ replies }: { replies: Reply[] }) {
   const sort = () => setShown(matchMedia('(prefers-reduced-motion: reduce)').matches ? replies.length : 1);
   return <>
     <StageHead title="What does each reply want?"><button type="button" className={`${base.exBtn} ${base.exBtnP}`} onClick={sort}>Sort with Zils</button></StageHead>
+    <p role="status" className={base.exSr}>{shown > 0 ? `Reply ${shown}: ${replies[shown - 1].intent.replace(/_/g, ' ')}` : ''}</p>
     <div className={s.inbox}>
       {replies.map((r, i) => <div key={r.id} className={s.reply}>
         <span className={s.txt}>{r.content}</span>

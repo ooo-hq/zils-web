@@ -25,7 +25,7 @@ export function OroDemo() {
       <div className={s.chat}>
         <p className={`${s.msg} ${s.assistant}`} data-oro-message><span className={s.who}>Shopping assistant</span>{example.message}</p>
         <p className={`${s.msg} ${s.shopper}`}><span className={s.who}>Shopper, holding its answer</span>“I want stripes.”</p>
-        {index < oroExamples.cases.length - 1 && <button type="button" className={`${base.exBtn} ${s.next}`} onClick={() => setIndex(index + 1)}>Next situation →</button>}
+        <button type="button" className={`${base.exBtn} ${s.next}`} onClick={() => setIndex((index + 1) % oroExamples.cases.length)}>Next situation →</button>
       </div>
       <Verdicts rows={{ zils: { answer: answers[zils], right: zils === expected }, jev: { answer: answers[jev], right: jev === expected } }} note={example.explanation.split('. ')[0] + '.'} />
     </div>

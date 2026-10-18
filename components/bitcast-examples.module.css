@@ -83,3 +83,5 @@
   .exScoreBars { border-right: 0; border-bottom: 1px solid var(--zs-line); padding: 6px 4px 22px; }
   .exScoreDelta { padding: 18px 4px; flex-direction: row; align-items: center; gap: 16px; }
 }
+
+.exSr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

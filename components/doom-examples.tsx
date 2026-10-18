@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { doomExamples, gameSeconds } from '@/lib/doom-examples';
 import { DetailsRow } from './site/details-row';
 import { StageHead, Who } from './examples-shared';
@@ -10,31 +10,38 @@ import s from './doom-examples.module.css';
 const outcomeText = { success: 'Reached the exit', death: 'Died', timeout: 'Ran out of time' } as const;
 const seconds = (tics: number) => `${gameSeconds(tics).toFixed(1)} s`;
 const models = ['zils', 'jev'] as const;
+const reducedQuery = '(prefers-reduced-motion: reduce)';
+const subscribeReduced = (cb: () => void) => { const mq = matchMedia(reducedQuery); mq.addEventListener('change', cb); return () => mq.removeEventListener('change', cb); };
 
 export function DoomDemo() {
   const videos = { zils: useRef<HTMLVideoElement>(null), jev: useRef<HTMLVideoElement>(null) };
   const [playing, setPlaying] = useState(false);
+  const [replayed, setReplayed] = useState(false);
   const [ended, setEnded] = useState({ zils: false, jev: false });
+  const reduced = useSyncExternalStore(subscribeReduced, () => matchMedia(reducedQuery).matches, () => false);
   const all = () => [videos.zils.current, videos.jev.current].filter((v): v is HTMLVideoElement => v !== null);
   function play() {
+    setReplayed(true);
     setEnded({ zils: false, jev: false });
     all().forEach(v => { v.currentTime = 0; });
     Promise.all(all().map(v => v.play())).then(() => setPlaying(true), () => setPlaying(false));
   }
-  // Videos load on demand and start when the pair is on screen. Reduced motion waits for Replay.
+  // Each recording loads on demand and starts when that clip is on screen (stacked on phones they differ).
+  // Reduced motion never autoplays; it shows the recorded outcomes and waits for Replay.
   useEffect(() => {
-    const el = videos.zils.current;
-    if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
-    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { io.disconnect(); play(); } }, { threshold: 0.4 });
-    io.observe(el);
+    if (reduced || !('IntersectionObserver' in window)) return;
+    const io = new IntersectionObserver(entries => entries.forEach(e => {
+      if (e.isIntersecting) { io.unobserve(e.target); (e.target as HTMLVideoElement).play().then(() => setPlaying(true), () => {}); }
+    }), { threshold: 0.4 });
+    all().forEach(v => io.observe(v));
     return () => io.disconnect();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [reduced]); // eslint-disable-line react-hooks/exhaustive-deps
   return <>
     <StageHead title="Zils reaches the armor. JEV dies in the doorway."><button type="button" className={base.exBtn} onClick={play}>Replay ↺</button></StageHead>
     <div className={s.duo}>
       {models.map(model => {
         const clip = doomExamples.clips[model];
-        const done = ended[model];
+        const done = ended[model] || (reduced && !replayed);
         const name = model === 'zils' ? 'Zils' : 'TypeSafe JEV';
         return <section key={model} aria-label={`${name} recording`}>
           <div className={s.ph}>

@@ -68,21 +68,77 @@ test('Sort an inbox reveals the recorded intents; JEV lead renders grey with its
   await expect(page.getByText('more games for Zils')).toBeVisible();
 });
 
-const study: [string, string][] = [
-  ['doom', 'ViZDoom 1.3.0’s unmodified Deadly Corridor scenario'],
-  ['content', '486 training posts, 159 calibration posts and 155 development posts'],
-  ['chess', '2,048 training positions and 512 test positions'],
-  ['inbox', '294 authored training examples'],
-  ['oro', 'October 13, 2026 pilot: 720 authored training decisions'],
-];
-for (const [hash, text] of study) {
-  test(`#${hash} Full test details holds the study text`, async ({ page }) => {
+import doom from '../../data/doom-examples.json';
+
+const closing = 'Each example uses its task-specific Zils adapter. These studies do not establish production reliability. The research adapters shown here have not been deployed.';
+const trained = (r: number, tot: number, z: number) => `Training improved Zils from ${r}/${tot} to ${z}/${tot} on this test.`;
+const o = doom.outcomes, e = doom.evidence;
+const w = doom.zilsSuccessWilson95.map(x => (100 * x).toFixed(1));
+const study: Record<string, string[]> = {
+  doom: [
+    'Correct means it collected the armor and reached the exit. 100 held-out starts on one map, every replay audited. One selected game is shown above.',
+    trained(0, 100, 97),
+    `${doom.date}: 100 held-out starts of ViZDoom 1.3.0’s unmodified Deadly Corridor scenario, difficulty 5, with a 2,100-tic limit. Success means collecting the armor and reaching the map’s exit. Trained Zils: ${o.zils.success} successes, ${o.zils.timeout} timeouts, ${o.zils.death} death. JEV: ${o.jev.death} deaths and ${o.jev.technical_failure} technical failure, counted separately. The untrained H2O base died in all 100. The scripted reference program Zils learned from succeeded in all 100.`,
+    'Training, development and test seed lists were disjoint, but the map is shared, so this measures robustness to the scenario’s randomness, not play on unseen levels. The structured observations and custom action interface make it different from standard pixel-based ViZDoom scores.',
+    `The paired success difference is +${doom.pairedDifference.points} points, with a descriptive 95% seed-bootstrap interval of ${doom.pairedDifference.bootstrap95[0]} to ${doom.pairedDifference.bootstrap95[1]} points; Zils’s Wilson 95% interval is ${w[0]}% to ${w[1]}%. The native replay audit verified ${doom.audit.replaysVerified} completed episodes and matched starting frames for all ${doom.audit.matchedStarts} seeds. JEV’s one technical failure, seed ${doom.interruptedSeed}, was an operator-interrupted episode and is not counted as a death.`,
+  ],
+  content: [
+    'Correct means it matched Bitcast’s automated label. Reused development posts.',
+    trained(116, 155, 139),
+    '486 training posts, 159 calibration posts and 155 development posts, with campaign groups kept separate. Reference labels came from Qwen3-32B and can be wrong. This pilot used an 80% campaign-relevance rule; the development set had been used before. Private holdout testing and human review remain needed. Zils minus JEV: +4.52 percentage points, descriptive 95% interval +0.72 to +8.97. JEV verdicts were supplied, with no exact model version or fresh API run.',
+  ],
+  chess: [
+    'Correct means it picked a checkmate among the legal checks. A narrow puzzle task, not full-game strength.',
+    trained(220, 512, 260),
+    '2,048 training positions and 512 test positions from separate source games. One chess adapter, one training seed. All legal checking moves were offered; any immediate mate received credit. Full-game strength was not tested. An exact chess-rules engine solves 100% of these positions.',
+  ],
+  inbox: [
+    'Correct means it matched the supplied intent label. Reused synthetic test; all 15 opt-outs recognized, one false opt-out.',
+    trained(86, 100, 93),
+    '294 authored training examples, 60 separate calibration cases, and 100 synthetic reserve replies. This set had been evaluated before. Zils scored 93/100 on all three passes. JEV and Luna results were supplied; JEV scored three cases higher. Zils’s seven errors all had high confidence. The dataset’s labels have not been independently reviewed.',
+  ],
+  oro: [
+    'Correct means it matched the pilot’s label. 60 message/rule pairs with three correlated decisions each; no shopping sessions were run.',
+    'Zils was trained on 720 synthetic disclosure decisions. An untrained baseline was not measured.',
+    'October 13, 2026 pilot: 720 authored training decisions (30 templates × 8 attribute types × 3 questions), 60 calibration decisions, and 180 held-out decisions. Training and test template strings and attribute types were separate; semantic categories were shared. Labels were AI-authored and agent-reviewed, not independently human-labeled.',
+    'The test contains 60 message/rule pairs across 30 templates and two attributes: pattern and power rating. These are correlated decisions, not 180 independent shopping tasks. At a 50% decision threshold, Zils matched 180/180 labels and JEV 173/180. At ORO’s 70% disclosure threshold, derived actions matched 60/60 versus 58/60. JEV’s two false disclosures came from the same quoted-message template.',
+    'Zils: H2O Lightning 4B v1.2.3 with one task adapter. JEV: a fresh call to TypeSafe’s direct API, version 1.13.0. ORO uses an OpenRouter route; exact serving equivalence was not established. No untrained H2O baseline was measured. The descriptive 95% interval for the accuracy difference includes zero (0 to +9.44 percentage points).',
+    `This isolates the first-turn disclosure decision. We did not run full shopping sessions or Mistral shopper replies, measure shopping success, or establish a speed or cost advantage. View the pinned ORO source${'.'}`,
+  ],
+};
+const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
+for (const [hash, paragraphs] of Object.entries(study)) {
+  test(`#${hash} Full test details holds the complete study text`, async ({ page }) => {
     await page.goto(`/examples#${hash}`);
     await page.getByText('Full test details', { exact: true }).click();
-    await expect(page.getByText(text)).toBeVisible();
-    await expect(page.getByText('Each example uses its task-specific Zils adapter.')).toBeVisible();
+    const full = page.locator('details').filter({ has: page.getByText('Full test details', { exact: true }) }).last();
+    const texts = (await full.locator('p').allInnerTexts()).map(norm);
+    for (const expected of [...paragraphs, closing]) expect(texts, expected.slice(0, 50)).toContain(expected);
   });
 }
+test('doom evidence links keep their targets', async ({ page }) => {
+  await page.goto('/examples#doom');
+  await page.getByText('Full test details', { exact: true }).click();
+  for (const [name, href] of [['Full benchmark report', e.report], ['All 100 starts (CSV)', e.seeds], ['Results (JSON)', e.results]]) await expect(page.getByRole('link', { name })).toHaveAttribute('href', href);
+});
+
+test('post, chess, inbox and Oro announce outcomes in polite status regions', async ({ page }) => {
+  const status = page.getByRole('status');
+  await page.goto('/examples#content');
+  await page.getByRole('button', { name: /Another post/ }).click();
+  await expect(status).toContainText('Post 2 of 5.');
+  await page.goto('/examples#chess');
+  await page.locator('[data-choice="zils"]').click();
+  await expect(status).toHaveText('Zils: Checkmate');
+  await page.locator('[data-choice="jev"]').click();
+  await expect(status).toHaveText('JEV: Check, not mate');
+  await page.goto('/examples#inbox');
+  await page.getByRole('button', { name: 'Sort with Zils' }).click();
+  await expect(status).toHaveText(/^Reply \d: /);
+  await expect(status).toHaveText(`Reply 5: ${recorded.replies[4].intent.replace(/_/g, ' ')}`, { timeout: 5000 });
+  await page.goto('/examples#oro');
+  await expect(status).toHaveText('Zils: Wait · right; JEV: Answer · wrong');
+});
 
 test('examples fit a phone with no horizontal scroll', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });

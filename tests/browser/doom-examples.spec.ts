@@ -37,3 +37,26 @@ test('Doom stacks on a phone without horizontal scroll', async ({ page }) => {
   await expect(page.getByRole('region', { name: 'TypeSafe JEV recording', exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
+
+test('Doom shows the recorded outcomes at once under reduced motion, without playing', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.addInitScript(() => { (window as unknown as { __plays: string[] }).__plays = []; HTMLMediaElement.prototype.play = function () { (window as unknown as { __plays: string[] }).__plays.push(this.getAttribute('aria-label')!); return Promise.resolve(); }; });
+  await page.goto('/examples');
+  await expect(page.getByRole('region', { name: 'Zils recording', exact: true })).toContainText(exit);
+  await expect(page.getByRole('region', { name: 'TypeSafe JEV recording', exact: true })).toContainText(died);
+  expect(await page.evaluate(() => (window as unknown as { __plays: string[] }).__plays)).toEqual([]);
+});
+
+test('on a phone each Doom clip starts only once it is scrolled into view', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 380 });
+  await page.addInitScript(() => { (window as unknown as { __plays: string[] }).__plays = []; HTMLMediaElement.prototype.play = function () { (window as unknown as { __plays: string[] }).__plays.push(this.getAttribute('aria-label')!); return Promise.resolve(); }; });
+  await page.goto('/examples');
+  const plays = () => page.evaluate(() => (window as unknown as { __plays: string[] }).__plays);
+  await page.evaluate(() => window.scrollBy(0, document.querySelector('video')!.getBoundingClientRect().top - 56));
+  await expect.poll(plays).toEqual([expect.stringContaining('Zils on test seed')]);
+  await page.waitForTimeout(500);
+  expect(await plays()).toHaveLength(1);
+  await page.evaluate(() => window.scrollBy(0, document.querySelectorAll('video')[1].getBoundingClientRect().top - 56));
+  await expect.poll(async () => (await plays()).length).toBe(2);
+  expect((await plays())[1]).toContain('TypeSafe JEV');
+});

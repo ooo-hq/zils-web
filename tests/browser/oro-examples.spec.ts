@@ -18,6 +18,11 @@ test('shopper demo shows the quoted-question disagreement, then cycles recorded 
   await expect(page.locator('[data-oro-message]')).toContainText(oro.cases[1].message);
   await expect(zils).toContainText('Right');
   await expect(jev).toContainText('Right');
+  await page.getByRole('button', { name: /Next situation/ }).click();
+  await page.getByRole('button', { name: /Next situation/ }).click();
+  await expect(page.locator('[data-oro-message]')).toContainText(oro.cases[0].message);
+  await expect(page.getByRole('button', { name: /Next situation/ })).toBeVisible();
+  await page.getByRole('button', { name: /Next situation/ }).click();
   await page.getByText('Behind this decision', { exact: true }).click();
   await expect(page.getByRole('table').first()).toContainText('96.7% yes');
   expect(inferenceRequests).toEqual([]);
