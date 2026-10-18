@@ -96,7 +96,7 @@ export default function HomePage() {
           ))}
           <Reveal delay={USE_CASES.length * 0.11}>
             <article className={s.job} aria-labelledby="rank-options">
-              <span className={s.badge}>SDK 0.3.0 · Experimental</span>
+              <span className={s.badge}>New in SDK 0.3.0 · Experimental</span>
               <div className={s.tile} style={{ '--g': 'linear-gradient(135deg, #c3b4f6, #8ea6ff)' } as React.CSSProperties}>
                 <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" {...ICON}><path d="M4 5h12M4 10h8M4 15h4" /></svg>
               </div>

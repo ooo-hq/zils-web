@@ -57,7 +57,7 @@ export function SupportStudySummary() {
     kind: trained ? 'zils' as const : 'jev' as const,
   }));
   return (
-    <section id="support-evidence" aria-labelledby="support-evidence-heading" className={css.sec}>
+    <section id="support-evidence" aria-labelledby="support-evidence-heading">
       <Reveal>
         <div className={css.head}>
           <h2 id="support-evidence-heading">See what training changed.</h2>
