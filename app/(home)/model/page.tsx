@@ -16,7 +16,7 @@ import { benchmark, readComparison, percent, decimal, milliseconds, comparisonHe
 
 export const metadata: Metadata = {
   title: 'zils — tuned open models can compete',
-  description: 'Task-tuned open JevK5 4B models outperformed official hosted TypeSafe JEV 1.13.0 on our support and mate-in-one tests. Also: B300 miner follow-ups, how the base-model competition works (no public round yet), and recorded d3-mini evidence.',
+  description: 'In our October 2026 support and mate-in-one tests, task-tuned open JevK5 4B models outperformed official hosted TypeSafe JEV 1.13.0. JevK5 has since been retired; the base is now d3-mini 4.5B. Also: B300 miner follow-ups, how the base-model competition works (no public round yet), and recorded d3-mini evidence.',
   alternates: { canonical: 'https://zils.ai/model' },
 };
 
@@ -32,7 +32,8 @@ const DOCS = 'https://docs.zils.ai';
 const PROMOTION_RULES = [
   ['Sealed score', 'Validators score the submitted weights on a sealed holdout, against the incumbent.'],
   ['Eligibility', 'Skill is positive, accuracy is not below the incumbent’s, and Brier improves by at least 0.01 with a paired-bootstrap 95% lower bound above zero.'],
-  ['Round weight', 'Eligible candidates share the round’s weight in proportion to skill.'],
+  ['Round weight', 'Winner takes all: the best eligible candidate takes the round’s whole base-tier share, and eligible runners-up earn nothing.'],
+  ['King of the hill', 'Once promoted, the winner’s miner keeps the whole base-tier share every epoch until an eligible challenger appears. The vendor base (stock d3-mini today) has no miner and pays nobody.'],
   ['Confirmation', 'The best eligible candidate is re-scored on a second, disjoint sealed draw at least 12 hours later and must stay eligible.'],
   ['Regression suite', 'Before promotion, a fixed suite of reference adapter jobs is retrained on the incumbent and on the candidate. The candidate must be no worse than 0.005 Brier on every job and better on at least one.'],
 ] as const;
