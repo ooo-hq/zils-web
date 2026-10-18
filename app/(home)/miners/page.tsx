@@ -125,7 +125,7 @@ export default async function MinersPage() {
         <div className={s.baseIntro}>
           <div>
             <h2 id="base-tier-heading" className={s.sectionTitle}>Improving the base model</h2>
-            <p>Every customer model is a small adapter on one shared base. Miners can also compete to replace the base itself. No outside miner has submitted a base candidate yet; the attempts below were run by Zils.</p>
+            <p>Every customer model is a small adapter on one shared base. Miners can also compete to replace the base itself.</p>
           </div>
           <section className={s.current} aria-labelledby="current-base">
             <h2 id="current-base">Current base</h2>
