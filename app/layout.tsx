@@ -29,7 +29,10 @@ export default function Layout({ children }: LayoutProps<'/'>) {
       className={`${plexSans.variable} ${plexMono.variable} ${interTight.variable}`}
       suppressHydrationWarning
     >
-      <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('zs-js')" }} />
+      </head>
       <body className="flex flex-col min-h-screen"><ThemeSync /><Toaster position="bottom-right" />{children}</body>
     </html>
   );

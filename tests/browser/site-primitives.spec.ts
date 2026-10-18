@@ -33,3 +33,19 @@ test('no horizontal overflow at 375px', async ({ page }) => {
   await page.goto(URL);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
+
+test('reduced motion: score bars are full width without scrolling', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(URL);
+  for (const el of await page.locator('[data-fill]').all()) await expect(el).toHaveCSS('transform', /^(none|matrix\(1, 0, 0, 1, 0, 0\))$/);
+});
+
+test.describe('without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+  test('reveals are visible and CountUp shows its final value', async ({ page }) => {
+    await page.goto(URL);
+    for (const el of await page.locator('[data-reveal]').all()) await expect(el).toHaveCSS('opacity', '1');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('79.2%');
+    for (const el of await page.locator('[data-fill]').all()) await expect(el).toHaveCSS('transform', /^(none|matrix\(1, 0, 0, 1, 0, 0\))$/);
+  });
+});

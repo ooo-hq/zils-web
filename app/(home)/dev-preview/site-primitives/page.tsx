@@ -9,7 +9,7 @@ import { SiteButton } from '@/components/site/site-button';
 
 // Dev-only fixture for tests/browser/site-primitives.spec.ts; deleted in Task 15.
 export default function Page() {
-  if (process.env.NODE_ENV === 'production') notFound();
+  if (process.env.ZILS_DEV_PREVIEW !== '1') notFound();
   return (
     <SiteFrame current="model">
       <SectionRow n="01" label="Primitives" note="System 01" />
