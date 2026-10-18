@@ -10,7 +10,7 @@ export function SitePage({ current, title, description, note, children }: {
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-black font-mono text-neutral-400">
+    <div className="zs flex min-h-screen flex-col bg-black font-mono text-neutral-400">
       <div className="mx-auto w-full max-w-5xl px-6 pb-24 sm:px-8">
         <SiteHeader current={current} />
         <main id="main-content" tabIndex={-1} className="pt-10 sm:pt-16">
@@ -22,7 +22,7 @@ export function SitePage({ current, title, description, note, children }: {
           <div className="font-sans text-base leading-7">{children}</div>
         </main>
       </div>
-      <SiteFooter tone="dark" />
+      <SiteFooter />
     </div>
   );
 }

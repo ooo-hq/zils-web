@@ -22,7 +22,7 @@ export function ThemeSync() {
   return null;
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ className = 'inline-flex size-11 shrink-0 items-center justify-center rounded-md text-subtle transition-colors hover:text-ink' }: { className?: string }) {
   function toggle() {
     const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     applyTheme(next);
@@ -30,7 +30,7 @@ export function ThemeToggle() {
   }
 
   return (
-    <button type="button" onClick={toggle} title="Change color theme" className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-subtle transition-colors hover:text-ink">
+    <button type="button" onClick={toggle} title="Change color theme" className={className}>
       <span className="inline-flex dark:hidden"><Moon size={16} aria-hidden="true" /><span className="sr-only">Dark mode</span></span>
       <span className="hidden dark:inline-flex"><Sun size={16} aria-hidden="true" /><span className="sr-only">Light mode</span></span>
     </button>

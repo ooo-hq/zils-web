@@ -74,6 +74,6 @@ test('theme still switches when browser storage is unavailable', async ({ page }
   await page.goto('/');
   await page.getByRole('button', { name: 'Light mode', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Dark mode', exact: true })).toBeVisible();
-  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'research' }).click();
+  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Research' }).click();
   await expect(page.getByRole('button', { name: 'Dark mode', exact: true })).toBeVisible();
 });

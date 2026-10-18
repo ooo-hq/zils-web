@@ -14,7 +14,6 @@ const LINK_GROUPS = [
   { label: 'Explore', links: [
     { href: '/model', label: 'Research' },
     { href: '/miners', label: 'Miners' },
-    { href: '/bittensor', label: 'Bittensor' },
     { href: 'https://github.com/ooo-hq/zils', label: 'Model source' },
   ] },
   { label: 'Keep in touch', links: [
@@ -25,51 +24,35 @@ const LINK_GROUPS = [
   ] },
 ] as const;
 
-/** A little crooked decision path, echoing the angles in the Zils mark. */
-function DecisionDoodle() {
+/** Shared Zils resources and policy links for every page. `tone` is ignored. */
+export function SiteFooter(_props: { tone?: 'light' | 'dark' }) {
   return (
-    <svg className={footer.doodle} viewBox="0 0 176 74" fill="none" aria-hidden="true" focusable="false">
-      <path className={footer.doodleWash} d="m17 26 101-13-43 40 78-8-20 20-119-4 43-28Z" />
-      <path d="M10 36 80 24 55 53 115 41M80 24l25-13m10 30 32 16m-32-16 32-17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="10" cy="36" r="4" fill="currentColor" />
-      <circle cx="110" cy="9" r="5" fill="currentColor" />
-      <path d="m153 13 8 10-11 8-8-10Z" fill="currentColor" />
-      <path className={footer.doodleSpark} d="m154 41 3 10 11-2-7 9 8 8-12-1-4 10-3-11-11 1 8-8-6-9 10 3Z" />
-    </svg>
-  );
-}
-
-/** Shared Zils resources and policy links for every page. */
-export function SiteFooter({ tone = 'light' }: { tone?: 'light' | 'dark' }) {
-  return (
-    <footer className={`${footer.root} ${tone === 'dark' ? footer.dark : ''}`}>
+    <footer className={`zs ${footer.root}`}>
       <div className={footer.inner}>
-        <div className={footer.main}>
-          <div className={footer.brand}>
-            <Link href="/" aria-label="Zils home" className={footer.logo}><ZilsWordmark className="text-[42px]" /></Link>
-            <p>Specialized models.<br />Decisions that are yours.</p>
-            <DecisionDoodle />
-          </div>
-          <nav aria-label="Footer" className={footer.navigation}>
-            {LINK_GROUPS.map((group) => (
-              <div key={group.label} className={footer.group}>
-                <h2>{group.label}</h2>
-                <ul>
-                  {group.links.map((link) => (
-                    <li key={link.href}><Link href={link.href}>{link.label}</Link></li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </nav>
+        <div className={footer.brand}>
+          <Link href="/" aria-label="Zils home" className={footer.logo}><ZilsWordmark /></Link>
+          <p>Specialized models.<br />Decisions that are yours.</p>
         </div>
-        <div className={footer.bottom}>
-          <p>Your data. Your decision model.</p>
-          <nav aria-label="Policies">
-            <Link href="/privacy">Privacy</Link>
-            <Link href="/terms">Terms</Link>
-          </nav>
-        </div>
+        <nav aria-label="Footer" className={footer.groups}>
+          {LINK_GROUPS.map((group) => (
+            <div key={group.label}>
+              <h2>{group.label}</h2>
+              <ul>
+                {group.links.map((link) => (
+                  <li key={link.href}><Link href={link.href}>{link.label}</Link></li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </nav>
+      </div>
+      <div className={footer.bottom}>
+        <span>Your data. Your decision model.</span>
+        <nav aria-label="Policies">
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/terms">Terms</Link>
+          <span>© 2026 Zils</span>
+        </nav>
       </div>
     </footer>
   );
