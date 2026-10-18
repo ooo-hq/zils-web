@@ -30,7 +30,7 @@ export function AccuracyComparison({ includeJev = false }: { includeJev?: boolea
               <dd className={`text-[32px] font-semibold leading-none tracking-[-0.045em] tabular-nums ${trained ? 'text-accent' : 'text-ink'}`}>{percent(metrics.accuracy)}</dd>
             </div>
             <div aria-hidden="true" className="mt-3 h-3 overflow-hidden rounded-sm bg-edge">
-              <div className={`h-full rounded-sm ${trained ? 'bg-accent' : 'bg-[#858898]'}`} style={{ width: `${metrics.accuracy * 100}%` }} />
+              <div className={`h-full rounded-sm ${trained ? 'bg-accent' : 'bg-edge-strong'}`} style={{ width: `${metrics.accuracy * 100}%` }} />
             </div>
             <dd className="mt-2 flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs leading-5 text-muted">
               <span>{note}</span><span className="tabular-nums">{metrics.correct} / {metrics.count} correct</span>

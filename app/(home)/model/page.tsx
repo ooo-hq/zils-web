@@ -62,15 +62,15 @@ const D3_EVIDENCE = [
   ['Exam prompt length, median input tokens', '528', '568', 'd3-mini prompts are about 40 tokens longer'],
 ] as const;
 const SECTIONS = [
-  { id: 'findings', label: 'Findings' },
-  { id: 'approach', label: 'Approach' },
-  { id: 'jev-comparison', label: 'Support' },
-  { id: 'chess-study', label: 'Chess' },
-  { id: 'flight-study', label: 'Flights' },
-  { id: 'base-tier', label: 'Base tier' },
-  { id: 'd3-mini', label: 'd3-mini evidence' },
-  { id: 'quality', label: 'Earlier benchmark' },
-  { id: 'metrics', label: 'Metric guide' },
+  { id: 'findings', n: '02', label: 'Findings' },
+  { id: 'approach', n: '03', label: 'Approach' },
+  { id: 'jev-comparison', n: '04', label: 'Support' },
+  { id: 'chess-study', n: '05', label: 'Chess' },
+  { id: 'flight-study', n: '06', label: 'Flights' },
+  { id: 'base-tier', n: '07', label: 'Base tier' },
+  { id: 'd3-mini', n: '08', label: 'd3-mini evidence' },
+  { id: 'quality', n: '09', label: 'Earlier benchmark' },
+  { id: 'metrics', n: '10', label: 'Metric guide' },
 ] as const;
 const RESOURCES = [
   { href: REPO, title: 'Research code' },

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import css from './sticky-index.module.css';
 
 /** Sticky section index: marks the section crossing a line near the top with aria-current="true". Hidden below 960px. */
-export function StickyIndex({ items, label = 'On this page' }: { items: readonly { id: string; label: string }[]; label?: string }) {
+export function StickyIndex({ items, label = 'On this page' }: { items: readonly { id: string; label: string; n?: string }[]; label?: string }) {
   const [active, setActive] = useState(items[0]?.id);
   useEffect(() => {
     const io = new IntersectionObserver(entries => {
@@ -15,7 +15,7 @@ export function StickyIndex({ items, label = 'On this page' }: { items: readonly
   return (
     <nav aria-label={label} className={css.nav}>
       {items.map(it => (
-        <a key={it.id} href={`#${it.id}`} aria-current={active === it.id ? 'true' : undefined}>{it.label}</a>
+        <a key={it.id} href={`#${it.id}`} aria-current={active === it.id ? 'true' : undefined}>{it.n && <span aria-hidden="true" className={css.n}>{it.n}</span>}{it.label}</a>
       ))}
     </nav>
   );

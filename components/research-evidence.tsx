@@ -4,10 +4,10 @@ import s from './research-guide.module.css';
 
 export function ResearchEvidence() {
   const outcomes = [
-    { label: 'Both correct', count: jevPaired.both_correct, color: 'rgba(var(--zs-fg-rgb), .3)' },
-    { label: 'Only trained model correct', count: jevPaired.trained_correct_other_wrong, color: 'var(--zs-lilac)' },
-    { label: 'Only JEV correct', count: jevPaired.other_correct_trained_wrong, color: 'var(--zs-orange)' },
-    { label: 'Both incorrect', count: jevPaired.both_wrong, color: 'transparent' },
+    { label: 'Both correct', count: jevPaired.both_correct, color: 'var(--zs-lilac)' },
+    { label: 'Only trained model correct', count: jevPaired.trained_correct_other_wrong, color: 'var(--zs-orange)' },
+    { label: 'Only JEV correct', count: jevPaired.other_correct_trained_wrong, color: 'var(--zs-peri)' },
+    { label: 'Both incorrect', count: jevPaired.both_wrong, color: 'rgba(var(--zs-fg-rgb), .18)' },
   ];
   return (
     <figure className={s.evidenceFigure} aria-labelledby="paired-results-title">

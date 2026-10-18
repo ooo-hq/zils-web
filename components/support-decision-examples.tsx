@@ -1,5 +1,6 @@
 import examples from '@/public/model/abcd-002-examples.json';
 import { supportBase, supportAdapter } from '@/lib/support-study';
+import { CountPair } from '@/components/site/count-pair';
 import s from './research-guide.module.css';
 
 const action = (key: string) => examples.action_labels[key as keyof typeof examples.action_labels] ?? key;
@@ -14,10 +15,7 @@ export function SupportTrainingExample() {
         <span>Learning a customer-support task.</span>
         <span>Correct next actions across all {supportBase.count} test conversations</span>
       </figcaption>
-      <dl className={s.trainingScores} aria-label="Accuracy before and after training">
-        <div><dt>Before training</dt><dd>{(supportBase.accuracy * 100).toFixed(1)}%</dd></div>
-        <div><dt>After training</dt><dd>{(supportAdapter.accuracy * 100).toFixed(1)}%</dd></div>
-      </dl>
+      <CountPair className={s.trainingScores} before={supportBase.accuracy * 100} after={supportAdapter.accuracy * 100} />
       <div className={s.recordedExample} data-example-id={example.id}>
         <p className={s.exampleLabel}>One recorded correction</p>
         <h2>{example.title}</h2>

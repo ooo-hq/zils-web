@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import study from '../../public/model/abcd-002-jev.json';
 import training from '../../public/model/abcd-002.json';
 import examples from '../../public/model/abcd-002-examples.json';
+import manifest from '../../public/model/flight-delay-001-manifest.json';
 import baseline from './fixtures/content-baseline.json';
 
 test('research readers can move from findings to evidence and the metric reference', async ({ page, request }) => {
@@ -109,10 +110,31 @@ test('the outcome grid paints in on reveal and shows its final state under reduc
   await expect(grid.locator('[data-outcome]').last()).toHaveCSS('opacity', '1');
 });
 
+test('flights show filling bars and the January to March timeline from the data', async ({ page }) => {
+  await page.goto('/model');
+  const flights = page.locator('#flight-study');
+  await flights.scrollIntoViewIfNeeded();
+  const fills = flights.locator('[data-fill]');
+  await expect(fills).toHaveCount(3);
+  for (const c of [manifest.splits.train.count, manifest.splits.calibration.count, manifest.splits.test.count]) {
+    await expect(flights.locator('ol')).toContainText(`${c.toLocaleString('en-US')} flights`);
+  }
+});
+
+test('light-theme accent text on /model meets 4.5:1 on panel and raised', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('zils-theme', 'light'));
+  await page.goto('/model');
+  const link = page.getByRole('link', { name: 'Read the training study', exact: true });
+  const rgb = await link.evaluate(el => getComputedStyle(el).color.match(/\d+/g)!.slice(0, 3).map(Number));
+  const lum = (c: number[]) => { const [r, g, b] = c.map(v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return .2126 * r + .7152 * g + .0722 * b; };
+  const ratio = (a: number[], b: number[]) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + .05) / (y + .05); };
+  for (const bg of [[250, 249, 252], [241, 239, 246]]) expect(ratio(rgb, bg)).toBeGreaterThanOrEqual(4.5);
+});
+
 test('the sticky index lists the sections and marks the one in view', async ({ page }) => {
   await page.goto('/model');
   const index = page.getByRole('navigation', { name: 'On this page' });
-  await expect(index.getByRole('link')).toHaveText(['Findings', 'Approach', 'Support', 'Chess', 'Flights', 'Base tier', 'd3-mini evidence', 'Earlier benchmark', 'Metric guide']);
+  await expect(index.getByRole('link')).toHaveText(['02Findings', '03Approach', '04Support', '05Chess', '06Flights', '07Base tier', '08d3-mini evidence', '09Earlier benchmark', '10Metric guide']);
   for (const [id, name] of [['chess-study', 'Chess'], ['base-tier', 'Base tier'], ['metrics', 'Metric guide']]) {
     await page.evaluate(i => document.getElementById(i)!.scrollIntoView({ block: 'start' }), id);
     await expect(index.getByRole('link', { name, exact: true })).toHaveAttribute('aria-current', 'true');

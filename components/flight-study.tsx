@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { ScoreBars } from '@/components/site/score-bars';
+import s from './research-guide.module.css';
 import { DetailsRow } from '@/components/site/details-row';
 import {
   flightStudy, flightSplits, flightSource, flightMethod, flightImprovement, flightComparisons,
@@ -16,20 +18,10 @@ function ProbabilityComparison() {
         <span className="font-semibold">Probability error</span>
         <span className="text-xs text-muted">Brier score · Lower is better</span>
       </figcaption>
-      <dl className="mt-7 space-y-6">
-        {flightComparisons.map(({ name, note, metrics, adapted }) => (
-          <div key={name}>
-            <div className="flex items-baseline justify-between gap-3">
-              <dt className={`text-sm ${adapted ? 'font-semibold text-accent' : 'text-ink'}`}>{name}</dt>
-              <dd className={`text-sm tabular-nums ${adapted ? 'font-semibold text-accent' : 'text-ink'}`}>{metrics.brier.toFixed(4)}</dd>
-            </div>
-            <div aria-hidden="true" className="mt-2 h-2 overflow-hidden rounded-sm bg-edge">
-              <div className={`h-full rounded-sm ${adapted ? 'bg-accent' : 'bg-[#858898]'}`} style={{ width: `${metrics.brier / 0.2 * 100}%` }} />
-            </div>
-            <dd className="mt-2 text-xs leading-5 text-muted">{note}</dd>
-          </div>
-        ))}
-      </dl>
+      <ScoreBars rows={flightComparisons.map(({ name, note, metrics, adapted }) => ({
+        label: name, value: metrics.brier, max: 0.2, display: metrics.brier.toFixed(4), note,
+        kind: adapted ? 'zils' : name === 'Before training' ? 'base' : 'jev',
+      }))} />
       <div aria-hidden="true" className="mt-5 flex justify-between text-[11px] tabular-nums text-subtle"><span>0</span><span>0.20</span></div>
       <p className="mt-5 border-t border-edge pt-4 text-xs leading-5 text-muted">
         Both models had their confidence scores adjusted on separate February data. All three were tested on the same March flights.
@@ -56,7 +48,7 @@ export function FlightStudySummary() {
             <span aria-hidden="true" className="mx-3 text-neutral-400">/</span>
             <span className="font-semibold tabular-nums">{number(flightSplits.test.count)}</span> held-out test flights
           </p>
-          <Link href="/model#flight-study" className="mt-7 inline-flex min-h-11 items-center rounded-md bg-[#4942c7] px-5 py-3 text-[13px] font-medium text-white hover:bg-[#39339f]">
+          <Link href="/model#flight-study" className="mt-7 inline-flex min-h-11 items-center rounded-md bg-action px-5 py-3 text-[13px] font-medium text-on-action hover:bg-action-hover">
             Read the flight study
           </Link>
         </div>
@@ -95,15 +87,14 @@ export function FlightStudyDetails() {
             Public US Bureau of Transportation Statistics records, departing JFK, LGA, and EWR.
             The decision: will a completed flight arrive at least 15 minutes late?
           </p>
-          <ol className="mt-6 divide-y divide-edge border-y border-edge">
+          <ol className={s.timeline}>
             {[
-              ['January 2025', 'Train the adapter', flightSplits.train.count],
-              ['February 2025', 'Adjust confidence scores', flightSplits.calibration.count],
-              ['March 2025', 'Test both models', flightSplits.test.count],
-            ].map(([date, purpose, count]) => (
-              <li key={date} className="flex items-center justify-between gap-4 py-4">
-                <div><p className="text-sm font-medium">{purpose}</p><p className="mt-1 text-xs text-muted">{date}</p></div>
-                <p className="whitespace-nowrap text-sm tabular-nums">{number(Number(count))} flights</p>
+              ['January 2025', 'Train the adapter', flightSplits.train.count, 'var(--zs-peach)'],
+              ['February 2025', 'Adjust confidence scores', flightSplits.calibration.count, 'var(--zs-lane-account)'],
+              ['March 2025', 'Test both models', flightSplits.test.count, 'var(--zs-peri)'],
+            ].map(([date, purpose, count, color]) => (
+              <li key={date as string} style={{ '--tl': color } as React.CSSProperties}>
+                <span className="text-[10.5px] uppercase tracking-[.12em] text-subtle">{date}</span><h4>{purpose}</h4><p>{number(Number(count))} flights</p>
               </li>
             ))}
           </ol>
