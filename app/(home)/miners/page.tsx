@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { currentBase } from '@/lib/base-model';
-import { networkMiners, type Miner } from '@/lib/network-miners';
+import { networkMiners, type Miner, type Track } from '@/lib/network-miners';
 import { blackletter } from '@/components/blackletter';
 import texture from '@/components/light.module.css';
 import s from './miners.module.css';
@@ -74,8 +74,13 @@ function Bars({ compare }: { compare: Compare }) {
   </figure>;
 }
 
-export default async function MinersPage() {
+const TRACKS: { id: Track; label: string }[] = [{ id: 'text', label: 'Text' }, { id: 'image', label: 'Image' }];
+
+export default async function MinersPage({ searchParams }: PageProps<'/miners'>) {
+  const query = await searchParams;
   const [base, network] = await Promise.all([currentBase(), networkMiners()]);
+  const track = network?.tracks ? TRACKS.find(item => item.id === query.track)?.id ?? null : null;
+  const stats = (miner: Miner) => track && miner.training.tracks ? miner.training.tracks[track] : miner.training;
   const latest = base?.channels.latest;
   const now = network ? Date.parse(network.as_of) : 0;
   // Miners keep qualification rows for retired bases; show only bases Zils trains on today.
@@ -100,8 +105,14 @@ export default async function MinersPage() {
         </figure>}
       </header>
 
-      <section className={s.board} aria-labelledby="board-heading">
-        <h2 id="board-heading" className={s.sectionTitle}>Leaderboard</h2>
+      {network?.tracks && <nav aria-label="Training tracks" className={s.tracks}>
+        <Link href="/miners#leaderboard" className={s.trackTile} aria-current={track === null ? 'page' : undefined}><strong>All tracks</strong><span>{network.tracks.text.completed_jobs + network.tracks.image.completed_jobs} completed jobs</span></Link>
+        {TRACKS.map(item => <Link key={item.id} href={`/miners?track=${item.id}#leaderboard`} className={s.trackTile} aria-current={track === item.id ? 'page' : undefined}><strong>{item.label}</strong><span>{network.tracks![item.id].completed_jobs} completed jobs, {network.tracks![item.id].miners} {network.tracks![item.id].miners === 1 ? 'miner' : 'miners'}</span></Link>)}
+        <div className={s.trackTile} data-closed><strong>Video</strong><span>Not open yet. d3-mini reads video in API calls; training on video comes later.</span></div>
+      </nav>}
+
+      <section id="leaderboard" className={s.board} aria-labelledby="board-heading">
+        <h2 id="board-heading" className={s.sectionTitle}>{track ? `Leaderboard, ${track} track` : 'Leaderboard'}</h2>
         {network ? <>
           <div className={s.tableWrap} role="region" aria-label="Miners" tabIndex={0}><table className={s.table}>
             <thead><tr><th scope="col">UID</th><th scope="col">Hotkey</th><th scope="col">Status</th><th scope="col">Can train</th><th scope="col">Jobs</th><th scope="col">Evaluated</th><th scope="col">Selected</th><th scope="col">Median skill</th><th scope="col">Last seen</th></tr></thead>
@@ -110,10 +121,10 @@ export default async function MinersPage() {
               <th scope="row"><code title={miner.hotkey}>{short(miner.hotkey)}</code></th>
               <td><span className={s.status} data-status={miner.status}><span className={s.lamp} aria-hidden="true" />{STATUS[miner.status]}</span></td>
               <td>{trainable(miner.models).length ? trainable(miner.models).map(id => MODEL_NAMES[id] ?? id).join(', ') : '—'}</td>
-              <td className={s.num}>{miner.training.assigned}</td>
-              <td className={s.num}>{miner.training.evaluated}</td>
-              <td className={s.num}>{miner.training.selected}</td>
-              <td>{miner.training.median_skill === null ? <span className={s.none}>—</span> : <span className={s.skill}><span aria-hidden="true" className={s.track}><span className={s.fill} style={{ width: `${miner.training.median_skill * 100}%` }} /></span><span className={s.value}>{miner.training.median_skill.toFixed(2)}</span></span>}</td>
+              <td className={s.num}>{stats(miner).assigned}</td>
+              <td className={s.num}>{stats(miner).evaluated}</td>
+              <td className={s.num}>{stats(miner).selected}</td>
+              <td>{stats(miner).median_skill === null ? <span className={s.none}>—</span> : <span className={s.skill}><span aria-hidden="true" className={s.track}><span className={s.fill} style={{ width: `${stats(miner).median_skill! * 100}%` }} /></span><span className={s.value}>{stats(miner).median_skill!.toFixed(2)}</span></span>}</td>
               <td>{ago(miner.last_seen, now)}</td>
             </tr>)}</tbody>
           </table></div>
