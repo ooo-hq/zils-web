@@ -16,7 +16,7 @@ import { Plus, ArrowUpRight, ArrowRight, ImageIcon, MessageSquareText } from 'lu
 import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { TrainingRunStatus } from '@/components/training-run-status';
 import { useAuthSession } from '@/components/auth-session';
-import { signInWithGoogle } from '@/lib/training-auth';
+import { sendSignInLink, signInWithGoogle } from '@/lib/training-auth';
 import { currentTrainingJob, trainingProgress } from '@/lib/training-status';
 import { runToasts } from '@/lib/run-toasts';
 import { toast } from 'sonner';
@@ -45,7 +45,7 @@ export function TrainingDashboard({ config, runId, bulkImport = false, upgradeOf
     setBusy('email'); setError(''); setNotice('');
     if (!client) { setError('Sign-in is unavailable. Please refresh and try again.'); setBusy(null); return; }
     try {
-      const { error } = await client.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false, emailRedirectTo: `${window.location.origin}/train` } });
+      const { error } = await sendSignInLink(client, email, window.location.origin);
       if (error?.code === 'otp_disabled' || error?.code === 'signup_disabled') {
         setError('Workspace access is by invitation. Join the early-access list below, or use the email address that was invited.');
         return;

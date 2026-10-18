@@ -15,6 +15,11 @@ export function signInWithGoogle(client: SupabaseClient, origin: string, returnP
   });
 }
 
+/** Email a sign-in link. Never creates accounts: workspaces are invite-only. */
+export function sendSignInLink(client: SupabaseClient, email: string, origin: string) {
+  return client.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false, emailRedirectTo: `${origin}/train` } });
+}
+
 /** Preserve active sessions and PKCE flows; use the Zils key for new sessions. */
 export function trainingAuthStorageKey(storage?: AuthStorage): string {
   const current = 'zils-training-auth';

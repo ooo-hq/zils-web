@@ -1,29 +1,54 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
+import { useState, type FormEvent } from 'react';
+import css from '@/components/site/form-page.module.css';
 
 export function EmailSignup({ earlyAccess = false }: { earlyAccess?: boolean }) {
   const [status, setStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
 
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (status === 'pending') return;
+    const data = new FormData(event.currentTarget);
+    setStatus('pending');
+    try {
+      const response = await fetch('/api/email-signups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.get('email'), website: data.get('website') }),
+        signal: AbortSignal.timeout(15000),
+      });
+      setStatus(response.ok && (await response.json()).ok === true ? 'success' : 'error');
+    } catch {
+      setStatus('error');
+    }
+  }
+
+  if (earlyAccess) return (
+    <>
+      <div role="status" aria-live="polite">
+        {status === 'success' && <div className={css.fpDone}><h2>You’re on the list.</h2><p>We’ll email you when a spot opens.</p></div>}
+      </div>
+      {status !== 'success' && <form aria-label="Join Zils early access" onSubmit={onSubmit}>
+        <div className={css.fpField}>
+          <div className={css.fpTop}><label htmlFor="signup-email" className={css.fpLabel}>Email address</label></div>
+          <input id="signup-email" name="email" type="email" required maxLength={254} autoComplete="email" placeholder="you@company.com" aria-describedby="signup-description" disabled={status === 'pending'} />
+          <span id="signup-description" className={css.fpHint}>Get an email when early-access opportunities open. No account or payment needed.</span>
+        </div>
+        <input name="website" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" className={css.fpHp} />
+        {status === 'error' && <p role="alert" className={css.fpError}>Couldn&apos;t save your email. Please try again.</p>}
+        <div className={css.fpFoot}>
+          <button type="submit" className={css.fpBtn} disabled={status === 'pending'}>{status === 'pending' ? 'Saving…' : 'Join early access'}</button>
+          <Link href="/privacy" className={css.fpLink}>Privacy</Link>
+        </div>
+      </form>}
+    </>
+  );
+
   return (
     <div className="w-full text-left">
-      <form aria-label={earlyAccess ? 'Join Zils early access' : 'Email updates'} onSubmit={async event => {
-        event.preventDefault();
-        if (status === 'pending') return;
-        const data = new FormData(event.currentTarget);
-        setStatus('pending');
-        try {
-          const response = await fetch('/api/email-signups', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: data.get('email'), website: data.get('website') }),
-            signal: AbortSignal.timeout(15000),
-          });
-          setStatus(response.ok && (await response.json()).ok === true ? 'success' : 'error');
-        } catch {
-          setStatus('error');
-        }
-      }}>
+      <form aria-label={earlyAccess ? 'Join Zils early access' : 'Email updates'} onSubmit={onSubmit}>
         <label htmlFor="signup-email" className={`block text-xl font-medium tracking-tight ${earlyAccess ? 'text-ink' : 'text-neutral-100'}`}>{earlyAccess ? 'Email address' : 'Get Fez updates'}</label>
         <p id="signup-description" className={`mt-3 max-w-sm text-sm leading-6 ${earlyAccess ? 'text-muted' : 'text-neutral-400'}`}>
           {earlyAccess ? 'Get an email when early-access opportunities open. No account or payment needed.' : 'New releases and what changed in them. Occasional, and nothing else.'}
