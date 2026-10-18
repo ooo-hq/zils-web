@@ -6,8 +6,6 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { ArrowRight, ArrowUpRight, FlaskConical, RefreshCw, LockKeyhole } from 'lucide-react';
 import { useAuthSession } from '@/components/auth-session';
 import { BillingUsage, BillingUsageDetails } from '@/components/billing-usage';
-import { ZilsSymbol } from '@/components/zils-symbol';
-import texture from '@/components/light.module.css';
 import { billingApi, BillingError, TOPUP_AMOUNTS_CENTS, formatCredit, checkoutIntent, pendingCheckout, attachCheckout, settleCheckout, clearCheckout, type BillingSummary, type CheckoutIntent } from '@/lib/billing';
 import styles from '@/app/(home)/billing/billing.module.css';
 
@@ -115,15 +113,11 @@ function AccountBilling({ config, client, owner, testPreview, checkoutReturn, vi
     {notice && <p className={styles.returnNotice} role="status">{notice}</p>}
     <div className={styles.refreshRow}><span>{refreshing ? 'Updating billing…' : stale ? 'Billing details could not be refreshed.' : 'All amounts in USD.'}</span><button type="button" className={styles.textButton} onClick={refresh} disabled={refreshing || busy}><RefreshCw size={14} aria-hidden="true" />{refreshing ? 'Refreshing…' : 'Refresh'}</button></div>
     {!summary || expired ? <p className={styles.loading} role="status">{expired ? 'Sign in again to view your account.' : refreshing ? 'Loading your billing details…' : 'Your billing details are unavailable. Refresh to try again.'}</p> : <>
-      <div className={styles.billingGrid}>
-          <section className={styles.cardSection} aria-labelledby="credit-heading">
-            <div className={styles.card}>
-              <div aria-hidden="true" className={`${styles.texture} ${texture.scanlines}`} />
-              <div className={styles.cardTop}><span className={styles.emblem} aria-hidden="true"><ZilsSymbol /></span>{summary.mode === 'test' && <span className={styles.stamp}>Test credit</span>}</div>
-              <h2 id="credit-heading">Available credit</h2>
-              <p className={styles.amount}>{formatCredit(summary.available_nanos)}</p>
-              <dl className={styles.balances}><div><dt>Total balance</dt><dd>{formatCredit(summary.balance_nanos)}</dd></div><div><dt>Reserved for work in progress</dt><dd>{formatCredit(summary.reserved_nanos)}</dd></div></dl>
-            </div>
+      <div className={styles.plan}>
+          <section className={styles.start} aria-labelledby="credit-heading">
+            <h2 id="credit-heading">Available credit</h2>
+            <p className={styles.startAmount}><strong>{formatCredit(summary.available_nanos)}</strong><span>{summary.mode === 'test' ? 'test credit' : 'prepaid credit'}</span></p>
+            <dl className={styles.balances}><div><dt>Total balance</dt><dd>{formatCredit(summary.balance_nanos)}</dd></div><div><dt>Reserved for work in progress</dt><dd>{formatCredit(summary.reserved_nanos)}</dd></div></dl>
             <p className={styles.balanceNote}>Shared across your models and API keys.</p>
             {summary.mode !== 'off' && BigInt(summary.available_nanos) < 2_000_000_000n && <p className={styles.lowBalance}><strong>{BigInt(summary.available_nanos) <= 0n ? 'No available credit' : 'Low credit'}</strong><span>{summary.free_training_runs > 0 ? 'Your included training is still available.' : 'Top up to cover new paid usage.'}</span></p>}
           </section>
