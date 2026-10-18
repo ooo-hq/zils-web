@@ -28,13 +28,19 @@ test('an emailed link never creates accounts; invite-only and success states sho
   await expect(page.getByRole('textbox', { name: 'Email' })).toHaveValue('invited@example.com');
   await page.getByRole('button', { name: 'Email me a sign-in link', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Check your email.' })).toBeVisible();
+  await expect(page.getByRole('status')).toBeFocused();
   expect(attempts).toBe(2);
 });
 
 test('a signed-in visitor goes straight to the workspace', async ({ page }) => {
   await signIn(page);
+  await page.addInitScript(() => {
+    (window as unknown as { seen: boolean }).seen = false;
+    new MutationObserver(() => { if (document.getElementById('sign-in-email')) (window as unknown as { seen: boolean }).seen = true; }).observe(document, { childList: true, subtree: true });
+  });
   await page.goto('/sign-in');
   await expect(page).toHaveURL(/\/train$/);
+  expect(await page.evaluate(() => (window as unknown as { seen: boolean }).seen)).toBe(false);
 });
 
 test('the page has its own theme toggle and the early-access link', async ({ page }) => {

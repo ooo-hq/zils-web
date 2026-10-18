@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, type CSSProperties, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import { useAuthSession } from '@/components/auth-session';
 import { ThemeToggle } from '@/components/theme';
 import { ZilsWordmark } from '@/components/zils-wordmark';
@@ -29,6 +29,8 @@ export function SignInPanel() {
   const [busy, setBusy] = useState<'email' | 'google' | null>(null);
   const [lit, setLit] = useState(1);
 
+  const result = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (sent) result.current?.focus(); }, [sent]);
   useEffect(() => { if (session) router.replace('/train'); }, [session, router]);
   useEffect(() => {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -83,13 +85,11 @@ export function SignInPanel() {
       <div className={css.formHalf}>
         <div className={css.formTop}><ThemeToggle className={css.theme} /></div>
         <main id="main-content" tabIndex={-1} className={css.box}>
-          {sent ? (
-            <div role="status" className={css.done}>
-              <h1>Check your email.</h1>
-              <p>If that address has a workspace, a sign-in link is on its way.</p>
+          {session !== null ? <div className={css.done} aria-busy="true"><p>Opening your workspace…</p></div> : <>
+            <div role="status" ref={result} tabIndex={-1} className={css.done}>
+              {sent && <><h1>Check your email.</h1><p>If that address has a workspace, a sign-in link is on its way.</p></>}
             </div>
-          ) : (
-            <form onSubmit={emailLink} aria-label="Sign in to Zils">
+            {!sent && <form onSubmit={emailLink} aria-label="Sign in to Zils">
               <h1>Sign in.</h1>
               <p className={css.sub}>Open your Zils workspace.</p>
               {(error || sessionError) && <p role="alert" className={form.fpError} style={{ marginTop: 20 }}>{error || sessionError}</p>}
@@ -106,8 +106,8 @@ export function SignInPanel() {
               </div>
               <button type="submit" className={`${form.fpBtn} ${css.submit}`} disabled={busy !== null}>{busy === 'email' ? 'Sending…' : 'Email me a sign-in link'}</button>
               <p className={css.fine}>Workspaces are invite-only for now. New here? <Link href="/early-access">Get early access</Link></p>
-            </form>
-          )}
+            </form>}
+          </>}
           <p className={css.legal}>By signing in you agree to the <Link href="/terms">Terms</Link> and <Link href="/privacy">Privacy policy</Link>.</p>
         </main>
       </div>

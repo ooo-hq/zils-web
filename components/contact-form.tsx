@@ -4,6 +4,10 @@ import Link from 'next/link';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import styles from '@/components/site/form-page.module.css';
 
+function Label({ id, children, optional }: { id: string; children: string; optional?: boolean }) {
+  return <div className={styles.fpTop}><label htmlFor={id} className={styles.fpLabel}>{children}{optional && <span className={styles.fpLabel}> (optional)</span>}</label>{optional && <span className={styles.fpLabel} aria-hidden="true">Optional</span>}</div>;
+}
+
 export function ContactForm() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [error, setError] = useState('');
@@ -52,7 +56,6 @@ export function ContactForm() {
   </div>;
 
   const off = status === 'sending';
-  const Label = ({ id, children, optional }: { id: string; children: string; optional?: boolean }) => <div className={styles.fpTop}><label htmlFor={id} className={styles.fpLabel}>{children}</label>{optional && <span className={styles.fpLabel}>Optional</span>}</div>;
   return <form onSubmit={submit} className={styles.fpForm} aria-label="Contact Zils">
     <div className={styles.fpPair}>
       <div className={styles.fpField}><Label id="contact-name">Name</Label><input id="contact-name" name="name" autoComplete="name" maxLength={100} required disabled={off} /></div>

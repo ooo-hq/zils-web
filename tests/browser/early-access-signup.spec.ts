@@ -28,6 +28,8 @@ test('failed signup preserves the email and a retry confirms a successful save',
   await expect(page.getByRole('textbox', { name: 'Email address' })).toHaveValue('builder@example.com');
   await page.getByRole('button', { name: 'Join early access', exact: true }).click();
   await expect(page.getByRole('main').getByRole('status')).toContainText("You’re on the list.");
+  await expect(page.getByRole('main').getByRole('status')).toContainText('We’ll email you with access updates.');
+  await expect(page.getByRole('main').getByRole('status').locator('[tabindex="-1"]')).toBeFocused();
   await expect(page.getByRole('button', { name: 'Join early access', exact: true })).toHaveCount(0);
   expect(attempts).toBe(2);
 });
@@ -50,4 +52,5 @@ test('contact shows a confirmation once the message is sent', async ({ page }) =
   await page.getByRole('button', { name: 'Send message' }).click();
   await expect(page.getByRole('heading', { name: 'Message sent.' })).toBeVisible();
   await expect(page.getByText('ada@example.com')).toBeVisible();
+  await expect(page.getByRole('status')).toBeFocused();
 });

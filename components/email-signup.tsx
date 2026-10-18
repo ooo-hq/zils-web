@@ -1,11 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import css from '@/components/site/form-page.module.css';
 
 export function EmailSignup({ earlyAccess = false }: { earlyAccess?: boolean }) {
   const [status, setStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
+
+  const done = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (status === 'success') done.current?.focus(); }, [status]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -28,7 +31,7 @@ export function EmailSignup({ earlyAccess = false }: { earlyAccess?: boolean }) 
   if (earlyAccess) return (
     <>
       <div role="status" aria-live="polite">
-        {status === 'success' && <div className={css.fpDone}><h2>You’re on the list.</h2><p>We’ll email you when a spot opens.</p></div>}
+        {status === 'success' && <div ref={done} tabIndex={-1} className={css.fpDone}><h2>You’re on the list.</h2><p>We’ll email you with access updates.</p></div>}
       </div>
       {status !== 'success' && <form aria-label="Join Zils early access" onSubmit={onSubmit}>
         <div className={css.fpField}>
