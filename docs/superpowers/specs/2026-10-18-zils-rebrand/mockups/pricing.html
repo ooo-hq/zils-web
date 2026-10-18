@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+var FGR, BGR, FGH, BGH, DIP, END;
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  var L = t === "light";
+  FGR = L ? "28,26,38" : "255,255,255";
+  BGR = L ? "250,249,252" : "24,25,30";
+  FGH = L ? "#1c1a26" : "#fff";
+  BGH = L ? "#faf9fc" : "#18191e";
+  DIP = L ? "#efe8f0" : "#3a3440";
+  END = L ? "#eeedf3" : "#24242c";
+}
+(function () { var t = "dark"; try { t = localStorage.getItem("zils-theme") || "dark"; } catch (e) {} applyTheme(t); })();
+</script>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zils pricing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter+Tight:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+  @font-face { font-family: "ZilsMark"; src: url("grenze.woff2") format("woff2"); font-weight: 600; }
+  :root {
+    --violet-hi: #8f88ff;
+    --orange: #ff7a2f; --peach: #f2a184; --pink: #dcb2ee; --lilac: #c3b4f6; --peri: #a9b5f2;
+    --bad: #ff8f6b;
+    --spectrum: linear-gradient(90deg, #ef8d5a 0%, #d9a08c 18%, #cfa2e4 42%, #c3b4f6 64%, #a9b5f2 82%, #8ea6ff 100%);
+    --ink: var(--panel); --ink-2: var(--ink-2);
+    --line: rgba(var(--fg-rgb),.08);
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+    --sans: "Inter Tight", system-ui, sans-serif;
+    --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--ink); color: var(--fg); font-family: var(--sans); min-height: 100vh; display: flex; flex-direction: column; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .page { position: relative; flex: 1; display: flex; flex-direction: column; }
+  .page::before, .page::after { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); z-index: 2; pointer-events: none; }
+  .page::before { left: 56px; } .page::after { right: 56px; }
+  .nav { position: sticky; top: 0; z-index: 20; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 76px; background: rgba(var(--bg-rgb),.88); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .nav .links { display: flex; gap: 26px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+  .nav .links span { opacity: .6; } .nav .links .on { opacity: 1; color: var(--fg); box-shadow: 0 1px 0 var(--orange); padding-bottom: 3px; }
+  .nav .cta { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 8px 12px; background: var(--fg); color: var(--ink); }
+  .mark { font-family: "ZilsMark", serif; font-weight: 600; letter-spacing: -0.025em; line-height: 1; color: var(--violet-hi); text-transform: none; }
+  .nav .mark { font-size: 24px; }
+  .label { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: rgba(var(--fg-rgb),.5); }
+  .corner { position: absolute; left: 0; top: 0; width: 0; height: 0; border-style: solid; border-width: 7px 7px 0 0; border-color: var(--orange) transparent transparent transparent; z-index: 3; }
+  .body { position: relative; margin: 0 56px; padding-bottom: 64px; }
+  .btn { font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; padding: 11px 15px; display: inline-flex; align-items: center; gap: 8px; }
+  .btn.p { background: var(--orange); color: #140a04; }
+  .btn.s { border: 1px solid rgba(var(--fg-rgb),.22); }
+  .sec-row { display: flex; align-items: center; height: 40px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin: 0 -56px; }
+  .sec-row .n { width: 56px; text-align: center; font-family: var(--mono); font-size: 10px; color: rgba(var(--fg-rgb),.45); }
+  .sec-row .t { padding-left: 24px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(var(--fg-rgb),.7); }
+
+  .hero { padding: 72px 40px 48px; display: flex; justify-content: space-between; align-items: end; gap: 32px; }
+  .badge { display: inline-flex; gap: 8px; align-items: center; font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--peach); border: 1px solid rgba(242,161,132,.4); padding: 5px 9px; }
+  .hero h1 { font-weight: 300; font-size: clamp(42px, 5.8vw, 80px); letter-spacing: -0.03em; line-height: .98; margin-top: 18px; }
+  .hero p { font-size: 15.5px; line-height: 1.55; color: rgba(var(--fg-rgb),.62); max-width: 340px; }
+
+  /* plan */
+  .plan { display: grid; grid-template-columns: 1fr 1.25fr; border-top: 1px solid var(--line); }
+  .plan > div { padding: 36px 40px 40px; }
+  .plan > div:first-child { border-right: 1px solid var(--line); position: relative; overflow: hidden; }
+  .five { font-weight: 200; font-size: clamp(110px, 13vw, 180px); letter-spacing: -0.05em; line-height: .85; margin-top: 18px; background: var(--spectrum); -webkit-background-clip: text; background-clip: text; color: transparent; display: block; width: fit-content; }
+  .plan .sub { font-size: 15px; margin-top: 14px; color: rgba(var(--fg-rgb),.75); }
+  .plan .sub b { color: var(--fg); font-weight: 500; }
+  .plan .soon { margin-top: 14px; font-family: var(--mono); font-size: 11px; letter-spacing: .04em; color: rgba(var(--fg-rgb),.45); }
+  .rates { display: grid; }
+  .rate { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 16px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+  .rate:first-child { padding-top: 4px; }
+  .rate h3 { font-weight: 400; font-size: 17px; }
+  .rate p { font-size: 13px; color: rgba(var(--fg-rgb),.5); margin-top: 3px; }
+  .rate .v { font-weight: 300; font-size: 36px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; text-align: right; }
+  .rate .v small { font-family: var(--mono); font-size: 11px; letter-spacing: .04em; color: rgba(var(--fg-rgb),.45); margin-left: 4px; }
+  .rate .v.inc { font-size: 15px; font-family: var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--lilac); }
+  .rate .v.free { font-size: 15px; font-family: var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--peach); }
+  .fine { font-size: 12px; color: rgba(var(--fg-rgb),.42); margin-top: 16px; line-height: 1.5; }
+
+  /* calculator */
+  .calc { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); }
+  .calc > div { padding: 32px 40px 36px; }
+  .calc > div:first-child { border-right: 1px solid var(--line); }
+  .calc h2, .faq-head h2 { font-weight: 300; font-size: clamp(28px, 3vw, 40px); letter-spacing: -0.02em; }
+  .ctl { margin-top: 26px; }
+  .ctl .top { display: flex; justify-content: space-between; align-items: baseline; }
+  .ctl .val { font-family: var(--mono); font-size: 16px; color: var(--fg); font-variant-numeric: tabular-nums; }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 26px; background: transparent; margin-top: 8px; cursor: pointer; }
+  input[type=range]::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(90deg, var(--peach) var(--p, 50%), rgba(var(--fg-rgb),.12) var(--p, 50%)); }
+  input[type=range]::-moz-range-track { height: 2px; background: rgba(var(--fg-rgb),.12); }
+  input[type=range]::-moz-range-progress { height: 2px; background: var(--peach); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: var(--ink); border: 2px solid var(--peach); margin-top: -7px; }
+  input[type=range]::-moz-range-thumb { width: 12px; height: 12px; background: var(--ink); border: 2px solid var(--peach); border-radius: 0; }
+  input[type=range]:focus-visible { outline: 1px dashed var(--peach); outline-offset: 4px; }
+  .total { font-weight: 200; font-size: clamp(64px, 7vw, 96px); letter-spacing: -0.04em; line-height: 1; margin-top: 10px; font-variant-numeric: tabular-nums; }
+  .credit { margin-top: 26px; }
+  .credit .bar { position: relative; height: 40px; border: 1px solid rgba(var(--fg-rgb),.14); display: flex; overflow: hidden; }
+  .credit .seg { height: 100%; transition: width .35s cubic-bezier(.2,.7,.2,1); position: relative; }
+  .credit .seg.inf { background: var(--spectrum); background-size: 300% 100%; }
+  .credit .seg.trn { background: var(--peach); }
+  .credit .seg::after { content: ""; position: absolute; inset: 0; background-image: var(--grain); opacity: .35; mix-blend-mode: overlay; }
+  .credit .cap { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--fg); display: none; z-index: 2; }
+  .credit .cap.on { display: block; }
+  .credit .bar { overflow: visible; }
+  .credit .legend { display: flex; justify-content: space-between; margin-top: 10px; font-family: var(--mono); font-size: 11px; color: rgba(var(--fg-rgb),.5); }
+  .credit .legend b { color: var(--fg); font-weight: 500; }
+  .lines { margin-top: 22px; border-top: 1px solid var(--line); }
+  .lines div { display: flex; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid rgba(var(--fg-rgb),.06); font-size: 14px; color: rgba(var(--fg-rgb),.7); }
+  .lines span:last-child { font-family: var(--mono); color: var(--fg); font-variant-numeric: tabular-nums; }
+  .lines .inc { color: var(--lilac) !important; } .lines .free { color: var(--peach) !important; }
+  .left { margin-top: 14px; font-size: 14px; } .left.over { color: var(--bad); }
+
+  /* faq */
+  .faq-head { padding: 40px 40px 20px; }
+  details { border-top: 1px solid var(--line); }
+  details summary { cursor: pointer; list-style: none; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 17px; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::after { content: "+"; font-family: var(--mono); color: var(--peach); font-size: 16px; }
+  details[open] summary::after { content: "−"; }
+  details p { padding: 0 40px 22px; font-size: 14.5px; line-height: 1.65; color: rgba(var(--fg-rgb),.62); max-width: 760px; }
+
+  .final { text-align: center; padding: 72px 24px 8px; border-top: 1px solid var(--line); }
+  .final h2 { font-weight: 300; font-size: clamp(32px, 4vw, 52px); letter-spacing: -0.02em; }
+  .final p { margin-top: 10px; color: rgba(var(--fg-rgb),.6); font-size: 15px; }
+  .final .btn { margin-top: 24px; }
+
+  .footer { display: flex; justify-content: space-between; align-items: center; padding: 22px 76px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: rgba(var(--fg-rgb),.4); margin-top: auto; }
+  .footer .mark { font-size: 20px; } .footer nav { display: flex; gap: 22px; }
+
+  @media (max-width: 900px) {
+    .nav { padding: 0 16px; } .nav .links { display: none; }
+    .page::before, .page::after { display: none; }
+    .body { margin: 0 16px; } .sec-row { margin: 0 -16px; }
+    .hero { flex-direction: column; align-items: start; padding: 48px 4px 32px; }
+    .plan, .calc { grid-template-columns: 1fr; }
+    .plan > div, .calc > div { padding: 28px 4px 32px; }
+    .plan > div:first-child, .calc > div:first-child { border-right: 0; border-bottom: 1px solid var(--line); }
+    .faq-head, details summary, details p { padding-left: 4px; padding-right: 4px; }
+    .footer { flex-direction: column; gap: 14px; padding: 22px 16px; }
+  }
+
+/* ---- quiet treatment: two surfaces, dim text ---- */
+:root { --gutter: #0f0f13; --panel: var(--panel); --ink: var(--panel); --ink-2: var(--ink-2); --line: rgba(var(--fg-rgb),.07); }
+body { background: var(--gutter) !important; }
+.page, .frame { background: linear-gradient(90deg, var(--gutter) 0 56px, var(--panel) 56px calc(100% - 56px), var(--gutter) calc(100% - 56px)) !important; }
+.nav { background: var(--navbg) !important; }
+.nav .cta { background: transparent !important; color: var(--fg) !important; border: 1px solid rgba(var(--fg-rgb),.25); }
+.nav .links span, .footer nav span, .nav .mark, .footer .mark { cursor: pointer; }
+.footer { background: var(--gutter); }
+h1, h2, h3, h4 { color: var(--fg); }
+.label { color: rgba(var(--fg-rgb),.38) !important; }
+@media (max-width: 900px) { .page, .frame { background: var(--panel) !important; } }
+
+/* ---- themes ---- */
+:root { --fg-rgb: 232,230,239; --bg-rgb: 24,25,30; --fg: #e8e6ef; --navbg: rgba(15,15,19,.92); }
+html[data-theme="light"] {
+  --fg-rgb: 28,26,38; --bg-rgb: 250,249,252; --fg: #1c1a26; --navbg: rgba(236,235,241,.92);
+  --gutter: #ecebf1; --panel: #faf9fc; --ink: #faf9fc; --ink-2: #f1eff6; --line: rgba(28,26,38,.1);
+  --violet-hi: #4b44c8; --peach: #c2582a; --lilac: #6a59cc; --ok: #6a59cc; --peri: #4a5fc4; --warn: #c2582a; --bad: #cc4426; --off: rgba(28,26,38,.35);
+  --t1: #1c1a26; --t2: rgba(28,26,38,.64); --t3: rgba(28,26,38,.44);
+  color-scheme: light;
+}
+html[data-theme="light"] .label { color: rgba(28,26,38,.48) !important; }
+html[data-theme="light"] .btn.p { color: #fff; }
+.theme-t { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid rgba(var(--fg-rgb),.2); color: var(--fg); margin-left: auto; margin-right: 12px; cursor: pointer; background: none; }
+.theme-t:hover { border-color: var(--peach); }
+.theme-t svg { width: 16px; height: 16px; }
+html[data-theme="light"] .theme-t .moon, html:not([data-theme="light"]) .theme-t .sun { display: none; }
+
+.nav .links { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+@media (max-width: 960px) { .nav .links { display: none; } }
+
+.zf { border-top: 1px solid rgba(var(--fg-rgb),.08); background: var(--gutter); font-family: "Inter Tight", system-ui, sans-serif; margin-top: auto; }
+.zf .in { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 32px; padding: 48px 76px 36px; }
+.zf .brand .mark { font-size: 30px; cursor: pointer; }
+.zf .brand p { margin-top: 14px; font-size: 15px; line-height: 1.45; color: rgba(var(--fg-rgb),.62); }
+.zf h5 { font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: rgba(var(--fg-rgb),.4); margin: 0 0 14px; }
+.zf ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.zf a { color: rgba(var(--fg-rgb),.72); text-decoration: none; font-size: 14px; }
+.zf a:hover { color: var(--fg); }
+.zf .bot { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 76px; border-top: 1px solid rgba(var(--fg-rgb),.08); font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: rgba(var(--fg-rgb),.4); }
+.zf .bot nav { display: flex; gap: 20px; }
+.zf .bot a { font-size: 10.5px; color: rgba(var(--fg-rgb),.5); }
+@media (max-width: 900px) { .zf .in { grid-template-columns: 1fr 1fr; padding: 36px 16px 24px; } .zf .brand { grid-column: 1 / -1; } .zf .bot { flex-direction: column; padding: 18px 16px; } }
+</style>
+</head>
+<body>
+  <div class="nav"><span class="mark">Zils</span><div class="links"><span>Examples</span><span>Research</span><span>Bittensor</span><span class="on">Pricing</span></div><button class="theme-t" type="button" aria-label="Switch light or dark mode" onclick="(function(){var t=document.documentElement.dataset.theme==='light'?'dark':'light';applyTheme(t);try{localStorage.setItem('zils-theme',t)}catch(e){}})()"><svg class="moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13.5 9.5A6 6 0 0 1 6.5 2.5a6 6 0 1 0 7 7Z"/></svg><svg class="sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M3 13l1.4-1.4M11.6 4.4 13 3"/></svg></button><span class="cta">Early access</span></div>
+
+  <div class="page">
+    <div class="body">
+      <span class="corner"></span>
+      <div class="hero">
+        <div><span class="badge">Beta launch pricing</span><h1>Your model.<br>Pay as you go.</h1></div>
+        <p>Train on your examples. Pay for the decisions you use. No subscriptions, tiers, or fees for model slots.</p>
+      </div>
+
+      <div class="sec-row"><span class="n">01</span><span class="t">One plan</span></div>
+      <div class="plan">
+        <div>
+          <span class="label">One plan. Start with</span>
+          <div class="five">$5</div>
+          <p class="sub">prepaid credit. <b>Your first training run is included</b>, and the full $5 stays for usage.</p>
+          <div style="margin-top:24px"><span class="btn p">Request early access</span></div>
+          <p class="soon">Paid access is coming. Top-ups are not available yet.</p>
+        </div>
+        <div>
+          <div class="rates">
+            <div class="rate"><div><h3>First custom model</h3><p>One standard training run, with your first top-up</p></div><span class="v inc">Included</span></div>
+            <div class="rate"><div><h3>More training</h3><p>Each additional standard run or retraining</p></div><span class="v">$2<small>/ run</small></span></div>
+            <div class="rate"><div><h3>Model usage</h3><p>Per million input tokens, including custom models</p></div><span class="v">$0.042</span></div>
+            <div class="rate"><div><h3>Output tokens</h3><p>The model’s answers</p></div><span class="v free">Free</span></div>
+          </div>
+          <p class="fine">All prices in USD. Shared context is counted once per request in the planned billing model. A standard run trains a model for your task with automated evaluation; larger datasets get an upfront estimate. Training pays for the work, not a guaranteed pass.</p>
+        </div>
+      </div>
+
+      <div class="sec-row"><span class="n">02</span><span class="t">Estimate</span></div>
+      <div class="calc">
+        <div>
+          <h2>See what you’d spend.</h2>
+          <div class="ctl"><div class="top"><span class="label">Decision requests</span><span class="val" id="v-req"></span></div><input type="range" id="req" min="0" max="100" value="50" aria-label="Decision requests"></div>
+          <div class="ctl"><div class="top"><span class="label">Input tokens per request</span><span class="val" id="v-tok"></span></div><input type="range" id="tok" min="0" max="100" value="50" aria-label="Input tokens per request"></div>
+          <div class="ctl"><div class="top"><span class="label">Extra training runs</span><span class="val" id="v-run"></span></div><input type="range" id="run" min="0" max="10" value="0" step="1" aria-label="Additional standard training runs"></div>
+          <p class="fine">Estimate only. Nothing runs and nothing is charged.</p>
+        </div>
+        <div>
+          <span class="label">Estimated usage</span>
+          <div class="total" id="total">$4.20</div>
+          <div class="credit">
+            <div class="bar"><span class="seg inf" id="s-inf"></span><span class="seg trn" id="s-trn"></span><span class="cap" id="cap"></span></div>
+            <div class="legend"><span>Your first <b>$5</b> credit</span><span id="pct"></span></div>
+          </div>
+          <div class="lines">
+            <div><span>First training run</span><span class="inc">Included</span></div>
+            <div><span>Extra training</span><span id="l-trn">$0.00</span></div>
+            <div><span>Inference</span><span id="l-inf">$4.20</span></div>
+            <div><span>Output tokens</span><span class="free">Free</span></div>
+          </div>
+          <p class="left" id="left"></p>
+        </div>
+      </div>
+
+      <div class="sec-row"><span class="n">03</span><span class="t">Details</span></div>
+      <div class="faq-head"><h2>A few useful details.</h2></div>
+      <details><summary>What counts as an input token?</summary><p>A token is a small piece of text. Input tokens are the context, questions, and answer choices you send for a decision. Under the planned billing model, shared context is counted once per request; repeated internal processing is not charged again.</p></details>
+      <details><summary>Can I train more than one model?</summary><p>Yes. There are no model-count tiers or fees for model slots. Each additional standard training run costs $2, and you pay for inference when you use a model. Serving availability depends on capacity; this plan does not reserve dedicated hardware.</p></details>
+      <details><summary>Does my credit expire each month?</summary><p>The launch plan has no monthly credit expiry and no recurring subscription. You’ll be able to set a spending cap. These billing controls will be available with paid access.</p></details>
+      <details><summary>What happens if training fails?</summary><p>A run that fails because of our infrastructure receives a credit. A completed run is charged for its training and evaluation work, even if the resulting model does not meet the agreed quality requirements.</p></details>
+      <details><summary>Can I pay and start today?</summary><p>These are planned beta launch prices. Checkout and usage billing are not open yet. Request early access, or, if you’ve already been invited, sign in to your workspace.</p></details>
+
+      <div class="final"><h2>Bring a decision to improve.</h2><p>Tell us what you want your model to learn.</p><span class="btn p">Request early access</span></div>
+    </div>
+
+    <footer class="zf">
+  <div class="in">
+    <div class="brand"><a href="home.html" class="mark">Zils</a><p>Specialized models.<br>Decisions that are yours.</p></div>
+    <div><h5>Build</h5><ul><li><a href="#">Docs</a></li><li><a href="examples.html">Examples</a></li><li><a href="pricing.html">Pricing</a></li><li><a href="early-access.html">Early access</a></li></ul></div>
+    <div><h5>Explore</h5><ul><li><a href="research.html">Research</a></li><li><a href="miners.html">Miners</a></li><li><a href="#">Model source</a></li></ul></div>
+    <div><h5>Keep in touch</h5><ul><li><a href="#">Changelog</a></li><li><a href="#">Discord</a></li><li><a href="#">X</a></li><li><a href="contact.html">Contact</a></li></ul></div>
+  </div>
+  <div class="bot"><span>Your data. Your decision model.</span><nav><a href="privacy.html">Privacy</a><a href="privacy.html">Terms</a><span>© 2026 Zils</span></nav></div>
+</footer></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  // log-scale sliders: requests 1k–10M (default 100k), tokens 100–10k (default 1k)
+  const logMap = (p, lo, hi) => Math.round(Math.pow(10, Math.log10(lo) + (Math.log10(hi) - Math.log10(lo)) * p / 100));
+  const nice = n => { const m = Math.pow(10, Math.floor(Math.log10(n)) - 1); return Math.round(n / m) * m; };
+  const fmt = n => n.toLocaleString("en-US");
+  const usd = n => "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const RATE = 0.042, RUN = 2, CREDIT = 5;
+  const req = $("req"), tok = $("tok"), run = $("run");
+  req.value = 50; tok.value = 50; // 100,000 and 1,000
+  function update() {
+    const r = nice(logMap(+req.value, 1000, 10000000)), t = nice(logMap(+tok.value, 100, 10000)), x = +run.value;
+    [req, tok, run].forEach(s => s.style.setProperty("--p", (s.value - s.min) / (s.max - s.min) * 100 + "%"));
+    const inf = r * t / 1e6 * RATE, trn = x * RUN, total = inf + trn;
+    $("v-req").textContent = fmt(r); $("v-tok").textContent = fmt(t); $("v-run").textContent = x;
+    $("total").textContent = usd(total); $("l-inf").textContent = usd(inf); $("l-trn").textContent = usd(trn);
+    const scale = Math.max(CREDIT, total);
+    $("s-inf").style.width = (inf / scale * 100) + "%"; $("s-trn").style.width = (trn / scale * 100) + "%";
+    const cap = $("cap"); cap.classList.toggle("on", total > CREDIT); cap.style.left = (CREDIT / scale * 100) + "%";
+    const used = Math.min(100, total / CREDIT * 100);
+    $("pct").textContent = total <= CREDIT ? `${used.toFixed(0)}% used` : "White line = end of $5 credit";
+    const left = $("left");
+    if (total <= CREDIT) { left.textContent = `${usd(CREDIT - total)} left from your first $5 credit.`; left.className = "left"; }
+    else { left.textContent = `${usd(total - CREDIT)} beyond your first $5 credit.`; left.className = "left over"; }
+  }
+  [req, tok, run].forEach(s => s.addEventListener("input", update));
+  update();
+})();
+</script>
+
+<script>
+(() => {
+  const map = { examples: "examples.html", research: "research.html", miners: "miners.html", bittensor: "miners.html", pricing: "pricing.html", "early access": "early-access.html" };
+  document.querySelectorAll(".nav .links span, .nav .cta").forEach(s => {
+    const k = s.textContent.trim().toLowerCase();
+    if (k === "bittensor") s.textContent = "Miners";
+    if (map[k]) { s.style.cursor = "pointer"; s.addEventListener("click", () => location.href = "" + map[k]); }
+  });
+  document.querySelectorAll(".nav .mark").forEach(m => { m.style.cursor = "pointer"; m.addEventListener("click", () => location.href = "home.html"); });
+})();
+</script>
+</body>
+</html>

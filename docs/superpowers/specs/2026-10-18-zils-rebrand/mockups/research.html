@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+var FGR, BGR, FGH, BGH, DIP, END;
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  var L = t === "light";
+  FGR = L ? "28,26,38" : "255,255,255";
+  BGR = L ? "250,249,252" : "24,25,30";
+  FGH = L ? "#1c1a26" : "#fff";
+  BGH = L ? "#faf9fc" : "#18191e";
+  DIP = L ? "#efe8f0" : "#3a3440";
+  END = L ? "#eeedf3" : "#24242c";
+}
+(function () { var t = "dark"; try { t = localStorage.getItem("zils-theme") || "dark"; } catch (e) {} applyTheme(t); })();
+</script>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zils research</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter+Tight:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+  @font-face { font-family: "ZilsMark"; src: url("grenze.woff2") format("woff2"); font-weight: 600; }
+  :root {
+    --violet-hi: #8f88ff;
+    --orange: #ff7a2f; --peach: #f2a184; --pink: #dcb2ee; --lilac: #c3b4f6; --peri: #a9b5f2; --blue: #8ea6ff;
+    --bad: #ff8f6b;
+    --spectrum: linear-gradient(90deg, #ef8d5a 0%, #d9a08c 18%, #cfa2e4 42%, #c3b4f6 64%, #a9b5f2 82%, #8ea6ff 100%);
+    --ink: var(--panel); --ink-2: var(--ink-2);
+    --line: rgba(var(--fg-rgb),.08);
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+    --sans: "Inter Tight", system-ui, sans-serif;
+    --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+  body { background: var(--ink); color: var(--fg); font-family: var(--sans); }
+  a { color: inherit; text-decoration: none; }
+  .page { position: relative; }
+  .page::before, .page::after { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); z-index: 2; pointer-events: none; }
+  .page::before { left: 56px; } .page::after { right: 56px; }
+  .nav { position: sticky; top: 0; z-index: 20; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 76px; background: rgba(var(--bg-rgb),.88); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .nav .links { display: flex; gap: 26px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+  .nav .links span { opacity: .6; } .nav .links .on { opacity: 1; color: var(--fg); box-shadow: 0 1px 0 var(--orange); padding-bottom: 3px; }
+  .nav .cta { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 8px 12px; background: var(--fg); color: var(--ink); }
+  .mark { font-family: "ZilsMark", serif; font-weight: 600; letter-spacing: -0.025em; line-height: 1; color: var(--violet-hi); text-transform: none; }
+  .nav .mark { font-size: 24px; }
+  .label { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: rgba(var(--fg-rgb),.5); }
+  .link { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg); border-bottom: 1px solid rgba(var(--fg-rgb),.3); padding-bottom: 2px; white-space: nowrap; }
+  .link::after { content: " →"; }
+  .links-row { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 22px; }
+  .corner { position: absolute; left: 0; top: 0; width: 0; height: 0; border-style: solid; border-width: 7px 7px 0 0; border-color: var(--orange) transparent transparent transparent; z-index: 3; }
+
+  /* hero */
+  .sec-row { display: flex; align-items: center; height: 40px; border-bottom: 1px solid var(--line); }
+  .sec-row .n { width: 56px; text-align: center; font-family: var(--mono); font-size: 10px; color: rgba(var(--fg-rgb),.45); }
+  .sec-row .t { padding-left: 24px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(var(--fg-rgb),.7); }
+  .sec-row .r { margin-left: auto; padding-right: 76px; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(var(--fg-rgb),.4); }
+  .hero { position: relative; margin: 0 56px; display: grid; grid-template-columns: 1.1fr 1fr; border-bottom: 1px solid var(--line); }
+  .hero > div { padding: 64px 40px 48px; }
+  .hero > div:first-child { border-right: 1px solid var(--line); }
+  .hero h1 { font-weight: 300; font-size: clamp(42px, 5.6vw, 76px); letter-spacing: -0.03em; line-height: .98; }
+  .hero p { margin-top: 20px; font-size: 16.5px; line-height: 1.6; color: rgba(var(--fg-rgb),.72); max-width: 520px; }
+  .hero .fine { margin-top: 24px; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: rgba(var(--fg-rgb),.4); line-height: 1.7; }
+  .btn { font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; padding: 11px 15px; display: inline-flex; margin-top: 26px; }
+  .btn.p { background: var(--orange); color: #140a04; }
+  .ba { display: grid; grid-template-columns: 1fr 1fr; margin-top: 18px; border: 1px solid rgba(var(--fg-rgb),.1); }
+  .ba > div { padding: 16px 18px; } .ba > div:first-child { border-right: 1px solid rgba(var(--fg-rgb),.1); }
+  .ba b { display: block; font-weight: 300; font-size: 44px; letter-spacing: -0.02em; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .ba .after b { background: var(--spectrum); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .corr { margin-top: 18px; border: 1px solid rgba(var(--fg-rgb),.1); }
+  .corr .h { padding: 14px 18px; border-bottom: 1px solid rgba(var(--fg-rgb),.07); }
+  .corr .h h4 { font-weight: 400; font-size: 16px; margin-top: 6px; }
+  .corr .h p { margin-top: 4px; font-size: 13.5px; line-height: 1.5; color: rgba(var(--fg-rgb),.6); max-width: none; }
+  .corr .rows { display: grid; grid-template-columns: 1fr 1fr; }
+  .corr .rows > div { padding: 12px 18px; font-size: 14px; } .corr .rows > div:first-child { border-right: 1px solid rgba(var(--fg-rgb),.07); }
+  .ok { font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--lilac); }
+  .no { font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--bad); }
+  .tiny, .hero .tiny { font-size: 12px; color: rgba(var(--fg-rgb),.42); line-height: 1.5; margin-top: 12px; }
+
+  /* layout with sticky index */
+  .wrapgrid { position: relative; margin: 0 56px; display: grid; grid-template-columns: 210px 1fr; }
+  .toc { border-right: 1px solid var(--line); }
+  .toc nav { position: sticky; top: 64px; padding: 24px 0; }
+  .toc a { display: grid; grid-template-columns: 34px 1fr; align-items: center; padding: 8px 18px; font-size: 13.5px; color: rgba(var(--fg-rgb),.5); border-left: 2px solid transparent; transition: color .2s, border-color .2s, background .2s; }
+  .toc a span { font-family: var(--mono); font-size: 10px; color: rgba(var(--fg-rgb),.35); }
+  .toc a.on { color: var(--fg); border-left-color: var(--orange); background: rgba(var(--fg-rgb),.02); }
+  .toc .res-links { padding: 18px 18px 0; margin-top: 12px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
+  .toc .res-links a { display: block; padding: 0; border: 0; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: rgba(var(--fg-rgb),.55); }
+  .main > section { position: relative; border-bottom: 1px solid var(--line); }
+  .shead { padding: 56px 44px 28px; }
+  .shead .kick { display: flex; gap: 14px; align-items: center; }
+  .shead .kick .n { font-family: var(--mono); font-size: 10px; color: rgba(var(--fg-rgb),.4); }
+  .shead h2 { font-weight: 300; font-size: clamp(30px, 3.4vw, 44px); letter-spacing: -0.02em; line-height: 1.08; margin-top: 14px; max-width: 760px; }
+  .shead p { margin-top: 14px; font-size: 15.5px; line-height: 1.65; color: rgba(var(--fg-rgb),.68); max-width: 720px; }
+  .shead p b { color: var(--fg); font-weight: 500; }
+  .pad { padding: 0 44px 44px; }
+  .prose { font-size: 15px; line-height: 1.65; color: rgba(var(--fg-rgb),.68); max-width: 720px; }
+  .prose + .prose { margin-top: 12px; }
+  .prose b { color: var(--fg); font-weight: 500; }
+
+  /* findings rows */
+  .finds { border-top: 1px solid var(--line); }
+  .find { display: grid; grid-template-columns: 1.15fr 1fr; border-bottom: 1px solid var(--line); }
+  .find > div { padding: 24px 28px 26px; }
+  .find > div:first-child { border-right: 1px solid var(--line); }
+  .badge { display: inline-flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg); }
+  .badge::before { content: ""; width: 8px; height: 8px; background: var(--c); }
+  .find h3 { font-weight: 400; font-size: 19px; margin-top: 12px; }
+  .find .meta { font-family: var(--mono); font-size: 10.5px; color: rgba(var(--fg-rgb),.42); margin-top: 6px; letter-spacing: .04em; }
+  .find .big { font-weight: 300; font-size: 34px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .find .vs { font-size: 13px; color: rgba(var(--fg-rgb),.6); margin-top: 4px; }
+  .find .cav { font-size: 13px; line-height: 1.55; color: rgba(var(--fg-rgb),.5); margin-top: 10px; }
+  .note { padding: 16px 28px; font-size: 12.5px; color: rgba(var(--fg-rgb),.45); }
+
+  /* approach steps */
+  .steps3 { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
+  .steps3 > div { padding: 24px 26px 28px; border-right: 1px solid var(--line); }
+  .steps3 > div:last-child { border-right: 0; }
+  .steps3 .num { width: 22px; height: 22px; border: 1px solid rgba(var(--fg-rgb),.2); display: grid; place-items: center; font-family: var(--mono); font-size: 10px; }
+  .steps3 h4 { font-weight: 400; font-size: 17px; margin-top: 14px; }
+  .steps3 p { font-size: 14px; line-height: 1.55; color: rgba(var(--fg-rgb),.6); margin-top: 8px; }
+
+  /* outcome grid */
+  .og { display: grid; grid-template-columns: 1fr 260px; border-top: 1px solid var(--line); }
+  .og > div { padding: 26px 28px; }
+  .og > div:first-child { border-right: 1px solid var(--line); }
+  .dots { display: grid; grid-template-columns: repeat(50, 1fr); gap: 3px; margin-top: 16px; }
+  .dots i { aspect-ratio: 1; background: rgba(var(--fg-rgb),.06); transition: background .25s; }
+  .legend { display: grid; gap: 14px; }
+  .legend div { display: grid; grid-template-columns: 12px 1fr auto; gap: 10px; align-items: center; font-size: 13.5px; }
+  .legend i { width: 12px; height: 12px; background: var(--c); }
+  .legend b { font-weight: 300; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .stats3 { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
+  .stats3 > div { padding: 22px 28px 24px; border-right: 1px solid var(--line); }
+  .stats3 > div:last-child { border-right: 0; }
+  .stats3 b { display: block; font-weight: 300; font-size: 44px; letter-spacing: -0.02em; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .stats3 p { font-size: 13px; color: rgba(var(--fg-rgb),.55); margin-top: 4px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; font-family: var(--mono); font-weight: 500; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(var(--fg-rgb),.45); padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  td { padding: 12px 14px; border-bottom: 1px solid rgba(var(--fg-rgb),.06); color: rgba(var(--fg-rgb),.8); vertical-align: top; line-height: 1.5; }
+  td:first-child { color: var(--fg); }
+  .tbl { border: 1px solid var(--line); margin-top: 18px; overflow-x: auto; }
+  details { border-top: 1px solid var(--line); }
+  details summary { cursor: pointer; list-style: none; padding: 16px 28px; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: rgba(var(--fg-rgb),.7); display: flex; justify-content: space-between; }
+  details summary::after { content: "+"; color: var(--peach); }
+  details[open] summary::after { content: "−"; }
+  details .inner { padding: 0 28px 22px; }
+
+  /* bars */
+  .hbars { display: grid; gap: 18px; margin-top: 18px; }
+  .hb .top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .hb .name { font-size: 14.5px; } .hb .name small { display: block; font-family: var(--mono); font-size: 10.5px; color: rgba(var(--fg-rgb),.4); margin-top: 3px; }
+  .hb .v { font-weight: 300; font-size: 30px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .hb .track { margin-top: 8px; height: 26px; background: rgba(var(--fg-rgb),.04); border: 1px solid rgba(var(--fg-rgb),.07); position: relative; }
+  .hb .fill { position: absolute; inset: 0 auto 0 0; transform-origin: left; transform: scaleX(0); transition: transform 1.4s cubic-bezier(.2,.7,.2,1); }
+  .hb .fill.z { background: var(--spectrum); } .hb .fill.z::after { content: ""; position: absolute; inset: 0; background-image: var(--grain); opacity: .35; mix-blend-mode: overlay; }
+  .hb .fill.j { background: repeating-linear-gradient(135deg, rgba(var(--fg-rgb),.18) 0 1px, transparent 1px 7px); border-right: 1px solid rgba(var(--fg-rgb),.4); }
+  .hb .fill.g { background: rgba(var(--fg-rgb),.14); }
+  .hbars.in .fill { transform: scaleX(1); }
+  .hbars.in .hb:nth-child(2) .fill { transition-delay: .2s; } .hbars.in .hb:nth-child(3) .fill { transition-delay: .4s; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); }
+  .two > div { padding: 24px 28px 28px; } .two > div:first-child { border-right: 1px solid var(--line); }
+  .two h4 { font-weight: 400; font-size: 17px; }
+  .two p { font-size: 14px; line-height: 1.6; color: rgba(var(--fg-rgb),.62); margin-top: 8px; }
+  .timeline { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); margin-top: 18px; }
+  .timeline > div { padding: 16px 18px; border-right: 1px solid var(--line); position: relative; }
+  .timeline > div:last-child { border-right: 0; }
+  .timeline > div::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--c); }
+  .timeline h4 { font-weight: 400; font-size: 15px; margin-top: 8px; }
+  .timeline p { font-family: var(--mono); font-size: 11px; color: rgba(var(--fg-rgb),.5); margin-top: 4px; }
+  .glossary { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); }
+  .glossary > div { padding: 22px 28px 24px; border-bottom: 1px solid var(--line); }
+  .glossary > div:nth-child(odd) { border-right: 1px solid var(--line); }
+  .glossary h4 { font-weight: 400; font-size: 16px; }
+  .glossary p { font-size: 14px; line-height: 1.6; color: rgba(var(--fg-rgb),.62); margin-top: 8px; }
+
+  .reveal { opacity: 0; transform: translateY(14px); transition: opacity .8s ease, transform .8s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .reveal, .hb .fill, .dots i { transition: none !important; } }
+
+  .footer { display: flex; justify-content: space-between; align-items: center; padding: 22px 76px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: rgba(var(--fg-rgb),.4); }
+  .footer .mark { font-size: 20px; } .footer nav { display: flex; gap: 22px; }
+
+  @media (max-width: 960px) {
+    .nav { padding: 0 16px; } .nav .links { display: none; }
+    .page::before, .page::after { display: none; }
+    .hero, .wrapgrid { margin: 0 16px; grid-template-columns: 1fr; }
+    .hero > div:first-child { border-right: 0; border-bottom: 1px solid var(--line); }
+    .hero > div { padding: 40px 4px; }
+    .toc { display: none; }
+    .shead, .pad { padding-left: 4px; padding-right: 4px; }
+    .find, .og, .two, .steps3, .stats3, .glossary { grid-template-columns: 1fr; }
+    .find > div:first-child, .og > div:first-child, .two > div:first-child, .steps3 > div, .stats3 > div, .glossary > div:nth-child(odd) { border-right: 0; border-bottom: 1px solid var(--line); }
+    .dots { grid-template-columns: repeat(25, 1fr); }
+    .sec-row .r { display: none; }
+    .footer { flex-direction: column; gap: 14px; padding: 22px 16px; }
+  }
+
+/* ---- quiet treatment: two surfaces, dim text ---- */
+:root { --gutter: #0f0f13; --panel: var(--panel); --ink: var(--panel); --ink-2: var(--ink-2); --line: rgba(var(--fg-rgb),.07); }
+body { background: var(--gutter) !important; }
+.page, .frame { background: linear-gradient(90deg, var(--gutter) 0 56px, var(--panel) 56px calc(100% - 56px), var(--gutter) calc(100% - 56px)) !important; }
+.nav { background: var(--navbg) !important; }
+.nav .cta { background: transparent !important; color: var(--fg) !important; border: 1px solid rgba(var(--fg-rgb),.25); }
+.nav .links span, .footer nav span, .nav .mark, .footer .mark { cursor: pointer; }
+.footer { background: var(--gutter); }
+h1, h2, h3, h4 { color: var(--fg); }
+.label { color: rgba(var(--fg-rgb),.38) !important; }
+@media (max-width: 900px) { .page, .frame { background: var(--panel) !important; } }
+
+/* ---- themes ---- */
+:root { --fg-rgb: 232,230,239; --bg-rgb: 24,25,30; --fg: #e8e6ef; --navbg: rgba(15,15,19,.92); }
+html[data-theme="light"] {
+  --fg-rgb: 28,26,38; --bg-rgb: 250,249,252; --fg: #1c1a26; --navbg: rgba(236,235,241,.92);
+  --gutter: #ecebf1; --panel: #faf9fc; --ink: #faf9fc; --ink-2: #f1eff6; --line: rgba(28,26,38,.1);
+  --violet-hi: #4b44c8; --peach: #c2582a; --lilac: #6a59cc; --ok: #6a59cc; --peri: #4a5fc4; --warn: #c2582a; --bad: #cc4426; --off: rgba(28,26,38,.35);
+  --t1: #1c1a26; --t2: rgba(28,26,38,.64); --t3: rgba(28,26,38,.44);
+  color-scheme: light;
+}
+html[data-theme="light"] .label { color: rgba(28,26,38,.48) !important; }
+html[data-theme="light"] .btn.p { color: #fff; }
+.theme-t { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid rgba(var(--fg-rgb),.2); color: var(--fg); margin-left: auto; margin-right: 12px; cursor: pointer; background: none; }
+.theme-t:hover { border-color: var(--peach); }
+.theme-t svg { width: 16px; height: 16px; }
+html[data-theme="light"] .theme-t .moon, html:not([data-theme="light"]) .theme-t .sun { display: none; }
+
+.nav .links { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+@media (max-width: 960px) { .nav .links { display: none; } }
+
+.zf { border-top: 1px solid rgba(var(--fg-rgb),.08); background: var(--gutter); font-family: "Inter Tight", system-ui, sans-serif; margin-top: auto; }
+.zf .in { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 32px; padding: 48px 76px 36px; }
+.zf .brand .mark { font-size: 30px; cursor: pointer; }
+.zf .brand p { margin-top: 14px; font-size: 15px; line-height: 1.45; color: rgba(var(--fg-rgb),.62); }
+.zf h5 { font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: rgba(var(--fg-rgb),.4); margin: 0 0 14px; }
+.zf ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.zf a { color: rgba(var(--fg-rgb),.72); text-decoration: none; font-size: 14px; }
+.zf a:hover { color: var(--fg); }
+.zf .bot { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 76px; border-top: 1px solid rgba(var(--fg-rgb),.08); font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: rgba(var(--fg-rgb),.4); }
+.zf .bot nav { display: flex; gap: 20px; }
+.zf .bot a { font-size: 10.5px; color: rgba(var(--fg-rgb),.5); }
+@media (max-width: 900px) { .zf .in { grid-template-columns: 1fr 1fr; padding: 36px 16px 24px; } .zf .brand { grid-column: 1 / -1; } .zf .bot { flex-direction: column; padding: 18px 16px; } }
+
+.main { min-width: 0; }
+</style>
+</head>
+<body>
+  <div class="nav"><span class="mark">Zils</span><div class="links"><span>Examples</span><span class="on">Research</span><span>Bittensor</span><span>Pricing</span></div><button class="theme-t" type="button" aria-label="Switch light or dark mode" onclick="(function(){var t=document.documentElement.dataset.theme==='light'?'dark':'light';applyTheme(t);try{localStorage.setItem('zils-theme',t)}catch(e){}})()"><svg class="moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13.5 9.5A6 6 0 0 1 6.5 2.5a6 6 0 1 0 7 7Z"/></svg><svg class="sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M3 13l1.4-1.4M11.6 4.4 13 3"/></svg></button><span class="cta">Early access</span></div>
+
+  <div class="page">
+    <div class="sec-row"><span class="n">01</span><span class="t">Zils research</span><span class="r">Recorded experiments · published evidence</span></div>
+    <div class="hero">
+      <span class="corner"></span>
+      <div>
+        <h1>Tuned open models can compete.</h1>
+        <p>We train open models for a specific job, then test them on examples they haven’t trained on. Here’s what improved, what didn’t, and how we measured it.</p>
+        <a class="btn p" href="#findings">Explore the findings</a>
+        <p class="fine">Recorded experiments. Published evidence.<br>Results apply to each test, not every task.</p>
+      </div>
+      <div>
+        <span class="label">Learning a customer-support task</span>
+        <p style="margin-top:6px;font-size:13.5px">Correct next actions across all 500 test conversations</p>
+        <div class="ba">
+          <div><span class="label">Before training</span><b data-count="57.8">57.8%</b></div>
+          <div class="after"><span class="label">After training</span><b data-count="79.2">79.2%</b></div>
+        </div>
+        <div class="corr">
+          <div class="h"><span class="label">One recorded correction</span><h4>Verify identity before proceeding</h4><p>The agent asks for account and order IDs to verify the customer’s identity. The customer provides both.</p></div>
+          <div class="rows">
+            <div><span class="label">Before training</span><p style="margin-top:6px">Issue a promo code</p><span class="no">Did not match the recorded action</span></div>
+            <div><span class="label">After training</span><p style="margin-top:6px">Verify identity</p><span class="ok">Matched the recorded action</span></div>
+          </div>
+        </div>
+        <p class="tiny">Selected correction from public ABCD role-play data. Context paraphrased; the scores above cover all 500 test cases.</p>
+        <div class="links-row"><span class="link">Read the training study</span><span class="link">Explore the evidence</span></div>
+      </div>
+    </div>
+
+    <div class="wrapgrid">
+      <aside class="toc">
+        <nav id="toc">
+          <a href="#findings"><span>02</span>Findings</a>
+          <a href="#approach"><span>03</span>Approach</a>
+          <a href="#support"><span>04</span>Support</a>
+          <a href="#chess"><span>05</span>Chess</a>
+          <a href="#flights"><span>06</span>Flights</a>
+          <a href="#base"><span>07</span>Base tier</a>
+          <a href="#d3"><span>08</span>d3-mini evidence</a>
+          <a href="#earlier"><span>09</span>Earlier benchmark</a>
+          <a href="#metrics"><span>10</span>Metric guide</a>
+          <div class="res-links"><a>Research code ↗</a><a>Training study report ↗</a><a>Training results (JSON) ↗</a></div>
+        </nav>
+      </aside>
+
+      <div class="main">
+        <!-- 02 findings -->
+        <section id="findings">
+          <span class="corner"></span>
+          <div class="shead"><div class="kick"><span class="n">02</span><span class="label">Findings</span></div><h2>What we’ve measured.</h2><p>Read each result against its own task and baseline. These experiments do not form a single leaderboard.</p></div>
+          <div class="finds">
+            <div class="find reveal">
+              <div><span class="badge" style="--c:var(--peach)">Higher accuracy</span><h3>Choose the next support action</h3><p class="meta">500 TEST CONVERSATIONS · ABCD</p><p class="cav">The open JevK5 4B model with a support adapter surpassed official JEV on recorded next actions. This does not measure whether the whole customer issue was resolved.</p></div>
+              <div><span class="big">79.2% vs 70.6%</span><p class="vs">Tuned open model vs official hosted TypeSafe JEV 1.13.0</p><p class="cav">Before task-specific training: 57.8%. Same 500 test conversations.</p></div>
+            </div>
+            <div class="find reveal">
+              <div><span class="badge" style="--c:var(--peach)">Higher accuracy</span><h3>Find a checkmate in one move</h3><p class="meta">512 TEST POSITIONS · LICHESS PUZZLES</p><p class="cav">A separate JevK5 4B chess adapter surpassed official JEV on this restricted task. It does not establish full-game chess strength or an advantage over a rules engine.</p></div>
+              <div><span class="big">50.78% vs 43.55%</span><p class="vs">Tuned open model vs official hosted TypeSafe JEV 1.13.0</p><p class="cav">Before chess training: 42.97%. Chess-rules software: 100%.</p></div>
+            </div>
+            <div class="find reveal">
+              <div><span class="badge" style="--c:var(--peri)">Hardware follow-up</span><h3>Practical models for miners</h3><p class="meta">10 OCTOBER 2026 · ABCD · B300 EXPERIMENTS</p><p class="cav">This follow-up compares local open models, not hosted TypeSafe JEV. H2O and 2B accuracy differences from the best 4B adapter remain inconclusive on two reused 500-case cohorts. New checkpoints have not been validated on miner hardware.</p></div>
+              <div><span class="big">H2O: 2.99× lower median latency</span><p class="vs">59.7 ms vs 178.4 ms for the JevK5 4B adapter on B300</p><p class="cav">2B used 54% less CUDA memory; 9B showed no clear accuracy gain.</p></div>
+            </div>
+            <div class="find reveal">
+              <div><span class="badge" style="--c:var(--pink)">Mixed result</span><h3>Estimate the risk of a late flight</h3><p class="meta">1,024 LATER TEST FLIGHTS · US FLIGHT RECORDS</p><p class="cav">The adapter improved risk estimates but did not meet the requirement to beat both baselines. No flight model was deployed.</p></div>
+              <div><span class="big">6.5% less probability error</span><p class="vs">Relative Brier reduction vs the base model</p><p class="cav">Historical delay rates had the best measured score.</p></div>
+            </div>
+            <div class="find reveal">
+              <div><span class="badge" style="--c:rgba(255,255,255,.35)">No accuracy gain</span><h3>Earlier public decision benchmark</h3><p class="meta">231 PUBLIC ITEMS · KEV 0.8B MODEL LINE</p><p class="cav">This earlier run did not establish an improvement. Its tasks, models, and scoring differ from the studies above.</p></div>
+              <div><span class="big">147 correct for Zils; 147 for Kev</span><p class="vs">Same accuracy; worse probability estimates</p><p class="cav">The unchanged published Kev checkpoint is the baseline.</p></div>
+            </div>
+          </div>
+          <p class="note">Support training and the JEV comparison reuse the same trained model and 500 test cases. They are two comparisons of one experiment, not independent replications.</p>
+        </section>
+
+        <!-- 03 approach -->
+        <section id="approach">
+          <span class="corner"></span>
+          <div class="shead"><div class="kick"><span class="n">03</span><span class="label">Approach</span></div><h2>What we’re training.</h2><p>A model that assigns probabilities to a set of possible answers. Each experiment tests a specific decision, such as which action to take next.</p></div>
+          <div class="steps3">
+            <div class="reveal"><span class="num">1</span><h4>Start with a base model.</h4><p>The support, flight, and chess studies use the published JevK5 4B weights. This unchanged model is the baseline for measuring what training adds.</p></div>
+            <div class="reveal" style="transition-delay:.1s"><span class="num">2</span><h4>Teach one task with an adapter.</h4><p>A LoRA adapter is a small set of learned weights added to the model. The base weights stay frozen while the adapter learns from examples for that task.</p></div>
+            <div class="reveal" style="transition-delay:.2s"><span class="num">3</span><h4>Test on separate examples.</h4><p>Compare models on the same held-out cases. Measure correctness, probability quality, and simple alternatives. Test data does not select the adapter.</p></div>
+          </div>
+          <details><summary>Model names, comparison controls, and deployment status</summary><div class="inner prose">Collapsed detail, as on the current page.</div></details>
+          <details><summary>How to read accuracy, confidence, and uncertainty</summary><div class="inner prose">Collapsed detail, as on the current page.</div></details>
+        </section>
+
+        <!-- 04 support -->
+        <section id="support">
+          <span class="corner"></span>
+          <div class="shead"><div class="kick"><span class="n">04</span><span class="label">Completed comparison · 6 October 2026 · 500 ABCD test conversations</span></div><h2>Models trained for customer support.</h2>
+            <p>Given a customer conversation, its previous actions, and a workflow guide, choose the next action from 30 options. ABCD is a public dataset of support role-play conversations; the recorded action is the test answer.</p>
+            <p>Our trained model matched that answer <b>79.2%</b> of the time, compared with <b>70.6%</b> for TypeSafe JEV 1.13.0. Both received the same inputs, instructions, and choices.</p></div>
+          <div class="pad">
+            <span class="label">What the comparison holds fixed</span>
+            <p class="prose" style="margin-top:10px">The Zils adapter trained on 1,024 separate conversations and was selected on a different development set. Its weights were frozen before the final test cases were prepared.</p>
+            <p class="prose">We then called TypeSafe’s hosted JEV API on those same test inputs. The Zils scores reuse verified predictions from the completed training study. No test answers were sent to either model, and no model or prompt was tuned during this comparison.</p>
+            <p class="prose">Our trained model got <b>72</b> cases right that JEV missed. JEV got <b>29</b> right that our trained model missed.</p>
+          </div>
+          <div class="og">
+            <div><span class="label">One test. 500 support decisions.</span><p style="font-size:14px;margin-top:6px;color:rgba(236,233,245,.6)">Trained with Zils compared with TypeSafe JEV. Each mark is one conversation. Grouped by outcome.</p><div class="dots" id="dots"></div></div>
+            <div class="legend">
+              <div><i style="--c:var(--lilac)"></i><span>Both correct</span><b>324</b></div>
+              <div><i style="--c:var(--orange)"></i><span>Only trained model correct</span><b>72</b></div>
+              <div><i style="--c:var(--blue)"></i><span>Only JEV correct</span><b>29</b></div>
+              <div><i style="--c:rgba(255,255,255,.18)"></i><span>Both incorrect</span><b>75</b></div>
+              <p style="font-size:13.5px;color:rgba(236,233,245,.6);border-top:1px solid var(--line);padding-top:14px"><b style="font-size:16px;font-weight:500;color:#fff">43 more correct decisions</b><br>On this test, with the same inputs and choices.</p>
+              <span class="link">View all 500 predictions</span>
+            </div>
+          </div>
+          <div class="stats3">
+            <div class="reveal"><span class="label">Accuracy gain</span><b>+8.6 points</b><p>Compared with TypeSafe JEV</p></div>
+            <div class="reveal" style="transition-delay:.1s"><span class="label">Fewer mistakes</span><b>29.3%</b><p>147 mistakes reduced to 104</p></div>
+            <div class="reveal" style="transition-delay:.2s"><span class="label">More correct actions</span><b>43</b><p>Across the same 500 conversations</p></div>
+          </div>
+          <div class="pad" style="padding-top:28px">
+            <p class="prose">The 95% interval for the accuracy advantage is +4.8 to +12.2 percentage points, from 2,000 paired resamples of test conversations. This measures uncertainty across these conversations, not across different training runs.</p>
+            <p class="prose">JEV was more accurate among its smaller set of answers assigned at least 90% probability. Our model assigned that probability to more cases, but made more mistakes within them. These groups contain different cases and have different coverage.</p>
+            <div class="tbl"><table>
+              <tr><th>Model</th><th>Cases / 500</th><th>Mistakes</th><th>Accuracy in group</th></tr>
+              <tr><td>TypeSafe JEV 1.13</td><td>176</td><td>8</td><td>95.5%</td></tr>
+              <tr><td>Trained with Zils</td><td>381</td><td>44</td><td>88.5%</td></tr>
+            </table></div>
+            <p class="tiny">Probability of the chosen action ≥90%. TypeSafe’s separate confidence field is not used.</p>
+          </div>
+          <details><summary>All scores, API checks, and method</summary><div class="inner prose">This measures recorded next-action agreement in public role-play conversations. It does not establish complete conversation success or a general model ranking. One training recipe and seed were used; public-data pretraining overlap cannot be excluded. The prompt was developed for Zils and was not separately optimized for JEV. The research adapter has not been deployed.</div></details>
+          <div class="pad" style="padding-top:20px"><div class="links-row" style="margin-top:0"><span class="link">Comparison report</span><span class="link">Recorded results (JSON)</span><span class="link">All 500 paired predictions</span><span class="link">Original training study</span></div></div>
+        </section>
+
+        <!-- 05 chess -->
+        <section id="chess">
+          <span class="corner"></span>
+          <div class="shead"><div class="kick"><span class="n">05</span><span class="label">Chess specialization · 7 October 2026 UTC</span></div><h2>Chess: find the move that ends the game.</h2>
+            <p>Choose an immediate checkmate from a supplied list of legal checking moves. A correct answer ends the game in one move; this does not test playing a whole game.</p>
+            <p>A fresh chess adapter selected a checkmating move in 260 of 512 held-out positions. Accuracy improved by +7.81 percentage points over the model before training and +7.23 over TypeSafe JEV.</p></div>
+          <div class="pad">
+            <span class="label">Checkmate accuracy · same 512 test positions · higher is better</span>
+            <div class="hbars" data-bars>
+              <div class="hb"><div class="top"><span class="name">After training<small>260 / 512 correct · fresh adapter · 2,048 training positions</small></span><span class="v">50.78%</span></div><div class="track"><span class="fill z" style="width:50.78%"></span></div></div>
+              <div class="hb"><div class="top"><span class="name">TypeSafe JEV 1.13.0<small>223 / 512 correct · regular JEV · same test inputs</small></span><span class="v">43.55%</span></div><div class="track"><span class="fill j" style="width:43.55%"></span></div></div>
+              <div class="hb"><div class="top"><span class="name">Before training<small>220 / 512 correct · no chess-specific adapter</small></span><span class="v">42.97%</span></div><div class="track"><span class="fill g" style="width:42.97%"></span></div></div>
+            </div>
+            <p class="tiny">All legal checking moves were offered. Every move that immediately checkmates received credit. This measures one-move choices among legal checks. Deterministic chess software solves 100% of these positions; the study tests specialization on a new task. One training seed, one recipe, no deployment.</p>
+            <div class="links-row"><span class="link">Read the chess study</span></div>
+          </div>
+        </section>
+
+        <!-- 06 flights -->
+        <section id="flights">
+          <span class="corner"></span>
+          <div class="shead"><div class="kick"><span class="n">06</span><span class="label">Completed experiment · 5 October 2026 UTC</span></div><h2>Flight risk: historical rates still scored best.</h2>
+            <p>Estimate whether a flight will arrive at least 15 minutes late, using scheduled information only. On 1,024 later test flights, the trained adapter reduced probability error by 6.5% versus the base. A simple historical-rate baseline still had the best measured score.</p></div>
+          <div class="pad">
+            <span class="label">Learn from the past. Test on later flights.</span>
+            <p class="prose" style="margin-top:8px">Public US Bureau of Transportation Statistics records, departing JFK, LGA, and EWR. The decision: will a completed flight arrive at least 15 minutes late?</p>
+            <div class="timeline">
+              <div style="--c:var(--peach)"><span class="label">January 2025</span><h4>Train the adapter</h4><p>3,072 flights</p></div>
+              <div style="--c:var(--pink)"><span class="label">February 2025</span><h4>Adjust confidence scores</h4><p>512 flights</p></div>
+              <div style="--c:var(--peri)"><span class="label">March 2025</span><h4>Test both models</h4><p>1,024 flights</p></div>
+            </div>
+            <p class="tiny">Only scheduled information entered the model: date, airline, route, times, duration, and distance. Actual delays and arrival times supplied the answers for training and scoring, never the prediction inputs.</p>
+            <div style="margin-top:28px"><span class="label">Probability error · Brier score · lower is better</span>
+              <div class="hbars" data-bars>
+                <div class="hb"><div class="top"><span class="name">Before training<small>No flight-specific training</small></span><span class="v">0.1641</span></div><div class="track"><span class="fill g" style="width:82%"></span></div></div>
+                <div class="hb"><div class="top"><span class="name">After training<small>Trained on January flights</small></span><span class="v">0.1534</span></div><div class="track"><span class="fill z" style="width:76.7%"></span></div></div>
+                <div class="hb"><div class="top"><span class="name">Historical delay rates<small>Simple baseline from the same training data</small></span><span class="v">0.1513</span></div><div class="track"><span class="fill j" style="width:75.6%"></span></div></div>
+              </div>
+              <p class="tiny">Both models had their confidence scores adjusted on separate February data. All three were tested on the same March flights. Scale 0 to 0.20.</p>
+            </div>
+          </div>
+          <div class="two">
+            <div><h4>What training improved</h4><p>The adapter produced better probability estimates and ranked delay risk more accurately. Its risk-ranking score (ROC-AUC) rose from 0.516 to 0.640. The measured probability-error improvement over the base was supported by a 95% interval that stayed above zero.</p></div>
+            <div><h4>Where it fell short</h4><p>Historical rates scored slightly better; the difference was uncertain. The experiment required the adapter to beat both references. It did not meet that bar, and no model was deployed from this run.</p></div>
+          </div>
+          <details><summary>Why 80.37% accuracy is not the headline</summary><div class="inner prose">Most flights were not late. At a 50% probability cutoff, the adapter predicted “not late” for every flight and flagged none of the 201 late arrivals. The improvement was in its risk estimates, not in useful delay alerts at that threshold. An alert threshold needs its own validation.</div></details>
+        </section>
+
+        <!-- 07 base tier -->
+        <section id="base">
+          <span class="corner"></span>
+          <div class="shead"><div class="kick"><span class="n">07</span><span class="label">Base tier · status as of 17 October 2026</span></div><h2>A competition for the base model itself.</h2>
+            <p>Customer adapters train on a pinned base model. Since 17 October 2026 that base is d3-mini 4.5B (below); before that it was H2O Lightning 4B v1.2.3. The base tier is the competition that decides when that base changes. Miners submit a full-weight replacement for the pinned base of a text profile. Validators score it on a sealed holdout against the incumbent, and a candidate is promoted only if it passes every step below.</p></div>
+          <div class="pad">
+            <div class="tbl"><table>
+              <tr><th style="width:170px">Step</th><th>Rule</th></tr>
+              <tr><td>Sealed score</td><td>Validators score the submitted weights on a sealed holdout, against the incumbent.</td></tr>
+              <tr><td>Eligibility</td><td>Skill is positive, accuracy is not below the incumbent’s, and Brier improves by at least 0.01 with a paired-bootstrap 95% lower bound above zero.</td></tr>
+              <tr><td>Round weight</td><td>Eligible candidates share the round’s weight in proportion to skill.</td></tr>
+              <tr><td>Confirmation</td><td>The best eligible candidate is re-scored on a second, disjoint sealed draw at least 12 hours later and must stay eligible.</td></tr>
+              <tr><td>Regression suite</td><td>Before promotion, a fixed suite of reference adapter jobs is retrained on the incumbent and on the candidate. The candidate must be no worse than 0.005 Brier on every job and better on at least one.</td></tr>
+            </table></div>
+            <div class="tbl"><table>
+              <tr><th style="width:170px">Channel</th><th>Advances</th><th>Who gets it</th></tr>
+              <tr><td>latest</td><td>Advances on each confirmed winner.</td><td>Opt-in, per job.</td></tr>
+              <tr><td>stable</td><td>Advances at most quarterly, to a base that held latest through a full window without rollback.</td><td>The default for new customer jobs.</td></tr>
+            </table></div>
+            <p class="prose" style="margin-top:18px">New customer jobs default to stable; latest is opt-in per job. Existing releases keep serving on their base.</p>
+          </div>
+          <details><summary>Status, 17 October 2026</summary><div class="inner prose">Implemented in the subnet repository. Open admission is off by default, and no public round has run. Round one’s sealed holdout has 1,458 teacher-authored cases in six families. The incumbent, stock H2O Lightning 4B v1.2.3, scores Brier 0.184 and 87.7% accuracy on it. d3-mini’s confirmation draw did not confirm a winner, but d3-mini became the base by decision on 17 October, so both channels now point at it and stock d3-mini is the incumbent for round two.</div></details>
+        </section>
+
+        <!-- 08 d3 -->
+        <section id="d3">
+          <span class="corner"></span>
+          <div class="shead"><div class="kick"><span class="n">08</span><span class="label">d3-mini · recorded 16–17 October 2026 · one rented B300</span></div><h2>d3-mini, tested as a base.</h2>
+            <p>Under the base tier’s own rules, stock d3-mini is not promotable today. The first sealed draw cleared, but the confirmation draw did not confirm a winner (Brier 0.1790 against 0.1794 for H2O). Under those rules d3-mini was not promoted; it became the base by decision instead.</p></div>
+          <div class="pad">
+            <div class="tbl"><table>
+              <tr><th>Measure</th><th>H2O Lightning 4B v1.2.3</th><th>d3-mini</th><th>Reading</th></tr>
+              <tr><td>Stock model, first draw</td><td>Brier 0.184 · 87.7%</td><td>Brier 0.142 · 89.8%</td><td>Eligible</td></tr>
+              <tr><td>Stock model, confirmation draw</td><td>Brier 0.1794 · 88.5%</td><td>Brier 0.1790 · 88.6%</td><td>No winner confirmed</td></tr>
+              <tr><td>Adapter regression suite (ABCD)</td><td>Brier 0.2801 · 81.6%</td><td>Brier 0.2515 · 84.0%</td><td>Passed, on one job</td></tr>
+              <tr><td>base_change upgrade</td><td>0.1805</td><td>0.1667</td><td>Improvement 0.0138</td></tr>
+              <tr><td>Adapter, 500-case ABCD cohort</td><td>83.0%</td><td>83.4%</td><td>A tie</td></tr>
+              <tr><td>Adapter, historical ABCD cohort</td><td>83.6%</td><td>86.6%</td><td>d3-mini ahead</td></tr>
+            </table></div>
+            <p class="tiny">Mockup shows the table condensed; the full rows, profile table, decision note and limits stay on the page as today.</p>
+          </div>
+          <details><summary>Decision, 17 October 2026</summary><div class="inner prose">Zils is adopting d3-mini as its base anyway, by the owner’s decision and recorded as an override of the promotion rule rather than a win under it. The grounds are capability: adapters trained on d3-mini beat adapters trained on H2O on the reference job and on ABCD, and d3-mini takes images and video, which H2O does not serve.</div></details>
+        </section>
+
+        <!-- 09 earlier -->
+        <section id="earlier">
+          <span class="corner"></span>
+          <div class="shead"><div class="kick"><span class="n">09</span><span class="label">Earlier research · Kev 0.8B</span></div><h2>Previous experiments, preserved.</h2>
+            <p>This earlier experiment fine-tuned Kev 0.8B and tested it on the public JevBench items. Accuracy tied the unchanged checkpoint, while probability quality worsened. Its model, tasks, and scoring rules differ from the studies above.</p></div>
+          <div class="stats3">
+            <div><span class="label">Zils candidate accuracy</span><b>63.64%</b><p>147 of 231 public items correct</p></div>
+            <div><span class="label">Probability error (Brier)</span><b>0.463608</b><p>Lower is better. Compare within this study.</p></div>
+            <div><span class="label">Confident mistakes</span><b>8</b><p>Wrong at ≥90% confidence.</p></div>
+          </div>
+          <details><summary>JevBench public comparison · 231 items</summary><div class="inner prose">Full metric, difficulty and method tables stay, restyled like the tables above.</div></details>
+        </section>
+
+        <!-- 10 metrics -->
+        <section id="metrics">
+          <span class="corner"></span>
+          <div class="shead"><div class="kick"><span class="n">10</span><span class="label">Metric guide</span></div><h2>Read the numbers.</h2><p>Being correct and knowing how likely you are to be correct are different properties. We report both.</p></div>
+          <div class="glossary">
+            <div><h4>Accuracy</h4><p>The fraction of decisions that match the test answer. On the support test, 396 / 500 = 79.2%. It measures the recorded next action, not the success of an entire conversation.</p></div>
+            <div><h4>Percentage points vs fewer mistakes</h4><p>79.2% − 70.6% = an 8.6-point accuracy gain. The same result is 43 fewer errors out of JEV’s 147, or 29.3% fewer mistakes. These describe the same comparison using different denominators.</p></div>
+            <div><h4>Confidence and coverage</h4><p>Confidence here is the probability assigned to the chosen answer. Coverage is the share of cases above a probability threshold. High accuracy on a small confident subset does not mean high accuracy on all cases.</p></div>
+            <div><h4>Calibration</h4><p>Among predictions assigned about 90% probability, roughly 90% should be correct. A model can improve accuracy while remaining overconfident. ECE summarizes the gap between confidence and accuracy across bins.</p></div>
+          </div>
+          <p class="note">Mining, validation, and the recorded testnet round are on the Bittensor page. All results on this page are recorded experiments. The study reports define their scope, artifacts, and reproduction limits.</p>
+        </section>
+      </div>
+    </div>
+
+    <footer class="zf">
+  <div class="in">
+    <div class="brand"><a href="home.html" class="mark">Zils</a><p>Specialized models.<br>Decisions that are yours.</p></div>
+    <div><h5>Build</h5><ul><li><a href="#">Docs</a></li><li><a href="examples.html">Examples</a></li><li><a href="pricing.html">Pricing</a></li><li><a href="early-access.html">Early access</a></li></ul></div>
+    <div><h5>Explore</h5><ul><li><a href="research.html">Research</a></li><li><a href="miners.html">Miners</a></li><li><a href="#">Model source</a></li></ul></div>
+    <div><h5>Keep in touch</h5><ul><li><a href="#">Changelog</a></li><li><a href="#">Discord</a></li><li><a href="#">X</a></li><li><a href="contact.html">Contact</a></li></ul></div>
+  </div>
+  <div class="bot"><span>Your data. Your decision model.</span><nav><a href="privacy.html">Privacy</a><a href="privacy.html">Terms</a><span>© 2026 Zils</span></nav></div>
+</footer></div>
+
+<script>
+(() => {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // hero count-up
+  document.querySelectorAll("[data-count]").forEach((el, i) => {
+    if (reduce) return;
+    const target = parseFloat(el.dataset.count), t0 = performance.now() + i * 350, dur = 1500;
+    el.textContent = "0.0%";
+    const step = now => { const t = Math.max(0, Math.min(1, (now - t0) / dur)), e = 1 - Math.pow(1 - t, 3); el.textContent = (target * e).toFixed(1) + "%"; if (t < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  });
+
+  // 500-dot outcome grid
+  const dots = document.getElementById("dots");
+  const groups = [["var(--lilac)", 324], ["var(--orange)", 72], ["var(--blue)", 29], [`rgba(${FGR},.18)`, 75]];
+  const colors = groups.flatMap(([c, n]) => Array(n).fill(c));
+  colors.forEach(() => dots.appendChild(document.createElement("i")));
+  const paintDots = () => {
+    const cells = dots.children;
+    if (reduce) { colors.forEach((c, i) => cells[i].style.background = c); return; }
+    let i = 0;
+    const tick = () => { for (let k = 0; k < 9 && i < colors.length; k++, i++) cells[i].style.background = colors[i]; if (i < colors.length) requestAnimationFrame(tick); };
+    tick();
+  };
+
+  // reveal on scroll
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return;
+    if (e.target === dots) paintDots(); else e.target.classList.add("in");
+    io.unobserve(e.target);
+  }), { threshold: .25 });
+  document.querySelectorAll(".reveal, [data-bars]").forEach(el => reduce ? el.classList.add("in") : io.observe(el));
+  io.observe(dots);
+
+  // sticky index highlight
+  const links = [...document.querySelectorAll("#toc > a")];
+  const secs = links.map(a => document.querySelector(a.getAttribute("href")));
+  const spy = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) links.forEach(a => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id));
+  }), { rootMargin: "-40% 0px -55% 0px" });
+  secs.forEach(s => spy.observe(s));
+})();
+</script>
+
+<script>
+(() => {
+  const map = { examples: "examples.html", research: "research.html", miners: "miners.html", bittensor: "miners.html", pricing: "pricing.html", "early access": "early-access.html" };
+  document.querySelectorAll(".nav .links span, .nav .cta").forEach(s => {
+    const k = s.textContent.trim().toLowerCase();
+    if (k === "bittensor") s.textContent = "Miners";
+    if (map[k]) { s.style.cursor = "pointer"; s.addEventListener("click", () => location.href = "" + map[k]); }
+  });
+  document.querySelectorAll(".nav .mark").forEach(m => { m.style.cursor = "pointer"; m.addEventListener("click", () => location.href = "home.html"); });
+})();
+</script>
+</body>
+</html>

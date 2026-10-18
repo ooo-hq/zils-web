@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+var FGR, BGR, FGH, BGH, DIP, END;
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  var L = t === "light";
+  FGR = L ? "28,26,38" : "255,255,255";
+  BGR = L ? "250,249,252" : "24,25,30";
+  FGH = L ? "#1c1a26" : "#fff";
+  BGH = L ? "#faf9fc" : "#18191e";
+  DIP = L ? "#efe8f0" : "#3a3440";
+  END = L ? "#eeedf3" : "#24242c";
+}
+(function () { var t = "dark"; try { t = localStorage.getItem("zils-theme") || "dark"; } catch (e) {} applyTheme(t); })();
+</script>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zils homepage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter+Tight:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+  @font-face { font-family: "ZilsMark"; src: url("grenze.woff2") format("woff2"); font-weight: 600; }
+  :root {
+    --violet-hi: #8f88ff;
+    --orange: #ff7a2f; --peach: #f2a184; --lilac: #c8b4f6;
+    --ink: var(--panel);
+    --line: rgba(var(--fg-rgb),.08);
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+    --sans: "Inter Tight", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--panel); color: var(--fg); font-family: var(--sans); padding: 0; }
+  .intro { max-width: 1180px; margin: 0 auto 24px; }
+  .intro h1 { font-weight: 300; font-size: 28px; }
+  .intro p { color: rgba(var(--fg-rgb),.6); margin-top: 6px; font-size: 15px; max-width: 800px; line-height: 1.5; }
+  .wrap { max-width: none; }
+
+  .frame { position: relative; border-radius: 0; overflow: hidden; height: 900px; background: var(--ink); isolation: isolate; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+  .rail { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); z-index: 3; }
+  .row { position: absolute; left: 0; right: 0; height: 1px; background: var(--line); z-index: 3; }
+  .gutter-n { position: absolute; left: 0; width: 56px; text-align: center; font-family: var(--mono); font-size: 10px; color: rgba(var(--fg-rgb),.45); z-index: 4; }
+  .strip { position: absolute; left: 56px; right: 56px; top: 64px; height: 38px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(var(--fg-rgb),.7); z-index: 4; }
+  .strip b { font-weight: 500; color: var(--fg); }
+  .corner { position: absolute; width: 0; height: 0; border-style: solid; border-width: 7px 7px 0 0; border-color: var(--orange) transparent transparent transparent; z-index: 4; }
+
+  .nav { position: absolute; inset: 0 0 auto 0; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 76px; z-index: 5; }
+  .nav .links { display: flex; gap: 26px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; opacity: .7; }
+  .nav .cta { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 8px 12px; background: var(--fg); color: var(--panel); }
+  .mark { font-family: "ZilsMark", serif; font-weight: 600; letter-spacing: -0.025em; line-height: 1; color: var(--violet-hi); }
+  .nav .mark { font-size: 24px; }
+
+  .hero { position: relative; z-index: 4; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 140px 24px 0; }
+  .hero > .mark { font-size: 72px; }
+  .hero h3 { font-weight: 300; font-size: clamp(30px, 4.4vw, 54px); letter-spacing: -0.02em; line-height: 1.05; margin-top: 18px; }
+  .hero .sub { max-width: 500px; font-size: 15px; line-height: 1.55; margin-top: 16px; opacity: .72; }
+  .btns { display: flex; gap: 12px; margin-top: 26px; }
+  .btn { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; padding: 11px 16px; }
+  .btn.p { background: var(--orange); color: #140a04; }
+  .btn.s { border: 1px solid rgba(var(--fg-rgb),.22); background: var(--ink); }
+
+  .console { position: relative; z-index: 4; margin: 32px auto 0; width: min(440px, calc(100% - 32px)); border: 1px solid rgba(var(--fg-rgb),.12); background: var(--ink); font-family: var(--mono); font-size: 12px; line-height: 1.75; text-align: left; }
+  .console .bar { display: flex; justify-content: space-between; padding: 7px 12px; border-bottom: 1px solid rgba(var(--fg-rgb),.08); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(var(--fg-rgb),.5); }
+  .console .live { display: inline-flex; align-items: center; gap: 6px; color: var(--peach); }
+  .console .live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--orange); animation: blink 1.6s ease-in-out infinite; }
+  .console .body { padding: 12px 14px 14px; color: var(--fg); min-height: 100px; }
+  .console .q { color: var(--fg); } .console .k { color: rgba(var(--fg-rgb),.4); }
+  .console .ans { color: var(--peach); } .console .conf { color: var(--lilac); }
+  .console .warn { color: #ff8f6b; }
+  .cursor { display: inline-block; width: 7px; height: 13px; background: var(--peach); vertical-align: -2px; animation: blink 1.1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .notes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+  .notes div { font-size: 13px; color: rgba(var(--fg-rgb),.6); line-height: 1.45; padding: 10px 12px; background: var(--ink-2); border-radius: 6px; }
+  .notes b { display: block; font-family: var(--mono); font-weight: 500; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: rgba(var(--fg-rgb),.6); margin-bottom: 3px; }
+  @media (max-width: 760px) { .nav .links { display: none; } .nav { padding: 0 20px; } .notes { grid-template-columns: 1fr; } .strip { font-size: 9px; } }
+
+/* sections */
+
+  @font-face { font-family: "ZilsMark"; src: url("grenze.woff2") format("woff2"); font-weight: 600; }
+  :root {
+    --violet-hi: #8f88ff;
+    --orange: #ff7a2f; --peach: #f2a184; --pink: #dcb2ee; --lilac: #c3b4f6; --peri: #a9b5f2; --blue: #8ea6ff;
+    --c-billing: #f08a4b; --c-spam: #e7a58f; --c-account: #d7a6e8; --c-tech: #c3b2f6; --c-sales: #a9b5f2; --c-review: #8ea6ff;
+    --spectrum: linear-gradient(90deg, #ef8d5a 0%, #d9a08c 18%, #cfa2e4 42%, #c3b4f6 64%, #a9b5f2 82%, #8ea6ff 100%);
+    --ink: var(--panel); --ink-2: var(--ink-2);
+    --line: rgba(var(--fg-rgb),.08);
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+    --sans: "Inter Tight", system-ui, sans-serif;
+    --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  * { box-sizing: border-box; margin: 0; }
+  
+  
+  
+  
+
+  .page { max-width: none; margin: 0; background: var(--ink); border-radius: 0; overflow: hidden; position: relative; }
+  .page::before, .page::after { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); z-index: 2; pointer-events: none; }
+  .page::before { left: 56px; } .page::after { right: 56px; }
+
+  /* section header row, Todai style */
+  .sec-row { position: relative; display: flex; align-items: center; height: 40px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .sec-row .n { width: 56px; text-align: center; font-family: var(--mono); font-size: 10px; color: rgba(var(--fg-rgb),.45); }
+  .sec-row .t { padding-left: 24px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(var(--fg-rgb),.7); }
+  .sec-
+  .corner { position: absolute; left: 0; top: 0; width: 0; height: 0; border-style: solid; border-width: 7px 7px 0 0; border-color: var(--orange) transparent transparent transparent; z-index: 3; }
+  .head { padding: 64px 40px 40px; }
+  .head h2 { font-weight: 300; font-size: clamp(30px, 3.6vw, 46px); letter-spacing: -0.02em; line-height: 1.08; max-width: 720px; }
+  .head p { margin-top: 14px; max-width: 600px; font-size: 15.5px; line-height: 1.6; color: rgba(var(--fg-rgb),.66); }
+  .head.center { text-align: center; } .head.center h2, .head.center p { margin-left: auto; margin-right: auto; }
+  .label { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: rgba(var(--fg-rgb),.5); }
+  .mono { font-family: var(--mono); }
+
+  /* grid of cells with faint borders */
+  .cells { display: grid; border-top: 1px solid var(--line); }
+  .cells > * { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .cells > *:last-child { border-right: 0; }
+  .c3 { grid-template-columns: repeat(3, 1fr); }
+  .c4 { grid-template-columns: repeat(4, 1fr); }
+
+  /* ---- 02: how it works ---- */
+  .step { padding: 28px 28px 32px; min-height: 420px; display: flex; flex-direction: column; }
+  .step .k { display: flex; align-items: center; gap: 10px; }
+  .step .k .num { width: 22px; height: 22px; border: 1px solid rgba(var(--fg-rgb),.2); display: grid; place-items: center; font-family: var(--mono); font-size: 10px; }
+  .step h3 { font-weight: 400; font-size: 21px; margin-top: 18px; letter-spacing: -0.01em; }
+  .step .d { margin-top: 8px; font-size: 14px; line-height: 1.55; color: rgba(var(--fg-rgb),.6); }
+  .step .viz { margin-top: auto; padding-top: 22px; }
+
+  .examples { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 11.5px; }
+  .examples td { padding: 9px 0; border-top: 1px dashed rgba(var(--fg-rgb),.1); vertical-align: top; }
+  .examples td:first-child { color: var(--fg); padding-right: 12px; }
+  .examples td:last-child { text-align: right; white-space: nowrap; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--fg); }
+  .chip::before { content: ""; width: 8px; height: 8px; background: var(--c); }
+  .foot { margin-top: 12px; font-size: 12.5px; color: rgba(var(--fg-rgb),.5); }
+
+  .learn { position: relative; height: 210px; overflow: hidden; }
+  .learn .dot { position: absolute; width: 6px; height: 6px; background: var(--c); }
+  .learn .core { position: absolute; left: 50%; top: 50%; width: 92px; height: 92px; transform: translate(-50%, -50%); background: var(--spectrum); display: grid; place-items: center; }
+  .learn .core::after { content: ""; position: absolute; inset: 0; background-image: var(--grain); opacity: .35; mix-blend-mode: overlay; }
+  .learn .core span { position: relative; z-index: 1; font-family: "ZilsMark", serif; font-weight: 600; font-size: 34px; color: var(--panel); }
+  .learn svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .learn .tag { position: absolute; bottom: 0; left: 0; right: 0; text-align: center; }
+
+  .incoming { border: 1px solid rgba(var(--fg-rgb),.12); background: var(--ink-2); font-family: var(--mono); font-size: 12px; }
+  .incoming .r { padding: 12px 14px; border-bottom: 1px solid rgba(var(--fg-rgb),.07); }
+  .incoming .r:last-child { border-bottom: 0; }
+  .incoming .msg { color: var(--fg); font-size: 13px; margin-top: 4px; font-family: var(--sans); }
+  .incoming .why { color: rgba(var(--fg-rgb),.6); font-family: var(--sans); font-size: 13px; line-height: 1.5; margin-top: 4px; }
+  .again { margin-top: 12px; display: inline-flex; gap: 8px; align-items: center; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 9px 12px; border: 1px solid rgba(var(--fg-rgb),.2); cursor: pointer; background: none; color: var(--fg); }
+  .again:hover { border-color: var(--peach); color: var(--peach); }
+  .disclaim { padding: 14px 40px; font-size: 12px; color: rgba(var(--fg-rgb),.45); border-bottom: 1px solid var(--line); }
+
+  /* ---- 03: jobs ---- */
+  .job { padding: 26px 24px 28px; min-height: 340px; display: flex; flex-direction: column; position: relative; }
+  .job .tile { width: 44px; height: 44px; background: var(--g); position: relative; display: grid; place-items: center; }
+  .job .tile::after { content: ""; position: absolute; inset: 0; background-image: var(--grain); opacity: .35; mix-blend-mode: overlay; }
+  .job .tile svg { position: relative; z-index: 1; }
+  .job h3 { font-weight: 400; font-size: 20px; margin-top: 22px; } .job .tile { order: 1; } .job h3, .job .d, .job .fine, .job .q { order: 3; }
+  .job .d { margin-top: 8px; font-size: 14px; line-height: 1.55; color: rgba(var(--fg-rgb),.6); }
+  .job .q { margin-top: auto; padding-top: 22px; font-family: var(--mono); font-size: 11.5px; color: var(--fg); border-top: 1px dashed rgba(var(--fg-rgb),.1); }
+  .job .q span { color: rgba(var(--fg-rgb),.4); }
+  .badge { position: static; align-self: flex-start; margin-top: 14px; order: 2; font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--peach); border: 1px solid rgba(242,161,132,.4); padding: 4px 7px; }
+  .fine { font-size: 12.5px; color: rgba(var(--fg-rgb),.45); margin-top: 10px; line-height: 1.5; }
+  .cta-row { display: flex; gap: 12px; justify-content: center; padding: 40px 0 56px; }
+  
+  
+  
+
+  @media (max-width: 860px) {
+    .c3, .c4 { grid-template-columns: 1fr; }
+    .cells > * { border-right: 0; }
+    .page::before, .page::after { display: none; }
+    .sec- .head { padding: 48px 8px 28px; } .disclaim { padding: 14px 8px; }
+  }
+
+.nav { position: fixed; background: rgba(var(--bg-rgb),.85); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(var(--fg-rgb),.08); }
+
+  .s2 .c3 > div { padding: 28px 28px 32px; min-height: 330px; display: flex; flex-direction: column; }
+  .s2 h3 { font-weight: 400; font-size: 21px; letter-spacing: -0.01em; }
+  .s2 .d { margin-top: 8px; font-size: 14px; line-height: 1.55; color: rgba(var(--fg-rgb),.6); }
+  .art { margin-top: auto; padding-top: 22px; }
+  .card { border: 1px solid rgba(var(--fg-rgb),.1); background: var(--ink-2); font-family: var(--mono); font-size: 11.5px; line-height: 1.8; }
+  .card .hd { padding: 7px 12px; border-bottom: 1px solid rgba(var(--fg-rgb),.07); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(var(--fg-rgb),.45); display: flex; justify-content: space-between; }
+  .card .bd { padding: 10px 12px; color: rgba(var(--fg-rgb),.85); }
+  .card .kv { display: flex; justify-content: space-between; gap: 12px; }
+  .card .kv span:first-child { color: rgba(var(--fg-rgb),.4); }
+  .card .ok { color: #c3b4f6; }
+  .mini { display: grid; gap: 7px; }
+  .mini .r { display: grid; grid-template-columns: 120px 1fr 38px; align-items: center; gap: 8px; }
+  .mini .bar { height: 6px; background: rgba(var(--fg-rgb),.06); position: relative; }
+  .mini .bar i { position: absolute; inset: 0 auto 0 0; background: var(--c); }
+  .mini .r span:last-child { text-align: right; color: rgba(var(--fg-rgb),.55); }
+  .code .bd { white-space: pre; overflow: hidden; color: rgba(var(--fg-rgb),.75); }
+  .code .s { color: #f2a184; } .code .c { color: rgba(var(--fg-rgb),.35); }
+
+  .notice { position: relative; margin: 0 0 0; padding: 26px 40px; border: 1px dashed rgba(var(--fg-rgb),.18); border-left: 0; border-right: 0; display: grid; grid-template-columns: 200px 1fr auto; gap: 24px; align-items: start; }
+  .notice h4 { font-weight: 400; font-size: 17px; }
+  .notice p { font-size: 14px; line-height: 1.6; color: rgba(var(--fg-rgb),.62); max-width: 640px; }
+  .link { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg); white-space: nowrap; border-bottom: 1px solid rgba(var(--fg-rgb),.3); padding-bottom: 2px; }
+  .link::after { content: " →"; }
+
+  .res { display: grid; grid-template-columns: 1.1fr 1fr; border-top: 1px solid var(--line); }
+  .res > div { padding: 32px 36px 36px; }
+  .res > div:first-child { border-right: 1px solid var(--line); }
+  .res .lead { font-size: 15.5px; line-height: 1.65; color: rgba(var(--fg-rgb),.72); }
+  .res .lead b { color: var(--fg); font-weight: 500; }
+  .res .meta { margin-top: 16px; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: rgba(var(--fg-rgb),.45); }
+  .res .links { display: flex; gap: 22px; margin-top: 26px; }
+  .chart .lbl { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: rgba(var(--fg-rgb),.5); }
+  .bars { margin-top: 18px; display: grid; gap: 22px; }
+  .b .top { display: flex; justify-content: space-between; align-items: baseline; }
+  .b .name { font-size: 14px; }
+  .b .name small { display: block; font-family: var(--mono); font-size: 10.5px; color: rgba(var(--fg-rgb),.4); margin-top: 3px; }
+  .b .pct { font-weight: 300; font-size: 40px; letter-spacing: -0.02em; }
+  .b .track { margin-top: 10px; height: 34px; background: rgba(var(--fg-rgb),.04); position: relative; border: 1px solid rgba(var(--fg-rgb),.07); }
+  .b .fill { position: absolute; inset: 0 auto 0 0; }
+  .b .fill.jev { background: repeating-linear-gradient(135deg, rgba(var(--fg-rgb),.18) 0 1px, transparent 1px 7px); border-right: 1px solid rgba(var(--fg-rgb),.4); }
+  .b .fill.zils { background: var(--spectrum); }
+  .b .fill.zils::after { content: ""; position: absolute; inset: 0; background-image: var(--grain); opacity: .35; mix-blend-mode: overlay; }
+  .b .cnt { margin-top: 6px; font-family: var(--mono); font-size: 10.5px; color: rgba(var(--fg-rgb),.45); }
+  .delta { margin-top: 22px; font-family: var(--mono); font-size: 12px; color: #f2a184; }
+  .fineprint { padding: 16px 36px 22px; border-top: 1px solid var(--line); font-size: 12px; line-height: 1.6; color: rgba(var(--fg-rgb),.42); }
+
+  .final { position: relative; text-align: center; padding: 96px 24px 0; overflow: hidden; }
+  .final h2 { font-weight: 300; font-size: clamp(34px, 4.4vw, 58px); letter-spacing: -0.02em; line-height: 1.05; }
+  .final p { margin: 16px auto 0; max-width: 520px; font-size: 15.5px; line-height: 1.6; color: rgba(var(--fg-rgb),.66); }
+  .final .btns { justify-content: center; margin-top: 28px; }
+  .final .sky { display: grid; grid-template-columns: repeat(10, 1fr); align-items: end; height: 150px; margin-top: 72px; border-top: 1px solid var(--line); }
+  .final .sky i { display: block; background: var(--spectrum); background-size: 1000% 100%; height: var(--h); border-right: 1px solid rgba(var(--bg-rgb),.6); }
+  .footer { display: flex; justify-content: space-between; align-items: center; padding: 22px 76px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: rgba(var(--fg-rgb),.4); }
+  .footer .mark { font-size: 20px; text-transform: none; letter-spacing: -0.025em; }
+  .footer nav { display: flex; gap: 22px; }
+  @media (max-width: 860px) {
+    .notice { grid-template-columns: 1fr; padding: 22px 8px; }
+    .res { grid-template-columns: 1fr; } .res > div:first-child { border-right: 0; border-bottom: 1px solid var(--line); }
+    .res > div { padding: 26px 8px; } .fineprint { padding: 16px 8px; }
+    .footer { flex-direction: column; gap: 14px; padding: 22px 16px; }
+  }
+
+
+/* scroll reveal */
+.reveal { opacity: 0; transform: translateY(16px); transition: opacity .8s ease, transform .8s cubic-bezier(.2,.7,.2,1); }
+.reveal.in { opacity: 1; transform: none; }
+.b .fill { transform-origin: left; transform: scaleX(0); transition: transform 1.6s cubic-bezier(.2,.7,.2,1); }
+.b:nth-child(2) .fill { transition-delay: .35s; }
+.res.in .b .fill { transform: scaleX(1); }
+.mini .bar i { transform-origin: left; transform: scaleX(0); transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
+.mini .r:nth-child(2) .bar i { transition-delay: .12s; } .mini .r:nth-child(3) .bar i { transition-delay: .24s; } .mini .r:nth-child(4) .bar i { transition-delay: .36s; }
+.in .mini .bar i { transform: scaleX(1); }
+.delta { opacity: 0; transition: opacity .6s ease 1.7s; } .res.in .delta { opacity: 1; }
+.final .sky i { transform-origin: bottom; transform: scaleY(0); transition: transform 1.1s cubic-bezier(.2,.7,.2,1); }
+.final .sky.in i { transform: scaleY(1); }
+@media (prefers-reduced-motion: reduce) { .reveal, .b .fill, .mini .bar i, .final .sky i, .delta { transition: none !important; } }
+
+/* ---- quiet treatment: two surfaces, dim text ---- */
+:root { --gutter: #0f0f13; --panel: var(--panel); --ink: var(--panel); --ink-2: var(--ink-2); --line: rgba(var(--fg-rgb),.07); }
+body { background: var(--gutter) !important; }
+.page, .frame { background: linear-gradient(90deg, var(--gutter) 0 56px, var(--panel) 56px calc(100% - 56px), var(--gutter) calc(100% - 56px)) !important; }
+.nav { background: var(--navbg) !important; }
+.nav .cta { background: transparent !important; color: var(--fg) !important; border: 1px solid rgba(var(--fg-rgb),.25); }
+.nav .links span, .footer nav span, .nav .mark, .footer .mark { cursor: pointer; }
+.footer { background: var(--gutter); }
+h1, h2, h3, h4 { color: var(--fg); }
+.label { color: rgba(var(--fg-rgb),.38) !important; }
+@media (max-width: 900px) { .page, .frame { background: var(--panel) !important; } }
+
+.sec-body { position: relative; margin: 0 56px; }
+@media (max-width: 860px) { .sec-body { margin: 0 16px; } }
+
+/* ---- themes ---- */
+:root { --fg-rgb: 232,230,239; --bg-rgb: 24,25,30; --fg: #e8e6ef; --navbg: rgba(15,15,19,.92); }
+html[data-theme="light"] {
+  --fg-rgb: 28,26,38; --bg-rgb: 250,249,252; --fg: #1c1a26; --navbg: rgba(236,235,241,.92);
+  --gutter: #ecebf1; --panel: #faf9fc; --ink: #faf9fc; --ink-2: #f1eff6; --line: rgba(28,26,38,.1);
+  --violet-hi: #4b44c8; --peach: #c2582a; --lilac: #6a59cc; --ok: #6a59cc; --peri: #4a5fc4; --warn: #c2582a; --bad: #cc4426; --off: rgba(28,26,38,.35);
+  --t1: #1c1a26; --t2: rgba(28,26,38,.64); --t3: rgba(28,26,38,.44);
+  color-scheme: light;
+}
+html[data-theme="light"] .label { color: rgba(28,26,38,.48) !important; }
+html[data-theme="light"] .btn.p { color: #fff; }
+.theme-t { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid rgba(var(--fg-rgb),.2); color: var(--fg); margin-left: auto; margin-right: 12px; cursor: pointer; background: none; }
+.theme-t:hover { border-color: var(--peach); }
+.theme-t svg { width: 16px; height: 16px; }
+html[data-theme="light"] .theme-t .moon, html:not([data-theme="light"]) .theme-t .sun { display: none; }
+
+.nav .links { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+@media (max-width: 960px) { .nav .links { display: none; } }
+
+.zf { border-top: 1px solid rgba(var(--fg-rgb),.08); background: var(--gutter); font-family: "Inter Tight", system-ui, sans-serif; margin-top: auto; }
+.zf .in { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 32px; padding: 48px 76px 36px; }
+.zf .brand .mark { font-size: 30px; cursor: pointer; }
+.zf .brand p { margin-top: 14px; font-size: 15px; line-height: 1.45; color: rgba(var(--fg-rgb),.62); }
+.zf h5 { font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: rgba(var(--fg-rgb),.4); margin: 0 0 14px; }
+.zf ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.zf a { color: rgba(var(--fg-rgb),.72); text-decoration: none; font-size: 14px; }
+.zf a:hover { color: var(--fg); }
+.zf .bot { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 76px; border-top: 1px solid rgba(var(--fg-rgb),.08); font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: rgba(var(--fg-rgb),.4); }
+.zf .bot nav { display: flex; gap: 20px; }
+.zf .bot a { font-size: 10.5px; color: rgba(var(--fg-rgb),.5); }
+@media (max-width: 900px) { .zf .in { grid-template-columns: 1fr 1fr; padding: 36px 16px 24px; } .zf .brand { grid-column: 1 / -1; } .zf .bot { flex-direction: column; padding: 18px 16px; } }
+
+@media (max-width: 700px) {
+  .frame { height: 940px !important; }
+  .frame .hero { padding-top: 112px; }
+  .frame .btns { flex-direction: column; align-self: stretch; padding: 0 8px; }
+  .frame .btns .btn { justify-content: center; }
+  .console .bar { gap: 10px; } .console .bar span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 9px; }
+}
+
+.frame { isolation: auto !important; }
+.frame > .nav { z-index: 60 !important; }
+.res > div { min-width: 0; }
+.res .links { flex-wrap: wrap; }
+.chart .lbl { flex-wrap: wrap; gap: 4px 12px; }
+.res .meta { word-break: break-word; }
+
+/* ---- console as the focal point ---- */
+.frame .console { background: var(--ink-2); border: 1px solid rgba(var(--fg-rgb),.18); width: min(480px, calc(100% - 32px));
+  box-shadow: 0 30px 80px -30px rgba(239,141,90,.35), 0 0 0 6px rgba(var(--bg-rgb),.6); }
+.frame .console::before { content: ""; position: absolute; left: -1px; right: -1px; top: -1px; height: 2px; background: var(--spectrum); }
+.frame .console .bar { padding: 10px 14px; color: rgba(var(--fg-rgb),.62); }
+.frame .console .live { position: relative; gap: 8px; padding: 3px 9px 3px 8px; border: 1px solid rgba(255,122,47,.5); background: rgba(255,122,47,.1); color: var(--orange); font-weight: 500; }
+.frame .console .live::before { width: 7px; height: 7px; animation: none; box-shadow: 0 0 0 0 rgba(255,122,47,.7); animation: ring 1.8s ease-out infinite; }
+@keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(255,122,47,.7); } 70% { box-shadow: 0 0 0 7px rgba(255,122,47,0); } 100% { box-shadow: 0 0 0 0 rgba(255,122,47,0); } }
+.frame .console .body { font-size: 13px; padding: 14px 16px 16px; min-height: 112px; }
+.frame .console .body > div { animation: lineIn .7s ease-out; margin: 0 -6px; padding: 0 6px; }
+@keyframes lineIn { from { background: rgba(255,122,47,.16); } to { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .frame .console .live::before, .frame .console .body > div { animation: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <div class="frame" id="frame">
+      <canvas id="field"></canvas>
+      <div class="rail" style="left:56px"></div>
+      <div class="rail" style="right:56px"></div>
+      <div class="row" style="top:64px"></div>
+      <div class="row" style="top:102px"></div>
+      <div class="gutter-n" style="top:78px">01</div>
+      <span class="corner" style="left:57px;top:103px"></span>
+      <div class="strip">System 01<b id="count" hidden></b></div>
+
+      <div class="nav"><span class="mark">Zils</span><div class="links"><span>Examples</span><span>Research</span><span>Bittensor</span><span>Pricing</span></div><button class="theme-t" type="button" aria-label="Switch light or dark mode" onclick="(function(){var t=document.documentElement.dataset.theme==='light'?'dark':'light';applyTheme(t);try{localStorage.setItem('zils-theme',t)}catch(e){}})()"><svg class="moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13.5 9.5A6 6 0 0 1 6.5 2.5a6 6 0 1 0 7 7Z"/></svg><svg class="sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M3 13l1.4-1.4M11.6 4.4 13 3"/></svg></button><span class="cta">Early access</span></div>
+      <div class="hero">
+        <div class="mark">Zils</div>
+        <h3>Teach AI to make<br>decisions your way.</h3>
+        <p class="sub">Show Zils examples with the right answers. It trains a small model your app can use to sort requests, flag problems, or score matches.</p>
+        <div class="btns"><span class="btn p">Request early access</span><span class="btn s">See how it works</span></div>
+        <div class="console">
+          <div class="bar"><span>zils · system 01 · support-router</span><span class="live">live demo</span></div>
+          <div class="body" id="console-body"><span class="k">&gt; </span><span class="cursor"></span></div>
+        </div>
+      </div>
+    </div>
+    
+<div class="page">
+    <!-- 02 -->
+    <div class="sec-row"><span class="n">02</span><span class="t">How it works</span></div>
+    <div class="sec-body">
+      <span class="corner"></span>
+      <div class="head">
+        <h2>Show it what a good answer looks like.</h2>
+        <p>Show Zils examples of decisions you already know how to make. It trains a model for that job, checks how well it does, and hosts it for your app to use.</p>
+        <p class="mono" style="font-size:12px;letter-spacing:.06em;color:rgba(var(--fg-rgb),.5);margin-top:18px">FOR EXAMPLE: WHICH TEAM SHOULD HANDLE THIS CUSTOMER MESSAGE?</p>
+      </div>
+      <div class="cells c3">
+        <div class="step">
+          <div class="k"><span class="num">1</span><span class="label">Examples</span></div>
+          <h3>You show it the answers.</h3>
+          <p class="d">Past messages, paired with the right team.</p>
+          <div class="viz">
+            <table class="examples">
+              <tr><td>“Please send me a receipt.”</td><td><span class="chip" style="--c:var(--c-billing)">Billing</span></td></tr>
+              <tr><td>“The app closes every time I open it.”</td><td><span class="chip" style="--c:var(--c-tech)">Technical support</span></td></tr>
+              <tr><td>“I need to change my account email.”</td><td><span class="chip" style="--c:var(--c-account)">Account changes</span></td></tr>
+            </table>
+            <p class="foot">Bring your checked examples in a spreadsheet.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="k"><span class="num">2</span><span class="label">Training</span></div>
+          <h3>Zils learns the job.</h3>
+          <p class="d">A small model, trained on your examples. Separate examples test how well it learned. You review the results.</p>
+          <div class="viz">
+            <div class="learn" id="learn">
+              <svg id="learn-lines" aria-hidden="true"></svg>
+              <div class="core"><span>Zils</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="k"><span class="num">3</span><span class="label">In your app</span></div>
+          <h3>A new message comes in.</h3>
+          <p class="d">Your app gets the answer and can route the message.</p>
+          <div class="viz">
+            <div class="incoming">
+              <div class="r"><span class="label">Message</span><div class="msg" id="in-msg">“My invoice page keeps crashing.”</div></div>
+              <div class="r"><span class="label">Example answer</span><div style="margin-top:6px"><span class="chip" id="in-ans" style="--c:var(--c-tech)">Technical support</span></div></div>
+              <div class="r"><span class="label">Why</span><div class="why" id="in-why">It mentions an invoice, but the problem is a broken page.</div></div>
+            </div>
+            <button class="again" id="again">Show another message ↻</button>
+          </div>
+        </div>
+      </div>
+      <p class="disclaim">Illustrated workflow, not live predictions. A few sample rows are shown; useful training needs varied examples for every answer.</p>
+    </div>
+
+    <!-- 03 -->
+    <div class="sec-row"><span class="n">03</span><span class="t">Jobs</span></div>
+    <div class="sec-body">
+      <span class="corner"></span>
+      <div class="head center">
+        <h2>Same idea, different jobs.</h2>
+        <p>Choose a team. Flag a problem. Score a match. Pick one repeatable task where you can show what a good answer looks like. Start there, then test how well the model learns it.</p>
+      </div>
+      <div class="cells c4">
+        <div class="job">
+          <div class="tile" style="--g:linear-gradient(135deg,#ef8d5a,#d9a08c)">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#18191e" stroke-width="1.6"><path d="M3 5h8M3 10h12M3 15h6"/><path d="M14 3l3 2-3 2"/></svg>
+          </div>
+          <h3>Sort requests.</h3>
+          <p class="d">Teach it which team, topic, or queue a request belongs in. Your app uses the answer to send it to the right place.</p>
+          <p class="q"><span>&gt; </span>“Which team should handle this?”</p>
+        </div>
+        <div class="job">
+          <div class="tile" style="--g:linear-gradient(135deg,#d9a08c,#cfa2e4)">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#18191e" stroke-width="1.6"><path d="M5 17V3M5 4h10l-2 3 2 3H5"/></svg>
+          </div>
+          <h3>Flag problems.</h3>
+          <p class="d">Show it examples that need attention and examples that can wait. Your app can use the result to ask someone to review.</p>
+          <p class="q"><span>&gt; </span>“Does this need a closer look?”</p>
+        </div>
+        <div class="job">
+          <div class="tile" style="--g:linear-gradient(135deg,#cfa2e4,#c3b4f6)">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#18191e" stroke-width="1.6"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3"/></svg>
+          </div>
+          <h3>Score matches.</h3>
+          <p class="d">Provide pairs with scores you have checked. Teach it how well a product, article, or result fits a request.</p>
+          <p class="q"><span>&gt; </span>“How well does this fit?”</p>
+        </div>
+        <div class="job">
+          <span class="badge">SDK 0.3.0 · Experimental</span>
+          <div class="tile" style="--g:linear-gradient(135deg,#c3b4f6,#8ea6ff)">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#18191e" stroke-width="1.6"><path d="M4 5h12M4 10h8M4 15h4"/></svg>
+          </div>
+          <h3>Rank options.</h3>
+          <p class="d">Give Zils 2–10 options and a criterion. The SDK returns an ordered list with relative scores.</p>
+          <p class="fine">Optional grouped ranking: ten options use 10 judgments instead of 90. Relative scores are not confidence percentages.</p>
+          <p class="q"><span>&gt; </span>“Which action best addresses this issue?”</p>
+        </div>
+      </div>
+      <div class="cta-row"><span class="btn p">Request early access</span><span class="btn s">See examples</span></div>
+    </div>
+  </div>
+
+
+
+
+<div class="page">
+  <!-- 04 -->
+  <div class="sec-row"><span class="n">04</span><span class="t">What you get</span></div>
+  <div class="sec-body s2">
+    <span class="corner"></span>
+    <div class="head">
+      <h2>What you get.</h2>
+      <p>You bring the examples. Zils handles training, evaluation, and hosting for accepted models.</p>
+    </div>
+    <div class="cells c3">
+      <div>
+        <h3>A model for your task.</h3>
+        <p class="d">Trained on your examples, with the training run and model version saved in your workspace.</p>
+        <div class="art">
+          <div class="card">
+            <div class="hd"><span>Model</span><span>System 01</span></div>
+            <div class="bd">
+              <div class="kv"><span>name</span><span>support-router</span></div>
+              <div class="kv"><span>version</span><span>v3</span></div>
+              <div class="kv"><span>training run</span><span>run_0418</span></div>
+              <div class="kv"><span>examples</span><span>1,024</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3>Results you can check.</h3>
+        <p class="d">See how it performs on examples kept out of training, including the mistakes. Review the results before relying on it.</p>
+        <div class="art">
+          <div class="card">
+            <div class="hd"><span>Held-out examples</span><span>illustrative</span></div>
+            <div class="bd mini">
+              <div class="r"><span>Billing</span><span class="bar"><i style="width:92%;--c:var(--c-billing)"></i></span><span>92%</span></div>
+              <div class="r"><span>Account changes</span><span class="bar"><i style="width:88%;--c:var(--c-account)"></i></span><span>88%</span></div>
+              <div class="r"><span>Tech support</span><span class="bar"><i style="width:84%;--c:var(--c-tech)"></i></span><span>84%</span></div>
+              <div class="r"><span>Mistakes to review</span><span class="bar"><i style="width:14%;--c:#ff8f6b"></i></span><span>31</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3>A way to use it in your app.</h3>
+        <p class="d">Once your model passes evaluation, Zils hosts it. Your app sends a request through the API and gets an answer back.</p>
+        <div class="art">
+          <div class="card code">
+            <div class="hd"><span>Request</span><span>API</span></div>
+            <div class="bd"><span class="c"># ask your model</span>
+zils.decide(
+  model=<span class="s">"support-router"</span>,
+  input=<span class="s">"My invoice page keeps crashing."</span>
+)
+<span class="c"># → "Technical support"</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="notice">
+      <h4>Before you upload.</h4>
+      <p>Training examples are copied to approved workers, whose operators can read and retain them. This is not confidential computing. Use only data you are authorized to share.</p>
+      <span class="link">Read how data is handled</span>
+    </div>
+  </div>
+
+  <!-- 05 -->
+  <div class="sec-row"><span class="n">05</span><span class="t">Research</span></div>
+  <div class="sec-body">
+    <span class="corner"></span>
+    <div class="head">
+      <h2>See what training changed.</h2>
+      <p>We trained a model to choose the next action in a customer-support conversation, then tested it on conversations it had not trained on.</p>
+    </div>
+    <div class="res">
+      <div>
+        <p class="lead">On 500 test conversations from the public ABCD dataset, our trained model chose the recorded answer <b>79.2%</b> of the time, compared with <b>70.6%</b> for TypeSafe JEV, another decision model. That is <b>29.3% fewer mistakes</b> on the same next-action task.</p>
+        <p class="meta">1,024 TRAINING CONVERSATIONS · SEPARATE DEVELOPMENT AND TEST SETS</p>
+        <div class="links"><span class="link">See the results and test method</span><span class="link">Explore all the research</span></div>
+      </div>
+      <div class="chart">
+        <div class="lbl"><span>Correct next actions</span><span>Same 500 test conversations</span></div>
+        <div class="bars">
+          <div class="b">
+            <div class="top"><span class="name">TypeSafe JEV 1.13<small>Hosted JEV 1.13.0 · same inputs and choices</small></span><span class="pct">70.6%</span></div>
+            <div class="track"><span class="fill jev" style="width:70.6%"></span></div>
+            <div class="cnt">353 / 500 correct</div>
+          </div>
+          <div class="b">
+            <div class="top"><span class="name">Trained with Zils<small>Trained on 1,024 separate conversations</small></span><span class="pct">79.2%</span></div>
+            <div class="track"><span class="fill zils" style="width:79.2%"></span></div>
+            <div class="cnt">396 / 500 correct</div>
+          </div>
+        </div>
+        <p class="delta">+8.6 percentage points vs TypeSafe JEV</p>
+      </div>
+    </div>
+    <p class="fineprint">JEV was tested live; Zils scores reuse verified predictions from the same frozen test set. One research experiment, not a guarantee for your task. It tested the choice of the next action, not success at resolving a whole conversation. JEV was more accurate on its smaller set of high-confidence answers; Zils still overstates its confidence. The research model shown here is not deployed in the shared playground.</p>
+  </div>
+
+  <!-- closing -->
+  <div class="sec-row"><span class="n">06</span><span class="t">Start</span></div>
+  <div class="sec-body">
+    <span class="corner"></span>
+    <div class="final">
+      <h2>Start with a decision<br>you know how to make.</h2>
+      <p>Bring examples and their right answers. The training workspace helps you prepare your data and start a run.</p>
+      <div class="btns"><span class="btn p">Request early access</span><span class="btn s">See examples</span></div>
+      <div class="sky">
+        <i style="--h:40%;background-position:0% 0"></i><i style="--h:62%;background-position:11% 0"></i><i style="--h:30%;background-position:22% 0;opacity:.35"></i><i style="--h:55%;background-position:33% 0"></i><i style="--h:80%;background-position:44% 0"></i><i style="--h:100%;background-position:55% 0"></i><i style="--h:70%;background-position:66% 0"></i><i style="--h:85%;background-position:77% 0"></i><i style="--h:48%;background-position:88% 0"></i><i style="--h:26%;background-position:100% 0;opacity:.4"></i>
+      </div>
+    </div>
+  </div>
+  <footer class="zf">
+  <div class="in">
+    <div class="brand"><a href="home.html" class="mark">Zils</a><p>Specialized models.<br>Decisions that are yours.</p></div>
+    <div><h5>Build</h5><ul><li><a href="#">Docs</a></li><li><a href="examples.html">Examples</a></li><li><a href="pricing.html">Pricing</a></li><li><a href="early-access.html">Early access</a></li></ul></div>
+    <div><h5>Explore</h5><ul><li><a href="research.html">Research</a></li><li><a href="miners.html">Miners</a></li><li><a href="#">Model source</a></li></ul></div>
+    <div><h5>Keep in touch</h5><ul><li><a href="#">Changelog</a></li><li><a href="#">Discord</a></li><li><a href="#">X</a></li><li><a href="contact.html">Contact</a></li></ul></div>
+  </div>
+  <div class="bot"><span>Your data. Your decision model.</span><nav><a href="privacy.html">Privacy</a><a href="privacy.html">Terms</a><span>© 2026 Zils</span></nav></div>
+</footer></div>
+
+<script>
+(() => {
+  const frame = document.getElementById("frame");
+  const cv = document.getElementById("field"), ctx = cv.getContext("2d");
+  let W = 0, H = 0;
+  function size() {
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = frame.clientWidth; H = frame.clientHeight;
+    cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  size(); addEventListener("resize", size);
+
+  const COLS = 10, ROWS = 6; let RH = 42;
+  const MOB = () => W < 700;
+  const setRH = () => { RH = MOB() ? 34 : 42; }; setRH(); addEventListener("resize", setRH);
+  const P = l => (MOB() ? l.m : l) || l;
+  // gradient rows filled from the bottom, per column (the skyline)
+  const SKY = [4, 3, 2, 3, 4, 4, 3, 4, 3, 2];
+  const geo = () => {
+    const M = MOB() ? 0 : 56, left = M, right = W - M, cw = (right - left) / COLS, bottom = H, top = bottom - ROWS * RH;
+    return { left, right, cw, top, bottom };
+  };
+
+  // answers: tag position (col,row) on the grid; side = which side its examples fall down
+  const lanes = [
+    { label: "Billing", col: 0, row: 2, m: { col: 0, row: 2 }, side: 0, color: "#f08a4b", conf: "0.97",
+      msgs: ["Please send me a receipt.", "Charged twice this month", "Refund for order 2231?", "Can I pay yearly?"],
+      files: ["receipt_0412.jpg", "invoice-scan.pdf"] },
+    { label: "Spam", col: 1, row: 1, side: 0, color: "#e7a58f", conf: "0.99",
+      msgs: ["You won a free cruise!!", "Crypto opportunity, act now", "Re: re: re: urgent wire"], files: [] },
+    { label: "Account changes", col: 3, row: 0, m: { col: 5, row: 0 }, side: 0, color: "#d7a6e8", conf: "0.93",
+      msgs: ["Change my account email", "Add a teammate", "Rename our workspace", "Transfer to Dana"],
+      files: ["new-id-card.jpg"] },
+    { label: "Technical support", col: 6, row: 0, m: { col: 0, row: 0 }, side: 1, color: "#c3b2f6", conf: "0.95",
+      msgs: ["App closes when I open it", "Invoice page keeps crashing", "Login loops on Android", "Export does nothing"],
+      files: ["crash-screenshot.png", "error-modal.png"] },
+    { label: "Sales", col: 8, row: 1, side: 1, color: "#a9b5f2", conf: "0.91",
+      msgs: ["Do you offer volume pricing?", "Can we get a demo Friday?", "Pricing for 40 seats?"], files: [] },
+    { label: "Needs review", col: 7, row: 2, m: { col: 5, row: 2 }, side: 1, color: "#8ea6ff", conf: "0.52",
+      msgs: ["Nobody answered in 3 days", "Fourth time asking", "I want to speak to legal"], files: ["damaged-box.jpg"] },
+  ];
+  lanes.forEach(l => { l.n = 0; l.pulse = 0; });
+  const review = lanes[5], tech = lanes[3];
+  const hesitant = ["The invoice is wrong and the page broke", "Cancel everything. Now.", "Is my data still mine?"];
+
+  const tagX = l => { const g = geo(); return g.left + P(l).col * g.cw + 13; };   // center of hatched square
+  const tagY = l => { const g = geo(); return g.top + P(l).row * RH; };
+
+  const items = [];
+  let side = 0, total = 1284390;
+  const countEl = document.getElementById("count");
+  const READ = () => H * .44;
+
+  function spawn() {
+    let lane, text, hes = null;
+    if (side === 1 && Math.random() < .16) {
+      lane = review; hes = tech; text = "“" + hesitant[Math.floor(Math.random() * hesitant.length)] + "”";
+    } else {
+      const pool = lanes.filter(l => l.side === side && l !== review || (side === 1 && l === review && Math.random() < .3));
+      lane = pool[Math.floor(Math.random() * pool.length)];
+      const useFile = lane.files.length && Math.random() < .35;
+      text = useFile ? "[img] " + lane.files[Math.floor(Math.random() * lane.files.length)]
+                     : "“" + lane.msgs[Math.floor(Math.random() * lane.msgs.length)] + "”";
+    }
+    const x0 = side === 0 ? .1 + Math.random() * .1 : .8 + Math.random() * .1;
+    items.push({ text, lane, hes, x0, y: 118 + Math.random() * 20, v: 32 + Math.random() * 8, stamped: false, flash: 0,
+      conf: hes ? (0.48 + Math.random() * .08).toFixed(2) : (0.86 + Math.random() * .13).toFixed(2) });
+    side = 1 - side;
+  }
+
+  // console narrates each decision as it's read
+  const body = document.getElementById("console-body");
+  let pending = null, busy = false;
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  async function narrate() {
+    if (busy || !pending) return;
+    busy = true; const d = pending; pending = null;
+    const lines = [
+      `<span class="k">&gt; in </span><span class="q">${esc(d.text)}</span>`,
+      d.hes ? `<span class="k">&gt; answer </span><span class="warn">unsure: ${esc(d.hes.label)}?</span>`
+            : `<span class="k">&gt; answer </span><span class="ans">${esc(d.lane.label)}</span>`,
+      d.hes ? `<span class="k">&gt; confidence </span><span class="conf">${d.conf}</span><span class="k"> → </span><span class="ans">Needs review</span>`
+            : `<span class="k">&gt; confidence </span><span class="conf">${d.conf}</span>`,
+    ];
+    body.innerHTML = "";
+    for (const line of lines) {
+      const div = document.createElement("div"); body.appendChild(div);
+      div.innerHTML = line + ' <span class="cursor"></span>';
+      await new Promise(r => setTimeout(r, 650));
+      div.innerHTML = line;
+    }
+    const last = document.createElement("div"); last.innerHTML = '<span class="k">&gt; </span><span class="cursor"></span>'; body.appendChild(last);
+    await new Promise(r => setTimeout(r, 1800));
+    busy = false; narrate();
+  }
+
+  function drawField(dt) {
+    const g = geo();
+    // skyline gradient, horizontal, with a dark dip like the reference
+    const grad = ctx.createLinearGradient(g.left, 0, g.right, 0);
+    [[0, "#ef8d5a"], [.12, "#d9a08c"], [.24, DIP], [.38, "#cfa2e4"], [.5, "#dcb2ee"], [.64, "#c3b4f6"], [.78, "#a9b5f2"], [.9, "#5d6688"], [1, END]]
+      .forEach(([o, c]) => grad.addColorStop(o, c));
+    for (let c = 0; c < COLS; c++) {
+      const h = SKY[c];
+      const x = g.left + c * g.cw, y = g.bottom - h * RH;
+      ctx.fillStyle = grad; ctx.fillRect(x, y, g.cw + .5, h * RH);
+    }
+    // soften: darken toward the top of the skyline
+    const vf = ctx.createLinearGradient(0, g.bottom - 3 * RH, 0, g.bottom);
+    vf.addColorStop(0, `rgba(${BGR},.35)`); vf.addColorStop(1, `rgba(${BGR},0)`);
+    ctx.fillStyle = vf; ctx.fillRect(g.left, g.bottom - 3 * RH, g.right - g.left, 3 * RH);
+
+    // dark slot below each tag (where examples drop in), glowing on landing
+    for (const l of lanes) {
+      l.pulse = Math.max(0, l.pulse - dt * 1.2);
+      if (MOB() && !l.m) continue;
+      const x = g.left + P(l).col * g.cw, y = tagY(l) + RH;
+      ctx.fillStyle = BGH; ctx.fillRect(x, y, g.cw, RH);
+      if (l.pulse > 0) {
+        const sg = ctx.createLinearGradient(0, y, 0, y + RH);
+        sg.addColorStop(0, l.color + "00"); sg.addColorStop(1, l.color);
+        ctx.globalAlpha = l.pulse * .7; ctx.fillStyle = sg; ctx.fillRect(x, y, g.cw, RH); ctx.globalAlpha = 1;
+      }
+    }
+
+    // faint grid: rows across, columns inside the field
+    ctx.strokeStyle = `rgba(${FGR},.07)`; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let r = 0; r <= ROWS; r++) { const y = Math.round(g.top + r * RH) + .5; ctx.moveTo(0, y); ctx.lineTo(W, y); }
+    for (let c = 1; c < COLS; c++) { const x = Math.round(g.left + c * g.cw) + .5; ctx.moveTo(x, g.top + 3 * RH); ctx.lineTo(x, g.bottom); }
+    ctx.stroke();
+
+    // tags
+    const TF = MOB() ? "500 9.5px 'IBM Plex Mono', monospace" : "500 11px 'IBM Plex Mono', monospace", PAD = MOB() ? 10 : 16;
+    for (const l of lanes) {
+      if (MOB() && !l.m) continue;
+      const x = g.left + P(l).col * g.cw, y = tagY(l);
+      ctx.font = TF;
+      const label = l.label.toUpperCase(), tw = ctx.measureText(label).width;
+      const w = Math.max(g.cw * 1.2, RH + PAD + tw + PAD);
+      ctx.fillStyle = BGH; ctx.fillRect(x, y, w, RH);
+      ctx.strokeStyle = `rgba(${FGR},.1)`; ctx.strokeRect(x + .5, y + .5, w - 1, RH - 1);
+      // hatched square
+      if (l.pulse > 0) { ctx.globalAlpha = l.pulse; ctx.fillStyle = l.color; ctx.fillRect(x + 1, y + 1, RH - 2, RH - 2); ctx.globalAlpha = 1; }
+      ctx.strokeStyle = `rgba(${FGR},.18)`; ctx.strokeRect(x + .5, y + .5, RH - 1, RH - 1);
+      ctx.beginPath(); ctx.moveTo(x + 1, y + RH - 1); ctx.lineTo(x + RH - 1, y + 1); ctx.stroke();
+      ctx.font = "400 7.5px 'IBM Plex Mono', monospace"; ctx.fillStyle = `rgba(${FGR},.45)`; ctx.textAlign = "right";
+      ctx.fillText(l.conf, x + RH - 4, y + RH - 5);
+      ctx.font = TF; ctx.fillStyle = `rgba(${FGR},.7)`; ctx.textAlign = "left";
+      ctx.fillText(label, x + RH + PAD, y + RH / 2 + 4);
+    }
+  }
+
+  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  let last = performance.now(), spawnT = 0;
+  for (let i = 0; i < 3; i++) { spawn(); items[items.length - 1].y += i * 110; }
+
+  function loop(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    spawnT += dt;
+    if (MOB()) {
+      items.length = 0;
+      if (spawnT > 2.6) { spawnT = 0; const vis = lanes.filter(l => l.m), l = vis[Math.floor(Math.random() * vis.length)];
+        const conf = (0.86 + Math.random() * .13).toFixed(2); l.pulse = 1; l.conf = conf; total++; countEl.textContent = total.toLocaleString();
+        pending = { text: "“" + l.msgs[Math.floor(Math.random() * l.msgs.length)] + "”", lane: l, conf }; narrate(); }
+    } else if (spawnT > 2.4) { spawnT = 0; spawn(); }
+    const g = geo(), rY = READ();
+    ctx.clearRect(0, 0, W, H);
+
+    // reading row on the sides
+    ctx.save();
+    if (MOB()) ctx.globalAlpha = 0;
+    ctx.setLineDash([3, 5]); ctx.strokeStyle = `rgba(${FGR},.08)`;
+    ctx.beginPath(); ctx.moveTo(g.left, rY); ctx.lineTo(W * .3, rY); ctx.moveTo(W * .7, rY); ctx.lineTo(g.right, rY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = "500 9.5px 'IBM Plex Mono', monospace"; ctx.fillStyle = `rgba(${FGR},.22)`;
+    
+    ctx.textAlign = "left"; ctx.fillText("READING", g.left + 10, rY - 8);
+    ctx.textAlign = "right"; ctx.fillText("READING", g.right - 10, rY - 8);
+    ctx.restore();
+
+    drawField(dt);
+
+    // examples
+    ctx.font = "400 11px 'IBM Plex Mono', monospace"; ctx.textAlign = "center";
+    for (let i = items.length - 1; i >= 0; i--) {
+      const m = items[i];
+      m.y += m.v * dt;
+      m.flash = Math.max(0, m.flash - dt * .8);
+      const end = tagY(m.lane) - 8;
+      let x = m.x0 * W;
+      if (m.y >= rY) {
+        if (!m.stamped) { m.stamped = true; m.flash = 1; total++; countEl.textContent = total.toLocaleString(); pending = m; narrate(); }
+        const t = Math.min(1, (m.y - rY) / (end - rY));
+        const tx = tagX(m.lane);
+        if (m.hes) {
+          const tempt = tagX(m.hes);
+          const a = ease(Math.min(1, t / .55)), b = ease(Math.max(0, (t - .55) / .45));
+          const wobble = Math.sin(t * 28) * 6 * Math.sin(Math.min(1, t / .55) * Math.PI);
+          x = m.x0 * W + (tempt - m.x0 * W) * a * (1 - b) + (tx - m.x0 * W) * b + wobble;
+        } else x = m.x0 * W + (tx - m.x0 * W) * ease(t);
+        if (t >= 1) { m.lane.n++; m.lane.pulse = 1; m.lane.conf = m.conf; items.splice(i, 1); continue; }
+      }
+      const pre = m.y < rY;
+      const fadeIn = Math.min(1, (m.y - 118) / 80);
+      const t2 = pre ? 0 : Math.min(1, (m.y - rY) / (end - rY));
+      const alpha = pre ? .12 * fadeIn : (.26 + m.flash * .2) * (1 - Math.pow(t2, 5));
+      const half = ctx.measureText(m.text).width / 2;
+      const cx = Math.max(64 + half, Math.min(W - 64 - half, x));
+      ctx.fillStyle = `rgba(${FGR},${alpha})`;
+      ctx.fillText(m.text, cx, m.y);
+      if (!pre) {
+        ctx.font = "500 9.5px 'IBM Plex Mono', monospace";
+        const stamp = m.hes ? `?  ${m.hes.label} ${m.conf}  →  review` : `→ ${m.lane.label} · ${m.conf}`;
+        ctx.globalAlpha = alpha; ctx.fillStyle = m.hes ? "#ff8f6b" : m.lane.color;
+        ctx.fillText(stamp.toUpperCase(), cx, m.y + 14);
+        ctx.globalAlpha = 1;
+        ctx.font = "400 11px 'IBM Plex Mono', monospace";
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+  document.fonts.ready.then(() => requestAnimationFrame(loop));
+})();
+</script>
+<script>
+  // step 2: example dots flow into the core
+  (() => {
+    const box = document.getElementById("learn"), svg = document.getElementById("learn-lines");
+    const colors = ["--c-billing", "--c-tech", "--c-account", "--c-spam", "--c-sales", "--c-review"];
+    const W = () => box.clientWidth, H = () => box.clientHeight;
+    const dots = [];
+    for (let i = 0; i < 14; i++) {
+      const d = document.createElement("span"); d.className = "dot";
+      d.style.setProperty("--c", `var(${colors[i % colors.length]})`);
+      box.appendChild(d);
+      dots.push({ el: d, a: (i / 14) * Math.PI * 2, r: 0, t: Math.random() });
+    }
+    function tick() {
+      const cx = W() / 2, cy = H() / 2;
+      svg.innerHTML = "";
+      for (const p of dots) {
+        p.t += 0.004; if (p.t > 1) p.t = 0;
+        const r = 30 + (1 - p.t) * Math.min(cx, cy) * 1.4;
+        const x = cx + Math.cos(p.a) * r * 1.4, y = cy + Math.sin(p.a) * r * .9;
+        p.el.style.left = (x - 3) + "px"; p.el.style.top = (y - 3) + "px";
+        p.el.style.opacity = Math.min(1, p.t * 4) * (r < 50 ? 0 : 1);
+        const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        l.setAttribute("x1", x); l.setAttribute("y1", y); l.setAttribute("x2", cx); l.setAttribute("y2", cy);
+        l.setAttribute("stroke", `rgba(${FGR},.07)`); l.setAttribute("stroke-dasharray", "2 4");
+        svg.appendChild(l);
+      }
+      requestAnimationFrame(tick);
+    }
+    tick();
+  })();
+
+  // step 3: cycle example messages
+  (() => {
+    const ex = [
+      { m: "“My invoice page keeps crashing.”", a: "Technical support", c: "--c-tech", w: "It mentions an invoice, but the problem is a broken page." },
+      { m: "“Can I get a copy of last month's receipt?”", a: "Billing", c: "--c-billing", w: "A request for a payment document." },
+      { m: "“Please add my coworker to our plan.”", a: "Account changes", c: "--c-account", w: "Changing who has access to the account." },
+    ];
+    let i = 0;
+    document.getElementById("again").addEventListener("click", e => {
+      e.stopPropagation();
+      i = (i + 1) % ex.length;
+      document.getElementById("in-msg").textContent = ex[i].m;
+      const ans = document.getElementById("in-ans"); ans.textContent = ex[i].a; ans.style.setProperty("--c", `var(${ex[i].c})`);
+      document.getElementById("in-why").textContent = ex[i].w;
+    });
+  })();
+</script>
+
+<script>
+(() => {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const els = [];
+  const add = (el, delay = 0) => { el.classList.add("reveal"); el.style.transitionDelay = delay + "ms"; els.push(el); };
+  document.querySelectorAll(".page .head, .notice, .fineprint, .final h2, .final p, .final .btns").forEach(el => add(el));
+  document.querySelectorAll(".page .cells").forEach(c => [...c.children].forEach((el, i) => add(el, i * 110)));
+  document.querySelectorAll(".res, .final .sky").forEach(el => els.push(el));
+  document.querySelectorAll(".final .sky i").forEach((el, i) => el.style.transitionDelay = (i * 70) + "ms");
+
+  function countUp(el) {
+    const target = parseFloat(el.textContent), dur = 1600, t0 = performance.now();
+    const step = now => {
+      const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 3);
+      el.textContent = (target * e).toFixed(1) + "%";
+      if (t < 1) requestAnimationFrame(step);
+    };
+    el.textContent = "0.0%"; requestAnimationFrame(step);
+  }
+  const reveal = el => {
+    el.classList.add("in");
+    if (el.classList.contains("res") && !reduce) el.querySelectorAll(".pct").forEach((p, i) => setTimeout(() => countUp(p), i * 350));
+  };
+  if (reduce || !("IntersectionObserver" in window)) { els.forEach(el => el.classList.add("in")); return; }
+  const io = new IntersectionObserver(entries => entries.forEach(e => {
+    if (e.isIntersecting) { reveal(e.target); io.unobserve(e.target); }
+  }), { threshold: .25 });
+  els.forEach(el => io.observe(el));
+})();
+</script>
+
+<script>
+(() => {
+  const map = { examples: "examples.html", research: "research.html", miners: "miners.html", bittensor: "miners.html", pricing: "pricing.html", "early access": "early-access.html" };
+  document.querySelectorAll(".nav .links span, .nav .cta").forEach(s => {
+    const k = s.textContent.trim().toLowerCase();
+    if (k === "bittensor") s.textContent = "Miners";
+    if (map[k]) { s.style.cursor = "pointer"; s.addEventListener("click", () => location.href = "" + map[k]); }
+  });
+  document.querySelectorAll(".nav .mark").forEach(m => { m.style.cursor = "pointer"; m.addEventListener("click", () => location.href = "home.html"); });
+})();
+</script>
+
+<script>
+(() => {
+  const frame = document.querySelector(".frame"), con = document.querySelector(".frame .console");
+  function fit() {
+    const field = (innerWidth < 700 ? 34 : 42) * 6;
+    const bottom = con.getBoundingClientRect().bottom - frame.getBoundingClientRect().top;
+    const h = Math.max(innerWidth < 700 ? 720 : 860, Math.ceil(bottom + 40 + field));
+    if (Math.abs(frame.offsetHeight - h) > 2) { frame.style.setProperty("height", h + "px", "important"); dispatchEvent(new Event("resize")); }
+  }
+  document.fonts.ready.then(fit); addEventListener("resize", () => requestAnimationFrame(fit));
+})();
+</script>
+</body>
+</html>
