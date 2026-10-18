@@ -62,7 +62,7 @@ export function CreditEstimate() {
           </div>
           <div className={css.legend}>
             <span>Your first <b>${CREDIT}</b> credit</span>
-            <span>{over ? `White line = end of $${CREDIT} credit` : `${e.usedPct.toFixed(0)}% used`}</span>
+            <span>{over ? `White line = end of $${CREDIT} credit` : `${Math.floor(e.usedPct)}% used`}</span>
           </div>
         </div>
         <dl className={css.lines}>

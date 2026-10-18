@@ -19,6 +19,7 @@ test('estimate defaults, overage marker and end-of-credit line', async ({ page }
 test('small print holds the standard-run explanation and copy stays', async ({ page }) => {
   await page.goto('/pricing');
   await expect(page.getByText('What’s in a standard run?')).toBeVisible();
+  await expect(page.getByText('prepaid credit. Your first standard training run is included')).toBeVisible();
   await expect(page.getByText('Paid access is coming. Top-ups are not available yet.')).toBeVisible();
 });
 

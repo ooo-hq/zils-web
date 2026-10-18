@@ -41,9 +41,9 @@ export default function PricingPage() {
         <div className={s.start}>
           <h2 id="plan-heading">One plan. Start with ${PRICING.startingCredit}.</h2>
           <Reveal>
-            <p className={s.five}>${PRICING.startingCredit}<span> prepaid credit</span></p>
+            <p className={s.five}>${PRICING.startingCredit}</p>
           </Reveal>
-          <p className={s.sub}>Your first standard training run is included with your first top-up. The full ${PRICING.startingCredit} stays available for usage.</p>
+          <p className={s.sub}>prepaid credit. Your first standard training run is included with your first top-up. The full ${PRICING.startingCredit} stays available for usage.</p>
           <div className={s.cta}><SiteButton href="/early-access" variant="primary">Request early access</SiteButton></div>
           <p className={s.soon}>Paid access is coming. Top-ups are not available yet.</p>
           <p className={s.soon}><Link href="/billing">View account billing</Link>{process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && '. Test payments only.'}</p>
