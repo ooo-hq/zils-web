@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { SiteFooter } from '@/components/site-footer';
-import { SiteHeader } from '@/components/site-header';
+import { SiteFrame } from '@/components/site/site-frame';
+import { SectionRow } from '@/components/site/section-row';
+import { DetailsRow } from '@/components/site/details-row';
+import { MinerBoard } from '@/components/site/miner-board';
 import { currentBase } from '@/lib/base-model';
-import { networkMiners, type Miner } from '@/lib/network-miners';
-import { blackletter } from '@/components/blackletter';
-import texture from '@/components/light.module.css';
+import { boardNumbers } from '@/lib/miner-board';
+import { networkMiners } from '@/lib/network-miners';
+import { Rehearsal } from './rehearsal';
 import s from './miners.module.css';
 
 export const metadata: Metadata = {
@@ -14,16 +16,8 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://zils.ai/miners' },
 };
 
-const STATUS: Record<Miner['status'], string> = { online: 'Online', stale: 'Seen recently', offline: 'Offline', unseen: 'Never seen', disabled: 'Disabled' };
-const MODEL_NAMES: Record<string, string> = { 'd3-mini-4.5b-v1': 'd3-mini 4.5B', 'h2o-lightning-4b-v1.2.3': 'H2O 4B' };
-const short = (hotkey: string) => hotkey.length > 14 ? `${hotkey.slice(0, 6)}…${hotkey.slice(-6)}` : hotkey;
-function ago(iso: string | null, now: number) {
-  if (!iso) return '—';
-  const minutes = Math.max(0, Math.round((now - Date.parse(iso)) / 60_000));
-  return minutes < 1 ? 'just now' : minutes < 60 ? `${minutes} min ago` : minutes < 48 * 60 ? `${Math.round(minutes / 60)} h ago` : `${Math.round(minutes / 1440)} days ago`;
-}
-
 const DOCS = 'https://docs.zils.ai';
+const utc = (iso: string) => new Date(iso).toUTCString().slice(17, 22);
 
 type Compare = { label: string; left: { name: string; value: number; text: string }; right: { name: string; value: number; text: string }; lowerIsBetter?: boolean };
 type Entry = { date: string; title: string; outcome: string; tone: 'win' | 'tie' | 'loss' | 'decision' | 'next'; body: string; compare?: Compare };
@@ -77,58 +71,53 @@ function Bars({ compare }: { compare: Compare }) {
 export default async function MinersPage() {
   const [base, network] = await Promise.all([currentBase(), networkMiners()]);
   const latest = base?.channels.latest;
-  const now = network ? Date.parse(network.as_of) : 0;
   // Miners keep qualification rows for retired bases; show only bases Zils trains on today.
-  const current = base ? new Set([base.channels.stable.id, base.channels.latest?.id].filter(Boolean)) : null;
-  const trainable = (models: string[]) => current ? models.filter(id => current.has(id)) : models;
-  return <div className="min-h-screen bg-page font-sans text-ink antialiased selection:bg-[#4942c7] selection:text-white">
-    <div className="mx-auto max-w-6xl px-6 sm:px-8"><SiteHeader tone="light" /></div>
-    <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl px-6 pb-20 sm:px-8">
+  const bases = base ? [base.channels.stable.id, base.channels.latest?.id].filter((id): id is string => Boolean(id)) : null;
+  const numbers = network && boardNumbers(network);
+  return (
+    <SiteFrame current="miners">
+      <SectionRow n="01" label="Testnet · subnet 579" note={network ? `Updated ${utc(network.as_of)} UTC` : undefined} />
       <header className={s.hero}>
-        <div aria-hidden="true" className={`${s.texture} ${texture.scanlines}`} />
-        <div aria-hidden="true" className={`${s.texture} ${texture.grain}`} />
-        <div className={s.heroCopy}>
-          <h1 className={blackletter.className}>Miners</h1>
-          <p>Every miner on the Zils subnet: whether it is online, which base models it can train, and how its candidates did on customer training jobs.</p>
-          <p className={s.testnet}><span className={s.badge}>Testnet</span>Subnet 579 on the Bittensor testnet. All miners are currently run by Zils; outside miners can join once the subnet moves to mainnet.</p>
-        </div>
-        {network && <figure className={s.lampBoard}>
-          <ul aria-label="Miners by UID">{network.miners.map(miner => <li key={miner.hotkey} className={s.unit} data-status={miner.status} title={`UID ${miner.uid}, ${STATUS[miner.status].toLowerCase()}, ${miner.hotkey}`}>
-            <span className={s.lamp} aria-hidden="true" /><span className={s.unitId}>{miner.uid}</span><span className="sr-only">{STATUS[miner.status]}</span>
-          </li>)}</ul>
-          <figcaption><strong>{network.summary.online} of {network.summary.miners}</strong> online now{network.summary.stale ? `, ${network.summary.stale} seen in the last hour` : ''}</figcaption>
-        </figure>}
+        <h1>Miner leaderboard</h1>
+        <p>Who is online, and whose models customers kept. <b>Outside miners join at mainnet.</b></p>
       </header>
 
-      <section id="leaderboard" className={s.board} aria-labelledby="board-heading">
-        <h2 id="board-heading" className={s.sectionTitle}>Leaderboard</h2>
-        {network ? <>
-          <div className={s.tableWrap} role="region" aria-label="Miners" tabIndex={0}><table className={s.table}>
-            <thead><tr><th scope="col">UID</th><th scope="col">Hotkey</th><th scope="col">Status</th><th scope="col">Can train</th><th scope="col">Jobs</th><th scope="col">Evaluated</th><th scope="col">Selected</th><th scope="col">Median skill</th><th scope="col">Last seen</th></tr></thead>
-            <tbody>{network.miners.map(miner => <tr key={miner.hotkey}>
-              <td className={s.num}>{miner.uid}</td>
-              <th scope="row"><code title={miner.hotkey}>{short(miner.hotkey)}</code></th>
-              <td><span className={s.status} data-status={miner.status}><span className={s.lamp} aria-hidden="true" />{STATUS[miner.status]}</span></td>
-              <td>{trainable(miner.models).length ? trainable(miner.models).map(id => MODEL_NAMES[id] ?? id).join(', ') : '—'}</td>
-              <td className={s.num}>{miner.training.assigned}</td>
-              <td className={s.num}>{miner.training.evaluated}</td>
-              <td className={s.num}>{miner.training.selected}</td>
-              <td>{miner.training.median_skill === null ? <span className={s.none}>—</span> : <span className={s.skill}><span aria-hidden="true" className={s.track}><span className={s.fill} style={{ width: `${miner.training.median_skill * 100}%` }} /></span><span className={s.value}>{miner.training.median_skill.toFixed(2)}</span></span>}</td>
-              <td>{ago(miner.last_seen, now)}</td>
-            </tr>)}</tbody>
-          </table></div>
-          <p className={s.legend}><strong>Jobs</strong> are customer training jobs assigned to the miner. <strong>Evaluated</strong> candidates were scored on the job&rsquo;s held-out test set; <strong>selected</strong> ones became the customer&rsquo;s model. <strong>Skill</strong> compares a candidate&rsquo;s probability error (Brier) with guessing evenly between the answers: 0 is no better than guessing, 1 is perfect, so it compares across different jobs. Data as of {new Date(network.as_of).toUTCString().replace(' GMT', ' UTC')}, refreshed every minute.</p>
-        </> : <p className={s.unavailable}>Live miner data is unavailable right now. Try again in a minute.</p>}
-      </section>
+      {numbers && <dl className={s.nums}>
+        <div><dt>Online now</dt><dd>{numbers.online}<small> / {numbers.total}</small></dd></div>
+        <div><dt>Jobs</dt><dd>{numbers.jobs}</dd></div>
+        <div><dt>Models selected</dt><dd>{numbers.selected}</dd></div>
+        <div><dt>Current base</dt><dd className={s.sm}>{base?.channels.stable.name ?? '—'}</dd></div>
+      </dl>}
 
-      <section className={s.baseTier} aria-labelledby="base-tier-heading">
-        <div className={s.baseIntro}>
-          <div>
-            <h2 id="base-tier-heading" className={s.sectionTitle}>Improving the base model</h2>
-            <p>Every customer model is a small adapter on one shared base. Miners can also compete to replace the base itself.</p>
-          </div>
-          <section className={s.current} aria-labelledby="current-base">
-            <h2 id="current-base">Current base</h2>
+      <SectionRow n="02" label="Miners" />
+      {network
+        ? <section aria-label="Leaderboard">
+          <MinerBoard miners={network.miners} asOf={network.as_of} bases={bases} />
+          <p className={s.asof}><span>Live from the Zils training API · refreshed every minute</span><span>Updated {utc(network.as_of)} UTC · sort by any column</span></p>
+        </section>
+        : <p className={s.unavailable}>The leaderboard is unavailable right now.</p>}
+
+      <DetailsRow summary="How to read the leaderboard">
+        <div className={s.prose}>
+          <p><b>Selected</b> is how many of the miner’s candidates a customer job kept as its model, out of the jobs it was given. <b>Jobs</b> are customer training jobs assigned to the miner; <b>evaluated</b> candidates were scored on the job’s held-out test set.</p>
+          <p><b>Skill</b> compares a candidate’s probability error (Brier) with guessing evenly between the answers: 0 is no better than guessing, 1 is perfect, so it compares across different jobs.</p>
+          <p><b>Online</b> checked in within the last minute. <b>Seen recently</b> checked in within the last hour. <b>Offline</b> has not checked in for longer than that. <b>Never seen</b> registered but never checked in. <b>Disabled</b> gets no new jobs. Miners that are not online are dimmed.</p>
+          <p>Subnet 579 runs on the Bittensor testnet. All miners are currently run by Zils; outside miners can join once the subnet moves to mainnet.</p>
+        </div>
+      </DetailsRow>
+
+      <SectionRow n="03" label="Base tier" />
+      <div className={s.base}>
+        <div>
+          <h2>Beat <em>d3-mini</em> to become the base.</h2>
+          <p>Win a sealed exam, then win again on a fresh one.</p>
+        </div>
+        <span className={s.pill}>Round two · not scheduled</span>
+      </div>
+      <DetailsRow summary="What we have tried">
+        <div className={s.tried}>
+          <section aria-labelledby="current-base">
+            <h3 id="current-base" className={s.subTitle}>Current base</h3>
             {base ? <>
               <p className={s.baseName}>{base.channels.stable.name}</p>
               <dl className={s.facts}>
@@ -140,34 +129,41 @@ export default async function MinersPage() {
               <p className={s.live}>Live from the Zils training API.</p>
             </> : <p className={s.live}>Live status is unavailable right now. Last recorded: d3-mini 4.5B on both channels (17 October 2026).</p>}
           </section>
+
+          <section aria-labelledby="how-heading">
+            <h3 id="how-heading" className={s.subTitle}>How a new base wins</h3>
+            <ol className={s.how}>
+              <li><strong>Submit.</strong> A miner on the Bittensor subnet submits a full set of replacement weights for the base.</li>
+              <li><strong>Score.</strong> Validators score it on a sealed exam the miner never sees, against the current base.</li>
+              <li><strong>Confirm.</strong> It must win again on a second, fresh exam, and customer-style adapters trained on it must not get worse.</li>
+            </ol>
+            <p>The full rules are on the <Link href="/model#base-tier">research page</Link> and in the <a href={DOCS}>miner guide</a>.</p>
+          </section>
+
+          <section aria-labelledby="timeline-heading">
+            <h3 id="timeline-heading" className={s.subTitle}>What we have tried</h3>
+            <ol className={s.timeline}>
+              {TIMELINE.map(entry => <li key={entry.title} data-tone={entry.tone}>
+                <p className={s.date}>{entry.date}</p>
+                <div className={s.entry}>
+                  <div className={s.entryHead}><h4>{entry.title}</h4><span className={s.outcome}>{entry.outcome}</span></div>
+                  <p>{entry.body}</p>
+                  {entry.compare && <Bars compare={entry.compare} />}
+                </div>
+              </li>)}
+            </ol>
+            <p className={s.note}>One rented card per run, teacher-authored exams rather than customer data, and one reference job in the adapter check where the rules ask for three or four. Results are recorded as measured, with their dates.</p>
+          </section>
         </div>
+      </DetailsRow>
 
-      <section className={s.how} aria-labelledby="how-heading">
-        <h3 id="how-heading" className={s.subTitle}>How a new base wins</h3>
-        <ol>
-          <li><strong>Submit.</strong> A miner on the Bittensor subnet submits a full set of replacement weights for the base.</li>
-          <li><strong>Score.</strong> Validators score it on a sealed exam the miner never sees, against the current base.</li>
-          <li><strong>Confirm.</strong> It must win again on a second, fresh exam, and customer-style adapters trained on it must not get worse.</li>
-        </ol>
-        <p>The full rules are on the <Link href="/model#base-tier">research page</Link> and in the <a href={DOCS}>miner guide</a>.</p>
-      </section>
+      <DetailsRow summary="Testnet rehearsal · 25 Sept 2026"><Rehearsal /></DetailsRow>
 
-      <section className={s.timelineSection} aria-labelledby="timeline-heading">
-        <h3 id="timeline-heading" className={s.subTitle}>What we have tried</h3>
-        <ol className={s.timeline}>
-          {TIMELINE.map(entry => <li key={entry.title} data-tone={entry.tone}>
-            <p className={s.date}>{entry.date}</p>
-            <div className={s.entry}>
-              <div className={s.entryHead}><h4>{entry.title}</h4><span className={s.outcome}>{entry.outcome}</span></div>
-              <p>{entry.body}</p>
-              {entry.compare && <Bars compare={entry.compare} />}
-            </div>
-          </li>)}
-        </ol>
-        <p className={s.note}>One rented card per run, teacher-authored exams rather than customer data, and one reference job in the adapter check where the rules ask for three or four. Results are recorded as measured, with their dates.</p>
-      </section>
-      </section>
-    </main>
-    <SiteFooter />
-  </div>;
+      <div className={s.more}>
+        <a href={DOCS}>Miner guide</a>
+        <Link href="/model#base-tier">Base tier rules</Link>
+        <a href="/model/testnet-round-001.json">Public chain view</a>
+      </div>
+    </SiteFrame>
+  );
 }

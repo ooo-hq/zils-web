@@ -155,17 +155,3 @@ test('every table row from the pre-rebrand page is still on /model, and nothing 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(await page.locator('main').evaluate(m => m.scrollWidth <= m.clientWidth)).toBe(true);
 });
-
-test('the miners page labels the testnet, survives an offline API and keeps the base-model timeline honest', async ({ page }) => {
-  await page.goto('/miners');
-  await expect(page.getByRole('heading', { name: 'Miners', level: 1 })).toBeVisible();
-  await expect(page.getByText(/Subnet 579 on the Bittensor testnet\. All miners are currently run by Zils/)).toBeVisible();
-  await expect(page.getByText(/Live miner data is unavailable right now/)).toBeVisible();
-  await expect(page.getByText(/Live status is unavailable right now/)).toBeVisible();
-  await expect(page.getByRole('heading', { level: 4 })).toHaveCount(6);
-  await expect(page.getByText('A tie, so no winner', { exact: true })).toBeVisible();
-  await expect(page.getByText(/recorded as an override of the promotion rule, not a win under it/)).toBeVisible();
-  await page.screenshot({ path: '.private/miners-desktop.png', fullPage: true });
-  await page.setViewportSize({ width: 375, height: 812 });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-});

@@ -15,6 +15,8 @@ const config = {
       { source: '/cli/:path((?!authorize$).*)', destination: 'https://fez.chat/cli/:path', permanent: true },
       // The Sidecar/agent-network page is the CLI page now.
       { source: '/network', destination: '/cli', permanent: true },
+      // The Bittensor page is part of Miners now (the rehearsal row keeps its content).
+      { source: '/bittensor', destination: '/miners', permanent: true },
       // Model pages moved out of Training into the workspace's Models section.
       { source: '/train/models/:jobId', destination: '/models/:jobId', permanent: false },
       // Retired pages: the front page carries the pitch now. Temporary, so
