@@ -92,71 +92,32 @@
 }
 @media(max-width:380px) { .container { padding:0 16px; }.balances>div { flex-wrap:wrap; gap:4px 16px; }.balances dd { margin-left:auto; } }
 
-/* Usage: a utility meter. The spend readout sits on digit wheels in the brand light. */
+/* Usage: the same plan card as the pricing page, a big number on the left and rate rows on the right. */
 .usage { min-width:0; scroll-margin-top:24px; }
 .sectionHeading { margin:0; font-size:17px; font-weight:600; letter-spacing:-.02em; }
 .sectionRow { display:flex; justify-content:space-between; align-items:baseline; gap:16px; margin-bottom:14px; }
 .sectionRow > span { font-size:12px; color:var(--zils-muted); white-space:nowrap; }
-.meterPanel { --ice:#d0eff4; --lilac:#ded0f6; --rose:#f3d3e9; position:relative; isolation:isolate; overflow:hidden; padding:26px 28px 28px; border:1px solid var(--zils-edge); border-radius:14px;
-  background: radial-gradient(60% 100% at 0% 0%, var(--lilac) 0%, transparent 70%), radial-gradient(50% 90% at 100% 100%, var(--ice) 0%, transparent 70%), radial-gradient(35% 60% at 75% 0%, var(--rose) 0%, transparent 75%), var(--zils-page); }
-:global([data-theme=dark]) .meterPanel { --ice:#1d3640; --lilac:#2a2350; --rose:#3b2340; }
-.texture { position:absolute; inset:0; z-index:-1; pointer-events:none; }
-.meterHead { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:6px 16px; }
-.meterHead h2 { margin:0; font-size:17px; font-weight:600; letter-spacing:-.02em; }
-.meterHead span { font-size:12px; color:var(--zils-muted); }
-.meterBody { margin:22px 0 0; display:grid; grid-template-columns:auto minmax(220px,1fr); gap:24px 48px; align-items:end; }
-.meterTotal dt { font-size:12px; color:var(--zils-muted); margin-bottom:8px; }
-.meterTotal dd { margin:0; }
-.wheels { display:inline-flex; align-items:stretch; gap:3px; padding:6px; border-radius:10px; background:#15151a; box-shadow:inset 0 2px 6px #00000066, 0 0 0 1px #ffffff14; }
-.wheel { position:relative; overflow:hidden; display:grid; place-items:center; width:.78em; height:1.3em; border-radius:4px; font-family:var(--font-plex-mono),monospace; font-size:clamp(34px,4.6vw,52px); font-weight:500; line-height:1; color:#15151a;
-  background:linear-gradient(#cfcfd8, #ffffff 22%, #ffffff 78%, #cfcfd8); }
-.wheel::after { content:''; position:absolute; inset:50% 0 auto; height:1px; background:#15151a14; }
-.wheel > span { animation:roll 700ms cubic-bezier(.2,.8,.2,1) both; animation-delay:calc(var(--wheel) * 70ms); }
-.wheelMark { display:grid; place-items:center; padding:0 2px; font-family:var(--font-plex-mono),monospace; font-size:clamp(26px,3.4vw,38px); color:#ffffffcc; }
-@keyframes roll { from { transform:translateY(-110%); } 70% { transform:translateY(8%); } to { transform:translateY(0); } }
-.split { display:grid; gap:12px; }
-.split > div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 10px; font-size:13px; }
-.split dt { color:var(--zils-muted); }
-.split dd { margin:0; font-weight:500; font-variant-numeric:tabular-nums; }
-.dotTrack { grid-column:1 / -1; position:relative; display:block; height:8px; background:radial-gradient(circle, color-mix(in srgb,var(--zils-ink) 16%,transparent) 1.3px, transparent 1.7px) 0 50% / 6px 8px repeat-x; }
-.dotFill { position:absolute; inset:0 auto 0 0; background:radial-gradient(circle, var(--zils-accent) 2px, transparent 2.4px) 0 50% / 6px 8px repeat-x; }
-.readouts { margin:16px 0 0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border:1px solid var(--zils-edge); border-radius:10px; }
-.readouts > div { padding:16px 18px; min-width:0; }
-.readouts > div + div { border-left:1px solid var(--zils-edge); }
-.readouts dt { font-size:12px; color:var(--zils-muted); }
-.readouts dd { margin:6px 0 4px; font-size:24px; font-weight:500; letter-spacing:-.03em; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
-.readouts p { margin:0; font-size:12px; line-height:1.5; color:var(--zils-muted); }
+.plan { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); border:1px solid var(--zils-edge); border-radius:16px; overflow:hidden; }
+.start { display:flex; flex-direction:column; align-items:flex-start; padding:34px; background:var(--zils-soft); }
+.start h2 { margin:0; font-size:20px; font-weight:500; letter-spacing:-.025em; }
+.startAmount { display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 14px; margin:24px 0 18px; }
+.startAmount strong { font-size:clamp(48px,6vw,72px); line-height:1; font-weight:500; letter-spacing:-.065em; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.startAmount span { color:var(--zils-muted); font-size:14px; }
+.startNote { max-width:36ch; margin:0; color:var(--zils-muted); font-size:14px; line-height:1.7; }
+.rates { margin:0; padding:14px 34px 22px; }
+.rate { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; padding:20px 0; border-bottom:1px solid var(--zils-edge); }
+.rate:last-child { border-bottom:0; }
+.rate dt { font-size:15px; font-weight:500; }
+.rate dt span { display:block; margin-top:5px; max-width:34ch; color:var(--zils-muted); font-size:12px; font-weight:400; line-height:1.65; }
+.rate dd { margin:0; flex-shrink:0; font-size:20px; font-weight:500; letter-spacing:-.035em; font-variant-numeric:tabular-nums; }
+@media (max-width:860px) { .plan { grid-template-columns:minmax(0,1fr); } .start { padding:26px 24px; } .rates { padding:6px 24px 18px; } .rate dd { font-size:18px; } .rate dt { font-size:14px; } }
 .usageDetails { margin-top:40px; }
-.shareCell { min-width:150px; }
-.usageTable td.shareCell { text-align:left; vertical-align:top; }
-.shareInner { display:grid; grid-template-columns:minmax(80px,1fr) 36px; gap:10px; align-items:center; padding-top:4px; }
-.shareInner .dotTrack { grid-column:auto; }
-.shareInner > span:last-child { text-align:right; color:var(--zils-muted); }
-@media (max-width:760px) {
-  .meterPanel { padding:20px 18px 22px; }
-  .meterBody { grid-template-columns:minmax(0,1fr); }
-  .readouts { grid-template-columns:minmax(0,1fr); }
-  .readouts > div + div { border-left:0; border-top:1px solid var(--zils-edge); }
-}
-@media (prefers-reduced-motion:reduce) { .wheel > span { animation:none; } }
 
-/* Billing: the balance as a prepaid card with a holographic sheen and the Zils mark as its emblem. */
-.billingGrid { display:grid; grid-template-columns:minmax(0,420px) minmax(0,1fr); gap:40px; align-items:start; }
-.cardSection { min-width:0; }
-.card { --ice:#d0eff4; --lilac:#ded0f6; --rose:#f3d3e9; position:relative; isolation:isolate; overflow:hidden; aspect-ratio:1.586; display:flex; flex-direction:column; padding:20px 22px; border:1px solid var(--zils-edge); border-radius:16px;
-  background: conic-gradient(from 210deg at 70% 30%, var(--lilac), var(--ice), var(--rose), var(--lilac)), var(--zils-page);
-  box-shadow: 0 1px 0 #ffffff inset, 0 18px 40px -24px color-mix(in srgb,var(--zils-accent) 70%,transparent); }
-:global([data-theme=dark]) .card { --ice:#1d3640; --lilac:#2a2350; --rose:#3b2340; box-shadow: 0 1px 0 #ffffff1f inset, 0 18px 40px -24px #000; }
-.card::before { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(115deg, transparent 30%, #ffffff8c 45%, transparent 60%); mix-blend-mode:soft-light; }
-.cardTop { display:flex; justify-content:space-between; align-items:flex-start; }
-.emblem { display:grid; place-items:center; width:38px; height:38px; border-radius:10px; background:color-mix(in srgb,var(--zils-page) 55%,transparent); color:var(--zils-accent); }
-.emblem svg { width:24px; height:24px; }
-.stamp { padding:3px 9px; border:1.5px solid var(--zils-accent); border-radius:5px; color:var(--zils-accent); font-size:11px; font-weight:600; transform:rotate(-4deg); }
-.card h2 { margin:auto 0 0; font-size:12px; font-weight:500; color:var(--zils-muted); letter-spacing:0; }
-.amount { margin:2px 0 10px; font-size:clamp(34px,4vw,46px); font-weight:600; font-variant-numeric:tabular-nums; letter-spacing:-.045em; line-height:1.05; overflow-wrap:anywhere; }
-.card .balances { padding-top:10px; border-top:1px solid color-mix(in srgb,var(--zils-ink) 12%,transparent); }
-.balanceNote { margin:12px 0 0; color:var(--zils-muted); font-size:12px; line-height:1.5; }
-.topUp { min-width:0; padding:4px 0 0; }
+/* Billing: the same plan card, credit on the left and top-ups on the right. */
+.start .balances { align-self:stretch; padding-top:14px; border-top:1px solid var(--zils-edge); }
+.balanceNote { margin:14px 0 0; color:var(--zils-muted); font-size:12px; line-height:1.5; }
+.start .lowBalance { align-self:stretch; }
+.topUp { min-width:0; padding:34px; }
 .lamp { width:8px; height:8px; border-radius:50%; background:var(--zils-edge-strong); flex-shrink:0; }
 .lamp[data-on] { background:#1f9d55; box-shadow:0 0 0 3px #1f9d5530, 0 0 10px #1f9d5599; }
-@media (max-width:900px) { .billingGrid { grid-template-columns:minmax(0,1fr); gap:28px; } .card { max-width:440px; } }
+@media (max-width:860px) { .topUp { padding:24px; } }

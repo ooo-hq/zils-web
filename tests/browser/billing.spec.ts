@@ -78,7 +78,7 @@ test('account usage is independent of transaction history and models keep unknow
   const report = page.getByRole('region', { name: 'Account usage', exact: true });
   await expect(report.getByText('1,200', { exact: true })).toBeVisible();
   await expect(report.getByText('1,000,000', { exact: true })).toBeVisible();
-  await expect(report.getByRole('img', { name: '$4.042', exact: true })).toBeVisible();
+  await expect(report.getByText('$4.042', { exact: true })).toBeVisible();
   await expect(report.getByText('Token counts unavailable for 10 earlier calls')).toBeVisible();
   const modelReport = page.getByRole('region', { name: 'API usage by model', exact: true });
   const row = modelReport.getByRole('row').filter({ hasText: 'support-routing' });
@@ -87,7 +87,6 @@ test('account usage is independent of transaction history and models keep unknow
   await expect(modelReport.getByRole('rowheader', { name: /Model not recorded/ })).toBeVisible();
   await modelReport.getByText('About this report', { exact: true }).click();
   await expect(modelReport.getByText(/One batch item counts as one API call/)).toBeVisible();
-  await page.waitForTimeout(1000);
   await page.screenshot({ path: '.private/usage-report-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 375, height: 812 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
