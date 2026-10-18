@@ -1,26 +1,37 @@
-import type { ReactNode } from 'react';
-import { SiteFooter } from '@/components/site-footer';
-import { SiteHeader } from '@/components/site-header';
+import { Children, isValidElement, type ReactNode } from 'react';
+import { SectionRow } from '@/components/site/section-row';
+import { SiteFrame } from '@/components/site/site-frame';
+import { StickyIndex } from '@/components/site/sticky-index';
+import css from './policy-page.module.css';
+
+export const policySlug = (title: string) => title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 export function PolicyPage({ title, children, updated = '6 October 2026' }: { title: string; children: ReactNode; updated?: string }) {
+  const items = Children.toArray(children).flatMap(c =>
+    isValidElement<{ title: string }>(c) && c.type === PolicySection
+      ? [{ id: policySlug(c.props.title), label: c.props.title, n: '' }]
+      : []);
+  items.forEach((it, i) => { it.n = String(i + 1).padStart(2, '0'); });
   return (
-    <div className="min-h-screen bg-page font-sans text-ink antialiased">
-      <div className="mx-auto max-w-6xl px-6 sm:px-8"><SiteHeader tone="light" /></div>
-      <main id="main-content" tabIndex={-1} className="mx-auto max-w-3xl px-6 pb-20 pt-10 sm:px-8">
-        <h1 className="text-[clamp(2.4rem,6vw,3.5rem)] font-semibold leading-tight tracking-[-0.05em]">{title}</h1>
-        <p className="mb-10 mt-4 text-sm text-muted">Updated {updated} · Zils at zils.ai</p>
-        <div className="space-y-9 text-sm leading-7 text-muted">{children}</div>
-      </main>
-      <SiteFooter />
-    </div>
+    <SiteFrame>
+      <SectionRow n="01" label={`Legal · ${title.replace(/\.$/, '').replace(/ (policy|of use)$/i, '')}`} />
+      <div className={css.legal}>
+        <aside className={css.aside}><StickyIndex items={items} /></aside>
+        <article className={css.article}>
+          <h1 className={css.h1}>{title}</h1>
+          <p className={css.meta}>Updated {updated} · Zils at zils.ai</p>
+          <div className={css.body}>{children}</div>
+        </article>
+      </div>
+    </SiteFrame>
   );
 }
 
 export function PolicySection({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section>
-      <h2 className="mb-3 text-lg font-semibold tracking-[-0.025em] text-ink">{title}</h2>
-      <div className="space-y-3">{children}</div>
+    <section id={policySlug(title)} className={css.section}>
+      <h2>{title}</h2>
+      {children}
     </section>
   );
 }

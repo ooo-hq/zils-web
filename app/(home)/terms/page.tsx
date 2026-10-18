@@ -8,8 +8,6 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://zils.ai/terms' },
 };
 
-const link = 'underline decoration-edge-strong underline-offset-4 hover:text-accent';
-
 export default function TermsPage() {
   return (
     <PolicyPage title="Terms of use.">
@@ -25,7 +23,7 @@ export default function TermsPage() {
 
       <PolicySection title="Your training submissions">
         <p>Submit only information you have the right to use and share for training and evaluation. You authorize Zils to process your submitted data, job settings, and resulting artifacts to carry out the requested run and provide its results.</p>
-        <p>Training submission separately requires your permission to export learning data to assigned, approved workers. Their operators can read and retain it. This is not confidential compute. Canceling a run cannot erase copies already downloaded or immediately terminate remote processing. The <Link href="/privacy" className={link}>privacy policy</Link> explains the current data-handling workflow.</p>
+        <p>Training submission separately requires your permission to export learning data to assigned, approved workers. Their operators can read and retain it. This is not confidential compute. Canceling a run cannot erase copies already downloaded or immediately terminate remote processing. The <Link href="/privacy">privacy policy</Link> explains the current data-handling workflow.</p>
       </PolicySection>
 
       <PolicySection title="Using model outputs">
@@ -43,7 +41,7 @@ export default function TermsPage() {
       </PolicySection>
 
       <PolicySection title="Changes and contact">
-        <p>Updates to these terms will appear on this page with an updated date. If a provision cannot be enforced, the remaining provisions continue to apply. For questions about the service or these terms, use the <Link href="/contact" className={link}>Zils contact form</Link>.</p>
+        <p>Updates to these terms will appear on this page with an updated date. If a provision cannot be enforced, the remaining provisions continue to apply. For questions about the service or these terms, use the <Link href="/contact">Zils contact form</Link>.</p>
       </PolicySection>
     </PolicyPage>
   );
