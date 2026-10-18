@@ -1,10 +1,12 @@
 'use client';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { CountUp } from './count-up';
 import css from './score-bars.module.css';
 
 type Row = { label: ReactNode; value: number; max: number; display: string; kind: 'zils' | 'jev' | 'base'; note?: string };
 
-export function ScoreBars({ rows, animate = true }: { rows: Row[]; animate?: boolean }) {
+/** `countUp` swaps the display for a CountUp of value (1 decimal, %) that starts when the bars come into view. */
+export function ScoreBars({ rows, animate = true, countUp = false }: { rows: Row[]; animate?: boolean; countUp?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
@@ -21,7 +23,7 @@ export function ScoreBars({ rows, animate = true }: { rows: Row[]; animate?: boo
         <div key={i}>
           <div className={css.top}>
             <span className={css.name}>{r.label}{r.note && <small>{r.note}</small>}</span>
-            <span className={css.v}>{r.display}</span>
+            <span className={css.v}>{countUp ? <CountUp value={r.value} decimals={1} suffix="%" start={seen} /> : r.display}</span>
           </div>
           <div className={css.track}>
             <span data-fill className={`${css.fill} ${css[r.kind]}`}

@@ -1,9 +1,12 @@
 import Link from 'next/link';
+import { Reveal } from '@/components/site/reveal';
+import { ScoreBars } from '@/components/site/score-bars';
 import { SupportDecisionExamples } from '@/components/support-decision-examples';
 import {
   supportStudy, supportBase, supportAdapter, supportGain, supportErrorReduction,
   supportComparisons, supportSource, supportMethod,
 } from '@/lib/support-study';
+import css from './support-study.module.css';
 import { jevComparisons, jevGain, jevErrorReduction, jevTrained, jevMetrics } from '@/lib/jev-comparison';
 
 const percent = (value: number) => `${(value * 100).toFixed(1)}%`;
@@ -45,23 +48,41 @@ export function AccuracyComparison({ includeJev = false }: { includeJev?: boolea
 }
 
 export function SupportStudySummary() {
+  const rows = jevComparisons.map(({ name, note, metrics, trained }) => ({
+    label: name,
+    note: `${note} · ${metrics.correct} / ${metrics.count} correct`,
+    value: metrics.accuracy * 100,
+    max: 100,
+    display: percent(metrics.accuracy),
+    kind: trained ? 'zils' as const : 'jev' as const,
+  }));
   return (
-    <section id="support-evidence" aria-labelledby="support-evidence-heading" className="mx-auto max-w-5xl scroll-mt-8 border-t border-edge px-6 py-20 sm:px-8">
-      <div className="grid gap-10 md:grid-cols-2 md:items-center">
-        <div>
-          <h2 id="support-evidence-heading" className="max-w-[18ch] text-balance text-[clamp(2rem,4.4vw,3.25rem)] font-semibold leading-[1.04] tracking-[-0.055em]">See what training changed.</h2>
-          <p className="mt-5 max-w-[45ch] text-[15px] leading-7 text-muted">We trained a model to choose the next action in a customer-support conversation, then tested it on conversations it had not trained on.</p>
-          <p className="mt-5 max-w-[45ch] text-[15px] leading-7 text-muted">
-            On {supportBase.count} test conversations from the public ABCD dataset, our trained model chose the recorded answer {percent(jevTrained.accuracy)} of the time, compared with {percent(jevMetrics.accuracy)} for TypeSafe JEV, another decision model.
-            That is <strong className="font-semibold text-ink">{jevErrorReduction}% fewer mistakes</strong> on the same next-action task.
-          </p>
-          <p className="mt-5 text-sm text-muted">{number(supportStudy.splits.training_conversations)} training conversations. Separate development and test sets.</p>
-          <Link href="/model#jev-comparison" className="mt-7 inline-flex min-h-11 items-center rounded-md bg-action px-5 py-3 text-[13px] font-medium text-on-action hover:bg-action-hover">See the results and test method</Link>
-          <Link href="/model" className="mt-3 flex min-h-11 w-fit items-center text-[13px] underline decoration-edge-strong underline-offset-4 hover:text-accent">Explore all the research</Link>
+    <section id="support-evidence" aria-labelledby="support-evidence-heading" className={css.sec}>
+      <Reveal>
+        <div className={css.head}>
+          <h2 id="support-evidence-heading">See what training changed.</h2>
+          <p>We trained a model to choose the next action in a customer-support conversation, then tested it on conversations it had not trained on.</p>
         </div>
-        <AccuracyComparison includeJev />
+      </Reveal>
+      <div className={css.res}>
+        <div className={css.left}>
+          <p className={css.lead}>
+            On {supportBase.count} test conversations from the public ABCD dataset, our trained model chose the recorded answer <b>{percent(jevTrained.accuracy)}</b> of the time, compared with <b>{percent(jevMetrics.accuracy)}</b> for TypeSafe JEV, another decision model.
+            {' '}That is <b>{jevErrorReduction}% fewer mistakes</b> on the same next-action task.
+          </p>
+          <p className={css.meta}>{number(supportStudy.splits.training_conversations)} training conversations. Separate development and test sets.</p>
+          <div className={css.lnks}>
+            <Link href="/model#jev-comparison" className={css.link}>See the results and test method</Link>
+            <Link href="/model" className={css.link}>Explore all the research</Link>
+          </div>
+        </div>
+        <figure className={css.chart} aria-label="Accuracy on 500 untouched support conversations">
+          <figcaption><span>Correct next actions</span><span>Same 500 test conversations</span></figcaption>
+          <ScoreBars rows={rows} countUp />
+          <p className={css.delta}>+{jevGain} percentage points vs TypeSafe JEV</p>
+        </figure>
       </div>
-      <p className="mt-7 max-w-[80ch] text-xs leading-6 text-muted">One research experiment, not a guarantee for your task. It tested the choice of the next action, not success at resolving a whole conversation. JEV was more accurate on its smaller set of high-confidence answers; Zils still overstates its confidence. The research model shown here is not deployed in the shared playground.</p>
+      <p className={css.fine}>JEV was tested live; Zils scores reuse verified predictions from the same frozen test set. One research experiment, not a guarantee for your task. It tested the choice of the next action, not success at resolving a whole conversation. JEV was more accurate on its smaller set of high-confidence answers; Zils still overstates its confidence. The research model shown here is not deployed in the shared playground.</p>
     </section>
   );
 }

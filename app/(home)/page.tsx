@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { SiteFooter } from '@/components/site-footer';
-import { SiteHeader } from '@/components/site-header';
-import { HeroBackdrop } from '@/components/hero-backdrop';
 import { HomeDecisionStory } from '@/components/home-decision-story';
-import { ZilsWordmark } from '@/components/zils-wordmark';
 import { SupportStudySummary } from '@/components/support-study';
+import { Reveal } from '@/components/site/reveal';
+import { SectionRow } from '@/components/site/section-row';
+import { SiteButton } from '@/components/site/site-button';
+import { SiteFrame } from '@/components/site/site-frame';
+import { SortingHero } from '@/components/site/sorting-hero';
 import s from './home.module.css';
 
 const TITLE = 'Teach AI to make decisions your way.';
@@ -25,10 +26,12 @@ export const metadata: Metadata = {
   twitter: { card: 'summary', title: `zils — ${TITLE}`, description: DESCRIPTION },
 };
 
+const ICON = { fill: 'none', stroke: '#18191e', strokeWidth: 1.6 } as const;
+
 const USE_CASES = [
-  { title: 'Sort requests.', body: 'Teach it which team, topic, or queue a request belongs in. Your app uses the answer to send it to the right place.', question: '“Which team should handle this?”' },
-  { title: 'Flag problems.', body: 'Show it examples that need attention and examples that can wait. Your app can use the result to ask someone to review.', question: '“Does this need a closer look?”' },
-  { title: 'Score matches.', body: 'Provide pairs with scores you have checked. Teach it how well a product, article, or result fits a request.', question: '“How well does this fit?”' },
+  { title: 'Sort requests.', body: 'Teach it which team, topic, or queue a request belongs in. Your app uses the answer to send it to the right place.', question: '“Which team should handle this?”', grad: '#ef8d5a, #d9a08c', icon: <path d="M3 5h8M3 10h12M3 15h6M14 3l3 2-3 2" /> },
+  { title: 'Flag problems.', body: 'Show it examples that need attention and examples that can wait. Your app can use the result to ask someone to review.', question: '“Does this need a closer look?”', grad: '#d9a08c, #cfa2e4', icon: <path d="M5 17V3M5 4h10l-2 3 2 3H5" /> },
+  { title: 'Score matches.', body: 'Provide pairs with scores you have checked. Teach it how well a product, article, or result fits a request.', question: '“How well does this fit?”', grad: '#cfa2e4, #c3b4f6', icon: <><circle cx="10" cy="10" r="7" /><circle cx="10" cy="10" r="3" /></> },
 ] as const;
 
 const DELIVERABLES = [
@@ -37,103 +40,162 @@ const DELIVERABLES = [
   { title: 'A way to use it in your app.', body: 'Once your model passes evaluation, Zils hosts it. Your app sends a request through the API and gets an answer back.' },
 ] as const;
 
+// Section 04 readout cards. Every value is a stand-in until the owner supplies real ones (spec section 8).
+const HOME_READOUTS = {
+  model: [
+    ['name', 'support-router'], // placeholder: owner to supply
+    ['version', 'v3'], // placeholder: owner to supply
+    ['training run', 'run_0418'], // placeholder: owner to supply
+    ['examples', '1,024'], // placeholder: owner to supply
+  ],
+  heldOut: [
+    { label: 'Billing', pct: 92, show: '92%', color: 'var(--zs-lane-billing)' }, // placeholder: owner to supply
+    { label: 'Account changes', pct: 88, show: '88%', color: 'var(--zs-lane-account)' }, // placeholder: owner to supply
+    { label: 'Tech support', pct: 84, show: '84%', color: 'var(--zs-lane-tech)' }, // placeholder: owner to supply
+    { label: 'Mistakes to review', pct: 14, show: '31', color: 'var(--zs-bad)' }, // placeholder: owner to supply
+  ],
+  request: {
+    comment: '# ask your model', // placeholder: owner to supply
+    model: 'support-router', // placeholder: owner to supply
+    input: 'My invoice page keeps crashing.', // placeholder: owner to supply
+    answer: '# → "Technical support"', // placeholder: owner to supply
+  },
+} as const;
+
+// Column heights (%) and gradient offsets for the closing skyline; the 3rd and last columns are faint.
+const SKY = [[40, 0, 1], [62, 11, 1], [30, 22, .35], [55, 33, 1], [80, 44, 1], [100, 55, 1], [70, 66, 1], [85, 77, 1], [48, 88, 1], [26, 100, .4]] as const;
+
 export default function HomePage() {
   return (
-    <div className={`${s.home} min-h-screen bg-page font-sans text-[var(--zils-ink)] antialiased`}>
-      <div className="mx-auto max-w-6xl px-6 sm:px-8"><SiteHeader tone="light" /></div>
-      <main id="main-content" tabIndex={-1}>
-        <div className="relative isolate overflow-hidden">
-          <HeroBackdrop variant="home" />
-          <section aria-labelledby="home-heading" className="relative mx-auto max-w-5xl px-6 pb-16 pt-4 text-center sm:px-8 sm:pb-20 sm:pt-8">
-            <ZilsWordmark className="text-[80px] text-[var(--zils-accent)] sm:text-[112px]" />
-            <h1 id="home-heading" className="mx-auto mt-8 max-w-[18ch] text-balance text-[clamp(2.8rem,6.5vw,5.1rem)] font-semibold leading-[1.02] tracking-[-0.055em]">
-              {TITLE}
-            </h1>
-            <p className="mx-auto mt-6 max-w-[35rem] text-[17px] leading-7 text-muted sm:text-[18px]">{DESCRIPTION}</p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
-              <Link href="/early-access" className={s.primary}>Request early access</Link>
-              <a href="#workflow" className={s.textLink}>See how it works</a>
-            </div>
-            <p className="mt-4 text-xs leading-5 text-muted">Start with a spreadsheet of examples and answers you trust.</p>
-          </section>
+    <SiteFrame>
+      <SortingHero title={TITLE} description={DESCRIPTION} />
+
+      <SectionRow n="02" label="How it works" />
+      <Reveal><HomeDecisionStory /></Reveal>
+
+      <SectionRow n="03" label="Jobs" />
+      <section aria-labelledby="jobs-h">
+        <Reveal>
+          <div className={`${s.head} ${s.center}`}>
+            <h2 id="jobs-h">Same idea, different jobs.</h2>
+            <p>Choose a team. Flag a problem. Score a match. Pick one repeatable task where you can show what a good answer looks like. Start there, then test how well the model learns it.</p>
+          </div>
+        </Reveal>
+        <div className={`${s.cells} ${s.c4}`}>
+          {USE_CASES.map(({ title, body, question, grad, icon }, i) => (
+            <Reveal key={title} delay={i * 0.11}>
+              <article className={s.job}>
+                <div className={s.tile} style={{ '--g': `linear-gradient(135deg, ${grad})` } as React.CSSProperties}>
+                  <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" {...ICON}>{icon}</svg>
+                </div>
+                <h3>{title}</h3>
+                <p className={s.d}>{body}</p>
+                <p className={s.q}><span>&gt; </span>{question}</p>
+              </article>
+            </Reveal>
+          ))}
+          <Reveal delay={USE_CASES.length * 0.11}>
+            <article className={s.job} aria-labelledby="rank-options">
+              <span className={s.badge}>SDK 0.3.0 · Experimental</span>
+              <div className={s.tile} style={{ '--g': 'linear-gradient(135deg, #c3b4f6, #8ea6ff)' } as React.CSSProperties}>
+                <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" {...ICON}><path d="M4 5h12M4 10h8M4 15h4" /></svg>
+              </div>
+              <h3 id="rank-options">Rank options.</h3>
+              <p className={s.d}>Give Zils 2–10 options and a criterion, such as which support action best addresses a customer’s issue. The SDK returns an ordered list with relative scores.</p>
+              <p className={s.fine}>Optional grouped ranking compares several options together: ten options use 10 judgments instead of 90. Pairwise ranking stays the default.</p>
+              <p className={s.fine}>Fewer comparisons can produce a worse order. Test later choices as well as the first. Relative scores are not confidence percentages.</p>
+              <div className={s.jobLinks}>
+                <a href="https://docs.zils.ai/sdks/ranking" className={s.link}>Use ranking in your app</a>
+                <a href="https://docs.zils.ai/changelog#sdk-0-3-0" className={s.link}>What’s new in 0.3.0</a>
+              </div>
+              <p className={s.q}><span>&gt; </span>“Which action best addresses this issue?”</p>
+            </article>
+          </Reveal>
         </div>
+        <div className={s.ctaRow}>
+          <SiteButton href="/early-access" variant="primary">Request early access</SiteButton>
+          <SiteButton href="/examples" variant="secondary">See examples</SiteButton>
+        </div>
+      </section>
 
-        <section id="workflow" aria-labelledby="workflow-h" className="scroll-mt-8 bg-[var(--zils-surface)] px-6 py-16 sm:px-8 sm:py-20">
-          <div className="mx-auto max-w-5xl"><HomeDecisionStory /></div>
-        </section>
-
-        <section aria-labelledby="cases" className="mx-auto max-w-5xl px-6 py-16 sm:px-8 sm:py-20">
-          <Heading id="cases" aside="Pick one repeatable task where you can show what a good answer looks like. Start there, then test how well the model learns it.">
-            One task.<br />Done your way.
-          </Heading>
-          <div className="mt-10 grid gap-9 md:grid-cols-3 md:gap-0 md:divide-x md:divide-edge">
-            {USE_CASES.map(({ title, body, question }) => (
-              <article key={title} className="flex flex-col md:px-7 first:md:pl-0 last:md:pr-0">
-                <h3 className="text-[22px] font-semibold tracking-[-0.035em]">{title}</h3>
-                <p className="mt-3 text-sm leading-6 text-muted">{body}</p>
-                <p className="mt-5 text-sm leading-6 text-[var(--zils-accent)]">{question}</p>
+      <SectionRow n="04" label="What you get" />
+      <section aria-labelledby="deliver-h">
+        <Reveal>
+          <div className={s.head}>
+            <h2 id="deliver-h">What you get.</h2>
+            <p>You bring the examples. Zils handles training, evaluation, and hosting for accepted models.</p>
+          </div>
+        </Reveal>
+        <div className={`${s.cells} ${s.c3}`}>
+          {DELIVERABLES.map(({ title, body }, i) => (
+            <Reveal key={title} delay={i * 0.11}>
+              <article className={s.deliver}>
+                <h3>{title}</h3>
+                <p className={s.d}>{body}</p>
+                <div className={s.art}>
+                  {i === 0 && (
+                    <div className={s.card} data-readout data-placeholder="true">
+                      <div className={s.hd}><span>Model</span><span>System 01</span></div>
+                      <div className={s.bd}>
+                        {HOME_READOUTS.model.map(([k, v]) => <div key={k} className={s.kv}><span>{k}</span><span>{v}</span></div>)}
+                      </div>
+                    </div>
+                  )}
+                  {i === 1 && (
+                    <div className={s.card} data-readout data-placeholder="true">
+                      <div className={s.hd}><span>Held-out examples</span><span>illustrative</span></div>
+                      <div className={`${s.bd} ${s.mini}`}>
+                        {HOME_READOUTS.heldOut.map(r => (
+                          <div key={r.label} className={s.mr}>
+                            <span>{r.label}</span>
+                            <span className={s.bar}><i style={{ width: `${r.pct}%`, '--c': r.color } as React.CSSProperties} /></span>
+                            <span>{r.show}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {i === 2 && (
+                    <div className={`${s.card} ${s.code}`} data-readout data-placeholder="true">
+                      <div className={s.hd}><span>Request</span><span>API</span></div>
+                      <pre className={s.bd}>
+                        <span className={s.cm}>{HOME_READOUTS.request.comment}</span>{'\n'}zils.decide({'\n'}  model=<span className={s.str}>{`"${HOME_READOUTS.request.model}"`}</span>,{'\n'}  input=<span className={s.str}>{`"${HOME_READOUTS.request.input}"`}</span>{'\n'}){'\n'}<span className={s.cm}>{HOME_READOUTS.request.answer}</span>
+                      </pre>
+                    </div>
+                  )}
+                </div>
               </article>
-            ))}
+            </Reveal>
+          ))}
+        </div>
+        <Reveal>
+          <div className={s.notice}>
+            <h3>Before you upload.</h3>
+            <p>Training examples are copied to approved workers, whose operators can read and retain them. This is not confidential computing. Use only data you are authorized to share.</p>
+            <Link href="/privacy" className={s.link}>Read how data is handled</Link>
           </div>
-          <article aria-labelledby="rank-options" className="mt-10 rounded-md border border-edge bg-[var(--zils-surface)] p-5 sm:p-6">
-            <p className="text-xs font-medium text-[var(--zils-accent)]">New in SDK 0.3.0 · Experimental</p>
-            <h3 id="rank-options" className="mt-2 text-[22px] font-semibold tracking-[-0.035em]">Rank options.</h3>
-            <p className="mt-3 max-w-[70ch] text-sm leading-6 text-muted">Give Zils 2–10 options and a criterion, such as which support action best addresses a customer’s issue. The SDK returns an ordered list with relative scores.</p>
-            <p className="mt-2 max-w-[70ch] text-sm leading-6 text-muted">Optional grouped ranking compares several options together: ten options use 10 judgments instead of 90. Pairwise ranking stays the default.</p>
-            <p className="mt-2 max-w-[70ch] text-xs leading-5 text-muted">Fewer comparisons can produce a worse order. Test later choices as well as the first. Relative scores are not confidence percentages.</p>
-            <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3 text-sm">
-              <a href="https://docs.zils.ai/sdks/ranking" className={s.textLink}>Use ranking in your app</a>
-              <a href="https://docs.zils.ai/changelog#sdk-0-3-0" className={s.textLink}>What’s new in 0.3.0</a>
-            </div>
-          </article>
-        </section>
+        </Reveal>
+      </section>
 
-        <section aria-labelledby="deliver" className="mx-auto max-w-5xl border-t border-edge px-6 py-16 sm:px-8 sm:py-20">
-          <Heading id="deliver" aside="You bring the examples. Zils handles training, evaluation, and hosting for accepted models.">What you get.</Heading>
-          <div className="mt-10 grid gap-9 md:grid-cols-3 md:gap-8">
-            {DELIVERABLES.map(({ title, body }) => (
-              <article key={title} className="border-t-2 border-[var(--zils-accent)]/30 pt-5">
-                <h3 className="text-[22px] font-semibold tracking-[-0.035em]">{title}</h3>
-                <p className="mt-3 text-sm leading-6 text-muted">{body}</p>
-              </article>
-            ))}
+      <SectionRow n="05" label="Research" />
+      <SupportStudySummary />
+
+      <SectionRow n="06" label="Start" />
+      <section aria-labelledby="cta" className={s.final}>
+        <Reveal>
+          <h2 id="cta">Start with a decision<br />you know how to make.</h2>
+          <p>Bring examples and their right answers. The training workspace helps you prepare your data and start a run.</p>
+          <div className={s.ctaRow}>
+            <SiteButton href="/early-access" variant="primary">Request early access</SiteButton>
+            <SiteButton href="/examples" variant="secondary">See examples</SiteButton>
           </div>
-          <div className="mt-9 grid gap-2 rounded-md bg-[var(--zils-surface)] p-5 text-sm md:grid-cols-[10rem_1fr] sm:p-6">
-            <h3 className="font-semibold">Before you upload.</h3>
-            <p className="leading-6 text-muted">
-              Training examples are copied to approved workers, whose operators can read and retain them. This is not confidential computing. Use only data you are authorized to share.{' '}
-              <Link href="/privacy" className="underline decoration-edge-strong underline-offset-4 hover:text-accent">Read how data is handled</Link>.
-            </p>
+        </Reveal>
+        <Reveal>
+          <div className={s.sky} aria-hidden="true">
+            {SKY.map(([h, x, o], i) => <i key={i} style={{ '--h': `${h}%`, '--i': i, backgroundPosition: `${x}% 0`, opacity: o } as React.CSSProperties} />)}
           </div>
-        </section>
-
-        <SupportStudySummary />
-
-        <section aria-labelledby="cta" className="px-6 pb-16 sm:px-8 sm:pb-24">
-          <div className="mx-auto max-w-5xl rounded-md bg-[#15151a] px-6 py-14 text-center sm:px-12 sm:py-16">
-            <h2 id="cta" className="text-balance text-[clamp(2.1rem,5vw,3.4rem)] font-semibold leading-[1.04] tracking-[-0.055em] text-white">
-              Start with a decision<br />you know how to make.
-            </h2>
-            <p className="mx-auto mt-5 max-w-md text-[15px] leading-7 text-neutral-300">
-              Bring examples and their right answers. The training workspace helps you prepare your data and start a run.
-            </p>
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
-              <Link href="/early-access" className="inline-flex min-h-11 items-center justify-center rounded-md bg-white px-5 py-3 text-[13px] font-medium text-black hover:bg-[#eceafa]">Request early access</Link>
-              <Link href="/examples" className="inline-flex min-h-11 items-center text-[13px] text-white underline decoration-white/40 underline-offset-4 hover:decoration-white">See examples</Link>
-            </div>
-          </div>
-        </section>
-      </main>
-      <SiteFooter />
-    </div>
-  );
-}
-
-function Heading({ id, aside, children }: { id: string; aside: string; children: React.ReactNode }) {
-  return (
-    <div className="grid gap-5 md:grid-cols-[1fr_22rem] md:items-end">
-      <h2 id={id} className="text-[clamp(2.1rem,4.4vw,3.3rem)] font-semibold leading-[1.04] tracking-[-0.055em]">{children}</h2>
-      <p className="max-w-[55ch] text-[15px] leading-7 text-muted">{aside}</p>
-    </div>
+        </Reveal>
+      </section>
+    </SiteFrame>
   );
 }
