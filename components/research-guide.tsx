@@ -67,7 +67,7 @@ export function ResearchModelGuide() {
         <p>A model that assigns probabilities to a set of possible answers. Each experiment tests a specific decision, such as which action to take next.</p>
       </div>
       <ol className={s.process}>
-        <li><span className={s.step}>1</span><div><h3>Start with a base model.</h3><p>The support, flight, and chess studies use the published JevK5 4B weights. This unchanged model is the baseline for measuring what training adds.</p></div></li>
+        <li><span className={s.step}>1</span><div><h3>Start with a base model.</h3><p>The support, flight, and chess studies (5–7 October 2026) used the published JevK5 4B weights, the base at the time. In each study, that unchanged model is the baseline for measuring what training adds. JevK5 was retired on 17 October 2026; customer adapters now train on d3-mini 4.5B.</p></div></li>
         <li><span className={s.step}>2</span><div><h3>Teach one task with an adapter.</h3><p>A LoRA adapter is a small set of learned weights added to the model. The base weights stay frozen while the adapter learns from examples for that task.</p></div></li>
         <li><span className={s.step}>3</span><div><h3>Test on separate examples.</h3><p>Compare models on the same held-out cases. Measure correctness, probability quality, and simple alternatives. Test data does not select the adapter.</p></div></li>
       </ol>
@@ -75,7 +75,7 @@ export function ResearchModelGuide() {
         <summary>Model names, comparison controls, and deployment status</summary>
         <div className={s.detailBody}>
           <dl className={s.definitions}>
-            <div><dt>Before and after training</dt><dd>Before training, each study uses the published JevK5 4B model. After training, it includes an adapter learned from examples for that task. The support, flight, and chess studies each use a separate adapter.</dd></div>
+            <div><dt>Before and after training</dt><dd>Before training, each study used the published JevK5 4B model, since retired. After training, it included an adapter learned from examples for that task. The support, flight, and chess studies each use a separate adapter.</dd></div>
             <div><dt>TypeSafe JEV</dt><dd>The external hosted comparator is JEV 1.13.0. It receives the same test inputs and choices. The support comparison reuses recorded Zils predictions and makes fresh JEV API calls; their timing measurements are not comparable.</dd></div>
             <div><dt>Earlier Kev 0.8B</dt><dd>A different model line, used in the archived JevBench comparison. Its percentages and probability-error scores should not be mixed with the newer studies.</dd></div>
             <div><dt>Research and deployment</dt><dd>The research adapters shown here have not been deployed. A benchmark result is evidence about that experiment; it is not a measurement of the shared playground or a guarantee for a customer-trained model.</dd></div>

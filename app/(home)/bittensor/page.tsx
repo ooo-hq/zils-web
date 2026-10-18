@@ -8,7 +8,7 @@ import testnet from '@/public/model/testnet-round-001.json';
 
 export const metadata: Metadata = {
   title: 'zils — Bittensor mining',
-  description: 'Mining, validation, and the recorded Zils Bittensor testnet rehearsal. Explore the training process, participants, and verified on-chain weights.',
+  description: 'Mining, validation, the base-tier competition and its winner-takes-all payout, and the recorded Zils Bittensor testnet rehearsal. Explore the training process, participants, and verified on-chain weights.',
   alternates: { canonical: 'https://zils.ai/bittensor' },
 };
 
@@ -23,12 +23,17 @@ const SECTIONS = [
   { id: 'training', title: 'Training & evaluation' },
   { id: 'participants', title: 'Participants' },
   { id: 'testnet', title: 'Testnet publication' },
+  { id: 'base-tier', title: 'Base tier' },
 ] as const;
 const PROCESS = [
   ['Train', 'Miners train compatible adapters and decision heads with a fixed one-epoch recipe and different seeds.'],
   ['Submit', 'Each miner freezes a candidate and signs its checkpoint hash for the validator.'],
   ['Evaluate', 'The validator verifies the checkpoint and runs its own evaluation of the model’s probabilities.'],
   ['Reward', 'Family-macro Brier skill determines proposed weights across eligible candidates.'],
+] as const;
+const PAYOUT = [
+  ['Winner takes all', 'The best eligible candidate takes the round’s whole base-tier share. Eligible runners-up earn nothing.'],
+  ['King of the hill', 'Once promoted, the winner’s miner keeps the whole base-tier share every epoch until an eligible challenger appears.'],
 ] as const;
 
 function time(value: string) {
@@ -57,7 +62,7 @@ export default function BittensorPage() {
         <header className="relative mx-auto max-w-5xl px-6 pb-16 pt-10 sm:px-8 sm:pt-16">
           <p className="flex items-center gap-2 text-[12px] font-medium"><span aria-hidden="true" className="text-base">✳</span> Bittensor · Recorded testnet research</p>
           <h1 className="mt-5 max-w-[16ch] text-[clamp(2.7rem,6.5vw,4.8rem)] font-semibold leading-[0.98] tracking-[-0.06em]">Bittensor mining.</h1>
-          <p className="mt-6 max-w-[58ch] text-lg leading-8 text-muted">How miners train decision models, validators evaluate them, and weights reach the chain. One testnet rehearsal is recorded here, with its evidence and limitations.</p>
+          <p className="mt-6 max-w-[58ch] text-lg leading-8 text-muted">How miners train decision models, validators evaluate them, and weights reach the chain. One testnet rehearsal, from 25 September 2026, is recorded here with its evidence and limitations, followed by the base tier, where miners compete to replace the base model itself.</p>
           <div className="mt-8 flex flex-wrap items-center gap-6">
             <a href="#testnet" className="inline-flex min-h-11 items-center rounded-md bg-action px-5 py-3 text-sm font-medium text-on-action hover:bg-action-hover">View the recorded round</a>
             <Link href="/model" className={`${LINK} text-sm`}>Model research</Link>
@@ -102,6 +107,13 @@ export default function BittensorPage() {
           <p className="mt-4 text-xs leading-6 text-muted">Each 0.8B checkpoint trained for one epoch on 224 examples, calibrated on 112 questions, and was evaluated on the same 224 test questions. This reused synthetic development benchmark is separate from the <Link href="/model#quality" className={LINK}>public JevBench comparison</Link>. All compute ran on one Apple M4 Pro with 24 GiB memory, with GPU jobs serialized.</p>
           <p className="mt-3 text-xs leading-6 text-muted">This closed rehearsal demonstrates the training-to-chain path. It does not establish mainnet deployment, miner earnings, open competition, or automatic model promotion.</p>
           <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3 text-sm"><a href={TESTNET_SOURCE} className={LINK}>Scores, methodology & chain evidence</a><a href={`${REPO}/blob/main/docs/testnet.md`} className={LINK}>Testnet guide</a><a href={`${REPO}/blob/main/docs/roadmap.md`} className={LINK}>Roadmap</a></div>
+        </Section>
+
+        <Section id="base-tier" eyebrow="Base tier · status as of 18 October 2026" title="A competition for the base model itself.">
+          <p className="max-w-[70ch] text-sm leading-7 text-muted">Customer adapters train on one pinned base model. Since 17 October 2026 that base is d3-mini 4.5B. In the base tier, miners submit a full-weight replacement for that base. Validators score each candidate on a sealed holdout against the incumbent, and a candidate is promoted only after it also passes a second sealed draw and an adapter regression suite.</p>
+          <dl className={`mt-6 divide-y divide-edge ${CARD}`}>{PAYOUT.map(([rule, description]) => <div key={rule} className="p-5"><dt className="font-medium">{rule}</dt><dd className="mt-1 text-sm leading-6 text-muted">{description}</dd></div>)}</dl>
+          <p className="mt-4 max-w-[70ch] text-xs leading-6 text-muted">The incumbent today is stock d3-mini, a vendor base with no miner behind it, so it pays nobody. No candidate has been promoted, no base-tier weights have been published, and nothing runs on mainnet yet.</p>
+          <Link href="/model#base-tier" className={`${LINK} mt-4 inline-block text-sm`}>Full promotion rules</Link>
         </Section>
       </main>
       <SiteFooter />
