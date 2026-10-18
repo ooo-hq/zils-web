@@ -7,7 +7,7 @@
   --zils-danger: var(--zs-bad); --zils-danger-soft: var(--zs-raised);
   color: var(--zs-fg);
 }
-:global([data-theme=light]) .res { --zils-accent: #a3461e; }
+:global([data-theme=light]) .res { --zils-accent: #a3461e; --zils-on-action: #fff; }
 .res :focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 4px; }
 .res h2 { text-wrap: balance; }
 .page { min-width: 0; }

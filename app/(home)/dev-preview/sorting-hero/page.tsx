@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { SiteFrame } from '@/components/site/site-frame';
 import { SortingHero } from '@/components/site/sorting-hero';
 
-// Dev-only fixture for tests/browser/sorting-hero.spec.ts; deleted in Task 15.
+// Dev-only fixture for tests/browser/sorting-hero.spec.ts. Kept after the rebrand; tests/dev-preview.test.cjs checks it 404s without ZILS_DEV_PREVIEW=1.
 export default function Page() {
   if (process.env.ZILS_DEV_PREVIEW !== '1') notFound();
   return (

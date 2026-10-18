@@ -17,6 +17,7 @@
 .fpField input, .fpField textarea { width: 100%; min-width: 0; background: transparent; border: 0; border-bottom: 1px solid rgba(var(--zs-fg-rgb), .2); border-radius: 0; padding: 10px 0 12px; font: inherit; font-size: 18px; font-weight: 300; color: var(--zs-fg); outline: none; resize: vertical; transition: border-color .2s; }
 .fpField textarea { min-height: 120px; line-height: 1.5; }
 .fpField input:focus, .fpField textarea:focus { border-bottom-color: var(--zs-peach); }
+.fpField input:focus-visible, .fpField textarea:focus-visible { box-shadow: 0 1px 0 var(--zs-peach); }
 .fpField input::placeholder, .fpField textarea::placeholder { color: rgba(var(--zs-fg-rgb), .4); }
 .fpField input:disabled, .fpField textarea:disabled { opacity: .6; }
 .fpHint { font-size: 13px; color: var(--zs-t3); }

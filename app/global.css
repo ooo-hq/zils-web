@@ -267,7 +267,7 @@ html > body[data-scroll-locked] {
   --zs-line: rgba(28,26,38,.10);
   --zs-fg: #1c1a26; --zs-fg-rgb: 28,26,38; --zs-bg-rgb: 250,249,252;
   --zs-t2: rgba(var(--zs-fg-rgb),.70); --zs-t3: rgba(var(--zs-fg-rgb),.64);
-  --zs-logo: #4b44c8; --zs-orange: #c2582a; --zs-peach: #c2582a;
+  --zs-logo: #4b44c8; --zs-orange: #ab4d25; --zs-peach: #ab4d25; /* #c2582a darkened 12%: AA as text on every light surface and under white button text */
   --zs-lilac: #6a59cc; --zs-peri: #4a5fc4; --zs-bad: #b4452a;
 }
 .zs .zs-mono { font-family: var(--font-plex-mono), ui-monospace, monospace; }

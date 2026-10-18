@@ -200,7 +200,7 @@ test('unapproved and invalid model links do not expose scores or API instruction
   await expect(page.getByRole('heading', { name: 'API usage', exact: true })).toHaveCount(0);
   await page.goto('/models/not-a-valid-id');
   // Streaming loading boundaries can send 200 before Next renders its 404.
-  await expect(page.getByRole('heading', { name: '404', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'No decision for this page.', level: 1 })).toBeVisible();
   await expect(page.locator('meta[name=robots]').first()).toHaveAttribute('content', /noindex/);
   expect(control.requests).not.toContain('/v1/jobs/not-a-valid-id');
 });
@@ -280,7 +280,7 @@ test('run links cannot expose another account or accept invalid IDs', async ({ p
   await expect(page.getByRole('main').getByRole('alert')).toHaveText('This run is not available to this account.');
   await expect(page.getByText(job.name, { exact: true })).toHaveCount(0);
   await page.goto('/train?run=invalid');
-  await expect(page.getByRole('heading', { name: '404', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'No decision for this page.', level: 1 })).toBeVisible();
   expect(control.requests).not.toContain('/v1/jobs/invalid');
   expect(control.writes).toEqual([]);
 });

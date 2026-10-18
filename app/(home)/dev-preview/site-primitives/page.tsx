@@ -7,7 +7,7 @@ import { DetailsRow } from '@/components/site/details-row';
 import { ScoreBars } from '@/components/site/score-bars';
 import { SiteButton } from '@/components/site/site-button';
 
-// Dev-only fixture for tests/browser/site-primitives.spec.ts; deleted in Task 15.
+// Dev-only fixture for tests/browser/site-primitives.spec.ts. Kept after the rebrand; tests/dev-preview.test.cjs checks it 404s without ZILS_DEV_PREVIEW=1.
 export default function Page() {
   if (process.env.ZILS_DEV_PREVIEW !== '1') notFound();
   return (
