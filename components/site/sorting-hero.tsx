@@ -13,7 +13,7 @@ import css from './sorting-hero.module.css';
 const INITIAL_CONF: Record<LaneId, number> = { billing: 0.97, spam: 0.99, account: 0.93, tech: 0.95, sales: 0.91, review: 0.52 };
 const HESITANT = ['The invoice is wrong and the page broke', 'Cancel everything. Now.', 'Is my data still mine?'];
 // Fixed spectrum stops from the spec; only the dip and the fade depend on the theme (CSS vars).
-const SKY_STOPS: [number, string][] = [[0, '#ef8d5a'], [0.12, '#d9a08c'], [0.38, '#cfa2e4'], [0.5, '#dcb2ee'], [0.64, '#c3b4f6'], [0.78, '#a9b5f2'], [0.9, '#5d6688']];
+const SKY_STOPS: [number, string][] = [[0, '#ef8d5a'], [0.12, '#d9a08c'], [0.38, '#cfa2e4'], [0.5, '#dcb2ee'], [0.64, '#c3b4f6'], [0.78, '#a9b5f2'], [0.9, 'FADE']];
 const STATIC_DECISION: Decision = { text: '“Please send me a receipt.”', laneId: 'billing', confidence: 0.97 };
 const SPAWN_Y = 54; // just under the strip
 const lane = (id: LaneId) => LANES.find((l) => l.id === id)!;
@@ -40,7 +40,7 @@ export function SortingHero({ title, description }: { title: string; description
     const readColors = () => {
       const cs = getComputedStyle(hero), v = (n: string) => cs.getPropertyValue(n).trim();
       return {
-        fgr: v('--zs-fg-rgb'), bgr: v('--zs-bg-rgb'), bg: v('--zs-panel'), dip: v('--hero-dip'), end: v('--hero-end'),
+        fgr: v('--zs-fg-rgb'), bgr: v('--zs-bg-rgb'), bg: v('--zs-panel'), dip: v('--hero-dip'), end: v('--hero-end'), fade: v('--hero-fade'),
         bad: v('--zs-bad'), mono: v('--font-plex-mono') || 'monospace',
         lane: Object.fromEntries(LANES.map((l) => [l.id, v(l.cssVar) || l.color])) as Record<LaneId, string>,
       };
@@ -73,7 +73,7 @@ export function SortingHero({ title, description }: { title: string; description
     function drawField(dt: number) {
       const g = fieldGeometry(W, H), RH = g.rh, phone = isPhone(W);
       const grad = ctx.createLinearGradient(g.left, 0, g.right, 0);
-      [...SKY_STOPS, [0.24, C.dip] as [number, string], [1, C.end] as [number, string]].forEach(([o, c]) => grad.addColorStop(o, c));
+      [...SKY_STOPS.map(([o, c]) => [o, c === 'FADE' ? C.fade : c] as [number, string]), [0.24, C.dip] as [number, string], [1, C.end] as [number, string]].forEach(([o, c]) => grad.addColorStop(o, c));
       ctx.fillStyle = grad;
       for (let c = 0; c < COLS; c++) ctx.fillRect(g.left + c * g.cell, g.bottom - SKY[c] * RH, g.cell + 0.5, SKY[c] * RH);
       const vf = ctx.createLinearGradient(0, g.bottom - 3 * RH, 0, g.bottom);

@@ -61,6 +61,9 @@ export function DecisionConsole({ decision }: { decision: Decision | null }) {
   const visible = shown ? all.slice(0, Math.min(shown.n, 3)) : [];
   const done = !shown || shown.n === 4;
   const cursor = <span className={css.cursor} />;
+  // Reduced motion: the one static decision is plain page content, so the live region stays silent.
+  const [quiet, setQuiet] = useState(false);
+  useEffect(() => setQuiet(matchMedia('(prefers-reduced-motion: reduce)').matches), []);
 
   return (
     <div className={css.con} data-console>
@@ -68,7 +71,7 @@ export function DecisionConsole({ decision }: { decision: Decision | null }) {
         <span className={css.title}>ZILS · SYSTEM 01 · SUPPORT-ROUTER</span>
         <span className={css.pill}>LIVE DEMO</span>
       </div>
-      <div className={css.body} role="log" aria-live="polite">
+      <div className={css.body} role="log" aria-live={quiet ? 'off' : 'polite'}>
         <div aria-hidden="true">
           {visible.map((l, i) => (
             <div key={`${shown!.seq}-${i}`} className={css.line} data-console-line>

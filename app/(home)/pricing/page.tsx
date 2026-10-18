@@ -68,7 +68,7 @@ export default function PricingPage() {
             </div>
           </dl>
           <p className={s.fine}>All prices in USD. Shared context is counted once per request in the planned billing model.</p>
-          <p className={s.fine}><strong>What’s in a standard run?</strong> Train a model for your task, with automated evaluation included. We confirm what’s included before the run starts.</p>
+          <p id="training-heading" className={s.fine}><strong>What’s in a standard run?</strong> Train a model for your task, with automated evaluation included. We confirm what’s included before the run starts.</p>
           <p className={s.fine}>Larger datasets or custom training needs get an upfront estimate. Training pays for the work; it does not guarantee a model that passes your quality requirements.</p>
         </div>
       </section>
@@ -86,7 +86,7 @@ export default function PricingPage() {
         <DetailsRow summary="Can I train more than one model?"><p className={s.answer}>Yes. There are no model-count tiers or fees for model slots. Each additional standard training run costs ${PRICING.trainingRun}, and you pay for inference when you use a model. Serving availability depends on capacity; this plan does not reserve dedicated hardware.</p></DetailsRow>
         <DetailsRow summary="Does my credit expire each month?"><p className={s.answer}>The launch plan has no monthly credit expiry and no recurring subscription. You’ll be able to set a spending cap. These billing controls will be available with paid access.</p></DetailsRow>
         <DetailsRow summary="What happens if training fails?"><p className={s.answer}>A run that fails because of our infrastructure receives a credit. A completed run is charged for its training and evaluation work, even if the resulting model does not meet the agreed quality requirements.</p></DetailsRow>
-        <DetailsRow summary="Can I pay and start today?"><p className={s.answer}>These are planned beta launch prices. Checkout and usage billing are not open yet. <Link href="/early-access">Request early access</Link>, or, if you’ve already been invited, <Link href="/train">sign in to your workspace</Link>.</p></DetailsRow>
+        <DetailsRow summary="Can I pay and start today?"><p className={s.answer}>These are planned beta launch prices. Checkout and usage billing are not open yet. <Link href="/early-access">Request early access</Link>, or, if you’ve already been invited, <Link href="/sign-in">sign in to your workspace</Link>.</p></DetailsRow>
       </section>
 
       <section className={s.closing} aria-labelledby="closing-heading">

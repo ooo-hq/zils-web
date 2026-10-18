@@ -2,6 +2,10 @@ import { test, expect } from '@playwright/test';
 import { createServer, type Server } from 'node:http';
 import { readFileSync, rmSync } from 'node:fs';
 
+// CI runs production: /miners is prerendered (ISR) before this listener exists, so the HTML is the unavailable state.
+// lib/miner-board unit tests cover sorting and labels in CI.
+test.skip(!!process.env.CI, 'ISR prerender cannot see the fixture listener');
+
 // networkMiners() runs on the Next server, so page.route cannot see it. A real listener stands in for the training API.
 // The port must match NEXT_PUBLIC_ZILS_TRAINING_API_URL in playwright.config.ts.
 const PORT = Number(process.env.ZILS_MINERS_TEST_PORT ?? 8999);

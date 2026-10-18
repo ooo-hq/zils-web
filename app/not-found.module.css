@@ -8,4 +8,4 @@
 .primary { background: var(--zs-orange); color: #140a04; }
 :global([data-theme=light]) .primary { color: #fff; }
 .secondary { border: 1px solid rgba(var(--zs-fg-rgb), .22); color: var(--zs-fg); }
-.primary:focus-visible, .secondary:focus-visible { outline: 2px solid var(--zs-fg); outline-offset: 3px; }
+.primary:focus-visible, .secondary:focus-visible { outline: 2px solid var(--zs-peach); outline-offset: 3px; }

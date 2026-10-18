@@ -30,7 +30,7 @@
 .google { width: 100%; margin-top: 32px; padding: 14px 16px; display: flex; justify-content: center; align-items: center; gap: 12px; border: 1px solid rgba(var(--zs-fg-rgb), .2); background: none; color: var(--zs-fg); font: inherit; font-size: 15px; cursor: pointer; }
 .google:hover:not(:disabled) { border-color: rgba(var(--zs-fg-rgb), .4); }
 .google:disabled { opacity: .6; cursor: default; }
-.google:focus-visible, .theme:focus-visible { outline: 2px solid var(--zs-fg); outline-offset: 2px; }
+.google:focus-visible, .theme:focus-visible { outline: 2px solid var(--zs-peach); outline-offset: 2px; }
 .or { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center; margin: 26px 0; }
 .or::before, .or::after { content: ""; height: 1px; background: rgba(var(--zs-fg-rgb), .12); }
 .submit { width: 100%; justify-content: center; }

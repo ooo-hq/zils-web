@@ -55,10 +55,11 @@ const HOME_READOUTS = {
     { label: 'Mistakes to review', pct: 14, show: '31', color: 'var(--zs-bad)' }, // placeholder: owner to supply
   ],
   request: {
-    comment: '# ask your model', // placeholder: owner to supply
+    comment: '# ask your model (illustrative)', // placeholder: owner to supply
     model: 'support-router', // placeholder: owner to supply
     input: 'My invoice page keeps crashing.', // placeholder: owner to supply
-    answer: '# → "Technical support"', // placeholder: owner to supply
+    question: 'Which team?', // placeholder: owner to supply
+    answer: '# → a decision for your app to use', // placeholder: owner to supply
   },
 } as const;
 
@@ -74,7 +75,7 @@ export default function HomePage() {
       <Reveal><HomeDecisionStory /></Reveal>
 
       <SectionRow n="03" label="Jobs" />
-      <section aria-labelledby="jobs-h">
+      <section id="cases" aria-labelledby="jobs-h">
         <Reveal>
           <div className={`${s.head} ${s.center}`}>
             <h2 id="jobs-h">Same idea, different jobs.</h2>
@@ -119,7 +120,7 @@ export default function HomePage() {
       </section>
 
       <SectionRow n="04" label="What you get" />
-      <section aria-labelledby="deliver-h">
+      <section id="deliver" aria-labelledby="deliver-h">
         <Reveal>
           <div className={s.head}>
             <h2 id="deliver-h">What you get.</h2>
@@ -135,7 +136,7 @@ export default function HomePage() {
                 <div className={s.art}>
                   {i === 0 && (
                     <div className={s.card} data-readout data-placeholder="true">
-                      <div className={s.hd}><span>Model</span><span>System 01</span></div>
+                      <div className={s.hd}><span>Model</span><span>illustrative</span></div>
                       <div className={s.bd}>
                         {HOME_READOUTS.model.map(([k, v]) => <div key={k} className={s.kv}><span>{k}</span><span>{v}</span></div>)}
                       </div>
@@ -157,9 +158,9 @@ export default function HomePage() {
                   )}
                   {i === 2 && (
                     <div className={`${s.card} ${s.code}`} data-readout data-placeholder="true">
-                      <div className={s.hd}><span>Request</span><span>API</span></div>
+                      <div className={s.hd}><span>Request</span><span>illustrative</span></div>
                       <pre className={s.bd}>
-                        <span className={s.cm}>{HOME_READOUTS.request.comment}</span>{'\n'}zils.decide({'\n'}  model=<span className={s.str}>{`"${HOME_READOUTS.request.model}"`}</span>,{'\n'}  input=<span className={s.str}>{`"${HOME_READOUTS.request.input}"`}</span>{'\n'}){'\n'}<span className={s.cm}>{HOME_READOUTS.request.answer}</span>
+                        <span className={s.cm}>{HOME_READOUTS.request.comment}</span>{'\n'}curl $ZILS_API_URL/v1/systemone \{'\n'}  -H <span className={s.str}>"Authorization: Bearer $ZILS_API_KEY"</span> \{'\n'}  -d <span className={s.str}>{`'{"model": "${HOME_READOUTS.request.model}",`}</span>{'\n'}     <span className={s.str}>{`"state": "${HOME_READOUTS.request.input}",`}</span>{'\n'}     <span className={s.str}>{`"questions": {"decision": "${HOME_READOUTS.request.question}"}}'`}</span>{'\n'}<span className={s.cm}>{HOME_READOUTS.request.answer}</span>
                       </pre>
                     </div>
                   )}

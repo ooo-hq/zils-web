@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { signIn } from './signed-in';
 
+// Spec 9.3 local before/after visual diff: baselines are darwin-only, so this never runs in CI.
+test.skip(process.platform !== 'darwin' || !!process.env.CI, 'local darwin visual diff (spec 9.3)');
+
 // Pixel baselines of the signed-in workspace; the rebrand must not change these pages.
 for (const route of ['/train', '/models', '/playground', '/keys']) {
   for (const theme of ['light', 'dark']) {

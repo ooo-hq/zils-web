@@ -8,7 +8,7 @@
 .groups ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .groups a { color: var(--zs-t2); text-decoration: none; font-size: 14px; }
 .groups a:hover, .bottom a:hover { color: var(--zs-fg); }
-.root a:focus-visible { outline: 2px solid var(--zs-fg); outline-offset: 2px; }
+.root a:focus-visible { outline: 2px solid var(--zs-peach); outline-offset: 2px; }
 .bottom { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 76px; border-top: 1px solid var(--zs-line); font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-t3); }
 .bottom nav { display: flex; gap: 20px; }
 .bottom a { color: var(--zs-t2); text-decoration: none; }

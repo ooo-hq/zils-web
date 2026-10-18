@@ -58,7 +58,12 @@ test('section 04 readout cards are marked as placeholders', async ({ page }) => 
   await page.goto('/');
   const cards = page.locator('[data-readout]');
   await expect(cards).toHaveCount(3);
-  for (const card of await cards.all()) await expect(card).toHaveAttribute('data-placeholder', 'true');
+  for (const card of await cards.all()) {
+    await expect(card).toHaveAttribute('data-placeholder', 'true');
+    await expect(card.getByText('illustrative', { exact: true })).toBeVisible();
+  }
+  await expect(cards.nth(2)).toContainText('/v1/systemone');
+  await expect(cards.nth(2)).not.toContainText('zils.decide');
 });
 
 test('no horizontal overflow at 375px', async ({ page }) => {
