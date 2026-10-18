@@ -6,7 +6,7 @@
 .start, .ratesCol { padding: 36px 40px 40px; min-width: 0; }
 .start { border-right: 1px solid var(--zs-line); }
 .start h2 { margin: 0; font-family: var(--font-plex-mono), ui-monospace, monospace; font-weight: 400; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--zs-t3); }
-.five { position: relative; display: block; width: fit-content; font-weight: 200; font-size: clamp(110px, 13vw, 180px); letter-spacing: -0.05em; line-height: .85; margin: 18px 0 0; background: var(--zs-spectrum); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.five { position: relative; display: block; width: fit-content; font-weight: 200; font-size: clamp(110px, 13vw, 180px); letter-spacing: -0.05em; line-height: .85; margin: 18px 0 0; background: var(--zs-spectrum-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .sub { font-size: 15px; line-height: 1.5; margin: 14px 0 0; color: var(--zs-t2); }
 .cta { margin-top: 24px; }
 .soon { margin: 14px 0 0; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .04em; color: var(--zs-t3); }

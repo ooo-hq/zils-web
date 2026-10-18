@@ -1,6 +1,6 @@
 .nf { display: flex; flex-direction: column; min-height: calc(100vh - 64px - 40px - 220px); }
 .c { flex: 1; display: grid; place-items: center; text-align: center; padding: 80px 24px 40px; }
-.code { font-weight: 200; font-size: clamp(120px, 18vw, 240px); letter-spacing: -0.06em; line-height: .85; background: var(--zs-spectrum); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.code { font-weight: 200; font-size: clamp(120px, 18vw, 240px); letter-spacing: -0.06em; line-height: .85; background: var(--zs-spectrum-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .h1 { margin: 18px 0 0; font-weight: 300; font-size: clamp(28px, 3.4vw, 44px); letter-spacing: -0.03em; line-height: .98; color: var(--zs-fg); }
 .p { margin: 10px 0 0; font-size: 15px; color: var(--zs-t2); }
 .btns { display: flex; gap: 10px; justify-content: center; margin-top: 26px; flex-wrap: wrap; }

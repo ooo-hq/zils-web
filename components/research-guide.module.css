@@ -40,7 +40,7 @@
 .trainingScores { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0 0; }
 .trainingScores dt { font-size: 12px; color: var(--zils-muted); }
 .trainingScores dd { margin: 5px 0 0; font-size: clamp(32px,3.5vw,44px); font-weight: 500; letter-spacing: -.045em; line-height: 1.15; font-variant-numeric: tabular-nums; }
-.trainingScores > div:last-child dd { background: var(--zs-spectrum); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.trainingScores > div:last-child dd { background: var(--zs-spectrum-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .timeline { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 24px 0 0; padding: 0; list-style: none; border: 1px solid var(--zils-edge); }
 .timeline li { position: relative; padding: 16px 18px; border-right: 1px solid var(--zils-edge); }
 .timeline li:last-child { border-right: 0; }

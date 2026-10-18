@@ -12,8 +12,8 @@ test('every dev-preview fixture 404s without ZILS_DEV_PREVIEW=1', () => {
   assert.ok(pages.length >= 2);
   for (const file of pages) {
     const src = readFileSync(file, 'utf8');
-    assert.match(src, /import \{ notFound \} from 'next\/navigation';/, file);
-    const body = src.slice(src.indexOf('export default function Page() {'));
-    assert.match(body, /^export default function Page\(\) \{\s*if \(process\.env\.ZILS_DEV_PREVIEW !== '1'\) notFound\(\);/, file);
+    assert.match(src, /import\s*\{[^}]*\bnotFound\b[^}]*\}\s*from\s*['"]next\/navigation['"]/, file);
+    // The guard must be the first statement of the default export, in any formatting (braces, return, async, props).
+    assert.match(src, /export\s+default\s+(?:async\s+)?function\s+\w*\s*\([^)]*\)\s*(?::[^{]+)?\{\s*if\s*\(\s*process\.env\.ZILS_DEV_PREVIEW\s*!==\s*['"]1['"]\s*\)\s*(?:\{\s*)?(?:return\s+)?notFound\(\)/, file);
   }
 });
