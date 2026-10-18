@@ -13,7 +13,7 @@ test('record content baseline', async ({ page }) => {
   const tables = await page.locator('table').evaluateAll(els => els.map(t => {
     const caption = t.querySelector('caption')?.textContent
       ?? (() => { let n: Element | null = t; while (n) { let p = n.previousElementSibling; while (p) { const h = /^H[1-6]$/.test(p.tagName) ? p : p.querySelector('h1,h2,h3,h4,h5,h6'); if (h) return h.textContent; p = p.previousElementSibling; } n = n.parentElement; } return ''; })();
-    return { caption: caption ?? '', rows: [...t.querySelectorAll('tr')].map(r => [...r.children].map(c => c.textContent).join(' ')) };
+    return { caption: caption ?? '', rows: [...t.querySelectorAll('tr')].map(r => (r as HTMLElement).innerText) };
   }));
   const policy = async (path: string) => {
     await page.goto(path);
@@ -28,7 +28,7 @@ test('record content baseline', async ({ page }) => {
     model: { tables: tables.map(t => ({ caption: norm(t.caption), rows: t.rows.map(norm) })) },
     privacy: clean(privacy), terms: clean(terms), bittensor: { text: norm(text) },
   };
-  const empty = data.model.tables.flatMap(t => t.rows.map(r => [t.caption, r])).filter(([, r]) => !r);
+  const empty = data.model.tables.flatMap(t => t.rows.length ? t.rows.map(r => [t.caption, r]) : [[t.caption, '']]).filter(([, r]) => !r.trim());
   if (empty.length || !data.model.tables.length || !data.bittensor.text) throw new Error(`empty baseline content: ${JSON.stringify(empty)}`);
   writeFileSync('tests/browser/fixtures/content-baseline.json', JSON.stringify(data, null, 2) + '\n');
 });

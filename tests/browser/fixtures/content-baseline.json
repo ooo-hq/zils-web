@@ -97,14 +97,14 @@
       {
         "caption": "Recorded Zils and published Kev results on the same public items",
         "rows": [
-          "Metric Zils candidateExperimental checkpoint Published Kev 0.8BComparison baseline",
-          "AccuracyHigher is better 63.64% 63.64%",
-          "Correct answersSame public items 147 / 231 147 / 231",
-          "Brier lossLower is better 0.463608 0.451648",
-          "Calibration error (ECE)Lower is better 0.113615 0.044050",
-          "Confident mistakesWrong at ≥90% confidence 8 3",
-          "Median latencyLocalhost HTTP 42.08 ms 52.78 ms",
-          "p95 latencyLocalhost HTTP 205.26 ms 209.36 ms",
+          "Metric Zils candidate Experimental checkpoint Published Kev 0.8B Comparison baseline",
+          "Accuracy Higher is better 63.64% 63.64%",
+          "Correct answers Same public items 147 / 231 147 / 231",
+          "Brier loss Lower is better 0.463608 0.451648",
+          "Calibration error (ECE) Lower is better 0.113615 0.044050",
+          "Confident mistakes Wrong at ≥90% confidence 8 3",
+          "Median latency Localhost HTTP 42.08 ms 52.78 ms",
+          "p95 latency Localhost HTTP 205.26 ms 209.36 ms",
           "Valid probability outputs 100.00% 100.00%"
         ]
       },
@@ -112,9 +112,9 @@
         "caption": "Correct and total counts, with accuracy, for each public subset",
         "rows": [
           "Subset Zils Kev baseline",
-          "easy 48 / 48100.00% 48 / 48100.00%",
-          "original 57 / 7279.17% 58 / 7280.56%",
-          "hard 42 / 11137.84% 41 / 11136.94%"
+          "Easy 48 / 48 100.00% 48 / 48 100.00%",
+          "Original 57 / 72 79.17% 58 / 72 80.56%",
+          "Hard 42 / 111 37.84% 41 / 111 36.94%"
         ]
       }
     ]
