@@ -13,7 +13,7 @@ test('record content baseline', async ({ page }) => {
   const tables = await page.locator('table').evaluateAll(els => els.map(t => {
     const caption = t.querySelector('caption')?.textContent
       ?? (() => { let n: Element | null = t; while (n) { let p = n.previousElementSibling; while (p) { const h = /^H[1-6]$/.test(p.tagName) ? p : p.querySelector('h1,h2,h3,h4,h5,h6'); if (h) return h.textContent; p = p.previousElementSibling; } n = n.parentElement; } return ''; })();
-    return { caption: caption ?? '', rows: [...t.querySelectorAll('tr')].map(r => r.textContent ?? '') };
+    return { caption: caption ?? '', rows: [...t.querySelectorAll('tr')].map(r => [...r.children].map(c => c.textContent).join(' ')) };
   }));
   const policy = async (path: string) => {
     await page.goto(path);
