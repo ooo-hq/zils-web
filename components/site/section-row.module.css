@@ -1,0 +1,6 @@
+.row { position: relative; display: flex; align-items: center; height: 40px; border-bottom: 1px solid var(--zs-line); font-family: var(--font-plex-mono), ui-monospace, monospace; text-transform: uppercase; }
+.n { width: 56px; margin-left: -56px; text-align: center; font-size: 10px; color: var(--zs-t3); flex: none; }
+.t { padding-left: 24px; font-size: 10.5px; letter-spacing: .14em; color: var(--zs-t2); }
+.note { margin-left: auto; padding-right: 20px; font-size: 10px; letter-spacing: .12em; color: var(--zs-t3); }
+.corner { position: absolute; left: 0; top: 0; width: 0; height: 0; border-style: solid; border-width: 7px 7px 0 0; border-color: var(--zs-orange) transparent transparent transparent; z-index: 3; }
+@media (max-width: 899px) { .n { margin-left: 0; width: 28px; } .t { padding-left: 8px; } .note { display: none; } }
