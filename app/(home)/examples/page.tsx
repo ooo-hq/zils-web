@@ -2,8 +2,7 @@ import type { Metadata } from 'next';
 import recordedExamples from '@/data/decision-examples.json';
 import { z } from 'zod';
 import { BitcastExamples } from '@/components/bitcast-examples';
-import { SiteHeader } from '@/components/site-header';
-import { SiteFooter } from '@/components/site-footer';
+import { SiteFrame } from '@/components/site/site-frame';
 
 export const metadata: Metadata = {
   title: 'Examples · Zils',
@@ -52,11 +51,5 @@ const exampleData = z.object({
 export default function ExamplesPage() {
   const data = exampleData.parse(recordedExamples);
 
-  return (
-    <div className="min-h-screen bg-page font-sans text-ink antialiased">
-      <div className="mx-auto max-w-6xl px-6 sm:px-8"><SiteHeader current="examples" tone="light" /></div>
-      <BitcastExamples data={data} />
-      <SiteFooter />
-    </div>
-  );
+  return <SiteFrame current="examples"><BitcastExamples data={data} /></SiteFrame>;
 }

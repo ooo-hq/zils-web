@@ -1,0 +1,8 @@
+.d { border-top: 1px solid var(--zs-line); }
+.d summary { cursor: pointer; list-style: none; padding: 16px 28px; display: flex; justify-content: space-between; gap: 16px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--zs-t2); }
+.d summary::-webkit-details-marker { display: none; }
+.d summary::after { content: "+"; color: var(--zs-peach); }
+.d[open] summary::after { content: "\2212"; }
+.d summary:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: -2px; }
+.inner { padding: 0 28px 22px; }
+@media (max-width: 899px) { .d summary { padding: 16px 0; } .inner { padding: 0 0 22px; } }

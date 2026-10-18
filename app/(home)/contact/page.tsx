@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
 import { ContactForm } from '@/components/contact-form';
-import { SiteHeader } from '@/components/site-header';
-import { SiteFooter } from '@/components/site-footer';
-import home from '../home.module.css';
-import styles from './contact.module.css';
+import { SectionRow } from '@/components/site/section-row';
+import { SiteFrame } from '@/components/site/site-frame';
+import css from '@/components/site/form-page.module.css';
 
 export const metadata: Metadata = {
   title: 'Contact Zils',
@@ -12,13 +11,14 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
-  return <div className={`${home.home} ${styles.page}`}>
-    <div className={styles.container}><SiteHeader tone="light" />
-      <main id="main-content" tabIndex={-1} className={styles.main}>
-        <div className={styles.intro}><h1>Contact us.</h1><p>Tell us what you’re building, or ask us a question.</p><p className={styles.detail}>Whether you have a decision to improve or you’re still exploring, we’d like to hear from you.</p></div>
-        <ContactForm />
-      </main>
+  return <SiteFrame>
+    <SectionRow n="01" label="Contact" />
+    <div className={css.fpSplit}>
+      <div>
+        <h1 className={css.fpH1}>Contact us.</h1>
+        <p className={css.fpLede}>Tell us what you’re building, or ask us a question. Whether you have a decision to improve or you’re still exploring, we’d like to hear from you.</p>
+      </div>
+      <div><ContactForm /></div>
     </div>
-    <SiteFooter />
-  </div>;
+  </SiteFrame>;
 }

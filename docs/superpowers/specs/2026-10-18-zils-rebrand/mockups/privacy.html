@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+var FGR, BGR, FGH, BGH, DIP, END;
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  var L = t === "light";
+  FGR = L ? "28,26,38" : "255,255,255";
+  BGR = L ? "250,249,252" : "24,25,30";
+  FGH = L ? "#1c1a26" : "#fff";
+  BGH = L ? "#faf9fc" : "#18191e";
+  DIP = L ? "#efe8f0" : "#3a3440";
+  END = L ? "#eeedf3" : "#24242c";
+}
+(function () { var t = "dark"; try { t = localStorage.getItem("zils-theme") || "dark"; } catch (e) {} applyTheme(t); })();
+</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zils privacy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter+Tight:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+@font-face { font-family: "ZilsMark"; src: url("grenze.woff2") format("woff2"); font-weight: 600; }
+:root { --violet-hi: #8f88ff; --orange: #ff7a2f; --peach: #f2a184; --lilac: #c3b4f6; --peri: #a9b5f2; --bad: #ff8f6b;
+  --spectrum: linear-gradient(90deg, #ef8d5a 0%, #d9a08c 18%, #cfa2e4 42%, #c3b4f6 64%, #a9b5f2 82%, #8ea6ff 100%);
+  --gutter: #0f0f13; --panel: #18191e; --ink: #18191e; --ink-2: #1d1e24; --line: rgba(255,255,255,.07);
+  --mono: "IBM Plex Mono", ui-monospace, monospace; --sans: "Inter Tight", system-ui, sans-serif; }
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--gutter); color: rgba(var(--fg-rgb),.6); font-family: var(--sans); min-height: 100vh; display: flex; flex-direction: column; }
+button, input, textarea { font: inherit; color: inherit; }
+.nav { position: sticky; top: 0; z-index: 20; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 76px; background: var(--navbg); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.nav .links { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; gap: 26px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: rgba(var(--fg-rgb),.45); }
+.nav .links .on { color: var(--fg); box-shadow: 0 1px 0 var(--orange); padding-bottom: 3px; }
+.nav .cta { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 8px 12px; border: 1px solid rgba(var(--fg-rgb),.25); color: var(--fg); }
+.mark { font-family: "ZilsMark", serif; font-weight: 600; letter-spacing: -0.025em; line-height: 1; color: var(--violet-hi); text-transform: none; text-decoration: none; }
+.nav .mark { font-size: 24px; }
+.wrap { flex: 1; display: grid; grid-template-columns: 56px 1fr 56px; }
+.gut { border-right: 1px solid var(--line); } .gut.r { border-right: 0; border-left: 1px solid var(--line); }
+.col { background: var(--panel); min-width: 0; display: flex; flex-direction: column; }
+.row { display: flex; align-items: center; height: 40px; padding: 0 28px; border-bottom: 1px solid var(--line); position: relative; }
+.row .n { position: absolute; left: -56px; width: 56px; text-align: center; font-family: var(--mono); font-size: 10px; color: rgba(var(--fg-rgb),.38); }
+.label { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: rgba(var(--fg-rgb),.42); }
+.corner { position: absolute; left: 0; bottom: -8px; width: 0; height: 0; border-style: solid; border-width: 7px 7px 0 0; border-color: var(--orange) transparent transparent transparent; z-index: 2; }
+h1 { font-weight: 300; font-size: clamp(44px, 6vw, 84px); letter-spacing: -0.03em; line-height: .98; color: var(--fg); }
+h2 { font-weight: 300; color: var(--fg); }
+.btn { font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; padding: 12px 16px; display: inline-flex; align-items: center; gap: 8px; border: 0; cursor: pointer; text-decoration: none; }
+.btn.p { background: var(--orange); color: #140a04; }
+.btn.s { border: 1px solid rgba(var(--fg-rgb),.22); color: var(--fg); background: none; }
+.link { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg); border-bottom: 1px solid rgba(var(--fg-rgb),.3); padding-bottom: 2px; text-decoration: none; }
+.link::after { content: " →"; }
+/* forms */
+.split { flex: 1; display: grid; grid-template-columns: 1fr 1fr; }
+.split > div { padding: 80px 40px 64px; }
+.split > div:first-child { border-right: 1px solid var(--line); }
+.split .lede { margin-top: 20px; font-size: 16px; line-height: 1.55; max-width: 380px; }
+.split .aside { margin-top: 28px; font-size: 14px; }
+.field { display: grid; gap: 8px; margin-bottom: 26px; }
+.field .top { display: flex; justify-content: space-between; }
+.field input, .field textarea { background: transparent; border: 0; border-bottom: 1px solid rgba(var(--fg-rgb),.2); padding: 10px 0 12px; font-size: 18px; font-weight: 300; color: var(--fg); outline: none; resize: vertical; transition: border-color .2s; }
+.field textarea { min-height: 120px; line-height: 1.5; }
+.field input:focus, .field textarea:focus { border-bottom-color: var(--peach); }
+.field input::placeholder, .field textarea::placeholder { color: rgba(var(--fg-rgb),.3); }
+.field .hint { font-size: 13px; color: rgba(var(--fg-rgb),.45); }
+.hp { position: absolute; left: -9999px; }
+.formfoot { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.formfoot p { font-size: 13px; color: rgba(var(--fg-rgb),.45); }
+.done { display: none; }
+.sent .done { display: block; } .sent form { display: none; }
+.done h2 { font-size: 34px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 14px; }
+.done h2::before { content: ""; width: 12px; height: 12px; background: var(--spectrum); }
+.done p { margin-top: 10px; font-size: 15px; }
+.sky { display: grid; grid-template-columns: repeat(10, 1fr); align-items: end; height: 110px; border-top: 1px solid var(--line); margin-top: auto; }
+.sky i { display: block; background: var(--spectrum); background-size: 1000% 100%; height: var(--h); opacity: .9; }
+@media (max-width: 900px) {
+  .nav { padding: 0 16px; } .nav .links { display: none; }
+  .wrap { grid-template-columns: 0 1fr 0; } .gut { border: 0; } .row .n { display: none; }
+  .split { grid-template-columns: 1fr; } .split > div { padding: 44px 16px 36px; } .split > div:first-child { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+
+.legal { flex: 1; display: grid; grid-template-columns: 240px 1fr; }
+.legal aside { border-right: 1px solid var(--line); }
+.legal aside nav { position: sticky; top: 64px; padding: 28px 0; display: grid; }
+.legal aside a { display: grid; grid-template-columns: 30px 1fr; padding: 8px 20px; font-size: 13.5px; color: rgba(var(--fg-rgb),.5); text-decoration: none; border-left: 2px solid transparent; }
+.legal aside a span { font-family: var(--mono); font-size: 10px; color: rgba(var(--fg-rgb),.35); padding-top: 2px; }
+.legal aside a.on { color: var(--fg); border-left-color: var(--orange); }
+.legal article { padding: 64px 48px 80px; max-width: 760px; }
+.legal article .meta { margin-top: 16px; }
+.legal article .intro { margin-top: 24px; font-size: 17px; line-height: 1.6; color: rgba(var(--fg-rgb),.72); }
+.legal section { margin-top: 48px; scroll-margin-top: 80px; }
+.legal section h2 { font-size: 24px; letter-spacing: -0.01em; }
+.legal section p { margin-top: 12px; font-size: 15px; line-height: 1.7; }
+@media (max-width: 900px) { .legal { grid-template-columns: 1fr; } .legal aside { display: none; } .legal article { padding: 44px 16px 56px; } }
+
+.zf { border-top: 1px solid rgba(var(--fg-rgb),.08); background: var(--gutter); font-family: "Inter Tight", system-ui, sans-serif; margin-top: auto; }
+.zf .in { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 32px; padding: 48px 76px 36px; }
+.zf .brand .mark { font-size: 30px; cursor: pointer; }
+.zf .brand p { margin-top: 14px; font-size: 15px; line-height: 1.45; color: rgba(var(--fg-rgb),.62); }
+.zf h5 { font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: rgba(var(--fg-rgb),.4); margin: 0 0 14px; }
+.zf ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.zf a { color: rgba(var(--fg-rgb),.72); text-decoration: none; font-size: 14px; }
+.zf a:hover { color: var(--fg); }
+.zf .bot { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 76px; border-top: 1px solid rgba(var(--fg-rgb),.08); font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: rgba(var(--fg-rgb),.4); }
+.zf .bot nav { display: flex; gap: 20px; }
+.zf .bot a { font-size: 10.5px; color: rgba(var(--fg-rgb),.5); }
+@media (max-width: 900px) { .zf .in { grid-template-columns: 1fr 1fr; padding: 36px 16px 24px; } .zf .brand { grid-column: 1 / -1; } .zf .bot { flex-direction: column; padding: 18px 16px; } }
+/* ---- themes ---- */
+:root { --fg-rgb: 232,230,239; --bg-rgb: 24,25,30; --fg: #e8e6ef; --navbg: rgba(15,15,19,.92); }
+html[data-theme="light"] {
+  --fg-rgb: 28,26,38; --bg-rgb: 250,249,252; --fg: #1c1a26; --navbg: rgba(236,235,241,.92);
+  --gutter: #ecebf1; --panel: #faf9fc; --ink: #faf9fc; --ink-2: #f1eff6; --line: rgba(28,26,38,.1);
+  --violet-hi: #4b44c8; --peach: #c2582a; --lilac: #6a59cc; --ok: #6a59cc; --peri: #4a5fc4; --warn: #c2582a; --bad: #cc4426; --off: rgba(28,26,38,.35);
+  --t1: #1c1a26; --t2: rgba(28,26,38,.64); --t3: rgba(28,26,38,.44);
+  color-scheme: light;
+}
+html[data-theme="light"] .label { color: rgba(28,26,38,.48) !important; }
+html[data-theme="light"] .btn.p { color: #fff; }
+.theme-t { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid rgba(var(--fg-rgb),.2); color: var(--fg); margin-left: auto; margin-right: 12px; cursor: pointer; background: none; }
+.theme-t:hover { border-color: var(--peach); }
+.theme-t svg { width: 16px; height: 16px; }
+html[data-theme="light"] .theme-t .moon, html:not([data-theme="light"]) .theme-t .sun { display: none; }
+
+.nav .links { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+@media (max-width: 960px) { .nav .links { display: none; } }
+</style>
+</head>
+<body>
+  <div class="nav"><span class="mark">Zils</span><div class="links"><span>Examples</span><span>Research</span><span>Miners</span><span>Pricing</span></div><button class="theme-t" type="button" aria-label="Switch light or dark mode" onclick="(function(){var t=document.documentElement.dataset.theme==='light'?'dark':'light';applyTheme(t);try{localStorage.setItem('zils-theme',t)}catch(e){}})()"><svg class="moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13.5 9.5A6 6 0 0 1 6.5 2.5a6 6 0 1 0 7 7Z"/></svg><svg class="sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M3 13l1.4-1.4M11.6 4.4 13 3"/></svg></button><span class="cta">Early access</span></div>
+  <div class="wrap"><div class="gut"></div><main class="col">
+<div class="row"><span class="n">01</span><span class="label">Legal · Privacy</span><span class="corner"></span></div>
+<div class="legal">
+  <aside><nav id="toc"><a href="#accounts-and-browser-storage"><span>01</span>Accounts and browser storage</a><a href="#files-you-prepare-and-submit"><span>02</span>Files you prepare and submit</a><a href="#training-workers-and-retained-copies"><span>03</span>Training workers and retained copies</a><a href="#model-requests"><span>04</span>Model requests</a><a href="#website-analytics"><span>05</span>Website analytics</a><a href="#contact-messages-and-service-providers"><span>06</span>Contact messages and service providers</a><a href="#questions-and-data-requests"><span>07</span>Questions and data requests</a></nav></aside>
+  <article><h1 style="font-size:clamp(40px,5vw,64px)">Privacy policy.</h1><p class="label meta">Updated 9 October 2026 · Zils at zils.ai</p><p class="intro">This notice describes information handled by the Zils website and its decision-model services, including sign-in, training, model requests, and support.</p><section id="accounts-and-browser-storage"><h2>Accounts and browser storage</h2><p>Zils uses Supabase for sign-in. Your email address, account identifier, and authentication records are used to manage access to your workspace. Training jobs and API-key records are associated with your account.</p><p>Your browser stores your sign-in session and light or dark theme preference. Choosing Save setup in the playground also stores your question setup on that browser, without its example text or conversation. Signing out removes the sign-in session; clearing browser storage also removes saved setups and preferences. Neither action deletes your account or uploaded data.</p></section><section id="files-you-prepare-and-submit"><h2>Files you prepare and submit</h2><p>Data review and preparation happen in your browser. Selecting a file or pasting data for review does not upload it. When you submit a training run, the prepared datasets are uploaded to private storage, and the service records the job settings, progress, evaluation results, and model artifacts.</p><p>The training service uses Supabase for account and job records. DigitalOcean Spaces stores newly uploaded datasets, photos, and model artifacts in private storage. Existing files may remain in Supabase Storage during migration. Authorized service operators process the data to validate your submission, coordinate training, evaluate candidates, and deliver available results.</p></section><section id="training-workers-and-retained-copies"><h2>Training workers and retained copies</h2><p>Submitting a run requires permission to copy the learning dataset to assigned, approved training workers. Their operators can read and retain that data. Confidence-check and final-evaluation datasets remain with the evaluation service rather than being included in worker training exports.</p><p>This training workflow is not confidential compute. Files, model artifacts, and local run records remain until operator cleanup; automatic deletion is not currently implemented. Canceling a job does not erase data already downloaded or immediately stop remote work. Expiring a download link does not remove a copy already obtained.</p></section><section id="model-requests"><h2>Model requests</h2><p>New text-training submissions include permission for a one-time comparison with TypeSafe JEV after a model is approved. Zils sends the held-out evaluation inputs and questions to TypeSafe; it does not send their correct-answer labels, training examples, or confidence-check examples for this comparison. Zils retains the predictions and aggregate scores so viewing a model page does not repeat those calls. Earlier submissions are not automatically opted in. See TypeSafe’s privacy policy.</p><p>Running the playground or calling the model API sends your supplied context and questions to the model service to produce predictions. These requests are processed on servers, rather than only in your browser. Use information you are authorized to send, and avoid sensitive data in public examples.</p><p>When the setup assistant is connected, requesting suggestions sends your description, follow-up conversation, and any question draft being revised to its configured AI provider. This is separate from running a prediction or submitting training data. Choosing and editing a built-in starter does not call the assistant.</p><p>Optional voice entry uses your browser’s speech recognition service, which may process audio remotely. It starts only when you choose Speak your goal. The transcript appears for you to review before requesting suggestions.</p></section><section id="website-analytics"><h2>Website analytics</h2><p>We use Plausible Analytics to understand page visits, referral sites, engagement, browser and device types, and approximate locations. Plausible does not use analytics cookies or store raw IP addresses. See Plausible’s data policy for details.</p><p>We remove URL query parameters and fragments before sending analytics events and send only the referring site’s origin. We do not send form contents, account identifiers, API keys, training files, or model inputs to Plausible. Private model pages, internal administration pages, the pricing lab, and individual shared artifacts are excluded.</p></section><section id="contact-messages-and-service-providers"><h2>Contact messages and service providers</h2><p>If you join the early-access email list, we store your email address in Supabase and use it for access updates. Joining the list does not create a workspace account. You can use the contact form to request removal.</p><p>The contact form sends your name, email address, optional company name, and message through Resend to the Zils support inbox so we can respond.</p><p>Vercel hosts the website; Supabase supports authentication and job records and retains existing file copies during migration; DigitalOcean Spaces provides private file storage; Resend delivers contact messages. Hosting, authentication, and delivery infrastructure may process technical records such as request details, IP addresses, and delivery events as part of operating those services.</p></section><section id="questions-and-data-requests"><h2>Questions and data requests</h2><p>Use the Zils contact form to ask about your information or request access, correction, or deletion. Include enough information to identify your account or job, but do not send passwords or API keys. We may need to verify the request. Copies retained by training-worker operators need to be considered separately from data held by the Zils service.</p><p>Changes to this notice will appear on this page with an updated date. External websites linked from Zils have their own privacy notices.</p></section></article>
+</div>
+<script>
+(() => { const links = [...document.querySelectorAll("#toc a")];
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) links.forEach(a => a.classList.toggle("on", a.hash === "#" + e.target.id)); }), { rootMargin: "-30% 0px -60% 0px" });
+  document.querySelectorAll(".legal section").forEach(s => io.observe(s)); })();
+</script></main><div class="gut r"></div></div>
+  <footer class="zf">
+  <div class="in">
+    <div class="brand"><a href="home.html" class="mark">Zils</a><p>Specialized models.<br>Decisions that are yours.</p></div>
+    <div><h5>Build</h5><ul><li><a href="#">Docs</a></li><li><a href="examples.html">Examples</a></li><li><a href="pricing.html">Pricing</a></li><li><a href="early-access.html">Early access</a></li></ul></div>
+    <div><h5>Explore</h5><ul><li><a href="research.html">Research</a></li><li><a href="miners.html">Miners</a></li><li><a href="#">Model source</a></li></ul></div>
+    <div><h5>Keep in touch</h5><ul><li><a href="#">Changelog</a></li><li><a href="#">Discord</a></li><li><a href="#">X</a></li><li><a href="contact.html">Contact</a></li></ul></div>
+  </div>
+  <div class="bot"><span>Your data. Your decision model.</span><nav><a href="privacy.html">Privacy</a><a href="privacy.html">Terms</a><span>© 2026 Zils</span></nav></div>
+</footer>
+  <script>
+(() => {
+  const map = { examples: "examples.html", research: "research.html", miners: "miners.html", bittensor: "miners.html", pricing: "pricing.html", "early access": "early-access.html" };
+  document.querySelectorAll(".nav .links span, .nav .cta").forEach(s => {
+    const k = s.textContent.trim().toLowerCase();
+    if (k === "bittensor") s.textContent = "Miners";
+    if (map[k]) { s.style.cursor = "pointer"; s.addEventListener("click", () => location.href = "" + map[k]); }
+  });
+  document.querySelectorAll(".nav .mark").forEach(m => { m.style.cursor = "pointer"; m.addEventListener("click", () => location.href = "home.html"); });
+})();
+</script>
+  <script>document.querySelectorAll("form").forEach(f => f.addEventListener("submit", e => { e.preventDefault(); f.closest("[data-form]").classList.add("sent"); }));</script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+var FGR, BGR, FGH, BGH, DIP, END;
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  var L = t === "light";
+  FGR = L ? "28,26,38" : "255,255,255";
+  BGR = L ? "250,249,252" : "24,25,30";
+  FGH = L ? "#1c1a26" : "#fff";
+  BGH = L ? "#faf9fc" : "#18191e";
+  DIP = L ? "#efe8f0" : "#3a3440";
+  END = L ? "#eeedf3" : "#24242c";
+}
+(function () { var t = "dark"; try { t = localStorage.getItem("zils-theme") || "dark"; } catch (e) {} applyTheme(t); })();
+</script>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zils miners</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter+Tight:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+  @font-face { font-family: "ZilsMark"; src: url("grenze.woff2") format("woff2"); font-weight: 600; }
+  :root {
+    --violet-hi: #8f88ff;
+    --orange: #ff7a2f; --peach: #f2a184; --lilac: #c3b4f6; --peri: #a9b5f2;
+    --ok: #c3b4f6; --warn: #f2a184; --off: rgba(var(--fg-rgb),.3);
+    --spectrum: linear-gradient(90deg, #ef8d5a 0%, #d9a08c 18%, #cfa2e4 42%, #c3b4f6 64%, #a9b5f2 82%, #8ea6ff 100%);
+    /* two surfaces: dark gutters, slightly lighter content column */
+    --gutter: #0f0f13;
+    --panel: var(--panel);
+    --panel-2: var(--ink-2);
+    --line: rgba(var(--fg-rgb),.07);
+    /* text: only headings are bright */
+    --t1: var(--fg);
+    --t2: rgba(var(--fg-rgb),.58);
+    --t3: rgba(var(--fg-rgb),.38);
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+    --sans: "Inter Tight", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--gutter); color: var(--t2); font-family: var(--sans); min-height: 100vh; display: flex; flex-direction: column; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .nav { position: sticky; top: 0; z-index: 20; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 76px; background: var(--navbg); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .nav .links { display: flex; gap: 26px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--t3); }
+  .nav .links .on { color: var(--t1); box-shadow: 0 1px 0 var(--orange); padding-bottom: 3px; }
+  .nav .cta { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 8px 12px; border: 1px solid rgba(var(--fg-rgb),.25); color: var(--t1); }
+  .mark { font-family: "ZilsMark", serif; font-weight: 600; letter-spacing: -0.025em; line-height: 1; color: var(--violet-hi); text-transform: none; }
+  .nav .mark { font-size: 24px; }
+
+  .wrap { flex: 1; display: grid; grid-template-columns: 56px 1fr 56px; }
+  .gut { border-right: 1px solid var(--line); }
+  .gut:last-child { border-right: 0; border-left: 1px solid var(--line); }
+  .col { background: var(--panel); min-width: 0; }
+  .label { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--t3); }
+
+  .row { display: flex; align-items: center; height: 40px; padding: 0 28px; border-bottom: 1px solid var(--line); position: relative; }
+  .row .label { color: var(--t2); }
+  .row .r { margin-left: auto; }
+  .row .n { position: absolute; left: -56px; width: 56px; text-align: center; font-family: var(--mono); font-size: 10px; color: var(--t3); }
+  .corner { position: absolute; left: 0; bottom: -8px; width: 0; height: 0; border-style: solid; border-width: 7px 7px 0 0; border-color: var(--orange) transparent transparent transparent; z-index: 2; }
+
+  /* hero: headline only */
+  .hero { padding: 80px 40px 64px; border-bottom: 1px solid var(--line); }
+  .hero h1 { font-weight: 300; font-size: clamp(44px, 6vw, 84px); letter-spacing: -0.03em; line-height: .98; color: var(--t1); }
+  .hero p { margin-top: 18px; font-size: 15px; color: var(--t2); }
+  .hero p b { color: var(--t1); font-weight: 400; }
+
+  /* four numbers */
+  .nums { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line); }
+  .nums div { padding: 28px 28px 30px; border-right: 1px solid var(--line); }
+  .nums div:last-child { border-right: 0; }
+  .nums b { display: block; font-weight: 300; font-size: 44px; letter-spacing: -0.02em; color: var(--t1); margin-top: 12px; font-variant-numeric: tabular-nums; line-height: 1; }
+  .nums b small { font-size: 22px; color: var(--t3); }
+  .nums b.sm { font-size: 26px; margin-top: 20px; }
+
+  /* leaderboard: the main thing */
+  .lb { border-bottom: 1px solid var(--line); }
+  .lbrow { display: grid; grid-template-columns: 56px 1.4fr 1fr 1fr 1.4fr 120px; align-items: center; gap: 16px; padding: 0 28px; }
+  .lbhead { height: 44px; border-bottom: 1px solid var(--line); }
+  .lbhead .label { cursor: pointer; }
+  .lbhead .label:hover, .lbhead .label.on { color: var(--t1); }
+  .lbhead .label.on::after { content: " ↓"; color: var(--peach); }
+  .lbbody .lbrow { min-height: 88px; border-bottom: 1px solid var(--line); transition: background .2s; }
+  .lbbody .lbrow:last-child { border-bottom: 0; }
+  .lbbody .lbrow:hover { background: var(--panel-2); }
+  .lbbody .lbrow.dim { opacity: .45; }
+  .rk { font-family: var(--mono); font-size: 12px; color: var(--t3); }
+  .miner b { display: block; font-weight: 300; font-size: 26px; color: var(--t1); font-variant-numeric: tabular-nums; }
+  .miner span { font-family: var(--mono); font-size: 11px; color: var(--t3); }
+  .st { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--c); display: inline-flex; gap: 8px; align-items: center; }
+  .st::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
+  .st.live::before { box-shadow: 0 0 8px var(--c); }
+  .sel b { font-weight: 300; font-size: 26px; color: var(--t1); }
+  .sel span { font-size: 13px; color: var(--t3); margin-left: 6px; }
+  .skill { display: grid; grid-template-columns: 1fr 44px; gap: 14px; align-items: center; }
+  .skill .track { height: 6px; background: rgba(var(--fg-rgb),.06); position: relative; }
+  .skill .fill { position: absolute; inset: 0 auto 0 0; background: var(--spectrum); }
+  .skill b { font-weight: 300; font-size: 20px; color: var(--t1); text-align: right; }
+  .seen { font-family: var(--mono); font-size: 11.5px; color: var(--t3); text-align: right; }
+  .asof { display: flex; justify-content: space-between; padding: 14px 28px; font-family: var(--mono); font-size: 10.5px; color: var(--t3); border-top: 1px solid var(--line); }
+
+  /* base: one line */
+  .base { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 24px; padding: 36px 40px; border-bottom: 1px solid var(--line); }
+  .base h2 { font-weight: 300; font-size: clamp(26px, 2.8vw, 36px); letter-spacing: -0.02em; color: var(--t1); }
+  .base h2 em { font-style: normal; background: var(--spectrum); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .base p { margin-top: 8px; font-size: 14px; }
+  .pill { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--peri); border: 1px solid rgba(169,181,242,.35); padding: 8px 12px; white-space: nowrap; }
+
+  details { border-bottom: 1px solid var(--line); }
+  details summary { cursor: pointer; list-style: none; padding: 18px 28px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--t2); display: flex; gap: 10px; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: "+"; color: var(--peach); }
+  details[open] summary::before { content: "−"; }
+  details .inner { padding: 0 28px 24px; display: grid; gap: 10px; font-size: 14px; line-height: 1.6; max-width: 780px; }
+  details .inner b { color: var(--t1); font-weight: 400; }
+  .morelinks { display: flex; gap: 26px; padding: 24px 28px 64px; }
+  .link { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--t1); border-bottom: 1px solid rgba(var(--fg-rgb),.25); padding-bottom: 2px; }
+  .link::after { content: " →"; }
+
+  .footer { display: flex; justify-content: space-between; align-items: center; padding: 22px 76px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--t3); }
+  .footer .mark { font-size: 20px; } .footer nav { display: flex; gap: 22px; }
+
+  @media (max-width: 900px) {
+    .nav { padding: 0 16px; } .nav .links { display: none; }
+    .wrap { grid-template-columns: 0 1fr 0; } .gut { border: 0; } .row .n { display: none; }
+    .hero { padding: 48px 16px 40px; }
+    .nums { grid-template-columns: 1fr 1fr; } .nums div:nth-child(2) { border-right: 0; } .nums div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    .lbrow { grid-template-columns: 32px 1fr auto; padding: 0 16px; }
+    .lbrow > :nth-child(4), .lbrow > :nth-child(5), .lbrow > :nth-child(6) { display: none; }
+    .base { grid-template-columns: 1fr; padding: 28px 16px; }
+    .footer { flex-direction: column; gap: 14px; padding: 22px 16px; }
+  }
+
+/* ---- themes ---- */
+:root { --fg-rgb: 232,230,239; --bg-rgb: 24,25,30; --fg: #e8e6ef; --navbg: rgba(15,15,19,.92); }
+html[data-theme="light"] {
+  --fg-rgb: 28,26,38; --bg-rgb: 250,249,252; --fg: #1c1a26; --navbg: rgba(236,235,241,.92);
+  --gutter: #ecebf1; --panel: #faf9fc; --ink: #faf9fc; --ink-2: #f1eff6; --line: rgba(28,26,38,.1);
+  --violet-hi: #4b44c8; --peach: #c2582a; --lilac: #6a59cc; --ok: #6a59cc; --peri: #4a5fc4; --warn: #c2582a; --bad: #cc4426; --off: rgba(28,26,38,.35);
+  --t1: #1c1a26; --t2: rgba(28,26,38,.64); --t3: rgba(28,26,38,.44);
+  color-scheme: light;
+}
+html[data-theme="light"] .label { color: rgba(28,26,38,.48) !important; }
+html[data-theme="light"] .btn.p { color: #fff; }
+.theme-t { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid rgba(var(--fg-rgb),.2); color: var(--fg); margin-left: auto; margin-right: 12px; cursor: pointer; background: none; }
+.theme-t:hover { border-color: var(--peach); }
+.theme-t svg { width: 16px; height: 16px; }
+html[data-theme="light"] .theme-t .moon, html:not([data-theme="light"]) .theme-t .sun { display: none; }
+
+.nav .links { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+@media (max-width: 960px) { .nav .links { display: none; } }
+
+.zf { border-top: 1px solid rgba(var(--fg-rgb),.08); background: var(--gutter); font-family: "Inter Tight", system-ui, sans-serif; margin-top: auto; }
+.zf .in { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 32px; padding: 48px 76px 36px; }
+.zf .brand .mark { font-size: 30px; cursor: pointer; }
+.zf .brand p { margin-top: 14px; font-size: 15px; line-height: 1.45; color: rgba(var(--fg-rgb),.62); }
+.zf h5 { font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: rgba(var(--fg-rgb),.4); margin: 0 0 14px; }
+.zf ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.zf a { color: rgba(var(--fg-rgb),.72); text-decoration: none; font-size: 14px; }
+.zf a:hover { color: var(--fg); }
+.zf .bot { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 76px; border-top: 1px solid rgba(var(--fg-rgb),.08); font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: rgba(var(--fg-rgb),.4); }
+.zf .bot nav { display: flex; gap: 20px; }
+.zf .bot a { font-size: 10.5px; color: rgba(var(--fg-rgb),.5); }
+@media (max-width: 900px) { .zf .in { grid-template-columns: 1fr 1fr; padding: 36px 16px 24px; } .zf .brand { grid-column: 1 / -1; } .zf .bot { flex-direction: column; padding: 18px 16px; } }
+
+@media (max-width: 900px) { .gut, .gut:last-child { border: 0 !important; } }
+
+@media (max-width: 900px) {
+  .lbhead, .asof span:last-child { display: none !important; }
+  .lbrow { grid-template-columns: 26px 1fr auto !important; grid-template-rows: auto auto; row-gap: 8px; padding: 16px !important; }
+  .lbbody .lbrow { min-height: 0; }
+  .lbrow > :nth-child(1) { grid-row: 1 / 3; align-self: center; }
+  .lbrow > :nth-child(2) { grid-column: 2; grid-row: 1; }
+  .lbrow > :nth-child(3) { grid-column: 2; grid-row: 2; display: inline-flex !important; }
+  .lbrow > :nth-child(4) { grid-column: 3; grid-row: 1; display: block !important; text-align: right; }
+  .lbrow > :nth-child(5) { grid-column: 3; grid-row: 2; display: block !important; width: 128px; }
+  .lbrow > :nth-child(6) { display: none !important; }
+  .miner b { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+  <div class="nav"><span class="mark">Zils</span><div class="links"><span>Examples</span><span>Research</span><span class="on">Miners</span><span>Pricing</span></div><button class="theme-t" type="button" aria-label="Switch light or dark mode" onclick="(function(){var t=document.documentElement.dataset.theme==='light'?'dark':'light';applyTheme(t);try{localStorage.setItem('zils-theme',t)}catch(e){}})()"><svg class="moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13.5 9.5A6 6 0 0 1 6.5 2.5a6 6 0 1 0 7 7Z"/></svg><svg class="sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M3 13l1.4-1.4M11.6 4.4 13 3"/></svg></button><span class="cta">Early access</span></div>
+
+  <div class="wrap">
+    <div class="gut"></div>
+    <main class="col">
+      <div class="row"><span class="n">01</span><span class="label">Testnet · subnet 579</span><span class="label r">Updated 19:58 UTC</span><span class="corner"></span></div>
+      <div class="hero">
+        <h1>Miner leaderboard</h1>
+        <p>Who is online, and whose models customers kept. <b>Outside miners join at mainnet.</b></p>
+      </div>
+
+      <div class="nums">
+        <div><span class="label">Online now</span><b>2<small> / 4</small></b></div>
+        <div><span class="label">Jobs</span><b>44</b></div>
+        <div><span class="label">Models selected</span><b>9</b></div>
+        <div><span class="label">Current base</span><b class="sm">d3-mini 4.5B</b></div>
+      </div>
+
+      <div class="row"><span class="n">02</span><span class="label">Miners</span><span class="corner"></span></div>
+      <div class="lb">
+        <div class="lbrow lbhead" id="head">
+          <span class="label">#</span><span class="label" data-k="uid">Miner</span><span class="label" data-k="status">Status</span><span class="label on" data-k="selected">Selected</span><span class="label" data-k="skill">Median skill</span><span class="label" data-k="seenN" style="text-align:right">Last seen</span>
+        </div>
+        <div class="lbbody" id="body"></div>
+        <div class="asof"><span>Live from the Zils training API · refreshed every minute</span><span>Click a column to sort</span></div>
+      </div>
+
+      <details><summary>How to read the leaderboard</summary><div class="inner">
+        <p><b>Selected</b> is how many of the miner’s candidates a customer job kept as its model, out of the jobs it was given.</p>
+        <p><b>Skill</b> compares a candidate’s probability error (Brier) with guessing evenly between the answers: 0 is no better than guessing, 1 is perfect, so it compares across different jobs.</p>
+        <p><b>Online</b> checked in within the last minute. <b>Never seen</b> registered but never checked in. <b>Disabled</b> gets no new jobs. (Status wording is a draft.)</p>
+      </div></details>
+
+      <div class="row"><span class="n">03</span><span class="label">Base tier</span><span class="corner"></span></div>
+      <div class="base">
+        <div><h2>Beat <em>d3-mini</em> to become the base.</h2><p>Win a sealed exam, then win again on a fresh one.</p></div>
+        <span class="pill">Round two · not scheduled</span>
+      </div>
+      <details><summary>What we have tried</summary><div class="inner">
+        <p><b>15–16 Oct.</b> Round zero: full-weight training trailed adapters (79.8% vs 84.4%). Not yet.</p>
+        <p><b>16 Oct.</b> Stock d3-mini cleared the first sealed exam (Brier 0.142 vs 0.184), and its adapters matched H2O’s (83.6% vs 83.0%).</p>
+        <p><b>17 Oct.</b> The confirmation exam tied (0.1790 vs 0.1794), so no winner. d3-mini was adopted by decision, recorded as an override of the rule.</p>
+        <p><b>25 Sept.</b> Testnet rehearsal on subnet 579: three miners, one validator, weights verified at block 8,081,345.</p>
+      </div></details>
+      <div class="morelinks"><span class="link">Miner guide</span><span class="link">Base tier rules</span><span class="link">Public chain view</span></div>
+    </main>
+    <div class="gut"></div>
+  </div>
+
+  <footer class="zf">
+  <div class="in">
+    <div class="brand"><a href="home.html" class="mark">Zils</a><p>Specialized models.<br>Decisions that are yours.</p></div>
+    <div><h5>Build</h5><ul><li><a href="#">Docs</a></li><li><a href="examples.html">Examples</a></li><li><a href="pricing.html">Pricing</a></li><li><a href="early-access.html">Early access</a></li></ul></div>
+    <div><h5>Explore</h5><ul><li><a href="research.html">Research</a></li><li><a href="miners.html">Miners</a></li><li><a href="#">Model source</a></li></ul></div>
+    <div><h5>Keep in touch</h5><ul><li><a href="#">Changelog</a></li><li><a href="#">Discord</a></li><li><a href="#">X</a></li><li><a href="contact.html">Contact</a></li></ul></div>
+  </div>
+  <div class="bot"><span>Your data. Your decision model.</span><nav><a href="privacy.html">Privacy</a><a href="privacy.html">Terms</a><span>© 2026 Zils</span></nav></div>
+</footer><script>
+(() => {
+  const C = { Online: "var(--ok)", "Never seen": "var(--off)", Disabled: "var(--warn)" };
+  const rows = [
+    { uid: 1,   key: "5HYcpL…ZuwaoF", status: "Online",     base: "d3-mini 4.5B", jobs: 28, selected: 4, skill: 0.98, seen: "just now", seenN: 0 },
+    { uid: 101, key: "5CqL39…vkACT5", status: "Online",     base: "d3-mini 4.5B", jobs: 14, selected: 3, skill: 0.94, seen: "just now", seenN: 0 },
+    { uid: 102, key: "5ERwXQ…WmF3bn", status: "Disabled",   base: "—",            jobs: 2,  selected: 2, skill: 0.71, seen: "—",        seenN: 1e9 },
+    { uid: 100, key: "5CRwgb…BrTxDn", status: "Never seen", base: "—",            jobs: 0,  selected: 0, skill: null, seen: "—",        seenN: 1e9 },
+  ];
+  let k = "selected";
+  const body = document.getElementById("body");
+  const v = (r, key) => key === "skill" ? (r.skill ?? -1) : key === "seenN" ? -r.seenN : key === "status" ? (r.status === "Online" ? 1 : 0) : r[key];
+  function render() {
+    const list = rows.slice().sort((a, b) => (v(b, k) - v(a, k)) || ((b.skill ?? -1) - (a.skill ?? -1)));
+    body.innerHTML = list.map((r, i) => `
+      <div class="lbrow ${r.status === "Online" ? "" : "dim"}">
+        <span class="rk">${String(i + 1).padStart(2, "0")}</span>
+        <span class="miner"><b>UID ${r.uid}</b><span>${r.key} · ${r.base}</span></span>
+        <span class="st ${r.status === "Online" ? "live" : ""}" style="--c:${C[r.status]}">${r.status}</span>
+        <span class="sel"><b>${r.selected}</b><span>of ${r.jobs} jobs</span></span>
+        <span>${r.skill == null ? '<span class="label">No candidates yet</span>' : `<span class="skill"><span class="track"><span class="fill" style="width:${r.skill * 100}%"></span></span><b>${r.skill.toFixed(2)}</b></span>`}</span>
+        <span class="seen">${r.seen}</span>
+      </div>`).join("");
+  }
+  document.querySelectorAll("#head [data-k]").forEach(h => h.addEventListener("click", () => {
+    k = h.dataset.k; document.querySelectorAll("#head .label").forEach(x => x.classList.toggle("on", x === h)); render();
+  }));
+  render();
+})();
+</script>
+
+<script>
+(() => {
+  const map = { examples: "examples.html", research: "research.html", miners: "miners.html", bittensor: "miners.html", pricing: "pricing.html", "early access": "early-access.html" };
+  document.querySelectorAll(".nav .links span, .nav .cta").forEach(s => {
+    const k = s.textContent.trim().toLowerCase();
+    if (k === "bittensor") s.textContent = "Miners";
+    if (map[k]) { s.style.cursor = "pointer"; s.addEventListener("click", () => location.href = "" + map[k]); }
+  });
+  document.querySelectorAll(".nav .mark").forEach(m => { m.style.cursor = "pointer"; m.addEventListener("click", () => location.href = "home.html"); });
+})();
+</script>
+</body>
+</html>

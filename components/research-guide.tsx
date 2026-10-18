@@ -3,6 +3,8 @@ import { jevMetrics } from '@/lib/jev-comparison';
 import { chessStudy, chessPercent } from '@/lib/chess-study';
 import { flightImprovement, flightSplits } from '@/lib/flight-study';
 import { benchmark, readComparison } from '@/lib/model-benchmark';
+import { Reveal } from '@/components/site/reveal';
+import { DetailsRow } from '@/components/site/details-row';
 import s from './research-guide.module.css';
 
 const percent = (n: number) => `${(n * 100).toFixed(1)}%`;
@@ -48,11 +50,11 @@ export function ResearchOverview() {
         <p>Read each result against its own task and baseline. These experiments do not form a single leaderboard.</p>
       </div>
       <div className={s.studies}>
-        {studies.map(study => <article key={study.href} className={s.study}>
+        {studies.map((study, i) => <Reveal key={study.href} delay={i * 0.11}><article className={s.study}>
           <div className={s.studyTitle}><span className={s.outcome} data-tone={study.tone}>{study.outcome}</span><h3><a href={study.href}>{study.title}</a></h3><p className={s.scope}>{study.scope}</p></div>
           <div className={s.studyResult}><p className={s.result}>{study.result}</p><p className={s.measure}>{study.measure}</p><p className={s.comparator}>{study.comparison}</p></div>
           <p className={s.meaning}>{study.meaning}</p>
-        </article>)}
+        </article></Reveal>)}
       </div>
       <p className={s.note}>Support training and the JEV comparison reuse the same trained model and 500 test cases. They are two comparisons of one experiment, not independent replications.</p>
     </section>
@@ -71,8 +73,7 @@ export function ResearchModelGuide() {
         <li><span className={s.step}>2</span><div><h3>Teach one task with an adapter.</h3><p>A LoRA adapter is a small set of learned weights added to the model. The base weights stay frozen while the adapter learns from examples for that task.</p></div></li>
         <li><span className={s.step}>3</span><div><h3>Test on separate examples.</h3><p>Compare models on the same held-out cases. Measure correctness, probability quality, and simple alternatives. Test data does not select the adapter.</p></div></li>
       </ol>
-      <details className={s.details}>
-        <summary>Model names, comparison controls, and deployment status</summary>
+      <DetailsRow summary="Model names, comparison controls, and deployment status">
         <div className={s.detailBody}>
           <dl className={s.definitions}>
             <div><dt>Before and after training</dt><dd>Before training, each study used the published JevK5 4B model, since retired. After training, it included an adapter learned from examples for that task. The support, flight, and chess studies each use a separate adapter.</dd></div>
@@ -82,7 +83,7 @@ export function ResearchModelGuide() {
           </dl>
           <p>Each study records its own split, selection rule, and evaluation protocol. The support study selects a checkpoint on development data; the flight study calibrates probabilities on a later, separate month; the chess study reserves calibration data but does not use it. A held-out test prevents direct training leakage, but cannot rule out public-data exposure during base-model pretraining.</p>
         </div>
-      </details>
+      </DetailsRow>
       <a href="#metrics" className={s.metricLink}>How to read accuracy, confidence, and uncertainty</a>
     </section>
   );
@@ -101,8 +102,7 @@ export function ResearchMetricGuide() {
         <div><dt>Confidence and coverage</dt><dd>Confidence here is the probability assigned to the chosen answer. Coverage is the share of cases above a probability threshold. High accuracy on a small confident subset does not mean high accuracy on all cases.</dd></div>
         <div><dt>Calibration</dt><dd>Among predictions assigned about 90% probability, roughly 90% should be correct. A model can improve accuracy while remaining overconfident. ECE summarizes the gap between confidence and accuracy across bins.</dd></div>
       </dl>
-      <details className={s.details}>
-        <summary>Technical reference: Brier, F1, ROC-AUC, NLL, and intervals</summary>
+      <DetailsRow summary="Technical reference: Brier, F1, ROC-AUC, NLL, and intervals">
         <div className={s.detailBody}>
           <dl className={s.definitions}>
             <div><dt>Brier score · lower is better</dt><dd>Mean squared probability error. For binary flight outcomes: mean((p − y)²), where y is 0 or 1. For multiclass decisions, sum the squared errors across choices before averaging. Different formulations and tasks have different scales; compare within a study.</dd></div>
@@ -113,7 +113,7 @@ export function ResearchMetricGuide() {
             <div><dt>Reproducibility</dt><dd>Protocols, reports, result files, prediction records where published, and hashes let readers inspect the evidence. They do not imply every checkpoint is distributed or every run can be reproduced from the repository alone. Check each study’s artifact and release limits.</dd></div>
           </dl>
         </div>
-      </details>
+      </DetailsRow>
     </section>
   );
 }

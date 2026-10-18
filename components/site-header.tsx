@@ -1,48 +1,37 @@
 import Link from 'next/link';
 import { ZilsWordmark } from '@/components/zils-wordmark';
 import { ThemeToggle } from '@/components/theme';
+import { MobileMenu } from '@/components/mobile-menu';
 import { AccountMenu } from '@/components/account-menu';
+import css from '@/components/site-header.module.css';
 
-/**
- * The one header every page wears — same links in the same order, so no
- * page quietly drops the entry for itself and the nav stops feeling like
- * one place. The current page's link renders lit instead of vanishing.
- */
+export type NavId = 'examples' | 'model' | 'miners' | 'pricing';
+
 const LINKS = [
-  { href: '/examples', label: 'examples' },
-  { href: '/model', label: 'research', id: 'model' },
-  { href: '/bittensor', label: 'bittensor' },
-  { href: '/pricing', label: 'pricing' },
+  { href: '/examples', label: 'Examples', id: 'examples' },
+  { href: '/model', label: 'Research', id: 'model' },
+  { href: '/miners', label: 'Miners', id: 'miners' },
+  { href: '/pricing', label: 'Pricing', id: 'pricing' },
 ] as const;
 
-export function SiteHeader({ current, tone = 'dark' }: { current?: string; tone?: 'light' | 'dark' }) {
+/**
+ * The one header every page wears. `current` is a loose string because
+ * pages outside the nav (/cli, /app) still pass their own ids; `tone` is ignored.
+ */
+export function SiteHeader({ current }: { current?: string; tone?: 'light' | 'dark' }) {
   return (
-    <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 py-6 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:py-8">
-      <a href="#main-content" className="sr-only z-50 bg-black px-4 py-3 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to content</a>
-      <Link href="/" aria-label="Zils home" className={`col-start-1 row-start-1 justify-self-start leading-none ${tone === 'light' ? 'text-ink' : 'text-white'}`}>
-        <ZilsWordmark className="text-[42px]" />
-      </Link>
-      <nav aria-label="Main navigation" className="col-span-2 row-start-2 flex max-w-full flex-wrap items-center justify-center gap-1 justify-self-center text-[13px] font-medium md:col-span-1 md:col-start-2 md:row-start-1 md:gap-4">
-        {LINKS.map((link) => {
-          const active = current === ('id' in link ? link.id : link.label);
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              aria-current={active ? 'page' : undefined}
-              className={`relative inline-flex min-h-11 items-center px-1 transition-colors md:px-3 ${active
-                ? (tone === 'light' ? 'text-accent' : 'text-white')
-                : (tone === 'light' ? 'text-muted hover:text-ink' : 'text-neutral-400 hover:text-white')}`}
-            >
-              {link.label}
-              {active && <span aria-hidden="true" className={`absolute inset-x-3 bottom-1 h-0.5 rounded-full ${tone === 'light' ? 'bg-accent' : 'bg-white'}`} />}
-            </Link>
-          );
-        })}
+    <header className={`zs ${css.hdr}`}>
+      <a href="#main-content" className={css.skip}>Skip to content</a>
+      <Link href="/" aria-label="Zils home" className={css.logo}><ZilsWordmark /></Link>
+      <nav aria-label="Main navigation" className={css.nav}>
+        {LINKS.map((link) => (
+          <Link key={link.href} href={link.href} className={css.link} aria-current={current === link.id ? 'page' : undefined}>{link.label}</Link>
+        ))}
       </nav>
-      <div className="col-start-2 row-start-1 flex items-center gap-2 justify-self-end md:col-start-3">
-        {tone === 'light' && <ThemeToggle />}
-        <AccountMenu tone={tone} />
+      <div className={css.right}>
+        <MobileMenu links={LINKS} current={current} />
+        <ThemeToggle className={css.theme} />
+        <AccountMenu />
       </div>
     </header>
   );

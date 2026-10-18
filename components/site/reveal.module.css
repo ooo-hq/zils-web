@@ -1,0 +1,4 @@
+@media (prefers-reduced-motion: no-preference) {
+  :global(html.zs-js) .r { opacity: 0; transform: translateY(14px); transition: opacity .8s ease var(--reveal-delay, 0s), transform .8s cubic-bezier(.2,.7,.2,1) var(--reveal-delay, 0s); }
+  :global(html.zs-js) .r[data-in] { opacity: 1; transform: none; }
+}

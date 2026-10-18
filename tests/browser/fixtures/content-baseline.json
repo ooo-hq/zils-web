@@ -1,0 +1,149 @@
+{
+  "model": {
+    "tables": [
+      {
+        "caption": "Probability of the chosen action ≥90%. TypeSafe’s separate confidence field is not used.",
+        "rows": [
+          "Model Cases / 500 Mistakes Accuracy in group",
+          "TypeSafe JEV 1.13 176 8 95.5%",
+          "Trained with Zils 381 44 88.5%"
+        ]
+      },
+      {
+        "caption": "All 500 cases included. Higher accuracy and macro F1 are better; lower Brier probability error is better.",
+        "rows": [
+          "Model Accuracy Macro F1 Brier error",
+          "TypeSafe JEV 1.13 70.6% 0.6108 0.403536",
+          "Trained with Zils 79.2% 0.7583 0.337545"
+        ]
+      },
+      {
+        "caption": "Final test only. Same 500 conversations. Higher accuracy and macro F1 are better; lower Brier error is better.",
+        "rows": [
+          "Model Accuracy Macro F1 Brier error",
+          "Before training 57.8% 0.4964 0.616934",
+          "After training 79.2% 0.7583 0.337545",
+          "Previous-action frequency 44.8% 0.1930 0.707464",
+          "Training-action frequency 19.8% 0.0110 0.926030"
+        ]
+      },
+      {
+        "caption": "Development results used for selection. These are a separate set of 500 conversations, not the final test above.",
+        "rows": [
+          "Training examples Accuracy Brier error",
+          "Before training 54.0% 0.656521",
+          "256 63.0% 0.498994",
+          "512 74.2% 0.381126",
+          "1,024 77.4% 0.366084"
+        ]
+      },
+      {
+        "caption": "Same 1,024 test flights. Lower Brier error is better; higher ROC-AUC is better.",
+        "rows": [
+          "Model Brier error Accuracy ROC-AUC",
+          "Before training, calibrated 0.164076 80.18% 0.5165",
+          "After training, calibrated 0.153357 80.37% 0.6401",
+          "Historical delay rates 0.151347 80.37% 0.6503",
+          "Before training, raw 0.170116 80.18% 0.5165",
+          "After training, raw 0.156231 80.37% 0.6401"
+        ]
+      },
+      {
+        "caption": "How a candidate base is scored and promoted",
+        "rows": [
+          "Step Rule",
+          "Sealed score Validators score the submitted weights on a sealed holdout, against the incumbent.",
+          "Eligibility Skill is positive, accuracy is not below the incumbent’s, and Brier improves by at least 0.01 with a paired-bootstrap 95% lower bound above zero.",
+          "Round weight Winner takes all: the best eligible candidate takes the round’s whole base-tier share, and eligible runners-up earn nothing.",
+          "King of the hill Once promoted, the winner’s miner keeps the whole base-tier share every epoch until an eligible challenger appears. The vendor base (stock d3-mini today) has no miner and pays nobody.",
+          "Confirmation The best eligible candidate is re-scored on a second, disjoint sealed draw at least 12 hours later and must stay eligible.",
+          "Regression suite Before promotion, a fixed suite of reference adapter jobs is retrained on the incumbent and on the candidate. The candidate must be no worse than 0.005 Brier on every job and better on at least one."
+        ]
+      },
+      {
+        "caption": "Base channels",
+        "rows": [
+          "Channel Advances Who gets it",
+          "latest Advances on each confirmed winner. Opt-in, per job.",
+          "stable Advances at most quarterly, to a base that held latest through a full window without rollback. The default for new customer jobs."
+        ]
+      },
+      {
+        "caption": "d3-mini profile",
+        "rows": [
+          "Property Value",
+          "Profile d3-mini-4.5b-v1",
+          "Vendor model vllm-sr/d3-mini · 4.54B parameters · Apache-2.0",
+          "Backbone Qwen3.5-4B (the same as H2O and Imajev), plus a 0.33B vision tower",
+          "Inputs Text, up to four images, and one video",
+          "Answers Yes/no, choice (up to 255 outcomes), and score",
+          "Pinned by Zils A byte-identical mirror, zils-ai/d3-mini-4.5b-v1, and a 4,096-token cap with no truncation"
+        ]
+      },
+      {
+        "caption": "d3-mini compared with the H2O incumbent, 16–17 October 2026",
+        "rows": [
+          "Measure H2O Lightning 4B v1.2.3 d3-mini Reading",
+          "Stock model, first draw (round-one sealed holdout), validator decision rule Brier 0.184 · 87.7% accuracy Brier 0.142 · 89.8% accuracy Eligible. Reproduced exactly on the node through the validator path, so real for that set",
+          "Stock model, confirmation draw (second, disjoint, teacher-authored sealed set: 291 calibration and 1,156 test cases, scored 12 hours later) Brier 0.1794 · 88.5% accuracy Brier 0.1790 · 88.6% accuracy No winner confirmed: improvement 0.0004, paired-bootstrap 95% interval −0.022 to +0.023; the rule needs at least 0.01 with a positive lower bound",
+          "Families won (of six), first draw and confirmation draw 0 and 3 6 and 3 The first-draw result did not carry over; the second split three and three, narrowly. H2O improved between draws (0.184 to 0.179) while d3-mini fell (0.142 to 0.179), so the second set is not simply harder",
+          "Adapter regression suite, one reference job (ABCD; the rule asks for three or four): calibrated Brier and accuracy Brier 0.2801 · 81.6% Brier 0.2515 · 84.0% Passed, on one job",
+          "Upgrading an existing H2O task to a d3-mini adapter with base_change: Brier 0.1805 (previous H2O release) 0.1667 (d3-mini candidate) Improvement 0.0138 against a 0.01 threshold",
+          "Adapter on the 500-case ABCD test cohort (frozen production recipe, 4,096 training examples, two seeds) 83.0% 83.4% A tie: the interval includes zero",
+          "Adapter on the historical ABCD cohort 83.6% 86.6% d3-mini ahead; interval +0.6 to +5.4 points",
+          "Exam prompt length, median input tokens 528 568 d3-mini prompts are about 40 tokens longer"
+        ]
+      },
+      {
+        "caption": "Recorded Zils and published Kev results on the same public items",
+        "rows": [
+          "Metric Zils candidate Experimental checkpoint Published Kev 0.8B Comparison baseline",
+          "Accuracy Higher is better 63.64% 63.64%",
+          "Correct answers Same public items 147 / 231 147 / 231",
+          "Brier loss Lower is better 0.463608 0.451648",
+          "Calibration error (ECE) Lower is better 0.113615 0.044050",
+          "Confident mistakes Wrong at ≥90% confidence 8 3",
+          "Median latency Localhost HTTP 42.08 ms 52.78 ms",
+          "p95 latency Localhost HTTP 205.26 ms 209.36 ms",
+          "Valid probability outputs 100.00% 100.00%"
+        ]
+      },
+      {
+        "caption": "Correct and total counts, with accuracy, for each public subset",
+        "rows": [
+          "Subset Zils Kev baseline",
+          "Easy 48 / 48 100.00% 48 / 48 100.00%",
+          "Original 57 / 72 79.17% 58 / 72 80.56%",
+          "Hard 42 / 111 37.84% 41 / 111 36.94%"
+        ]
+      }
+    ]
+  },
+  "privacy": {
+    "h2": [
+      "Accounts and browser storage",
+      "Files you prepare and submit",
+      "Training workers and retained copies",
+      "Model requests",
+      "Website analytics",
+      "Contact messages and service providers",
+      "Questions and data requests"
+    ],
+    "paragraphs": 19
+  },
+  "terms": {
+    "h2": [
+      "An experimental service",
+      "Your account and access",
+      "Your training submissions",
+      "Using model outputs",
+      "Acceptable use",
+      "Availability and responsibility",
+      "Changes and contact"
+    ],
+    "paragraphs": 12
+  },
+  "bittensor": {
+    "text": "Training & evaluation Participants Testnet publication Base tier ✳ Training & evaluation Train. Submit. Evaluate. Reward. 01 Train Miners train compatible adapters and decision heads with a fixed one-epoch recipe and different seeds. 02 Submit Each miner freezes a candidate and signs its checkpoint hash for the validator. 03 Evaluate The validator verifies the checkpoint and runs its own evaluation of the model’s probabilities. 04 Reward Family-macro Brier skill determines proposed weights across eligible candidates. One testnet round completed Training, signed submissions, evaluation, and revealed chain weights are recorded below. A live submission queue and round feed are not connected. View the verified round The local loop works on Apple Silicon and an RTX 4090. Accuracy and latency are diagnostics, not separate reward components. The subnet’s family-macro Brier and JevBench Brier use different aggregation rules. Evaluation contract ✳ Participants Three miners. One validator. One host. Three registered miners and one validator completed the recorded subnet 579 rehearsal. Miners · UIDs 1–3 Trained and submitted three distinct checkpoints RECORDED PARTICIPATION Validator · UID 0 Evaluated the checkpoints and published weights RECORDED PARTICIPATION One operator ran all four processes on one host. Services exited after the round; these counts do not indicate current availability or independent operators. Miner guide ✳ Testnet publication Bittensor testnet · Subnet 579 First training-to-chain round completed. Revealed weights verified. Round evidence (JSON) ↗ Network Bittensor testnet Publication receipt 8081301-0008 Verified at block 8,081,345 Round status Completed · recorded rehearsal Three evaluated miners and their verified testnet weight allocation Miner UID Correct / 224 Requested weight On-chain value 1 183 / 224 34.09% 65,535 2 180 / 224 33.60% 64,598 3 180 / 224 32.31% 62,125 Weights are based on family-macro Brier skill. The chain stores maximum-scaled integers; their normalized proportions matched the requested allocation within quantization tolerance. Verified 25 Sept 2026, 06:40:01 UTC. This is the observation time, not a live refresh. Each 0.8B checkpoint trained for one epoch on 224 examples, calibrated on 112 questions, and was evaluated on the same 224 test questions. This reused synthetic development benchmark is separate from the public JevBench comparison. All compute ran on one Apple M4 Pro with 24 GiB memory, with GPU jobs serialized. This closed rehearsal demonstrates the training-to-chain path. It does not establish mainnet deployment, miner earnings, open competition, or automatic model promotion. Scores, methodology & chain evidence Testnet guide Roadmap ✳ Base tier · status as of 18 October 2026 A competition for the base model itself. Customer adapters train on one pinned base model. Since 17 October 2026 that base is d3-mini 4.5B. In the base tier, miners submit a full-weight replacement for that base. Validators score each candidate on a sealed holdout against the incumbent, and a candidate is promoted only after it also passes a second sealed draw and an adapter regression suite. Winner takes all The best eligible candidate takes the round’s whole base-tier share. Eligible runners-up earn nothing. King of the hill Once promoted, the winner’s miner keeps the whole base-tier share every epoch until an eligible challenger appears. The incumbent today is stock d3-mini, a vendor base with no miner behind it, so it pays nobody. No candidate has been promoted, no base-tier weights have been published, and nothing runs on mainnet yet. Full promotion rules"
+  }
+}

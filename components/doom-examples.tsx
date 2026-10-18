@@ -1,62 +1,67 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { Check, Gamepad2, Play, RotateCcw } from 'lucide-react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { doomExamples, gameSeconds } from '@/lib/doom-examples';
-import { ZilsWordmark } from './zils-wordmark';
+import { DetailsRow } from './site/details-row';
+import { StageHead, Who } from './examples-shared';
 import base from './bitcast-examples.module.css';
 import s from './doom-examples.module.css';
 
-const models = { zils: { name: 'Zils' }, jev: { name: 'TypeSafe JEV', mark: 'J' } } as const;
-const outcomeText = { success: 'Collected the armor', death: 'Died', timeout: 'Ran out of time' } as const;
+const outcomeText = { success: 'Reached the exit', death: 'Died', timeout: 'Ran out of time' } as const;
 const seconds = (tics: number) => `${gameSeconds(tics).toFixed(1)} s`;
+const models = ['zils', 'jev'] as const;
+const reducedQuery = '(prefers-reduced-motion: reduce)';
+const subscribeReduced = (cb: () => void) => { const mq = matchMedia(reducedQuery); mq.addEventListener('change', cb); return () => mq.removeEventListener('change', cb); };
 
 export function DoomDemo() {
   const videos = { zils: useRef<HTMLVideoElement>(null), jev: useRef<HTMLVideoElement>(null) };
   const [playing, setPlaying] = useState(false);
+  const [replayed, setReplayed] = useState(false);
   const [ended, setEnded] = useState({ zils: false, jev: false });
+  const reduced = useSyncExternalStore(subscribeReduced, () => matchMedia(reducedQuery).matches, () => false);
   const all = () => [videos.zils.current, videos.jev.current].filter((v): v is HTMLVideoElement => v !== null);
   function play() {
+    setReplayed(true);
     setEnded({ zils: false, jev: false });
     all().forEach(v => { v.currentTime = 0; });
     Promise.all(all().map(v => v.play())).then(() => setPlaying(true), () => setPlaying(false));
   }
-  function reset() {
-    all().forEach(v => { v.pause(); v.currentTime = 0; });
-    setPlaying(false); setEnded({ zils: false, jev: false });
-  }
-  // Both recordings start on load so the comparison is visible before any click.
-  useEffect(() => { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) all().forEach(v => v.play().catch(() => {})); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Each recording loads on demand and starts when that clip is on screen (stacked on phones they differ).
+  // Reduced motion never autoplays; it shows the recorded outcomes and waits for Replay.
+  useEffect(() => {
+    if (reduced || !('IntersectionObserver' in window)) return;
+    const io = new IntersectionObserver(entries => entries.forEach(e => {
+      if (e.isIntersecting) { io.unobserve(e.target); (e.target as HTMLVideoElement).play().then(() => setPlaying(true), () => {}); }
+    }), { threshold: 0.4 });
+    all().forEach(v => io.observe(v));
+    return () => io.disconnect();
+  }, [reduced]); // eslint-disable-line react-hooks/exhaustive-deps
   return <>
-    <div className={base.appHeader}><div><Gamepad2 size={18} /><strong>{doomExamples.scenario}</strong><span>ViZDoom study</span></div><span className={base.recorded}>Real results, replayed</span></div>
-    <div className={base.demoToolbar}>
-      <div><h2>Zils reaches the armor. JEV dies in the doorway.</h2><p>Same map, same start, same information. Both recordings run together, in game time.</p></div>
-      <button className={playing || ended.zils ? base.secondary : base.primary} type="button" onClick={playing || ended.zils ? reset : play}>{playing || ended.zils ? <><RotateCcw size={16} />Reset</> : <><Play size={16} />Play both</>}</button>
-    </div>
-    <div className={s.screens}>
-      {(['zils', 'jev'] as const).map(model => {
+    <StageHead title="Zils reaches the armor. JEV dies in the doorway."><button type="button" className={base.exBtn} onClick={play}>Replay ↺</button></StageHead>
+    <div className={s.duo}>
+      {models.map(model => {
         const clip = doomExamples.clips[model];
-        const done = ended[model];
-        return <section key={model} className={s.screen} aria-label={`${models[model].name} recording`}>
-          <header>{model === 'zils' ? <h3 className={s.wordmark}><ZilsWordmark className={s.logo} /></h3> : <><span className={s.jevMark}>J</span><h3>{models[model].name}</h3></>}<span className={done ? (clip.outcome === 'success' ? base.match : base.caution) : s.pending} aria-live="polite">{done ? <>{clip.outcome === 'success' ? <Check size={14} /> : <span aria-hidden="true">!</span>}{outcomeText[clip.outcome]} at {seconds(clip.gameTics)}</> : playing ? 'Playing' : 'Ready'}</span></header>
-          <div className={s.frame}>
-            <video ref={videos[model]} src={clip.src} poster={doomExamples.poster} muted playsInline preload="metadata" onPlay={() => setPlaying(true)} onEnded={() => setEnded(prev => ({ ...prev, [model]: true }))} aria-label={`${models[model].name} on test seed ${doomExamples.seed}`} />
-            {done && <p className={`${s.stamp} ${clip.outcome === 'success' ? s.stampWin : s.stampLoss}`}>{outcomeText[clip.outcome]}</p>}
+        const done = ended[model] || (reduced && !replayed);
+        const name = model === 'zils' ? 'Zils' : 'TypeSafe JEV';
+        return <section key={model} aria-label={`${name} recording`}>
+          <div className={s.ph}>
+            <Who model={model} />
+            <span className={`${base.exTag} ${done ? (clip.outcome === 'success' ? base.exGood : base.exBad) : base.exWait}`} aria-live="polite">{done ? `${outcomeText[clip.outcome]} · ${seconds(clip.gameTics)}` : playing ? 'Playing' : 'Ready'}</span>
           </div>
-          <dl className={s.stats}>
-            <div><dt>Game time</dt><dd>{seconds(clip.gameTics)}</dd></div>
-            <div><dt>Health left</dt><dd>{Math.max(0, clip.health)}</dd></div>
-            <div><dt>Decisions</dt><dd>{clip.decisions}</dd></div>
-          </dl>
+          <video ref={videos[model]} className={s.video} src={clip.src} poster={doomExamples.poster} muted playsInline preload="none" onPlay={() => setPlaying(true)} onEnded={() => setEnded(prev => ({ ...prev, [model]: true }))} aria-label={`${name} on test seed ${doomExamples.seed}`} />
         </section>;
       })}
     </div>
-    <details className={base.exampleDetails}><summary>Behind this game</summary><div>
-      <p>Test seed {doomExamples.seed} is a selected highlight: the lowest-numbered held-out start where trained Zils collected the green armor and JEV died. {doomExamples.audit.eligibleHighlights} of the 100 starts qualified; none went the other way. Both runs began from the same frame and the same observation, and the recorded hashes match. The footage is rendered from the native game recordings with labels added, not a recreated win.</p>
-      <p>Both models received the same text: health, the names and screen positions of visible enemies and the armor, the previous observation and the last action. Neither saw pixels, the map, or anything off-screen. Thinking paused the game, so playback is game time at {doomExamples.fps} tics per second and omits inference waits.</p>
-      <p>Zils: {doomExamples.zilsModel} with one adapter trained on {doomExamples.trainingExamples.toLocaleString()} decisions from a scripted reference program. JEV: a live call to TypeSafe’s API, version {doomExamples.jevModel}, with no task training.</p>
-    </div></details>
+    <DetailsRow summary="Behind this game"><DoomGameDetails /></DetailsRow>
   </>;
+}
+
+function DoomGameDetails() {
+  return <div className={base.exBehind}>
+    <p>Test seed {doomExamples.seed} is a selected highlight: the lowest-numbered held-out start where trained Zils collected the green armor and JEV died. {doomExamples.audit.eligibleHighlights} of the 100 starts qualified; none went the other way. Both runs began from the same frame and the same observation, and the recorded hashes match. The footage is rendered from the native game recordings with labels added, not a recreated win.</p>
+    <p>Both models received the same text: health, the names and screen positions of visible enemies and the armor, the previous observation and the last action. Neither saw pixels, the map, or anything off-screen. Thinking paused the game, so playback is game time at {doomExamples.fps} tics per second and omits inference waits.</p>
+    <p>Zils: {doomExamples.zilsModel} with one adapter trained on {doomExamples.trainingExamples.toLocaleString()} decisions from a scripted reference program. JEV: a live call to TypeSafe’s API, version {doomExamples.jevModel}, with no task training.</p>
+  </div>;
 }
 
 export function DoomStudyDetails() {

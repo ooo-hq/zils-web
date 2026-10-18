@@ -33,9 +33,9 @@ test('signed-out visitors join early access and invited users can find sign-in',
   await page.goto('/model');
   await page.locator('header').getByRole('link', { name: 'Early access', exact: true }).click();
   await expect(page.getByRole('form', { name: 'Join Zils early access' })).toBeVisible();
-  await page.getByRole('link', { name: 'Sign in to your workspace.' }).click();
-  await expect(page.getByRole('heading', { name: 'Sign in to Zils', exact: true })).toBeVisible();
-  await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible();
+  await page.getByRole('link', { name: 'Sign in to your workspace' }).click();
+  await expect(page.getByRole('heading', { name: 'Sign in.', exact: true })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Email' })).toBeVisible();
   expect(errors).toEqual([]);
 });
 

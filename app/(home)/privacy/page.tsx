@@ -8,8 +8,6 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://zils.ai/privacy' },
 };
 
-const link = 'underline decoration-edge-strong underline-offset-4 hover:text-accent';
-
 export default function PrivacyPage() {
   return (
     <PolicyPage title="Privacy policy." updated="9 October 2026">
@@ -31,14 +29,14 @@ export default function PrivacyPage() {
       </PolicySection>
 
       <PolicySection title="Model requests">
-        <p>New text-training submissions include permission for a one-time comparison with TypeSafe JEV after a model is approved. Zils sends the held-out evaluation inputs and questions to TypeSafe; it does not send their correct-answer labels, training examples, or confidence-check examples for this comparison. Zils retains the predictions and aggregate scores so viewing a model page does not repeat those calls. Earlier submissions are not automatically opted in. See <a href="https://typesafe.ai/legal/privacy-policy" className={link}>TypeSafe’s privacy policy</a>.</p>
+        <p>New text-training submissions include permission for a one-time comparison with TypeSafe JEV after a model is approved. Zils sends the held-out evaluation inputs and questions to TypeSafe; it does not send their correct-answer labels, training examples, or confidence-check examples for this comparison. Zils retains the predictions and aggregate scores so viewing a model page does not repeat those calls. Earlier submissions are not automatically opted in. See <a href="https://typesafe.ai/legal/privacy-policy">TypeSafe’s privacy policy</a>.</p>
         <p>Running the playground or calling the model API sends your supplied context and questions to the model service to produce predictions. These requests are processed on servers, rather than only in your browser. Use information you are authorized to send, and avoid sensitive data in public examples.</p>
         <p>When the setup assistant is connected, requesting suggestions sends your description, follow-up conversation, and any question draft being revised to its configured AI provider. This is separate from running a prediction or submitting training data. Choosing and editing a built-in starter does not call the assistant.</p>
         <p>Optional voice entry uses your browser’s speech recognition service, which may process audio remotely. It starts only when you choose Speak your goal. The transcript appears for you to review before requesting suggestions.</p>
       </PolicySection>
 
       <PolicySection title="Website analytics">
-        <p>We use Plausible Analytics to understand page visits, referral sites, engagement, browser and device types, and approximate locations. Plausible does not use analytics cookies or store raw IP addresses. See <a href="https://plausible.io/data-policy" className={link}>Plausible’s data policy</a> for details.</p>
+        <p>We use Plausible Analytics to understand page visits, referral sites, engagement, browser and device types, and approximate locations. Plausible does not use analytics cookies or store raw IP addresses. See <a href="https://plausible.io/data-policy">Plausible’s data policy</a> for details.</p>
         <p>We remove URL query parameters and fragments before sending analytics events and send only the referring site’s origin. We do not send form contents, account identifiers, API keys, training files, or model inputs to Plausible. Private model pages, internal administration pages, the pricing lab, and individual shared artifacts are excluded.</p>
       </PolicySection>
 
@@ -49,7 +47,7 @@ export default function PrivacyPage() {
       </PolicySection>
 
       <PolicySection title="Questions and data requests">
-        <p>Use the <Link href="/contact" className={link}>Zils contact form</Link> to ask about your information or request access, correction, or deletion. Include enough information to identify your account or job, but do not send passwords or API keys. We may need to verify the request. Copies retained by training-worker operators need to be considered separately from data held by the Zils service.</p>
+        <p>Use the <Link href="/contact">Zils contact form</Link> to ask about your information or request access, correction, or deletion. Include enough information to identify your account or job, but do not send passwords or API keys. We may need to verify the request. Copies retained by training-worker operators need to be considered separately from data held by the Zils service.</p>
         <p>Changes to this notice will appear on this page with an updated date. External websites linked from Zils have their own privacy notices.</p>
       </PolicySection>
     </PolicyPage>

@@ -1,9 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { Check } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import styles from '@/app/(home)/contact/contact.module.css';
+import styles from '@/components/site/form-page.module.css';
+
+function Label({ id, children, optional }: { id: string; children: string; optional?: boolean }) {
+  return <div className={styles.fpTop}><label htmlFor={id} className={styles.fpLabel}>{children}</label>{optional && <span id={`${id}-optional`} className={styles.fpLabel}>Optional</span>}</div>;
+}
 
 export function ContactForm() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
@@ -46,23 +49,22 @@ export function ContactForm() {
     } finally { pending.current = false; }
   }
 
-  if (status === 'sent') return <div ref={result} className={styles.success} tabIndex={-1} role="status">
-    <span className={styles.check}><Check size={24} aria-hidden="true" /></span>
+  if (status === 'sent') return <div ref={result} className={styles.fpDone} tabIndex={-1} role="status">
     <h2>Message sent.</h2>
     <p>Thanks for reaching out. We’ll reply to <strong>{replyEmail}</strong>.</p>
-    <Link href="/" className={styles.button}>Back to Zils</Link>
+    <Link href="/" className={styles.fpBtn}>Back to Zils</Link>
   </div>;
 
-  return <form onSubmit={submit} className={styles.form} aria-label="Contact Zils">
-    <div className={styles.pair}>
-      <div><label htmlFor="contact-name">Name</label><input id="contact-name" name="name" autoComplete="name" maxLength={100} required disabled={status === 'sending'} /></div>
-      <div><label htmlFor="contact-email">Email</label><input id="contact-email" name="email" type="email" autoComplete="email" maxLength={254} required disabled={status === 'sending'} /></div>
+  const off = status === 'sending';
+  return <form onSubmit={submit} className={styles.fpForm} aria-label="Contact Zils">
+    <div className={styles.fpPair}>
+      <div className={styles.fpField}><Label id="contact-name">Name</Label><input id="contact-name" name="name" autoComplete="name" maxLength={100} required disabled={off} /></div>
+      <div className={styles.fpField}><Label id="contact-email">Email</Label><input id="contact-email" name="email" type="email" autoComplete="email" maxLength={254} required disabled={off} /></div>
     </div>
-    <div><label htmlFor="contact-company">Company <span>Optional</span></label><input id="contact-company" name="company" autoComplete="organization" maxLength={160} disabled={status === 'sending'} /></div>
-    <div><label htmlFor="contact-message">How can we help?</label><p id="message-help" className={styles.hint}>A short overview of your project or question is enough.</p><textarea id="contact-message" name="message" rows={6} maxLength={3000} required aria-describedby="message-help" disabled={status === 'sending'} placeholder="What are you building, and where could Zils help?" /></div>
-    <input name="website" type="text" autoComplete="off" tabIndex={-1} aria-hidden="true" className={styles.honeypot} />
-    {error && <p className={styles.error} role="alert">{error}</p>}
-    <div className={styles.submitRow}><button className={styles.button} type="submit" disabled={status === 'sending'}>{status === 'sending' ? 'Sending…' : 'Send message'}</button><p>We’ll reply by email.</p></div>
-    <p className={styles.note}>No datasets or private customer information needed.</p>
+    <div className={styles.fpField}><Label id="contact-company" optional>Company</Label><input id="contact-company" name="company" autoComplete="organization" maxLength={160} aria-describedby="contact-company-optional" disabled={off} /></div>
+    <div className={styles.fpField}><Label id="contact-message">How can we help?</Label><textarea id="contact-message" name="message" rows={6} maxLength={3000} required aria-describedby="message-help" disabled={off} placeholder="What are you building, and where could Zils help?" /><span id="message-help" className={styles.fpHint}>A short overview of your project or question is enough. No datasets or private customer information needed.</span></div>
+    <input name="website" type="text" autoComplete="off" tabIndex={-1} aria-hidden="true" className={styles.fpHp} />
+    {error && <p className={styles.fpError} role="alert">{error}</p>}
+    <div className={styles.fpFoot}><button className={styles.fpBtn} type="submit" disabled={off}>{off ? 'Sending…' : 'Send message'}</button><p>We’ll reply by email.</p></div>
   </form>;
 }

@@ -1,0 +1,25 @@
+/* Home section 05 (SupportStudySummary). The rest of this file's markup uses the old Tailwind tokens. */
+.head { padding: 64px 40px 40px; }
+.head h2 { margin: 0; max-width: 720px; font-weight: 300; font-size: clamp(30px, 3.6vw, 46px); letter-spacing: -0.02em; line-height: 1.08; }
+.head p { margin: 14px 0 0; max-width: 600px; font-size: 15.5px; line-height: 1.6; color: var(--zs-t2); }
+.res { display: grid; grid-template-columns: 1.1fr 1fr; border-top: 1px solid var(--zs-line); }
+.res > * { padding: 32px 36px 36px; min-width: 0; }
+.left { border-right: 1px solid var(--zs-line); }
+.lead { margin: 0; font-size: 15.5px; line-height: 1.65; color: var(--zs-t2); }
+.lead b { color: var(--zs-fg); font-weight: 500; }
+.meta { margin: 16px 0 0; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .06em; color: var(--zs-t3); }
+.lnks { display: flex; flex-wrap: wrap; gap: 14px 22px; margin-top: 26px; }
+.link { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--zs-fg); border-bottom: 1px solid rgba(var(--zs-fg-rgb), .3); padding-bottom: 2px; text-decoration: none; }
+.link::after { content: " \2192"; }
+.link:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 4px; }
+.chart { margin: 0; }
+.chart figcaption { display: flex; justify-content: space-between; gap: 12px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-t3); }
+.delta { margin: 22px 0 0; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12px; color: var(--zs-peach); }
+.fine { margin: 0; padding: 16px 36px 22px; border-top: 1px solid var(--zs-line); font-size: 12px; line-height: 1.6; color: var(--zs-t3); }
+@media (max-width: 860px) {
+  .head { padding: 48px 8px 28px; }
+  .res { grid-template-columns: 1fr; }
+  .left { border-right: 0; border-bottom: 1px solid var(--zs-line); }
+  .res > * { padding: 26px 8px; }
+  .fine { padding: 16px 8px; }
+}

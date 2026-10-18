@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
+import { DetailsRow } from '@/components/site/details-row';
 import Link from 'next/link';
-import { SiteHeader } from '@/components/site-header';
-import { SiteFooter } from '@/components/site-footer';
+import { SiteFrame } from '@/components/site/site-frame';
+import { SectionRow } from '@/components/site/section-row';
 import { jevTrained, jevMetrics } from '@/lib/jev-comparison';
 import miner from '@/public/model/b300-2026-10-10/miner-results.json';
 import original from '@/public/model/b300-2026-10-10/results.json';
@@ -46,9 +47,10 @@ const originalCandidates = [
 
 export default function B300StudyPage() {
   return (
-    <div className={`${s.page} min-h-screen bg-page font-sans text-ink antialiased`}>
-      <div className="mx-auto max-w-6xl px-6 sm:px-8"><SiteHeader tone="light" current="model" /></div>
-      <main id="main-content" tabIndex={-1} className="mx-auto max-w-5xl px-6 sm:px-8">
+    <SiteFrame current="model">
+      <div className={`${s.res} ${s.page}`}>
+        <SectionRow label="Research · B300 study" />
+        <div className={s.studyBody}>
         <header className="pb-12 pt-8">
           <Link href="/model#findings" className={`text-sm ${LINK}`}>Back to model research</Link>
           <p className="mt-8 text-xs text-muted">Completed experiment · <time dateTime="2026-10-10">10 October 2026</time> · NVIDIA B300</p>
@@ -67,6 +69,7 @@ export default function B300StudyPage() {
           <div><p className="text-xs text-muted">Selected 9B vs 4B adapter</p><p className="mt-3 text-3xl font-semibold tracking-tight">No clear gain</p><p className="mt-2 text-sm leading-6 text-muted">80.8% vs 82.4% accuracy on the original test cohort. The paired interval includes zero.</p></div>
         </section>
 
+        <SectionRow label="Miner models" />
         <section id="miner-results" aria-labelledby="miner-heading" className="scroll-mt-8 py-14">
           <p className="text-xs text-muted">Miner-sized follow-ups</p>
           <h2 id="miner-heading" className="mt-3 text-3xl font-semibold tracking-tight">Speed, memory, and accuracy.</h2>
@@ -90,6 +93,7 @@ export default function B300StudyPage() {
           </div>
         </section>
 
+        <SectionRow label="Larger models" />
         <section id="larger-models" aria-labelledby="larger-heading" className="scroll-mt-8 border-t border-edge py-14">
           <p className="text-xs text-muted">Original 4B / 9B matrix</p>
           <h2 id="larger-heading" className="mt-3 text-3xl font-semibold tracking-tight">More parameters did not settle it.</h2>
@@ -105,6 +109,7 @@ export default function B300StudyPage() {
           <p className="mt-4 max-w-[78ch] text-sm leading-7 text-muted">The 27B teacher trial was canceled before any complete development predictions. Its gate was not evaluated, and there is no 27B accuracy or distillation result.</p>
         </section>
 
+        <SectionRow label="Method" />
         <section id="method" aria-labelledby="method-heading" className="scroll-mt-8 border-t border-edge py-14">
           <h2 id="method-heading" className="text-3xl font-semibold tracking-tight">What this experiment can tell us.</h2>
           <div className="mt-6 space-y-5 text-sm leading-7 text-muted">
@@ -113,16 +118,16 @@ export default function B300StudyPage() {
             <p>One training seed (553), fixed recipes, and different native prompts, calibration, and decision protocols limit generalization. JEV uses a knockout protocol; H2O reads all 30 choices in one pass. JevK5 2B is v0.2; the 4B comparator is v0.3. These are complete-system comparisons, not an isolated test of parameter count.</p>
             <p>Paired 95% intervals resample the same 500 conversations 2,000 times, seed 553. They quantify cohort sampling uncertainty, not variation between training seeds, and are not adjusted for multiple comparisons. An interval spanning zero proves neither superiority nor equivalence.</p>
           </div>
-          <details className="mt-7 rounded-md border border-edge bg-surface px-5 py-4 text-sm">
-            <summary className="cursor-pointer font-medium">Numerical checks, recovery, and calibration limits</summary>
+          <DetailsRow summary="Numerical checks, recovery, and calibration limits">
             <div className="mt-5 space-y-4 leading-7 text-muted">
               <p>The 9B/4,096 numerical check exceeded the 0.03 probability-error bound on its longest training input: fast BF16 vs FP32 error was 0.04114, and reference BF16 vs FP32 was 0.05380. BF16 cutoff ties changed knockout finalists, although final actions agreed. Replaying identical 16-option prompts reduced fast-vs-FP32 error to 0.01468. The run proceeded under a recorded exception; FP32 equivalence was not established.</p>
               <p>H2O serialized both checkpoints before its training process failed a CUDA-memory release assertion. The unchanged weights were evaluated in fresh processes after correcting a PEFT layer-name validation mismatch. Training peak memory and uninterrupted total runtime are unavailable.</p>
               <p>New H2O training used native temperature 0.75; the reused 1,024-example adapter was trained at 0.8. Their comparison changes training calibration as well as data exposure. Full controls and original failures are described in the reports.</p>
             </div>
-          </details>
+          </DetailsRow>
         </section>
 
+        <SectionRow label="Hardware" />
         <section id="hardware-context" aria-labelledby="hardware-heading" className="scroll-mt-8 border-t border-edge py-14">
           <h2 id="hardware-heading" className="text-3xl font-semibold tracking-tight">B300 is the test bench.</h2>
           <div className="mt-6 max-w-[78ch] space-y-5 text-sm leading-7 text-muted">
@@ -133,6 +138,7 @@ export default function B300StudyPage() {
           </div>
         </section>
 
+        <SectionRow label="Evidence" />
         <section id="evidence" aria-labelledby="evidence-heading" className="scroll-mt-8 border-t border-edge py-14">
           <h2 id="evidence-heading" className="text-3xl font-semibold tracking-tight">Inspect the evidence.</h2>
           <p className="mt-4 max-w-[78ch] text-sm leading-7 text-muted">Reports include full scores, paired intervals, development selection, pinned model revisions, and limitations. JSON files preserve aggregate results and source digests. Raw conversations, labels, per-case predictions, and trained weights are not distributed, so these downloads do not reproduce inference.</p>
@@ -145,8 +151,8 @@ export default function B300StudyPage() {
             ].map(([file, label]) => <a key={file} href={`${EVIDENCE}/${file}`} className={`inline-flex min-h-11 items-center ${LINK}`}>{label}</a>)}
           </nav>
         </section>
-      </main>
-      <SiteFooter tone="light" />
-    </div>
+        </div>
+      </div>
+    </SiteFrame>
   );
 }

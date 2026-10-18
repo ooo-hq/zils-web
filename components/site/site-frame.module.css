@@ -1,0 +1,11 @@
+.frame { position: relative; display: flex; flex-direction: column; min-height: 100vh; background: var(--zs-panel); color: var(--zs-fg); overflow-x: clip; }
+.frame::before, .frame::after { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: var(--zs-line); z-index: 2; pointer-events: none; }
+.frame::before { left: 56px; }
+.frame::after { right: 56px; }
+.body { margin: 0 56px; position: relative; flex: 1; }
+.skip { position: absolute; left: -9999px; }
+.skip:focus { left: 8px; top: 8px; z-index: 50; background: var(--zs-fg); color: var(--zs-panel); padding: 8px 12px; }
+@media (max-width: 899px) {
+  .frame::before, .frame::after { display: none; }
+  .body { margin: 0 16px; }
+}

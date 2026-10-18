@@ -248,3 +248,29 @@ html > body[data-scroll-locked] {
     @apply font-sans;
   }
 }
+/* Marketing-site tokens. Scoped to .zs so the workspace tokens above are untouched. */
+.zs {
+  --zs-gutter: #0f0f13; --zs-panel: #18191e; --zs-raised: #1d1e24;
+  --zs-line: rgba(255,255,255,.07);
+  --zs-fg: #e8e6ef; --zs-fg-rgb: 232,230,239; --zs-bg-rgb: 24,25,30;
+  --zs-t2: rgba(var(--zs-fg-rgb),.58); --zs-t3: rgba(var(--zs-fg-rgb),.54);
+  --zs-logo: #8f88ff; --zs-orange: #ff7a2f; --zs-peach: #f2a184;
+  --zs-lilac: #c3b4f6; --zs-peri: #a9b5f2; --zs-bad: #ff8f6b;
+  --zs-spectrum: linear-gradient(90deg, #ef8d5a 0%, #d9a08c 18%, #cfa2e4 42%, #c3b4f6 64%, #a9b5f2 82%, #8ea6ff 100%);
+  --zs-spectrum-text: var(--zs-spectrum); /* gradient-filled text; light theme deepens it below */
+  --zs-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  --zs-lane-billing: #f08a4b; --zs-lane-spam: #e7a58f; --zs-lane-account: #d7a6e8;
+  --zs-lane-tech: #c3b2f6; --zs-lane-sales: #a9b5f2; --zs-lane-review: #8ea6ff;
+  font-family: var(--font-inter-tight), system-ui, sans-serif;
+}
+[data-theme=light] .zs {
+  --zs-gutter: #ecebf1; --zs-panel: #faf9fc; --zs-raised: #f1eff6;
+  --zs-line: rgba(28,26,38,.10);
+  --zs-fg: #1c1a26; --zs-fg-rgb: 28,26,38; --zs-bg-rgb: 250,249,252;
+  --zs-t2: rgba(var(--zs-fg-rgb),.70); --zs-t3: rgba(var(--zs-fg-rgb),.64);
+  --zs-logo: #4b44c8; --zs-orange: #ab4d25; --zs-peach: #ab4d25; /* #c2582a darkened 12%: AA as text on every light surface and under white button text */
+  --zs-lilac: #6a59cc; --zs-peri: #4a5fc4; --zs-bad: #b4452a;
+  /* Same hues as the spectrum, deepened so every stop reaches 3:1 on gutter, panel and raised. */
+  --zs-spectrum-text: linear-gradient(90deg, #b86d45 0%, #a17668 18%, #9575a4 42%, #857aa7 64%, #757da7 82%, #6a7cbf 100%);
+}
+.zs .zs-mono { font-family: var(--font-plex-mono), ui-monospace, monospace; }

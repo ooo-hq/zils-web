@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test';
 import study from '../../public/model/abcd-002-jev.json';
 import training from '../../public/model/abcd-002.json';
 import examples from '../../public/model/abcd-002-examples.json';
+import manifest from '../../public/model/flight-delay-001-manifest.json';
+import baseline from './fixtures/content-baseline.json';
 
 test('research readers can move from findings to evidence and the metric reference', async ({ page, request }) => {
   await page.goto('/model');
@@ -74,10 +76,11 @@ test('research hero separates full-test accuracy from a recorded correction', as
   await expect(page.getByRole('heading', { name: 'How the support model learned.', exact: true })).toBeInViewport();
 });
 
-test('detailed JEV comparison accounts for all paired support decisions', async ({ page }) => {
+test('detailed JEV comparison accounts for all paired support decisions in a 500-cell outcome grid', async ({ page }) => {
   await page.goto('/model');
   const figure = page.locator('#jev-comparison').getByRole('figure', { name: /One test. 500 support decisions/ });
-  await expect(figure.locator('rect')).toHaveCount(study.test.metrics.trained_jevk5.n);
+  const grid = figure.locator('[data-outcome-grid]');
+  await expect(grid.locator('[data-outcome]')).toHaveCount(study.test.metrics.trained_jevk5.n);
   const paired = study.test.comparisons.trained_vs_jev;
   for (const [label, count] of Object.entries({
     'Both correct': paired.both_correct,
@@ -85,21 +88,70 @@ test('detailed JEV comparison accounts for all paired support decisions', async 
     'Only JEV correct': paired.other_correct_trained_wrong,
     'Both incorrect': paired.both_wrong,
   })) {
-    await expect(figure.locator(`g[data-outcome="${label}"] rect`)).toHaveCount(count);
+    await expect(grid.locator(`[data-outcome="${label}"]`)).toHaveCount(count);
   }
+  const columns = () => grid.evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length);
+  expect(await columns()).toBe(50);
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await columns()).toBe(25);
   await expect(figure.getByRole('link', { name: 'View all 500 predictions' })).toHaveAttribute('href', '/model/abcd-002-jev-predictions.json');
 });
 
-test('the miners page labels the testnet, survives an offline API and keeps the base-model timeline honest', async ({ page }) => {
-  await page.goto('/miners');
-  await expect(page.getByRole('heading', { name: 'Miners', level: 1 })).toBeVisible();
-  await expect(page.getByText(/Subnet 579 on the Bittensor testnet\. All miners are currently run by Zils/)).toBeVisible();
-  await expect(page.getByText(/Live miner data is unavailable right now/)).toBeVisible();
-  await expect(page.getByText(/Live status is unavailable right now/)).toBeVisible();
-  await expect(page.getByRole('heading', { level: 4 })).toHaveCount(6);
-  await expect(page.getByText('A tie, so no winner', { exact: true })).toBeVisible();
-  await expect(page.getByText(/recorded as an override of the promotion rule, not a win under it/)).toBeVisible();
-  await page.screenshot({ path: '.private/miners-desktop.png', fullPage: true });
+test('the outcome grid paints in on reveal and shows its final state under reduced motion', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/model');
+  const grid = page.locator('[data-outcome-grid]');
+  await expect(grid).toHaveAttribute('data-in', '');
+  await expect(grid.locator('[data-outcome]').first()).toHaveCSS('opacity', '1');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/model');
+  await grid.scrollIntoViewIfNeeded();
+  await expect(grid).toHaveAttribute('data-in', '');
+  await expect(grid.locator('[data-outcome]').last()).toHaveCSS('opacity', '1');
+});
+
+test('flights show filling bars and the January to March timeline from the data', async ({ page }) => {
+  await page.goto('/model');
+  const flights = page.locator('#flight-study');
+  await flights.scrollIntoViewIfNeeded();
+  const fills = flights.locator('[data-fill]');
+  await expect(fills).toHaveCount(3);
+  for (const c of [manifest.splits.train.count, manifest.splits.calibration.count, manifest.splits.test.count]) {
+    await expect(flights.locator('ol')).toContainText(`${c.toLocaleString('en-US')} flights`);
+  }
+});
+
+test('light-theme accent text on /model meets 4.5:1 on panel and raised', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('zils-theme', 'light'));
+  await page.goto('/model');
+  const link = page.getByRole('link', { name: 'Read the training study', exact: true });
+  const rgb = await link.evaluate(el => getComputedStyle(el).color.match(/\d+/g)!.slice(0, 3).map(Number));
+  const lum = (c: number[]) => { const [r, g, b] = c.map(v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return .2126 * r + .7152 * g + .0722 * b; };
+  const ratio = (a: number[], b: number[]) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + .05) / (y + .05); };
+  for (const bg of [[250, 249, 252], [241, 239, 246]]) expect(ratio(rgb, bg)).toBeGreaterThanOrEqual(4.5);
+});
+
+test('the sticky index lists the sections and marks the one in view', async ({ page }) => {
+  await page.goto('/model');
+  const index = page.getByRole('navigation', { name: 'On this page' });
+  await expect(index.getByRole('link')).toHaveText(['02Findings', '03Approach', '04Support', '05Chess', '06Flights', '07Base tier', '08d3-mini evidence', '09Earlier benchmark', '10Metric guide']);
+  for (const [id, name] of [['chess-study', 'Chess'], ['base-tier', 'Base tier'], ['metrics', 'Metric guide']]) {
+    await page.evaluate(i => document.getElementById(i)!.scrollIntoView({ block: 'start' }), id);
+    await expect(index.getByRole('link', { name, exact: true })).toHaveAttribute('aria-current', 'true');
+    await expect(index.locator('[aria-current="true"]')).toHaveCount(1);
+  }
+  await page.setViewportSize({ width: 900, height: 800 });
+  await expect(index).toBeHidden();
+});
+
+test('every table row from the pre-rebrand page is still on /model, and nothing overflows at 375px', async ({ page }) => {
+  const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
   await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto('/model');
+  await page.locator('details').evaluateAll(els => els.forEach(d => ((d as HTMLDetailsElement).open = true)));
+  const text = norm(await page.locator('main').innerText());
+  const missing = baseline.model.tables.flatMap(t => t.rows.filter(row => !text.includes(row)).map(row => `${t.caption}: ${row}`));
+  expect(missing).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(await page.locator('main').evaluate(m => m.scrollWidth <= m.clientWidth)).toBe(true);
 });

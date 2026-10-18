@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { EmailSignup } from '@/components/email-signup';
-import { SiteHeader } from '@/components/site-header';
-import { SiteFooter } from '@/components/site-footer';
-import home from '../home.module.css';
-import styles from '../contact/contact.module.css';
+import { FormSkyline } from '@/components/site/form-skyline';
+import { SectionRow } from '@/components/site/section-row';
+import { SiteFrame } from '@/components/site/site-frame';
+import css from '@/components/site/form-page.module.css';
 
 export const metadata: Metadata = {
   title: 'Zils — early access',
@@ -13,12 +13,16 @@ export const metadata: Metadata = {
 };
 
 export default function EarlyAccessPage() {
-  return <div className={`${home.home} ${styles.page} flex flex-col`}>
-    <div className={`${styles.container} w-full flex-1`}><SiteHeader tone="light" />
-      <main id="main-content" tabIndex={-1} className={styles.main}>
-        <div className={styles.intro}><h1>Get early access.</h1><p>Join the email list. We’ll invite selected users as space opens up.</p><p className={styles.detail}>Already invited? <Link href="/train" className="underline underline-offset-4">Sign in to your workspace.</Link></p></div>
-        <EmailSignup earlyAccess />
-      </main>
-    </div><SiteFooter />
-  </div>;
+  return <SiteFrame>
+    <SectionRow n="01" label="Early access" />
+    <div className={css.fpSplit}>
+      <div>
+        <h1 className={css.fpH1}>Get early<br />access.</h1>
+        <p className={css.fpLede}>Join the email list. We’ll invite selected users as space opens up.</p>
+        <p className={css.fpAside}>Already invited? <Link href="/sign-in" className={css.fpLink}>Sign in to your workspace</Link></p>
+      </div>
+      <div><EmailSignup earlyAccess /></div>
+    </div>
+    <FormSkyline />
+  </SiteFrame>;
 }

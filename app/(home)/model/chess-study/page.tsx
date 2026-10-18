@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ChessStudyDetails } from '@/components/chess-study';
-import { SiteHeader } from '@/components/site-header';
-import { SiteFooter } from '@/components/site-footer';
+import { SiteFrame } from '@/components/site/site-frame';
+import { SectionRow } from '@/components/site/section-row';
+import s from '@/components/research-guide.module.css';
 
 export const metadata: Metadata = {
   title: 'zils — mate-in-one chess study',
@@ -12,9 +13,10 @@ export const metadata: Metadata = {
 
 export default function ChessStudyPage() {
   return (
-    <div className="min-h-screen bg-page font-sans text-ink antialiased">
-      <div className="mx-auto max-w-6xl px-6 sm:px-8"><SiteHeader tone="light" current="model" /></div>
-      <main id="main-content" tabIndex={-1} className="mx-auto max-w-5xl px-6 sm:px-8">
+    <SiteFrame current="model">
+      <div className={`${s.res} ${s.page}`}>
+        <SectionRow label="Research · Chess study" />
+        <div className={s.studyBody}>
         <header className="pb-10 pt-8">
           <Link href="/model#chess-study" className="text-sm underline decoration-edge-strong underline-offset-4 hover:text-accent">Back to model research</Link>
           <p className="mt-8 text-xs text-muted">Completed experiment · 7 October 2026 UTC</p>
@@ -22,8 +24,8 @@ export default function ChessStudyPage() {
           <p className="mt-5 max-w-[66ch] text-base leading-8 text-muted">Training improved the model’s ability to select an immediate checkmate. On the same 512 held-out positions, it outperformed both the model before training and TypeSafe JEV.</p>
         </header>
         <ChessStudyDetails />
-      </main>
-      <SiteFooter tone="light" />
-    </div>
+        </div>
+      </div>
+    </SiteFrame>
   );
 }
