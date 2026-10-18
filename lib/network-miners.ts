@@ -20,7 +20,6 @@ const network = z.object({
 });
 export type NetworkMiners = z.infer<typeof network>;
 export type Miner = z.infer<typeof miner>;
-export type Track = 'text' | 'image';
 
 /** Per-hotkey miner aggregates from the public training API (refreshed every minute). */
 export async function networkMiners(): Promise<NetworkMiners | null> {
