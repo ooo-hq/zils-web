@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { DetailsRow } from '@/components/site/details-row';
 import { Reveal } from '@/components/site/reveal';
 import { ScoreBars } from '@/components/site/score-bars';
 import { SupportDecisionExamples } from '@/components/support-decision-examples';
@@ -102,9 +103,8 @@ export function SupportStudyDetails() {
       <h2 id="support-study-heading" className="mt-4 max-w-[24ch] text-[clamp(2.1rem,4.4vw,3.3rem)] font-semibold leading-[1.04] tracking-[-0.055em]">How the support model learned.</h2>
       <p className="mt-5 max-w-[68ch] text-[15px] leading-7 text-muted">After training on {number(supportStudy.splits.training_conversations)} separate conversations, Zils’ accuracy rose from {percent(supportBase.accuracy)} to {percent(supportAdapter.accuracy)} on the untouched test set. The task was to choose the next recorded support action from all {supportStudy.splits.action_choices} tool choices.</p>
 
-      <details className="group mt-8 rounded-md border border-edge">
-        <summary className="cursor-pointer px-5 py-5 text-sm font-semibold marker:text-accent hover:text-accent">Training protocol, checkpoint selection, and full evaluation</summary>
-        <div className="border-t border-edge p-5 sm:p-6">
+      <DetailsRow summary="Training protocol, checkpoint selection, and full evaluation">
+        <div className="pb-4 pt-2">
           <div className="grid gap-10 md:grid-cols-2 md:items-center">
             <div>
               <h3 className="text-xl font-semibold tracking-[-0.035em]">Learn, select, then test.</h3>
@@ -153,12 +153,11 @@ export function SupportStudyDetails() {
             </div>
           </div>
         </div>
-      </details>
+      </DetailsRow>
 
-      <details className="mt-4 rounded-md border border-edge px-5 sm:px-6">
-        <summary className="cursor-pointer py-5 text-sm font-semibold marker:text-accent hover:text-accent">Inspect recorded decisions: three corrections and one new mistake</summary>
+      <DetailsRow summary="Inspect recorded decisions: three corrections and one new mistake">
         <SupportDecisionExamples />
-      </details>
+      </DetailsRow>
 
       <div className="mt-8 rounded-md bg-surface p-5 sm:p-6">
         <h3 className="text-sm font-semibold">What this result establishes</h3>

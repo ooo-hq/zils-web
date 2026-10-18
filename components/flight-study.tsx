@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { DetailsRow } from '@/components/site/details-row';
 import {
   flightStudy, flightSplits, flightSource, flightMethod, flightImprovement, flightComparisons,
 } from '@/lib/flight-study';
@@ -139,9 +140,8 @@ export function FlightStudyDetails() {
         </p>
       </div>
 
-      <details className="group mt-8 rounded-md border border-edge">
-        <summary className="cursor-pointer px-5 py-5 text-sm font-semibold marker:text-accent hover:text-accent">All scores, methodology, and limitations</summary>
-        <div className="border-t border-edge p-5 sm:p-6">
+      <DetailsRow summary="All scores, methodology, and limitations">
+        <div className="pb-4 pt-2">
           <div role="region" aria-label="Flight study model scores" tabIndex={0} className="overflow-x-auto">
             <table className="w-full min-w-[580px] border-collapse text-sm">
               <caption className="pb-4 text-left text-xs leading-6 text-muted">Same {number(flightSplits.test.count)} test flights. Lower Brier error is better; higher ROC-AUC is better.</caption>
@@ -162,7 +162,7 @@ export function FlightStudyDetails() {
             <p><strong className="font-medium text-ink">Scope and limits.</strong> One recipe, three airports, one season, and {improvement.base_calibrated.date_clusters} test dates. Canceled and diverted flights were excluded, so this does not cover all scheduled flights. There were no live weather, congestion, or inbound-aircraft feeds. Public records may have appeared in base-model pretraining. Historical schedules are not a timestamped record of what was known at booking time. This result does not establish general improvement or customer readiness.</p>
           </div>
         </div>
-      </details>
+      </DetailsRow>
 
       <nav aria-label="Flight study evidence" className="mt-7 flex flex-wrap gap-x-6 gap-y-4 text-sm">
         <a href={flightMethod} className={link}>Full report &amp; reproduction</a>

@@ -1,16 +1,18 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { SiteFooter } from '@/components/site-footer';
+import { SiteFrame } from '@/components/site/site-frame';
+import { SectionRow } from '@/components/site/section-row';
+import { StickyIndex } from '@/components/site/sticky-index';
+import { SiteButton } from '@/components/site/site-button';
+import { DetailsRow } from '@/components/site/details-row';
 import { FlightStudyDetails } from '@/components/flight-study';
 import { ChessStudySummary } from '@/components/chess-study';
 import { SupportStudyDetails } from '@/components/support-study';
 import { JevComparisonDetails } from '@/components/jev-comparison';
 import { ResearchOverview, ResearchModelGuide, ResearchMetricGuide } from '@/components/research-guide';
 import { supportMethod, supportSource } from '@/lib/support-study';
-import { SiteHeader } from '@/components/site-header';
 import { SupportTrainingExample } from '@/components/support-decision-examples';
-import { HeroBackdrop } from '@/components/hero-backdrop';
 import s from '@/components/research-guide.module.css';
 import { benchmark, readComparison, percent, decimal, milliseconds, comparisonHeadline } from '@/lib/model-benchmark';
 
@@ -60,15 +62,15 @@ const D3_EVIDENCE = [
   ['Exam prompt length, median input tokens', '528', '568', 'd3-mini prompts are about 40 tokens longer'],
 ] as const;
 const SECTIONS = [
-  { id: 'findings', title: 'Findings' },
-  { id: 'approach', title: 'Approach' },
-  { id: 'jev-comparison', title: 'Support' },
-  { id: 'chess-study', title: 'Chess' },
-  { id: 'flight-study', title: 'Flights' },
-  { id: 'base-tier', title: 'Base tier' },
-  { id: 'd3-mini', title: 'd3-mini evidence' },
-  { id: 'quality', title: 'Earlier benchmark' },
-  { id: 'metrics', title: 'Metric guide' },
+  { id: 'findings', label: 'Findings' },
+  { id: 'approach', label: 'Approach' },
+  { id: 'jev-comparison', label: 'Support' },
+  { id: 'chess-study', label: 'Chess' },
+  { id: 'flight-study', label: 'Flights' },
+  { id: 'base-tier', label: 'Base tier' },
+  { id: 'd3-mini', label: 'd3-mini evidence' },
+  { id: 'quality', label: 'Earlier benchmark' },
+  { id: 'metrics', label: 'Metric guide' },
 ] as const;
 const RESOURCES = [
   { href: REPO, title: 'Research code' },
@@ -97,13 +99,16 @@ function Table({ label, head, rows, wide }: { label: string; head: readonly stri
   );
 }
 
-function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: string; children: ReactNode }) {
+function Section({ id, label, eyebrow, title, children }: { id: string; label: string; eyebrow: string; title: string; children: ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-heading`} className="scroll-mt-16 border-t border-edge py-16 sm:py-20">
+    <>
+    <SectionRow label={label} />
+    <section id={id} aria-labelledby={`${id}-heading`} className="scroll-mt-16 py-16 sm:py-20">
       <p className="text-xs text-muted">{eyebrow}</p>
       <h2 id={`${id}-heading`} className="mb-8 mt-3 text-[clamp(1.9rem,3.6vw,2.6rem)] font-semibold leading-[1.05] tracking-[-0.05em]">{title}</h2>
       {children}
     </section>
+    </>
   );
 }
 
@@ -124,41 +129,40 @@ export default function ModelPage() {
   ];
 
   return (
-    <div className={`${s.page} min-h-screen bg-page font-sans text-ink antialiased selection:bg-[#4942c7] selection:text-white`}>
-      <div className="mx-auto max-w-6xl px-6 sm:px-8"><SiteHeader tone="light" current="model" /></div>
-      <main id="main-content" tabIndex={-1}>
-        <div className={s.heroStage}>
-          <div className={s.heroAtmosphere}><HeroBackdrop variant="research" /></div>
-          <header className={s.hero}>
-            <div className={s.heroCopy}>
-              <p className={s.heroIdentity}>Zils research</p>
-              <h1>Tuned open models can compete.</h1>
-              <p className={s.heroLead}>We train open models for a specific job, then test them on examples they haven’t trained on. Here’s what improved, what didn’t, and how we measured it.</p>
-              <a href="#findings" className={s.primaryLink}>Explore the findings</a>
-              <p className={s.heroNote}>Recorded experiments. Published evidence.<br /> Results apply to each test, not every task.</p>
-            </div>
-            <SupportTrainingExample />
-            <nav aria-label="Project resources" className={s.resources}>
-              <span>Explore the evidence</span>
-              {RESOURCES.map(r => <a key={r.href} href={r.href}>{r.title}</a>)}
-            </nav>
-          </header>
-        </div>
+    <SiteFrame current="model">
+      <div className={`${s.res} ${s.page}`}>
+        <SectionRow n="01" label="Zils research" note="Recorded experiments · published evidence" />
+        <header className={s.hero}>
+          <div className={s.heroCopy}>
+            <h1>Tuned open models can compete.</h1>
+            <p className={s.heroLead}>We train open models for a specific job, then test them on examples they haven’t trained on. Here’s what improved, what didn’t, and how we measured it.</p>
+            <SiteButton href="#findings" variant="primary">Explore the findings</SiteButton>
+            <p className={s.heroNote}>Recorded experiments. Published evidence.<br /> Results apply to each test, not every task.</p>
+          </div>
+          <div className={s.heroFig}><SupportTrainingExample /></div>
+          <nav aria-label="Project resources" className={s.resources}>
+            <span>Explore the evidence</span>
+            {RESOURCES.map(r => <a key={r.href} href={r.href}>{r.title}</a>)}
+          </nav>
+        </header>
 
         <div className={s.researchLayout}>
-          <nav aria-label="On this page" className={s.sectionNav}>
-            <span>On this page</span>
-            {SECTIONS.map(section => <a key={section.id} href={`#${section.id}`}>{section.title}</a>)}
-          </nav>
+          <aside className={s.indexCol}><StickyIndex items={SECTIONS} /></aside>
           <div className={s.reports}>
+          <SectionRow label="Findings" />
           <ResearchOverview />
+          <SectionRow label="Approach" />
           <ResearchModelGuide />
+          <SectionRow label="Support" />
           <JevComparisonDetails />
+          <SectionRow label="Support study" />
           <SupportStudyDetails />
+          <SectionRow label="Chess" />
           <ChessStudySummary />
+          <SectionRow label="Flights" />
           <FlightStudyDetails />
 
-          <Section id="base-tier" eyebrow="Base tier · status as of 17 October 2026" title="A competition for the base model itself.">
+          <Section id="base-tier" label="Base tier" eyebrow="Base tier · status as of 17 October 2026" title="A competition for the base model itself.">
             <p className="max-w-[70ch] text-[15px] leading-7 text-muted">Customer adapters train on a pinned base model. Since 17 October 2026 that base is d3-mini 4.5B (below); before that it was H2O Lightning 4B v1.2.3. The base tier is the competition that decides when that base changes. Miners submit a full-weight replacement for the pinned base of a text profile. Validators score it on a sealed holdout against the incumbent, and a candidate is promoted only if it passes every step below.</p>
             <Table label="How a candidate base is scored and promoted" head={['Step', 'Rule']} rows={PROMOTION_RULES} />
             <h3 className="mt-10 text-xl font-semibold tracking-[-0.035em]">Two channels</h3>
@@ -171,7 +175,7 @@ export default function ModelPage() {
             <p className="mt-6 text-sm leading-7 text-muted">Want to compete? Read the <a href={DOCS} className={LINK}>miner guide</a> in the Zils docs. For every attempt so far, in order, see the <Link href="/miners" className={LINK}>miners page</Link>.</p>
           </Section>
 
-          <Section id="d3-mini" eyebrow="d3-mini · recorded 16–17 October 2026 · one rented B300" title="d3-mini, tested as a base.">
+          <Section id="d3-mini" label="d3-mini evidence" eyebrow="d3-mini · recorded 16–17 October 2026 · one rented B300" title="d3-mini, tested as a base.">
             <p className="max-w-[70ch] text-[15px] leading-7 text-muted">Under the base tier’s own rules, stock d3-mini is not promotable today. On the night of 16–17 October 2026, one rented B300 ran for 6.75 hours. The first sealed draw cleared, but the confirmation draw did not confirm a winner (Brier 0.1790 for d3-mini against 0.1794 for H2O, an improvement of 0.0004 where the rule needs at least 0.01 with a positive lower bound). The adapter regression suite passed, on one reference job where the rule asks for three or four. Under those rules d3-mini was not promoted; it became the base by decision instead (below). No round-two decision was frozen under the exam.</p>
             <Table label="d3-mini profile" head={['Property', 'Value']} rows={D3_PROFILE} />
             <p className="mt-4 max-w-[70ch] text-sm leading-7 text-muted">Merged on 16–17 October 2026 in the subnet and platform repositories: the profile, runtime, node qualification, images and video, platform routing, a <code className="font-mono text-xs">latest</code> channel that can point at d3-mini, and cross-profile upgrades. Through the training API, an existing task on H2O can be upgraded to a d3-mini adapter by setting <code className="font-mono text-xs">&quot;base_change&quot;: true</code> in the acceptance policy; the frozen previous release is scored on its own base and compared on the same test data. The dashboard does not offer this yet.</p>
@@ -185,11 +189,11 @@ export default function ModelPage() {
             </div>
           </Section>
 
-          <Section id="overview" eyebrow="Earlier research · Kev 0.8B" title="Previous experiments, preserved.">
+          <Section id="overview" label="Earlier research" eyebrow="Earlier research · Kev 0.8B" title="Previous experiments, preserved.">
             <p className="max-w-[70ch] text-[15px] leading-7 text-muted">This earlier experiment fine-tuned Kev 0.8B and tested it on the public JevBench items. Accuracy tied the unchanged checkpoint, while probability quality worsened. Its model, tasks, and scoring rules differ from the studies above. Checkpoint and dataset identities are preserved in the method below.</p>
           </Section>
 
-          <Section id="quality" eyebrow="Earlier JevBench comparison" title={comparisonHeadline(fez, kev)}>
+          <Section id="quality" label="Earlier benchmark" eyebrow="Earlier JevBench comparison" title={comparisonHeadline(fez, kev)}>
             <div className="mb-6 rounded-md bg-surface p-6 sm:p-8">
               <div className="grid gap-6 sm:grid-cols-3">
                 {[
@@ -242,9 +246,8 @@ export default function ModelPage() {
               <div><dt className="text-subtle">Hardware / precision</dt><dd className="mt-1 font-mono">{benchmark.runtime.hardware}</dd><dd className="mt-1 text-subtle">{benchmark.runtime.precision.toUpperCase()}. Same runtime for both models.</dd></div>
             </dl>
 
-            <details className="rounded-md border border-edge bg-surface px-5 py-4 text-sm">
-              <summary className="cursor-pointer font-medium marker:text-accent hover:text-accent">Method, checkpoint identities &amp; limitations</summary>
-              <div className="mt-5 space-y-5 text-sm leading-7 text-muted">
+            <DetailsRow summary="Method, checkpoint identities & limitations">
+              <div className="space-y-5 pt-2 text-sm leading-7 text-muted">
                 <p>This earlier experiment fine-tuned a published Kev 0.8B checkpoint built on Qwen3.5-0.8B-Base. The unchanged published checkpoint is the baseline in this comparison.</p>
                 <p>No official JevBench rank or composite score is available: private and sealed tests were not run. Hosted cost was not measured. Other experiment suites are documented separately and cannot form an improvement line with this comparison.</p>
                 <dl className="space-y-4 text-xs">
@@ -257,21 +260,21 @@ export default function ModelPage() {
                 <p>The experimental Zils checkpoint is not distributed, so the full comparison cannot be reproduced from the checkout alone.</p>
                 <div className="flex flex-wrap gap-x-6 gap-y-3"><a href={METHOD} className={LINK}>Full methodology</a><a href={benchmark.benchmark.upstream_url} className={LINK}>Pinned benchmark harness</a><a href={`${REPO}/blob/main/docs/experiments.md`} className={LINK}>Other experiment suites</a></div>
               </div>
-            </details>
+            </DetailsRow>
           </Section>
 
+          <SectionRow label="Metric guide" />
           <ResearchMetricGuide />
 
           <aside id="training" aria-label="Bittensor mining" className="scroll-mt-16 border-t border-edge py-8 text-sm leading-7 text-muted">
             <span id="participants" className="block scroll-mt-16" />
             <span id="testnet" className="block scroll-mt-16" />
-            Mining, validation, and the recorded testnet round are on the <Link href="/bittensor" className={LINK}>Bittensor page</Link>.
+            Mining, validation, and the recorded testnet round are on the <Link href="/miners" className={LINK}>Bittensor page</Link>.
           </aside>
           <p className="border-t border-edge py-8 text-xs leading-6 text-subtle">All results on this page are recorded experiments. The study reports define their scope, artifacts, and reproduction limits.</p>
           </div>
         </div>
-      </main>
-      <SiteFooter />
-    </div>
+      </div>
+    </SiteFrame>
   );
 }

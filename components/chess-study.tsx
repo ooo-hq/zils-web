@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { ScoreBars } from '@/components/site/score-bars';
+import { DetailsRow } from '@/components/site/details-row';
 import { chessComparisons, chessPercent, chessPoints, chessProtocol, chessStudy } from '@/lib/chess-study';
 
 const link = 'underline decoration-edge-strong underline-offset-4 hover:text-accent';
@@ -11,20 +13,10 @@ function ChessComparison() {
         <span className="font-semibold">Checkmate accuracy</span>
         <span className="text-xs text-muted">Same 512 test positions · Higher is better</span>
       </figcaption>
-      <dl className="mt-7 space-y-6">
-        {chessComparisons.map(({ key, name, note, adapted, metrics, correct }) => (
-          <div key={key}>
-            <div className="flex items-baseline justify-between gap-3">
-              <dt className={`text-sm ${adapted ? 'font-semibold text-accent' : 'text-ink'}`}>{name}</dt>
-              <dd className="shrink-0 text-sm font-semibold tabular-nums">{chessPercent(metrics.accuracy)}</dd>
-            </div>
-            <div aria-hidden="true" className="mt-2 h-2 overflow-hidden rounded-sm bg-edge">
-              <div className={`h-full rounded-sm ${adapted ? 'bg-accent' : 'bg-[#858898]'}`} style={{ width: `${metrics.accuracy * 100}%` }} />
-            </div>
-            <dd className="mt-2 text-xs leading-5 text-muted">{correct} / 512 correct · {note}</dd>
-          </div>
-        ))}
-      </dl>
+      <ScoreBars rows={chessComparisons.map(({ key, name, note, adapted, metrics, correct }) => ({
+        label: name, value: metrics.accuracy, max: 1, display: chessPercent(metrics.accuracy),
+        kind: adapted ? 'zils' : key === 'jev' ? 'jev' : 'base', note: `${correct} / 512 correct · ${note}`,
+      }))} />
       <div aria-hidden="true" className="mt-5 flex justify-between text-[11px] tabular-nums text-subtle"><span>0%</span><span>100%</span></div>
       <p className="mt-5 border-t border-edge pt-4 text-xs leading-6 text-muted">
         All legal checking moves were offered. Every move that immediately checkmates received credit.
@@ -101,9 +93,8 @@ export function ChessStudyDetails() {
         <p className="mt-5 text-xs leading-6 text-muted">Chess software already solves every position in this task. The experiment asks whether specialization improves Zils on a new domain. No model was deployed or promoted.</p>
       </section>
 
-      <details className="rounded-md border border-edge">
-        <summary className="cursor-pointer px-5 py-5 text-sm font-semibold marker:text-accent hover:text-accent">All scores, training method, and reliability</summary>
-        <div className="border-t border-edge p-5 sm:p-6">
+      <DetailsRow summary="All scores, training method, and reliability">
+        <div className="pb-4 pt-2">
           <div role="region" aria-label="Chess study model scores" tabIndex={0} className="overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse text-sm">
               <caption className="pb-4 text-left text-xs leading-6 text-muted">All 512 test positions per model. Any immediate checkmate receives credit. Lower negative log likelihood (NLL) is better.</caption>
@@ -120,7 +111,7 @@ export function ChessStudyDetails() {
             <p><strong className="font-medium text-ink">Additional measures.</strong> First-listed move accuracy was {chessPercent(chessStudy.baselines.first_option)}. A confident choice assigns at least 90% probability to the selected move. The table’s mating probability is the total probability assigned to all correct moves. NLL is the negative log of that total, with a floor for zero probability.</p>
           </div>
         </div>
-      </details>
+      </DetailsRow>
 
       <nav aria-label="Chess study evidence" className="flex flex-wrap gap-x-6 gap-y-4 text-sm">
         <a href="/model/chess-001.md" className={link}>Full report (Markdown)</a>

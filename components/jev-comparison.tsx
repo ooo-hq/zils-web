@@ -1,3 +1,4 @@
+import { DetailsRow } from '@/components/site/details-row';
 import { ResearchEvidence } from '@/components/research-evidence';
 import {
   jevStudy, jevMetrics, jevTrained, jevPaired, jevGain, jevErrorReduction,
@@ -50,9 +51,9 @@ export function JevComparisonDetails() {
         </div>
       </div>
 
-      <details className="group mt-8 rounded-md border border-edge">
-        <summary className="cursor-pointer px-5 py-5 text-sm font-semibold marker:text-accent hover:text-accent">All scores, API checks, and method</summary>
-        <div className="border-t border-edge p-5 sm:p-6">
+      <div className="mt-8 border-b border-edge">
+      <DetailsRow summary="All scores, API checks, and method">
+        <div className="pb-4 pt-2">
           <div role="region" aria-label="JEV comparison full test scores" tabIndex={0} className="overflow-x-auto overscroll-x-contain">
             <table className="w-full min-w-[580px] border-collapse text-sm">
               <caption className="pb-4 text-left text-xs leading-6 text-muted">All 500 cases included. Higher accuracy and macro F1 are better; lower Brier probability error is better.</caption>
@@ -67,7 +68,8 @@ export function JevComparisonDetails() {
             <p><strong className="font-medium text-ink">Usage and timing.</strong> JEV reported {jevMetrics.total_input_tokens.toLocaleString('en-US')} input tokens, an estimated ${jevStudy.test.jev_api_cost_usd.toFixed(5)} at the provider’s listed rate. API response time includes networking; the earlier Zils timings measure local GPU inference. They do not establish a comparable speed advantage.</p>
           </div>
         </div>
-      </details>
+      </DetailsRow>
+      </div>
 
       <p className="mt-6 max-w-[80ch] text-sm leading-7 text-muted">This measures recorded next-action agreement in public role-play conversations. It does not establish complete conversation success or a general model ranking. One training recipe and seed were used; public-data pretraining overlap cannot be excluded. The prompt was developed for Zils and was not separately optimized for JEV. The research adapter has not been deployed.</p>
       <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm">
