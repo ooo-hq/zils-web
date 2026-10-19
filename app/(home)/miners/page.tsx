@@ -49,8 +49,8 @@ const TIMELINE: Entry[] = [
     body: 'We adopted d3-mini anyway, for what it adds: adapters that train better, up to four images and a video per call, and yes/no, choice and score answers. This is recorded as an override of the promotion rule, not a win under it. H2O and the separate image model stopped serving the same day.',
   },
   {
-    date: 'Next', title: 'Round two: beat d3-mini', outcome: 'Not scheduled yet', tone: 'next',
-    body: 'Stock d3-mini is now the model to beat, with the same exam and rules. As of 17 October 2026, open admission for outside miners is built but off, and no public round has run. We also want the exam to cover images and video, since that is what the base is used for.',
+    date: 'Next', title: 'Round two: beat d3-mini', outcome: 'Open on testnet', tone: 'next',
+    body: 'Stock d3-mini is now the model to beat, with the same exam and rules. Since 18 October 2026 anyone registered on testnet 579 can enter, and a public validator scores candidates hourly without publishing weights. We also want the exam to cover images and video, since that is what the base is used for.',
   },
 ];
 
@@ -112,7 +112,7 @@ export default async function MinersPage() {
           <h2>Beat <em>d3-mini</em> to become the base.</h2>
           <p>Win a sealed exam, then win again on a fresh one.</p>
         </div>
-        <span className={s.pill}>Round two · not scheduled</span>
+        <span className={s.pill}>Round two · open on testnet</span>
       </div>
       <DetailsRow summary="What we have tried">
         <div className={s.tried}>
