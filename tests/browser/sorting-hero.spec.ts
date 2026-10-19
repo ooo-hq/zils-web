@@ -11,8 +11,9 @@ for (const width of [1440, 1100, 768, 375, 320]) {
     await page.goto(URL);
     await page.evaluate(() => document.fonts.ready);
     await expect.poll(() => page.evaluate(() => {
-      const wrap = document.querySelector('[data-field-top]')!;
-      const con = document.querySelector('[data-console]')!;
+      const wrap = document.querySelector('[data-field-top]');
+      const con = document.querySelector('[data-console]');
+      if (!wrap || !con) return false; // not hydrated yet: retry
       const gap = Number(wrap.getAttribute('data-field-top')) - (con.getBoundingClientRect().bottom - wrap.getBoundingClientRect().top);
       return gap >= 40;
     })).toBe(true);
@@ -83,8 +84,9 @@ test('a resize mid-animation keeps the console clear of the field', async ({ pag
   await expect.poll(() => frames(page)).toBeGreaterThan(5);
   await page.setViewportSize({ width: 320, height: 700 });
   await expect.poll(() => page.evaluate(() => {
-    const wrap = document.querySelector('[data-field-top]')!;
-    const con = document.querySelector('[data-console]')!;
+    const wrap = document.querySelector('[data-field-top]');
+    const con = document.querySelector('[data-console]');
+    if (!wrap || !con) return false;
     return Number(wrap.getAttribute('data-field-top')) - (con.getBoundingClientRect().bottom - wrap.getBoundingClientRect().top) >= 40
       && document.documentElement.scrollWidth <= window.innerWidth;
   })).toBe(true);
