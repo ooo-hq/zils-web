@@ -18,8 +18,7 @@ export default async function DashboardPage() {
   const base = await currentBase();
   const shared = playgroundConfig();
   return <ConsoleShell className={styles.page}>
-    <div className={styles.workspaceHeading}><div><h1>Home</h1></div></div>
     {config ? <WorkspaceHome config={config} baseName={base?.channels.stable.name ?? null} sharedModel={shared.configured ? shared.models[0]?.id ?? null : null} />
-      : <section className={styles.panel}><h2>The workspace is not configured here yet.</h2><p>This environment is not connected to the training service.</p></section>}
+      : <section className={styles.panel}><h1>The workspace is not configured here yet.</h1><p>This environment is not connected to the training service.</p></section>}
   </ConsoleShell>;
 }

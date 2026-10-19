@@ -60,12 +60,12 @@ export function ConsoleNav({ auth, billingUrl }: { auth?: { url: string; key: st
   }
   const email = session?.user.email || 'Your account';
   return <aside className={styles.sidebar} aria-label="Workspace">
-    <Link href="/" aria-label="Zils home" className={styles.brand}><ZilsWordmark className="text-[30px]" /></Link>
+    <Link href="/" aria-label="Zils home" className={styles.brand}><ZilsWordmark className="text-[28px]" /></Link>
     <nav aria-label="Workspace navigation" className={styles.nav}>
       {LINKS.map(({ href, label, icon: Icon }) => <Link key={href} href={href} className={styles.link} aria-current={path === href || path.startsWith(`${href}/`) ? 'page' : undefined}>
-        <Icon size={15} aria-hidden="true" />{label}
+        <Icon size={14} aria-hidden="true" />{label}
       </Link>)}
-      <a href={docsUrl} className={styles.link} target="_blank" rel="noreferrer"><BookOpen size={15} aria-hidden="true" />Documentation<SquareArrowOutUpRight size={12} aria-hidden="true" className={styles.external} /></a>
+      <a href={docsUrl} className={styles.link} target="_blank" rel="noreferrer"><BookOpen size={14} aria-hidden="true" />Documentation<SquareArrowOutUpRight size={12} aria-hidden="true" className={styles.external} /></a>
     </nav>
     <div className={styles.bottom}>
       {session && <Link href="/billing" className={styles.balance}><span>Balance</span><strong>{balance ?? '—'}</strong></Link>}

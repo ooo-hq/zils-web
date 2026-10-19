@@ -224,21 +224,22 @@ test('verified already-paid retry clears uncertain checkout while ordinary confl
 test.describe('production checkout', () => {
   test.skip(process.env.ZILS_BROWSER_BILLING_PREVIEW !== 'off');
 
-  test('credit, top-ups and account usage share the first screen; detail comes afterwards', async ({ page }) => {
+  test('credit and top-ups share the first screen, and usage has its own page', async ({ page }) => {
     const { checkouts, errors } = await billing(page, { mode: 'live' });
+    await page.addInitScript(() => localStorage.setItem('zils-theme', 'light'));
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/billing');
     const credit = page.getByRole('region', { name: 'Available credit', exact: true });
-    const report = page.getByRole('region', { name: 'Account usage', exact: true });
+    const topUp = page.getByRole('region', { name: 'Add credit', exact: true });
     await expect(credit.getByText('$1.00', { exact: true })).toBeVisible();
-    await expect(report.getByText('$4.042', { exact: true })).toBeVisible();
-    for (const name of ['Available credit', 'Account usage', 'Add credit']) {
+    await expect(page.getByRole('region', { name: 'Account usage', exact: true })).toHaveCount(0);
+    for (const name of ['Available credit', 'Add credit']) {
       await expect(page.getByRole('heading', { name, exact: true })).toBeInViewport();
     }
     await expect(page.getByRole('button', { name: 'Add $100', exact: true })).toBeInViewport();
     const creditBox = (await credit.boundingBox())!;
-    const reportBox = (await report.boundingBox())!;
-    expect(reportBox.x).toBeGreaterThan(creditBox.x + creditBox.width);
+    const topUpBox = (await topUp.boundingBox())!;
+    expect(topUpBox.x).toBeGreaterThanOrEqual(creditBox.x + creditBox.width - 1);
     await page.screenshot({ path: '.private/billing-redesign-desktop.png', fullPage: true });
     await page.getByRole('button', { name: 'Refresh', exact: true }).press('Tab');
     const firstTopupLink = page.getByRole('link', { name: 'View pricing', exact: true });
@@ -249,10 +250,11 @@ test.describe('production checkout', () => {
     expect(await add.evaluate(el => getComputedStyle(el).outlineStyle)).toBe('solid');
     await page.getByRole('button', { name: 'Dark mode', exact: true }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-    expect(await add.evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(16, 16, 20)');
+    expect(await add.evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(24, 25, 30)');
     await page.screenshot({ path: '.private/billing-redesign-dark.png', fullPage: true });
-    await page.getByRole('link', { name: 'Explore usage by model' }).click();
-    await expect(page.getByRole('heading', { name: 'API usage by model', exact: true })).toBeInViewport();
+    await page.goto('/usage');
+    await expect(page.getByRole('region', { name: 'Account usage', exact: true }).getByText('$4.042', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'API usage by model', exact: true })).toBeVisible();
     expect(checkouts).toEqual([]);
     expect(errors).toEqual([]);
   });
@@ -268,9 +270,9 @@ test.describe('production checkout', () => {
     const add = page.getByRole('button', { name: 'Add $5', exact: true });
     await expect(add).toBeInViewport();
     expect(await add.evaluate(el => getComputedStyle(el).transitionDuration)).toBe('0s');
+    const creditBox = (await credit.boundingBox())!;
     const topupBox = (await page.getByRole('region', { name: 'Add credit', exact: true }).boundingBox())!;
-    const usageBox = (await page.getByRole('region', { name: 'Account usage', exact: true }).boundingBox())!;
-    expect(usageBox.y).toBeGreaterThanOrEqual(topupBox.y + topupBox.height);
+    expect(topupBox.y).toBeGreaterThanOrEqual(creditBox.y + creditBox.height - 1);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.screenshot({ path: '.private/billing-redesign-mobile.png', fullPage: true });
     await page.screenshot({ path: '.private/billing-redesign-mobile-first-screen.png' });

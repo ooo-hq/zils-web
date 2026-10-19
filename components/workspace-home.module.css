@@ -1,13 +1,13 @@
 .grid { display:grid; grid-template-columns:minmax(0,2fr) minmax(260px,1fr); gap:20px; align-items:start; }
-.quickstart,.usage,.models { min-width:0; border:1px solid var(--zils-edge); border-radius:8px; background:var(--zils-page); }
+.quickstart,.usage,.models { min-width:0; border:1px solid var(--zils-edge); background:var(--zils-page); }
 .quickstart { padding:24px 24px 20px; }
 .side { display:grid; gap:20px; min-width:0; }
-.grid h2 { margin:0; font-size:15px; font-weight:600; letter-spacing:-.01em; }
+.grid h2 { margin:0; font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:10.5px; font-weight:400; letter-spacing:.14em; text-transform:uppercase; color:var(--zils-muted); }
 .grid h3 { margin:0; font-size:14px; font-weight:500; }
 .grid p { margin:4px 0 0; font-size:13px; line-height:1.55; color:var(--zils-muted); }
 .steps { list-style:none; counter-reset:step; margin:16px 0 0; padding:0; }
 .steps li { counter-increment:step; display:grid; grid-template-columns:24px minmax(0,1fr) auto; gap:4px 14px; align-items:start; padding:16px 0; border-top:1px solid var(--zils-edge); }
-.steps li::before { content:counter(step); display:grid; place-items:center; width:24px; height:24px; border-radius:50%; background:var(--zils-surface); border:1px solid var(--zils-edge); font-size:12px; color:var(--zils-muted); font-variant-numeric:tabular-nums; }
+.steps li::before { content:counter(step); display:grid; place-items:center; width:24px; height:24px; border-radius:0; font-family:var(--font-plex-mono),ui-monospace,monospace; background:var(--zils-surface); border:1px solid var(--zils-edge); font-size:12px; color:var(--zils-muted); font-variant-numeric:tabular-nums; }
 .steps li.code { grid-template-columns:24px minmax(0,1fr); }
 .steps li.code>:last-child { grid-column:2; margin-top:10px; min-width:0; }
 .action { align-self:center; font-size:13px; color:var(--zils-accent); text-decoration:underline; text-underline-offset:3px; white-space:nowrap; }
@@ -16,17 +16,17 @@
 .cardHeading a { font-size:12px; color:var(--zils-accent); text-decoration:underline; text-underline-offset:3px; }
 .usage { padding:20px; background:var(--zils-surface); }
 .usage dl { margin:14px 0 0; display:grid; gap:14px; }
-.usage dt { font-size:12px; color:var(--zils-muted); }
-.usage dd { margin:2px 0 0; font-size:16px; font-weight:500; font-variant-numeric:tabular-nums; }
-.usage dd.figure { font-size:30px; letter-spacing:-.04em; line-height:1.15; }
+.usage dt { font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--zils-subtle); }
+.usage dd { margin:2px 0 0; font-size:18px; font-weight:300; font-variant-numeric:tabular-nums; }
+.usage dd.figure { display:inline-block; font-size:40px; font-weight:300; letter-spacing:-.03em; line-height:1.1; background:var(--zs-spectrum-text); -webkit-background-clip:text; background-clip:text; color:transparent; }
 .models { padding:20px; }
-.base { min-width:0; padding:20px; border:1px solid var(--zils-edge); border-radius:8px; background:var(--zils-page); }
-.base .baseName { margin:10px 0 0; font-size:20px; font-weight:600; letter-spacing:-.03em; color:var(--zils-accent); }
+.base { min-width:0; padding:20px; border:1px solid var(--zils-edge); background:var(--zils-page); }
+.base .baseName { margin:12px 0 0; font-size:26px; font-weight:300; letter-spacing:-.03em; color:var(--zils-ink); }
 .models ul { list-style:none; margin:12px 0 0; padding:0; }
 .models li { padding:10px 0; border-top:1px solid var(--zils-edge); font-size:12px; color:var(--zils-muted); }
 .models li a { display:block; color:var(--zils-ink); text-decoration:none; }
 .models li a:hover strong { color:var(--zils-accent); text-decoration:underline; text-underline-offset:3px; }
-.models strong { display:block; font-size:13px; font-weight:500; overflow-wrap:anywhere; }
+.models strong { display:block; font-size:14px; font-weight:400; overflow-wrap:anywhere; }
 .models code { display:block; margin:2px 0 4px; font-family:var(--font-plex-mono),monospace; font-size:11px; color:var(--zils-muted); overflow-wrap:anywhere; }
 .models p a { color:var(--zils-accent); text-decoration:underline; }
 .muted { color:var(--zils-muted); font-size:13px; }
