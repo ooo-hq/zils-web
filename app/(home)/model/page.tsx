@@ -34,8 +34,8 @@ const DOCS = 'https://docs.zils.ai';
 const PROMOTION_RULES = [
   ['Sealed score', 'Validators score the submitted weights on a sealed holdout, against the incumbent.'],
   ['Eligibility', 'Skill is positive, accuracy is not below the incumbent’s, and Brier improves by at least 0.01 with a paired-bootstrap 95% lower bound above zero.'],
-  ['Round weight', 'Winner takes all: the best eligible candidate takes the round’s whole base-tier share, and eligible runners-up earn nothing.'],
-  ['King of the hill', 'Once promoted, the winner’s miner keeps the whole base-tier share every epoch until an eligible challenger appears. The vendor base (stock d3-mini today) has no miner and pays nobody.'],
+  ['King of the hill', 'Only kings are paid. A winner becomes king when the owner promotes it. The base-tier share splits equally over the last five distinct kings still registered.'],
+  ['No king', 'An empty track’s share is burned. The vendor base (stock d3-mini today) has no miner, so there is no king yet. Merged 19 October 2026, not yet live on chain.'],
   ['Confirmation', 'The best eligible candidate is re-scored on a second, disjoint sealed draw at least 12 hours later and must stay eligible.'],
   ['Regression suite', 'Before promotion, a fixed suite of reference adapter jobs is retrained on the incumbent and on the candidate. The candidate must be no worse than 0.005 Brier on every job and better on at least one.'],
 ] as const;
@@ -176,7 +176,7 @@ export default function ModelPage() {
           </Section>
 
           <Section id="d3-mini" label="d3-mini evidence" eyebrow="d3-mini · recorded 16–17 October 2026 · one rented B300" title="d3-mini, tested as a base.">
-            <p className="max-w-[70ch] text-[15px] leading-7 text-muted">Under the base tier’s own rules, stock d3-mini is not promotable today. On the night of 16–17 October 2026, one rented B300 ran for 6.75 hours. The first sealed draw cleared, but the confirmation draw did not confirm a winner (Brier 0.1790 for d3-mini against 0.1794 for H2O, an improvement of 0.0004 where the rule needs at least 0.01 with a positive lower bound). The adapter regression suite passed, on one reference job where the rule asks for three or four. Under those rules d3-mini was not promoted; it became the base by decision instead (below). No round-two decision was frozen under the exam.</p>
+            <p className="max-w-[70ch] text-[15px] leading-7 text-muted">Under the base tier’s own rules, stock d3-mini was not promotable. On the night of 16–17 October 2026, one rented B300 ran for 6.75 hours. The first sealed draw cleared, but the confirmation draw did not confirm a winner (Brier 0.1790 for d3-mini against 0.1794 for H2O, an improvement of 0.0004 where the rule needs at least 0.01 with a positive lower bound). The adapter regression suite passed, on one reference job where the rule asks for three or four. Under those rules d3-mini was not promoted; it became the base by decision instead (below). No round-two decision was frozen under the exam.</p>
             <Table label="d3-mini profile" head={['Property', 'Value']} rows={D3_PROFILE} />
             <p className="mt-4 max-w-[70ch] text-sm leading-7 text-muted">Merged on 16–17 October 2026 in the subnet and platform repositories: the profile, runtime, node qualification, images and video, platform routing, a <code className="font-mono text-xs">latest</code> channel that can point at d3-mini, and cross-profile upgrades. Through the training API, an existing task on H2O can be upgraded to a d3-mini adapter by setting <code className="font-mono text-xs">&quot;base_change&quot;: true</code> in the acceptance policy; the frozen previous release is scored on its own base and compared on the same test data. The dashboard does not offer this yet.</p>
             <h3 className="mt-10 text-xl font-semibold tracking-[-0.035em]">What we measured</h3>

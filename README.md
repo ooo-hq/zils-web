@@ -135,13 +135,17 @@ Explicit older model settings remain supported and keep their own labels.
 When migrating an existing deployment, update the endpoint, API key, model ID,
 and label together; changing the source defaults does not override deployed settings.
 
+The playground requires sign-in. Signed-in owners can also run their own ready
+trained models with one of their API keys, which never replaces the server key.
+A question picker adds questions by type, and own models start from their saved questions.
+
 New training sessions use `zils-training-auth`. Existing sessions and pending
 sign-in links continue using their original storage key until sign-out, avoiding
 token copies or competing refresh locks in already-open tabs.
 
 For training, configure Supabase Auth's site URL and redirect allowlist for
 `https://zils.ai/train`. The coordinator must allow `https://zils.ai` as its web
-origin. See the [training service setup](https://github.com/ooo-hq/zils/blob/main/docs/supabase-training.md).
+origin. See the [training service setup](https://github.com/ooo-hq/zils-platform/blob/main/docs/supabase-training.md).
 Public browser settings are baked into the build, so changes require a new build.
 
 The decision API must also allow the website origin for browser key management.
