@@ -9,6 +9,7 @@ import { currentBase } from '@/lib/base-model';
 import { boardNumbers } from '@/lib/miner-board';
 import { networkMiners } from '@/lib/network-miners';
 import { Rehearsal } from './rehearsal';
+import { Competitions } from './competitions';
 import s from './miners.module.css';
 
 export const metadata: Metadata = {
@@ -80,7 +81,7 @@ export default async function MinersPage() {
       <SectionRow n="01" label="Testnet · subnet 579" note={network ? `Updated ${utc(network.as_of)} UTC` : undefined} />
       <header className={s.hero}>
         <h1>Miner leaderboard</h1>
-        <p>Who is online, and whose models customers kept. <b>Outside miners can enter the base tier now</b>; customer jobs open at mainnet.</p>
+        <p>Who is online, and whose models customers kept. <b>Outside miners can enter the base tier now</b>; customer jobs open once miner terms are live.</p>
       </header>
 
       {numbers && <dl className={s.nums}>
@@ -90,9 +91,12 @@ export default async function MinersPage() {
         <div><dt>Current base</dt><dd className={s.sm}>{base?.channels.stable.name ?? '—'}</dd></div>
       </dl>}
 
-      <SectionRow n="02" label="Miners" />
+      <SectionRow n="02" label="Competitions" note="Proposed" />
+      <Competitions />
+
+      <SectionRow n="03" label="Miners" />
       {network
-        ? <section aria-label="Leaderboard">
+        ? <section id="miners" aria-label="Leaderboard">
           <MinerBoard miners={network.miners} asOf={network.as_of} bases={bases} />
           <p className={s.asof}><span>Live from the Zils training API · refreshed every minute</span><span>Updated {utc(network.as_of)} UTC · sort by any column</span></p>
         </section>
@@ -107,8 +111,8 @@ export default async function MinersPage() {
         </div>
       </DetailsRow>
 
-      <SectionRow n="03" label="Base tier" />
-      <div className={s.base}>
+      <SectionRow n="04" label="Base tier" />
+      <div id="base-tier" className={s.base}>
         <div>
           <h2>Beat <em>d3-mini</em> to become the base.</h2>
           <p>Win a sealed exam, then win again on a fresh one.</p>

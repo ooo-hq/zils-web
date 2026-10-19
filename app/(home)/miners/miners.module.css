@@ -134,3 +134,37 @@
   .rhFacts { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 480px) { .rhSteps { grid-template-columns: 1fr; } }
+
+/* Competitions (feature-tracks proposal) */
+.lanes { padding: 36px 40px 40px; border-bottom: 1px solid var(--zs-line); display: grid; gap: 24px; }
+.lanesHead { display: grid; gap: 8px; max-width: 860px; }
+.lanesHead h2 { margin: 0; font-weight: 300; font-size: clamp(26px, 2.8vw, 36px); letter-spacing: -0.02em; }
+.lanesHead p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--zs-t2); }
+.proposed { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-peach); border: 1px dashed rgba(242, 161, 132, .5); padding: 3px 8px; margin-right: 8px; white-space: nowrap; }
+.laneGrid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--zs-line); border: 1px solid var(--zs-line); }
+.lane { background: var(--zs-panel); padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.laneTop { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.laneTop h3 { margin: 0; font-weight: 400; font-size: 18px; }
+.share { font-weight: 300; font-size: 34px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.laneStatus { margin: 0; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-peri); }
+.lane[data-tone=planned] .laneStatus { color: var(--zs-peach); }
+.lane[data-tone=closed] .laneStatus { color: var(--zs-t3); }
+.laneLead { margin: 0; font-size: 14px; line-height: 1.5; color: var(--zs-t2); }
+.trackList { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+.trackList li { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--zs-line); padding-top: 6px; }
+.trackList a { color: var(--zs-fg); text-underline-offset: 3px; }
+.trackList span:first-child { color: var(--zs-t3); }
+.trackMeta { font-size: 12px; color: var(--zs-t3); text-align: right; }
+.laneFacts { margin: auto 0 0; padding-top: 10px; display: grid; gap: 6px; font-size: 13px; }
+.laneFacts div { display: grid; grid-template-columns: 90px 1fr; gap: 10px; }
+.laneFacts dt { color: var(--zs-t3); }
+.laneFacts dd { margin: 0; }
+.laneLink { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--zs-fg); text-decoration: none; border-bottom: 1px solid rgba(var(--zs-fg-rgb), .25); padding-bottom: 2px; align-self: flex-start; margin-top: 6px; }
+.laneLink::after { content: " →"; }
+.laneLink:focus-visible, .trackList a:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 3px; }
+.graduated { margin: 0; font-size: 13px; color: var(--zs-t2); }
+.graduated span { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-t3); margin-right: 10px; }
+@media (max-width: 899px) {
+  .lanes { padding: 28px 4px 32px; }
+  .laneGrid { grid-template-columns: 1fr; }
+}

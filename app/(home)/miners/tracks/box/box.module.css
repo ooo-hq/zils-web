@@ -1,0 +1,98 @@
+.crumb { margin: 0 0 44px !important; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--zs-t3) !important; }
+.crumb a { color: var(--zs-t2); text-underline-offset: 3px; }
+.section { padding: 32px 40px 40px; border-bottom: 1px solid var(--zs-line); display: grid; gap: 20px; }
+.h2 { margin: 0; font-weight: 300; font-size: clamp(22px, 2.4vw, 30px); letter-spacing: -0.02em; max-width: 860px; }
+.visuallyHidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.caveat, .fine { margin: 0; max-width: 860px; font-size: 13.5px; line-height: 1.6; color: var(--zs-t2); }
+.caveat b { color: var(--zs-fg); font-weight: 400; }
+.fine { font-size: 12px; color: var(--zs-t3); }
+
+.scroll { overflow-x: auto; border: 1px solid var(--zs-line); max-width: 860px; }
+.scroll:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 2px; }
+.table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 13.5px; }
+.table th, .table td { padding: 12px 16px; text-align: right; font-variant-numeric: tabular-nums; border-top: 1px solid var(--zs-line); font-weight: 400; }
+.table thead th { border-top: 0; font-size: 12px; color: var(--zs-t2); }
+.table th:first-child, .table td:first-child { text-align: left; }
+.table tbody th { color: var(--zs-fg); }
+.table tr[data-best] td, .table tr[data-best] th { color: var(--zs-fg); background: rgba(var(--zs-fg-rgb), .03); }
+.empty { text-align: center !important; color: var(--zs-t3); padding: 28px 16px !important; }
+
+/* Box colours sit on photos, so they are fixed rather than themed; line style also differs for colour-blind readers. */
+.legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 13px; color: var(--zs-t2); }
+.legend li { display: flex; align-items: center; gap: 8px; }
+.legend li::before { content: ""; width: 22px; height: 12px; border: 2px solid; }
+.legend [data-kind=truth]::before { border: 2px dashed #ffffff; box-shadow: 0 0 0 1px #000; }
+.legend [data-kind=ours]::before { border-color: #ff7a2f; border-width: 3px; }
+.legend [data-kind=jev]::before { border: 2px dotted #7fb2ff; }
+.gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--zs-line); border: 1px solid var(--zs-line); }
+.card { margin: 0; background: var(--zs-panel); display: grid; align-content: space-between; height: 100%; }
+.gallery > [data-reveal] { background: var(--zs-panel); }
+.photo { position: relative; line-height: 0; align-self: start; }
+.photo img { width: 100%; height: auto; display: block; }
+.frame { position: absolute; box-sizing: border-box; pointer-events: none; top: var(--t); left: var(--l); width: var(--w); height: var(--h); }
+.frame[data-kind=truth] { border: 2px dashed #ffffff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .7); }
+.frame[data-kind=ours] { border: 3px solid #ff7a2f; }
+.frame[data-kind=jev] { border: 2px dotted #7fb2ff; }
+.card figcaption { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; font-size: 13px; }
+.cardLabel { color: var(--zs-fg); text-transform: capitalize; }
+.scores { display: flex; gap: 12px; font-variant-numeric: tabular-nums; color: var(--zs-t3); }
+.scores [data-best] { color: var(--zs-fg); }
+
+.rules { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--zs-line); border: 1px solid var(--zs-line); }
+.rules li { background: var(--zs-panel); padding: 20px; }
+.num { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12px; color: var(--zs-orange); }
+.rules h3 { margin: 12px 0 6px; font-weight: 400; font-size: 16px; }
+.rules p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--zs-t2); }
+
+.data { list-style: none; margin: 0; padding: 0; max-width: 860px; display: grid; }
+.data li { display: grid; grid-template-columns: 190px 170px 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid var(--zs-line); font-size: 13.5px; color: var(--zs-t2); }
+.dataName { color: var(--zs-fg); }
+.licence { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11.5px; color: var(--zs-peri); }
+
+@media (max-width: 899px) {
+  .section { padding: 28px 4px 32px; }
+  .gallery, .rules { grid-template-columns: 1fr; }
+  .data li { grid-template-columns: 1fr; gap: 2px; }
+}
+
+/* Hero: a detection box locks onto the title. Corners close in from far out, then the confidence tag appears. */
+.target { position: relative; display: inline-block; padding: 0 .12em; }
+.lock { position: absolute; inset: -.1em -.06em -.04em; pointer-events: none; }
+.lock i { position: absolute; width: .22em; height: .22em; border: 0 solid var(--zs-orange); }
+.lock i:nth-child(1) { top: 0; left: 0; border-width: 3px 0 0 3px; }
+.lock i:nth-child(2) { top: 0; right: 0; border-width: 3px 3px 0 0; }
+.lock i:nth-child(3) { bottom: 0; left: 0; border-width: 0 0 3px 3px; }
+.lock i:nth-child(4) { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
+.lock b { position: absolute; top: -1.6em; left: 0; font: 400 11px/1 var(--font-plex-mono), ui-monospace, monospace; letter-spacing: .08em; color: #16120f; background: var(--zs-orange); padding: 4px 6px; }
+
+/* Gallery scan line; hidden unless motion is allowed. */
+.scan { display: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .lock { animation: lock-in 1.1s cubic-bezier(.2,.8,.2,1) .25s both; }
+  .lock i { animation: corner-pulse 2.8s ease-in-out 1.6s infinite; }
+  .lock b { animation: tag-in .35s ease-out 1.2s both; }
+  @keyframes lock-in {
+    0% { inset: -.9em -1.4em -.8em; opacity: 0; }
+    35% { opacity: 1; }
+    70% { inset: -.16em -.12em -.1em; }
+    100% { inset: -.1em -.06em -.04em; opacity: 1; }
+  }
+  @keyframes corner-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+  @keyframes tag-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* Boxes start as the whole image and close onto their answer once the card scrolls into view:
+     a scan sweeps first, then Jev, then ours, and the true box fades in last for comparison. */
+  :global(html.zs-js) .frame { top: 0; left: 0; width: 100%; height: 100%; opacity: 0;
+    transition: top .9s cubic-bezier(.2,.8,.2,1), left .9s cubic-bezier(.2,.8,.2,1), width .9s cubic-bezier(.2,.8,.2,1), height .9s cubic-bezier(.2,.8,.2,1), opacity .3s ease; }
+  :global(html.zs-js) [data-in] .frame { top: var(--t); left: var(--l); width: var(--w); height: var(--h); opacity: 1; }
+  :global(html.zs-js) [data-in] .frame[data-kind=jev] { transition-delay: .7s; }
+  :global(html.zs-js) [data-in] .frame[data-kind=ours] { transition-delay: 1.05s; }
+  :global(html.zs-js) [data-in] .frame[data-kind=truth] { transition: opacity .6s ease 2.1s; top: var(--t); left: var(--l); width: var(--w); height: var(--h); }
+  :global(html.zs-js) .frame[data-kind=truth] { top: var(--t); left: var(--l); width: var(--w); height: var(--h); }
+  :global(html.zs-js) .scan { display: block; position: absolute; left: 0; right: 0; top: 0; height: 2px; z-index: 1; opacity: 0;
+    background: linear-gradient(90deg, transparent, var(--zs-orange), transparent); box-shadow: 0 0 18px 4px rgba(255, 122, 47, .45); }
+  :global(html.zs-js) [data-in] .scan { animation: scan .8s ease-in-out .05s both; }
+  @keyframes scan { 0% { top: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { top: calc(100% - 2px); opacity: 0; } }
+  .scores span { transition: color .4s ease 2s; }
+}

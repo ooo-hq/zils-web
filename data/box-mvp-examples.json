@@ -1,0 +1,176 @@
+[
+ {
+  "id": "visa-fryum-058",
+  "src": "/feature-tracks/box/visa-fryum-058.png",
+  "source": "visa",
+  "target": "the defect",
+  "object": "fryum",
+  "truth": {
+   "top": 0.151,
+   "bottom": 0.821,
+   "left": 0.294,
+   "right": 0.729
+  },
+  "ours": {
+   "top": 0.15,
+   "bottom": 0.83,
+   "left": 0.3,
+   "right": 0.73
+  },
+  "jev": {
+   "top": 0.45,
+   "bottom": 0.57,
+   "left": 0.35,
+   "right": 0.74
+  },
+  "ours_iou": 0.97,
+  "jev_iou": 0.16,
+  "ours_confidence": 0.44,
+  "jev_confidence": 0.18
+ },
+ {
+  "id": "synth-0500",
+  "src": "/feature-tracks/box/synth-0500.png",
+  "source": "synthetic",
+  "target": "the red ellipse",
+  "object": null,
+  "truth": {
+   "top": 0.402,
+   "bottom": 0.822,
+   "left": 0.647,
+   "right": 0.901
+  },
+  "ours": {
+   "top": 0.4,
+   "bottom": 0.82,
+   "left": 0.65,
+   "right": 0.9
+  },
+  "jev": {
+   "top": 0.38,
+   "bottom": 0.83,
+   "left": 0.64,
+   "right": 0.9
+  },
+  "ours_iou": 0.97,
+  "jev_iou": 0.9,
+  "ours_confidence": 0.6,
+  "jev_confidence": 0.7
+ },
+ {
+  "id": "visa-pcb1-029",
+  "src": "/feature-tracks/box/visa-pcb1-029.png",
+  "source": "visa",
+  "target": "the defect",
+  "object": "pcb1",
+  "truth": {
+   "top": 0.635,
+   "bottom": 0.688,
+   "left": 0.42,
+   "right": 0.482
+  },
+  "ours": {
+   "top": 0.66,
+   "bottom": 0.71,
+   "left": 0.43,
+   "right": 0.47
+  },
+  "jev": {
+   "top": 0.64,
+   "bottom": 0.7,
+   "left": 0.42,
+   "right": 0.48
+  },
+  "ours_iou": 0.26,
+  "jev_iou": 0.71,
+  "ours_confidence": 0.35,
+  "jev_confidence": 0.45
+ },
+ {
+  "id": "visa-capsules-075",
+  "src": "/feature-tracks/box/visa-capsules-075.png",
+  "source": "visa",
+  "target": "the defect",
+  "object": "capsules",
+  "truth": {
+   "top": 0.79,
+   "bottom": 0.925,
+   "left": 0.634,
+   "right": 0.789
+  },
+  "ours": {
+   "top": 0.77,
+   "bottom": 0.93,
+   "left": 0.65,
+   "right": 0.78
+  },
+  "jev": {
+   "top": 0.05,
+   "bottom": 0.43,
+   "left": 0.09,
+   "right": 0.22
+  },
+  "ours_iou": 0.72,
+  "jev_iou": 0.0,
+  "ours_confidence": 0.45,
+  "jev_confidence": 0.06
+ },
+ {
+  "id": "visa-pipe_fryum-076",
+  "src": "/feature-tracks/box/visa-pipe_fryum-076.png",
+  "source": "visa",
+  "target": "the defect",
+  "object": "pipe_fryum",
+  "truth": {
+   "top": 0.429,
+   "bottom": 0.568,
+   "left": 0.323,
+   "right": 0.494
+  },
+  "ours": {
+   "top": 0.42,
+   "bottom": 0.52,
+   "left": 0.32,
+   "right": 0.46
+  },
+  "jev": {
+   "top": 0.41,
+   "bottom": 0.62,
+   "left": 0.27,
+   "right": 0.46
+  },
+  "ours_iou": 0.49,
+  "jev_iou": 0.43,
+  "ours_confidence": 0.48,
+  "jev_confidence": 0.48
+ },
+ {
+  "id": "visa-pcb1-036",
+  "src": "/feature-tracks/box/visa-pcb1-036.png",
+  "source": "visa",
+  "target": "the defect",
+  "object": "pcb1",
+  "truth": {
+   "top": 0.648,
+   "bottom": 0.703,
+   "left": 0.453,
+   "right": 0.511
+  },
+  "ours": {
+   "top": 0.57,
+   "bottom": 0.57,
+   "left": 0.47,
+   "right": 0.51
+  },
+  "jev": {
+   "top": 0.66,
+   "bottom": 0.71,
+   "left": 0.42,
+   "right": 0.51
+  },
+  "ours_iou": 0.0,
+  "jev_iou": 0.47,
+  "ours_confidence": 0.22,
+  "jev_confidence": 0.67
+ }
+]
