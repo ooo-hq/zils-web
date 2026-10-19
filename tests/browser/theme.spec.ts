@@ -59,8 +59,16 @@ test('mobile dark mode covers public pages without horizontal overflow', async (
     await expect(page.getByRole('button', { name: 'Light mode', exact: true })).toBeVisible();
     const background = await page.locator('body').evaluate(el => getComputedStyle(el).backgroundColor);
     const frame = page.locator('body > div:visible').first();
-    // Rebranded pages (.zs): the center column is the panel colour; the gutters around it are darker.
-    if (await frame.evaluate(el => el.classList.contains('zs'))) await expect(page.locator('#main-content').locator('..')).toHaveCSS('background-color', 'rgb(24, 25, 30)');
+    // Rebranded pages (.zs): the content sits on the panel colour, painted by its nearest ancestor with
+    // a background (the site frame's center column, or the console shell itself); gutters are darker.
+    const panel = () => page.locator('#main-content').evaluate(el => {
+      for (let node = el.parentElement; node; node = node.parentElement) {
+        const color = getComputedStyle(node).backgroundColor;
+        if (color !== 'rgba(0, 0, 0, 0)') return color;
+      }
+      return null;
+    });
+    if (await frame.evaluate(el => el.classList.contains('zs'))) await expect.poll(panel).toBe('rgb(24, 25, 30)');
     else await expect(frame).toHaveCSS('background-color', background);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.screenshot({ path: `.private/theme-${route.slice(1) || 'home'}-mobile.png`, fullPage: true });
