@@ -5,15 +5,17 @@ import css from './site-frame.module.css';
 
 export type { NavId };
 
-/** The one wrapper every marketing page uses: .zs root, nav, gutters, footer. */
+/** The one wrapper every marketing page uses: .zs root on the gutter colour, a centered container, nav, gutters, footer. */
 export function SiteFrame({ children, current }: { children: ReactNode; current?: NavId }) {
   return (
-    <div className={`zs ${css.frame}`}>
-      <div className={css.body}>
-        <SiteHeader current={current} />
-        <main id="main-content" tabIndex={-1}>{children}</main>
+    <div className={`zs ${css.outer}`}>
+      <div className={css.frame}>
+        <div className={css.body}>
+          <SiteHeader current={current} />
+          <main id="main-content" tabIndex={-1}>{children}</main>
+        </div>
+        <SiteFooter />
       </div>
-      <SiteFooter />
     </div>
   );
 }
