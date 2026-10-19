@@ -1,0 +1,8 @@
+.box { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; border: 1px solid var(--zs-line); background: var(--zs-raised); padding: 14px 14px 14px 18px; }
+.line { flex: 1 1 280px; min-width: 0; margin: 0; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 14px; line-height: 1.5; color: var(--zs-fg); white-space: pre-wrap; overflow-wrap: anywhere; }
+.prompt { color: var(--zs-t3); user-select: none; }
+.copy { display: inline-flex; align-items: center; gap: 8px; flex: none; padding: 8px 14px; border: 1px solid var(--zs-line); background: var(--zs-panel); color: var(--zs-fg); font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
+.copy:hover { border-color: rgba(var(--zs-fg-rgb), .4); }
+.copy:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 3px; }
+.status { flex-basis: 100%; font-size: 12px; color: var(--zs-t3); }
+.status:empty { display: none; }

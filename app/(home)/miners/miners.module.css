@@ -22,6 +22,10 @@
 .base h2 { margin: 0; font-weight: 300; font-size: clamp(26px, 2.8vw, 36px); letter-spacing: -0.02em; }
 .base h2 em { font-style: normal; background: var(--zs-spectrum-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .base p { margin: 8px 0 0; font-size: 14px; color: var(--zs-t2); }
+.install { display: grid; gap: 14px; padding: 0 40px 40px; max-width: 860px; }
+.install .subTitle { margin: 0; }
+.install p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--zs-t2); }
+.install code { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; color: var(--zs-fg); }
 .pill { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-peri); border: 1px solid rgba(169, 181, 242, .35); padding: 8px 12px; white-space: nowrap; }
 
 .more { display: flex; flex-wrap: wrap; gap: 14px 26px; padding: 24px 28px 64px; }
@@ -121,6 +125,7 @@
   .asof { padding: 14px 0; flex-direction: column; }
   .unavailable { padding: 32px 0; }
   .base { grid-template-columns: 1fr; padding: 28px 4px; }
+  .install { padding: 0 4px 32px; }
   .more { padding: 24px 4px 48px; }
   .timeline li, .facts div { grid-template-columns: 1fr; gap: 4px; }
   .compare dl > div { grid-template-columns: 1fr 56px; }

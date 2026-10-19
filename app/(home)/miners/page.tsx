@@ -4,6 +4,7 @@ import { SiteFrame } from '@/components/site/site-frame';
 import { SectionRow } from '@/components/site/section-row';
 import { DetailsRow } from '@/components/site/details-row';
 import { MinerBoard } from '@/components/site/miner-board';
+import { InstallCommand } from '@/components/site/install-command';
 import { currentBase } from '@/lib/base-model';
 import { boardNumbers } from '@/lib/miner-board';
 import { networkMiners } from '@/lib/network-miners';
@@ -79,7 +80,7 @@ export default async function MinersPage() {
       <SectionRow n="01" label="Testnet · subnet 579" note={network ? `Updated ${utc(network.as_of)} UTC` : undefined} />
       <header className={s.hero}>
         <h1>Miner leaderboard</h1>
-        <p>Who is online, and whose models customers kept. <b>Outside miners join at mainnet.</b></p>
+        <p>Who is online, and whose models customers kept. <b>Outside miners can enter the base tier now</b>; customer jobs open at mainnet.</p>
       </header>
 
       {numbers && <dl className={s.nums}>
@@ -114,6 +115,11 @@ export default async function MinersPage() {
         </div>
         <span className={s.pill}>Round two · open on testnet</span>
       </div>
+      <section className={s.install} aria-labelledby="install-heading">
+        <h3 id="install-heading" className={s.subTitle}>Start mining</h3>
+        <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
+        <p>Installs the <code>zils</code> and <code>btcli</code> commands, then <code>zils setup</code> asks for your wallet and Hugging Face repo. After that, <code>zils doctor</code> checks each step and prints the command for the next one: register on testnet 579, train a candidate, commit it. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the command to update.</p>
+      </section>
       <DetailsRow summary="What we have tried">
         <div className={s.tried}>
           <section aria-labelledby="current-base">
@@ -133,7 +139,7 @@ export default async function MinersPage() {
           <section aria-labelledby="how-heading">
             <h3 id="how-heading" className={s.subTitle}>How a new base wins</h3>
             <ol className={s.how}>
-              <li><strong>Submit.</strong> A miner uploads replacement weights for the base to Hugging Face, then commits them on chain with <code>commit-candidate</code>.</li>
+              <li><strong>Submit.</strong> A miner uploads replacement weights for the base to Hugging Face, then commits them on chain with <code>zils commit-candidate</code>.</li>
               <li><strong>Score.</strong> Validators score it on a sealed exam the miner never sees, against the current base.</li>
               <li><strong>Confirm.</strong> It must win again on a second, fresh exam, and customer-style adapters trained on it must not get worse.</li>
             </ol>
