@@ -64,3 +64,15 @@ test('curl uses the public API, keeps the key in an environment variable and esc
   assert.match(command, /It'\\''s late/);
   assert.doesNotMatch(command, /zils_sk_/);
 });
+
+test('an own model brings its saved questions, keeping only ones the playground can send', () => isolated(async () => {
+  process.env.NEXT_PUBLIC_ZILS_TRAINING_API_URL = 'https://training.example';
+  const ready = { status: 'completed', result: { delivery: { status: 'accepted' } } };
+  const jobs = { jobs: [
+    { ...ready, name: 'a', workflow: { state: 'ready', model_id: 'm-a' }, question_schema: { team: { type: 'choice', instructions: 'Which team?', criteria: { x: 'X', y: 'Y' } }, broken: { type: 'choice' } } },
+    { ...ready, name: 'b', workflow: { state: 'ready', model_id: 'm-b' }, question_schema: null },
+  ] };
+  const models = await ownedModels('session-token', async () => Response.json(jobs));
+  assert.deepEqual(models[0].questions, { team: { type: 'choice', instructions: 'Which team?', criteria: { x: 'X', y: 'Y' } } });
+  assert.equal('questions' in models[1], false);
+}));

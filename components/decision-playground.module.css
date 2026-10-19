@@ -74,3 +74,4 @@
 .picker span { margin-right:4px; }
 .chip { padding:4px 10px; border:1px solid var(--zils-edge-strong); border-radius:999px; background:var(--zils-page); color:var(--zils-ink); font-size:12px; cursor:pointer; }
 .chip:hover { border-color:var(--zils-accent); color:var(--zils-accent); }
+.chip[data-own] { border-color:var(--zils-accent); color:var(--zils-accent); font-family:var(--font-plex-mono),monospace; }

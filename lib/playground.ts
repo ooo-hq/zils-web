@@ -28,7 +28,17 @@ const responseSchema = z.object({
 export type DecisionRequest = z.infer<typeof requestSchema>;
 export type DecisionResponse = z.infer<typeof responseSchema>;
 export type Answer = DecisionResponse['answers'][string];
-export type ModelOption = { id: string; label: string; own?: boolean };
+export type ModelOption = { id: string; label: string; own?: boolean; questions?: DecisionRequest['questions'] };
+
+/** A trained model's saved questions, keeping only the ones the playground can send. */
+export function savedQuestions(value: unknown): DecisionRequest['questions'] | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const kept = Object.entries(value).flatMap(([id, q]) => {
+    const parsed = question.safeParse(q);
+    return parsed.success && id.length <= 100 ? [[id, parsed.data] as const] : [];
+  }).slice(0, 8);
+  return kept.length ? Object.fromEntries(kept) : undefined;
+}
 
 export function parseRequest(value: unknown): DecisionRequest {
   const result = requestSchema.safeParse(value);

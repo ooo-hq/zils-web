@@ -34,6 +34,7 @@ export function Playground({ configured, models: shared, apiUrl }: { configured:
         <input id="playground-key" className={s.input} type="password" autoComplete="off" spellCheck={false} placeholder="zils_sk_…" value={apiKey} onChange={e => setApiKey(e.target.value.trim())} />
         <p className={s.helper}>Used for this tab only and never saved. <Link href="/keys">Create a key</Link></p></div>}
     </div>
-    <DecisionPlayground configured={configured} model={model} apiKey={apiKey} apiUrl={apiUrl} />
+    {/* A model with saved questions starts from them, with an empty context to fill in. */}
+    <DecisionPlayground key={model.id} configured={configured} model={model} apiKey={apiKey} apiUrl={apiUrl} initialRequest={model.questions && { state: '', model: model.id, questions: model.questions }} />
   </div>;
 }

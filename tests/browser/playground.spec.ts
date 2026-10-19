@@ -3,12 +3,14 @@ import { signIn } from './signed-in';
 
 const KEY = `zils_sk_${'c'.repeat(32)}_${'D'.repeat(43)}`;
 const OWN = { id: 'acct-support-router', label: 'support-router', own: true };
+const LEARNED = { team: { type: 'choice', instructions: 'Which team should handle this?', criteria: { returns: 'Refunds', billing: 'Charges' } } };
+const TRAINED = { id: 'acct-team-router', label: 'team-router', own: true, questions: LEARNED };
 
 async function open(page: Page, runs: Request[]) {
   await signIn(page);
   await page.route('**/api/playground', route => {
     const request = route.request();
-    if (request.method() === 'GET') return route.fulfill({ json: { configured: true, models: [{ id: 'browser-test-release', label: 'Zils shared' }, OWN] } });
+    if (request.method() === 'GET') return route.fulfill({ json: { configured: true, models: [{ id: 'browser-test-release', label: 'Zils shared' }, OWN, TRAINED] } });
     runs.push(request);
     const body = request.postDataJSON();
     return route.fulfill({ json: { model: body.model, answers: Object.fromEntries(Object.keys(body.questions).map(id => [id, { type: 'noul', noul: .7 }])), usage: { input_tokens: 30, output_tokens: 0 } } });
@@ -93,4 +95,19 @@ test('start blank, add a question by type, and type over its instructions', asyn
   await page.getByRole('button', { name: /Run decisions/ }).click();
   await expect.poll(() => runs.length).toBe(1);
   expect(Object.keys(runs[0].postDataJSON().questions)).toEqual(['yes_no', 'choice']);
+});
+
+test('a model with saved questions starts from them and offers them in the picker', async ({ page }) => {
+  await open(page, []);
+  await page.getByLabel('Model', { exact: true }).selectOption(TRAINED.id);
+  await expect(page.getByLabel('Example', { exact: true })).toHaveValue('-1');
+  await expect(page.getByText('The questions this model learned.')).toBeVisible();
+  await expect(page.getByLabel(/^Context/)).toHaveValue('');
+  const box = page.getByLabel(/^Decisions/);
+  expect(JSON.parse(await box.inputValue())).toEqual(LEARNED);
+  await page.getByRole('group', { name: 'Add a question' }).getByRole('button', { name: '+ team' }).click();
+  expect(Object.keys(JSON.parse(await box.inputValue()))).toEqual(['team', 'team_2']);
+  await page.screenshot({ path: '.private/playground-own-questions.png', fullPage: true });
+  await page.getByLabel('Model', { exact: true }).selectOption(OWN.id);
+  await expect(page.getByRole('button', { name: '+ team' })).toHaveCount(0);
 });
