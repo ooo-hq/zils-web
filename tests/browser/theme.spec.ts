@@ -59,8 +59,8 @@ test('mobile dark mode covers public pages without horizontal overflow', async (
     await expect(page.getByRole('button', { name: 'Light mode', exact: true })).toBeVisible();
     const background = await page.locator('body').evaluate(el => getComputedStyle(el).backgroundColor);
     const frame = page.locator('body > div:visible').first();
-    // Rebranded pages (.zs) sit on the panel colour between gutters; the body shows only in the gutters.
-    if (await frame.evaluate(el => el.classList.contains('zs'))) await expect(frame).toHaveCSS('background-color', 'rgb(24, 25, 30)');
+    // Rebranded pages (.zs): the center column is the panel colour; the gutters around it are darker.
+    if (await frame.evaluate(el => el.classList.contains('zs'))) await expect(page.locator('#main-content').locator('..')).toHaveCSS('background-color', 'rgb(24, 25, 30)');
     else await expect(frame).toHaveCSS('background-color', background);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.screenshot({ path: `.private/theme-${route.slice(1) || 'home'}-mobile.png`, fullPage: true });
