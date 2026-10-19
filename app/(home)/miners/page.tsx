@@ -51,7 +51,7 @@ const TIMELINE: Entry[] = [
   },
   {
     date: 'Next', title: 'Round two: beat d3-mini', outcome: 'Open on testnet', tone: 'next',
-    body: 'Stock d3-mini is now the model to beat, with the same exam and rules. Since 18 October 2026 anyone registered on testnet 579 can enter, and a public validator scores candidates hourly without publishing weights. We also want the exam to cover images and video, since that is what the base is used for.',
+    body: 'Stock d3-mini is now the model to beat, with the same exam and rules. Anyone registered on testnet 579 can enter: upload to Hugging Face, commit on chain, and every validator pulls and scores it. We also want the exam to cover images and video, since that is what the base is used for.',
   },
 ];
 

@@ -18,7 +18,7 @@ import { benchmark, readComparison, percent, decimal, milliseconds, comparisonHe
 
 export const metadata: Metadata = {
   title: 'zils — tuned open models can compete',
-  description: 'In our October 2026 support and mate-in-one tests, task-tuned open JevK5 4B models outperformed official hosted TypeSafe JEV 1.13.0. JevK5 has since been retired; the base is now d3-mini 4.5B. Also: B300 miner follow-ups, how the base-model competition works (no public round yet), and recorded d3-mini evidence.',
+  description: 'In our October 2026 support and mate-in-one tests, task-tuned open JevK5 4B models outperformed official hosted TypeSafe JEV 1.13.0. JevK5 has since been retired; the base is now d3-mini 4.5B. Also: B300 miner follow-ups, how the base-model competition works, and recorded d3-mini evidence.',
   alternates: { canonical: 'https://zils.ai/model' },
 };
 
@@ -35,7 +35,7 @@ const PROMOTION_RULES = [
   ['Sealed score', 'Validators score the submitted weights on a sealed holdout, against the incumbent.'],
   ['Eligibility', 'Skill is positive, accuracy is not below the incumbent’s, and Brier improves by at least 0.01 with a paired-bootstrap 95% lower bound above zero.'],
   ['King of the hill', 'Only kings are paid. A winner becomes king when the owner promotes it. The base-tier share splits equally over the last five distinct kings still registered.'],
-  ['No king', 'An empty track’s share is burned. The vendor base (stock d3-mini today) has no miner, so there is no king yet. Merged 19 October 2026, not yet live on chain.'],
+  ['No king', 'An empty track’s share is burned. The vendor base (stock d3-mini today) has no miner, so there is no king yet.'],
   ['Confirmation', 'The best eligible candidate is re-scored on a second, disjoint sealed draw at least 12 hours later and must stay eligible.'],
   ['Regression suite', 'Before promotion, a fixed suite of reference adapter jobs is retrained on the incumbent and on the candidate. The candidate must be no worse than 0.005 Brier on every job and better on at least one.'],
 ] as const;
@@ -169,7 +169,7 @@ export default function ModelPage() {
             <Table label="Base channels" head={['Channel', 'Advances', 'Who gets it']} rows={CHANNELS} />
             <p className="mt-4 max-w-[70ch] text-sm leading-7 text-muted">New customer jobs default to <code className="font-mono text-xs">stable</code>; <code className="font-mono text-xs">latest</code> is opt-in per job. Existing releases keep serving on their base.</p>
             <div className="mt-8 rounded-md bg-surface p-5 text-sm leading-7 text-muted sm:p-6">
-              <p><strong className="font-medium text-ink">Status, 19 October 2026.</strong> Open to anyone registered on testnet subnet 579: upload to Hugging Face, then commit on chain. A public testnet validator runs hourly rounds but publishes no weights. Customer-job admission stays off until miner terms and intake are ready. Mainnet is not live.</p>
+              <p><strong className="font-medium text-ink">Status, 19 October 2026.</strong> Open to anyone registered on testnet subnet 579: upload to Hugging Face, then commit on chain. Every validator reads the commitments and scores them. Customer-job admission stays off until miner terms and intake are ready. Mainnet is not live.</p>
               <p className="mt-3">Round one’s sealed holdout has 1,458 teacher-authored cases in six families. The incumbent, stock H2O Lightning 4B v1.2.3, scores Brier 0.184 and 87.7% accuracy on it. d3-mini’s confirmation draw did not confirm a winner, but d3-mini became the base by decision on 17 October (see below), so both channels now point at it and stock d3-mini is the incumbent for round two.</p>
             </div>
             <p className="mt-6 text-sm leading-7 text-muted">Want to compete? Read the <a href={DOCS} className={LINK}>miner guide</a> in the Zils docs. For every attempt so far, in order, see the <Link href="/miners" className={LINK}>miners page</Link>.</p>
