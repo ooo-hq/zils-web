@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { API_KEY_PATTERN, decisionApiUrl } from './api-keys';
-import { parseResponse, type DecisionRequest, type ModelOption } from './playground';
+import { parseResponse, savedQuestions, type DecisionRequest, type ModelOption } from './playground';
 import { serviceUrl } from './training';
 
 export const MAX_BODY_BYTES = 32_768;
@@ -50,6 +50,7 @@ const ownedJob = z.object({
   name: z.string(), status: z.string(),
   result: z.object({ delivery: z.object({ status: z.string() }) }).nullable().optional(),
   workflow: z.object({ state: z.string(), model_id: z.string().optional(), model_name: z.string().optional() }).nullable().optional(),
+  question_schema: z.unknown().optional(),
 });
 
 /** The signed-in account's ready trained models, as the training dashboard lists them. */
@@ -63,7 +64,10 @@ export async function ownedModels(sessionToken: string, send: typeof fetch = fet
   return (parsed.data.models ?? parsed.data.jobs)
     // Same rule as the dashboard's model library: an accepted, completed run whose model is ready.
     .filter(job => job.status === 'completed' && job.result?.delivery.status === 'accepted' && job.workflow?.state === 'ready' && job.workflow.model_id)
-    .map(job => ({ id: job.workflow!.model_id!, label: job.workflow!.model_name || job.name, own: true }));
+    .map(job => {
+      const questions = savedQuestions(job.question_schema);
+      return { id: job.workflow!.model_id!, label: job.workflow!.model_name || job.name, own: true, ...(questions && { questions }) };
+    });
 }
 
 /**
