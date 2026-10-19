@@ -33,6 +33,9 @@ test('an own model runs with the pasted key, keeps it out of storage, and shows 
   const runs: Request[] = [];
   await open(page, runs);
   await page.getByLabel('Model', { exact: true }).selectOption(OWN.id);
+  const [select, key] = await Promise.all([page.getByLabel('Model', { exact: true }).boundingBox(), page.getByLabel('Your API key').boundingBox()]);
+  expect([select?.y, select?.height]).toEqual([key?.y, key?.height]);
+  await page.screenshot({ path: '.private/playground-model-bar.png', clip: { x: 0, y: 0, width: 1280, height: 360 } });
   await page.getByRole('button', { name: /Run decisions/ }).click();
   await expect(page.getByRole('main').getByRole('alert')).toContainText('Paste one of your API keys');
   expect(runs).toHaveLength(0);

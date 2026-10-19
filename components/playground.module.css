@@ -1,5 +1,7 @@
 .modelBar { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),360px)); gap:16px; padding:0 0 20px; margin-bottom:24px; border-bottom:1px solid var(--zils-edge); }
 .label { display:block; font-size:13px; font-weight:500; margin:0 0 8px; }
-.input { display:block; width:100%; min-width:0; padding:10px 12px; border:1px solid var(--zils-edge-strong); border-radius:6px; background:var(--zils-page); color:var(--zils-ink); font:inherit; font-size:14px; }
+.input { display:block; box-sizing:border-box; width:100%; min-width:0; height:40px; padding:0 12px; border:1px solid var(--zils-edge-strong); border-radius:6px; background:var(--zils-page); color:var(--zils-ink); font:inherit; font-size:14px; }
 .helper { margin:6px 0 0; font-size:12px; color:var(--zils-subtle); line-height:1.6; }
 .helper a { color:var(--zils-accent); text-decoration:underline; text-underline-offset:3px; }
+/* Beats the page-wide `.page select` rule; Safari ignores height on a native select, so draw the arrow. */
+.modelBar select.input { -webkit-appearance:none; appearance:none; padding-right:36px; background-image:linear-gradient(45deg,transparent 50%,var(--zils-muted) 50%),linear-gradient(135deg,var(--zils-muted) 50%,transparent 50%); background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%; background-size:5px 5px; background-repeat:no-repeat; }
