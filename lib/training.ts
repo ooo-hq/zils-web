@@ -4,7 +4,7 @@ import { uploadSchema, uploadDescriptor, storageUrl, type StorageLocations } fro
 export const SPLITS = ['train', 'calibration', 'test'] as const;
 export type Split = typeof SPLITS[number];
 export const MAX_DATASET_BYTES = 128 * 1024 * 1024;
-/** Text adapters train on the pinned H2O profile, which accepts up to 255 outcomes per question; image questions use the image training profile's max_options. */
+/** Text adapters train on the pinned d3-mini profile, which accepts up to 255 outcomes per question; image questions use the image training profile's max_options. */
 export const MAX_TEXT_OUTCOMES = 255;
 export const acceptanceSchema = z.object({ min_accuracy: z.number().min(0).max(1), min_brier_improvement: z.number().min(0).max(2), previous_job_id: z.string().uuid().optional() });
 export const submissionSchema = z.object({

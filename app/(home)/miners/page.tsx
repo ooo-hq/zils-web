@@ -49,8 +49,8 @@ const TIMELINE: Entry[] = [
     body: 'We adopted d3-mini anyway, for what it adds: adapters that train better, up to four images and a video per call, and yes/no, choice and score answers. This is recorded as an override of the promotion rule, not a win under it. H2O and the separate image model stopped serving the same day.',
   },
   {
-    date: 'Next', title: 'Round two: beat d3-mini', outcome: 'Not scheduled yet', tone: 'next',
-    body: 'Stock d3-mini is now the model to beat, with the same exam and rules. As of 17 October 2026, open admission for outside miners is built but off, and no public round has run. We also want the exam to cover images and video, since that is what the base is used for.',
+    date: 'Next', title: 'Round two: beat d3-mini', outcome: 'Open on testnet', tone: 'next',
+    body: 'Stock d3-mini is now the model to beat, with the same exam and rules. Since 18 October 2026 anyone registered on testnet 579 can enter, and a public validator scores candidates hourly without publishing weights. We also want the exam to cover images and video, since that is what the base is used for.',
   },
 ];
 
@@ -102,7 +102,7 @@ export default async function MinersPage() {
           <p><b>Selected</b> is how many of the miner’s candidates a customer job kept as its model, out of the jobs it was given. <b>Jobs</b> are customer training jobs assigned to the miner; <b>evaluated</b> candidates were scored on the job’s held-out test set.</p>
           <p><b>Skill</b> compares a candidate’s probability error (Brier) with guessing evenly between the answers: 0 is no better than guessing, 1 is perfect, so it compares across different jobs.</p>
           <p><b>Online</b> checked in within the last minute. <b>Seen recently</b> checked in within the last hour. <b>Offline</b> has not checked in for longer than that. <b>Never seen</b> registered but never checked in. <b>Disabled</b> gets no new jobs. Miners that are not online are dimmed.</p>
-          <p>Subnet 579 runs on the Bittensor testnet. All miners are currently run by Zils; outside miners can join once the subnet moves to mainnet.</p>
+          <p>Subnet 579 runs on the Bittensor testnet. Outside miners can already compete in the base tier there (below). Customer jobs stay with Zils miners until miner terms and intake are ready.</p>
         </div>
       </DetailsRow>
 
@@ -112,7 +112,7 @@ export default async function MinersPage() {
           <h2>Beat <em>d3-mini</em> to become the base.</h2>
           <p>Win a sealed exam, then win again on a fresh one.</p>
         </div>
-        <span className={s.pill}>Round two · not scheduled</span>
+        <span className={s.pill}>Round two · open on testnet</span>
       </div>
       <DetailsRow summary="What we have tried">
         <div className={s.tried}>
@@ -133,7 +133,7 @@ export default async function MinersPage() {
           <section aria-labelledby="how-heading">
             <h3 id="how-heading" className={s.subTitle}>How a new base wins</h3>
             <ol className={s.how}>
-              <li><strong>Submit.</strong> A miner on the Bittensor subnet submits a full set of replacement weights for the base.</li>
+              <li><strong>Submit.</strong> A miner uploads replacement weights for the base to Hugging Face, then commits them on chain with <code>commit-candidate</code>.</li>
               <li><strong>Score.</strong> Validators score it on a sealed exam the miner never sees, against the current base.</li>
               <li><strong>Confirm.</strong> It must win again on a second, fresh exam, and customer-style adapters trained on it must not get worse.</li>
             </ol>
