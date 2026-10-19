@@ -257,3 +257,5 @@
 .readinessChecks ul { padding-left:18px; }
 .readinessChecks li { margin:6px 0; }
 @media(max-width:420px) { .trainingSheet .steps { gap:5px; }.trainingSheet .steps li { font-size:11px; gap:5px; }.spreadsheetDrop { padding:14px; }.spreadsheetDrop[data-dragging=true] { padding:13px; }.reviewExample { padding:14px; } }
+
+@media (max-width:860px) { .workspaceHeading { padding:16px 0 20px; } .workspaceHeading h1 { font-size:32px; } .workspaceHeading p { margin-top:6px; } }
