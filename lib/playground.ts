@@ -67,6 +67,28 @@ export function editorRequest(state: string, questions: string, model: string): 
   return parseRequest({ state: parsedState, questions: parsedQuestions, model });
 }
 
+type Question = DecisionRequest['questions'][string];
+
+/** Starting points for the playground's "Add a question" buttons. */
+export const QUESTION_TYPES: { label: string; hint: string; id: string; template: Question & { instructions: string } }[] = [
+  { label: 'Yes / no', hint: 'How true is something?', id: 'yes_no', template: { type: 'noul', instructions: 'Write a yes or no question about the context' } },
+  { label: 'Choice', hint: 'Pick one of several options', id: 'choice', template: { type: 'choice', instructions: 'Write a question with one right option', criteria: { first_option: 'When the first option fits', second_option: 'When the second option fits' } } },
+  { label: 'Score', hint: 'Grade against a rubric', id: 'score', template: { type: 'score', instructions: 'Write what to grade', criteria: ['Lowest level', 'Middle level', 'Highest level'] } },
+];
+
+/** Adds a question to the editor's JSON under an unused id. */
+export function addQuestion(text: string, id: string, question: Question): { text: string; id: string } {
+  let current: unknown = {};
+  if (text.trim()) {
+    try { current = JSON.parse(text); } catch { throw new Error('Fix the questions JSON before adding a question. Check quotes and commas.'); }
+  }
+  if (!current || typeof current !== 'object' || Array.isArray(current)) throw new Error('Questions must be a JSON object.');
+  if (Object.keys(current).length >= 8) throw new Error('Use 1–8 questions.');
+  let key = id;
+  for (let n = 2; Object.hasOwn(current, key); n++) key = `${id}_${n}`;
+  return { text: JSON.stringify({ ...current, [key]: question }, null, 2), id: key };
+}
+
 export const PRESETS: { name: string; tag: string; description: string; state: DecisionRequest['state']; questions: DecisionRequest['questions'] }[] = [
   {
     name: 'Choose the right model', tag: 'Request → model', description: 'Decide whether a request can stay on a small model or needs a large one.',

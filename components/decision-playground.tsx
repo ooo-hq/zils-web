@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { sessionHeaders } from '@/components/auth-session';
 import { curlCommand } from '@/lib/model-quickstart';
-import { editorRequest, parseResponse, PRESETS, type Answer, type DecisionRequest, type DecisionResponse, type ModelOption } from '@/lib/playground';
+import { addQuestion, editorRequest, parseResponse, PRESETS, QUESTION_TYPES, type Answer, type DecisionRequest, type DecisionResponse, type ModelOption } from '@/lib/playground';
 import s from '@/components/decision-playground.module.css';
 
 type Run = { request: DecisionRequest; response: DecisionResponse; elapsed: number };
 const asText = (value: unknown) => typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+const BLANK = -2;
 const percentage = (value: number) => `${(value * 100).toFixed(1)}%`;
 
 /** One answer: every option as a probability bar, the most likely one highlighted. */
@@ -45,12 +46,23 @@ export function DecisionPlayground({ configured, model: selected, apiKey, apiUrl
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const active = useRef<AbortController | null>(null);
+  const questionsBox = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => () => { active.current?.abort(); }, []);
 
   function changed() { setRun(null); setError(''); setCopied(false); }
   function selectPreset(index: number) {
-    changed(); setPreset(index); setState(asText(PRESETS[index].state)); setQuestions(asText(PRESETS[index].questions)); setView('Answers');
+    changed(); setPreset(index); setView('Answers');
+    if (index === BLANK) { setState(''); setQuestions('{}'); return; }
+    setState(asText(PRESETS[index].state)); setQuestions(asText(PRESETS[index].questions));
+  }
+  function insert(id: string, question: (typeof QUESTION_TYPES)[number]['template']) {
+    let added: ReturnType<typeof addQuestion>;
+    try { added = addQuestion(questions, id, question); } catch (e) { setError((e as Error).message); return; }
+    changed(); setQuestions(added.text);
+    // Select the new question's instructions so typing replaces them.
+    const start = added.text.indexOf(JSON.stringify(question.instructions), added.text.indexOf(`"${added.id}": {`)) + 1;
+    requestAnimationFrame(() => { questionsBox.current?.focus(); questionsBox.current?.setSelectionRange(start, start + question.instructions.length); });
   }
 
   async function decide() {
@@ -102,8 +114,9 @@ export function DecisionPlayground({ configured, model: selected, apiKey, apiUrl
           <select id="decision-example" className={s.select} value={preset} onChange={e => selectPreset(Number(e.target.value))}>
             {preset === -1 && <option value={-1}>Your request</option>}
             {PRESETS.map((p, i) => <option key={p.name} value={i}>{p.name}</option>)}
+            <option value={BLANK}>Start blank</option>
           </select>
-          {preset >= 0 && <p className={s.hint}>{PRESETS[preset].description}</p>}
+          {preset >= 0 ? <p className={s.hint}>{PRESETS[preset].description}</p> : preset === BLANK && <p className={s.hint}>Paste your own context, then add questions below.</p>}
         </div>
         <div className={s.field}>
           <label htmlFor="decision-state" className={`${s.label} ${s.labelRow}`}>Context <span>text or JSON the model reads</span></label>
@@ -116,7 +129,11 @@ export function DecisionPlayground({ configured, model: selected, apiKey, apiUrl
               try { setQuestions(JSON.stringify(JSON.parse(questions), null, 2)); setError(''); } catch { setError('Questions must be valid JSON before formatting.'); }
             }}>Format JSON</button>
           </div>
-          <textarea id="decision-questions" spellCheck={false} autoCapitalize="off" autoCorrect="off" value={questions} onChange={e => { changed(); setQuestions(e.target.value); }} className={`${s.textarea} ${s.questions}`} />
+          <div className={s.picker} role="group" aria-label="Add a question">
+            <span>Add a question</span>
+            {QUESTION_TYPES.map(t => <button type="button" key={t.id} className={s.chip} title={t.hint} onClick={() => insert(t.id, t.template)}>+ {t.label}</button>)}
+          </div>
+          <textarea ref={questionsBox} id="decision-questions" spellCheck={false} autoCapitalize="off" autoCorrect="off" value={questions} onChange={e => { changed(); setQuestions(e.target.value); }} className={`${s.textarea} ${s.questions}`} />
         </div>
       </fieldset>
       {error && <p role="alert" className={s.error}>{error}</p>}

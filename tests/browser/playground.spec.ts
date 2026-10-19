@@ -74,3 +74,23 @@ test('signed-out visitors are sent to sign in or examples, and the model routes 
     expect((await page.request.post(path, { data: {}, headers: { authorization: 'Bearer not-a-session' } })).status()).toBe(401);
   }
 });
+
+test('start blank, add a question by type, and type over its instructions', async ({ page }) => {
+  const runs: Request[] = [];
+  await open(page, runs);
+  await page.getByLabel('Example', { exact: true }).selectOption({ label: 'Start blank' });
+  const box = page.getByLabel(/^Decisions/);
+  await expect(box).toHaveValue('{}');
+  const picker = page.getByRole('group', { name: 'Add a question' });
+  await picker.getByRole('button', { name: '+ Yes / no' }).click();
+  await expect(box).toBeFocused();
+  await page.keyboard.type('Is the customer asking for a refund?');
+  await picker.getByRole('button', { name: '+ Choice' }).click();
+  const questions = JSON.parse(await box.inputValue());
+  expect(Object.keys(questions)).toEqual(['yes_no', 'choice']);
+  expect(questions.yes_no.instructions).toBe('Is the customer asking for a refund?');
+  await page.getByLabel(/^Context/).fill('Please refund my order.');
+  await page.getByRole('button', { name: /Run decisions/ }).click();
+  await expect.poll(() => runs.length).toBe(1);
+  expect(Object.keys(runs[0].postDataJSON().questions)).toEqual(['yes_no', 'choice']);
+});

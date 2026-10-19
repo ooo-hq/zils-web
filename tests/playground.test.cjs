@@ -70,3 +70,19 @@ test('shared inference validates choice, yes/no and score answers and rejects a 
   delete result.answers.urgent;
   await assert.rejects(infer(request, new AbortController().signal), error => error.status === 502);
 }));
+
+test('adding a question keeps existing ones, picks an unused id, and refuses broken or full JSON', () => {
+  const { addQuestion, editorRequest, QUESTION_TYPES } = require('../.private/test-build/playground.js');
+  const [yesNo, choice] = QUESTION_TYPES;
+  const first = addQuestion('', yesNo.id, yesNo.template);
+  assert.equal(first.id, 'yes_no');
+  const second = addQuestion(first.text, yesNo.id, yesNo.template);
+  assert.equal(second.id, 'yes_no_2');
+  const third = addQuestion(second.text, choice.id, choice.template);
+  assert.deepEqual(Object.keys(JSON.parse(third.text)), ['yes_no', 'yes_no_2', 'choice']);
+  for (const t of QUESTION_TYPES) editorRequest('Some context', addQuestion('{}', t.id, t.template).text, 'm');
+  assert.throws(() => addQuestion('{ "a": ', yesNo.id, yesNo.template), /Fix the questions JSON/);
+  assert.throws(() => addQuestion('[]', yesNo.id, yesNo.template), /JSON object/);
+  const full = JSON.stringify(Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`q${i}`, yesNo.template])));
+  assert.throws(() => addQuestion(full, yesNo.id, yesNo.template), /1–8 questions/);
+});
