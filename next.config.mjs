@@ -3,6 +3,12 @@ const config = {
   reactStrictMode: true,
   async redirects() {
     return [
+      // `curl -fsSL https://zils.ai/install.sh | sh` installs the miner CLI from the subnet repo.
+      {
+        source: '/install.sh',
+        destination: 'https://raw.githubusercontent.com/ooo-hq/zils/main/scripts/install.sh',
+        permanent: false,
+      },
       // Legacy Fez product routes remain on the chat product's site.
       // Zils serves its own Privacy and Terms pages locally.
       ...['app', 'extensions', 'judge'].map((path) => ({

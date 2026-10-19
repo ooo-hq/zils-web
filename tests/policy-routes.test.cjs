@@ -13,3 +13,10 @@ test('Zils policy routes stay on Zils while legacy Fez product routes still redi
   assert.equal(getRedirectUrl(legacy), 'https://fez.chat/app');
   assert.equal(legacy.status, 308);
 });
+
+test('zils.ai/install.sh redirects to the miner installer on the subnet repo', async () => {
+  const { default: nextConfig } = await import('../next.config.mjs');
+  const response = await unstable_getResponseFromNextConfig({ url: 'https://zils.ai/install.sh', nextConfig });
+  assert.equal(getRedirectUrl(response), 'https://raw.githubusercontent.com/ooo-hq/zils/main/scripts/install.sh');
+  assert.equal(response.status, 307);
+});
