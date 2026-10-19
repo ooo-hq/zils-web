@@ -71,7 +71,8 @@ li[data-done=true] .stepNumber { border-color:transparent; color:var(--zils-acce
 .lessonPair p { font-size:13px; line-height:1.7; margin:7px 0 0; white-space:pre-wrap; overflow-wrap:anywhere; }
 .pairArrow { color:var(--zils-edge-strong); }
 .actions { display:flex; justify-content:space-between; gap:15px; align-items:center; margin-top:34px; padding-top:22px; border-top:1px solid var(--zils-edge); }
-.primary,.secondary { min-height:44px; border-radius:6px; padding:11px 17px; font-size:13px!important; line-height:1.4; display:inline-flex; align-items:center; justify-content:center; gap:10px; text-align:center; transition:background .15s; }
+/* Same shape as /train's buttons (workspace rebrand): square, mono, uppercase. */
+.primary,.secondary { min-height:42px; border-radius:0; padding:10px 16px; font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:11.5px!important; letter-spacing:.06em; text-transform:uppercase; line-height:1.5; display:inline-flex; align-items:center; justify-content:center; gap:10px; text-align:center; transition:background .15s; }
 .primary { color:var(--zils-on-action); background:var(--zils-action); border:1px solid var(--zils-action); }
 .primary:hover:not(:disabled) { background:var(--zils-action-hover); border-color:var(--zils-action-hover); }
 .secondary { background:var(--zils-page); color:var(--zils-ink); border:1px solid var(--zils-edge-strong); }
@@ -138,7 +139,6 @@ li[data-done=true] .stepNumber { border-color:transparent; color:var(--zils-acce
 .reviewEditor textarea+label { margin-top:20px; }
 .editorFooter { display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; border-top:1px solid var(--zils-edge); padding-top:16px; }
 .editorFooter>span { font-size:11px; color:var(--zils-muted); max-width:200px; }
-.editorFooter .primary { font-size:12px!important; }
 .taskSummary { padding:18px 20px; background:var(--zils-surface); border-radius:8px; margin-bottom:26px; border-left:3px solid var(--zils-accent); }
 .taskSummary>span { color:var(--zils-muted); font-size:11px; }.taskSummary p { font-size:16px; font-weight:500; margin:5px 0; }.taskSummary small { font-size:12px; color:var(--zils-muted); display:block; margin-top:8px; }
 .main .caseChoice { margin:0 0 28px; }
