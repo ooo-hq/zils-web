@@ -1,6 +1,4 @@
 import Link from 'next/link';
-import { blackletter } from './blackletter';
-import texture from './light.module.css';
 import s from './workspace-hero.module.css';
 
 const greeting = (hour: number) => hour < 5 ? 'Up late' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
@@ -16,10 +14,8 @@ const SPECIMENS: { kind: string; question: string; rows: Row[]; answer: string }
 export function WorkspaceHero({ email }: { email?: string }) {
   const name = email?.split('@')[0];
   return <section className={s.hero} aria-labelledby="workspace-greeting">
-    <div aria-hidden="true" className={`${s.texture} ${texture.scanlines}`} />
-    <div aria-hidden="true" className={`${s.texture} ${texture.grain}`} />
     <div className={s.copy}>
-      <h2 id="workspace-greeting" className={`${s.greeting} ${blackletter.className}`}>{greeting(new Date().getHours())}{name ? `, ${name}` : ''}</h2>
+      <h1 id="workspace-greeting" className={s.greeting}>{greeting(new Date().getHours())}{name ? `, ${name}` : ''}.</h1>
       <p>Ask Zils anything about one input. Every answer comes back as a probability your code can act on.</p>
       <div className={s.actions}>
         <Link href="/playground" className={s.primary}>Open the playground</Link>
@@ -35,7 +31,7 @@ export function WorkspaceHero({ email }: { email?: string }) {
           <dd className={s.value}>{Math.round(row.value * 100)}%</dd>
           <dd aria-hidden="true" className={s.track}><span className={s.fill} style={{ width: `${row.value * 100}%` }} /></dd>
         </div>)}</dl>
-        <p className={s.answer}>{item.answer}</p>
+        <p className={s.answer}><span>Answer</span>{item.answer}</p>
       </li>)}
     </ul>
   </section>;

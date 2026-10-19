@@ -2,9 +2,9 @@
 .page :focus-visible { outline:2px solid var(--zils-accent); outline-offset:4px; }
 .container { max-width:1152px; margin:auto; padding:0 32px; }
 .main { padding:36px 0 88px; }
-.heading { display:flex; justify-content:space-between; align-items:center; gap:24px; padding-top:20px; margin-bottom:28px; }
-.heading h1 { font-size:24px; font-weight:600; letter-spacing:-.03em; line-height:1.15; margin:0; }
-.heading p { color:var(--zils-muted); font-size:13px; margin:6px 0 0; }
+.heading { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; padding-top:36px; margin-bottom:32px; }
+.heading h1 { font-size:clamp(34px,3.6vw,52px); font-weight:300; letter-spacing:-.03em; line-height:1.05; margin:0; }
+.heading p { color:var(--zils-muted); font-size:14px; line-height:1.6; margin:12px 0 0; }
 .heading>a,.pricingLink { color:var(--zils-accent); font-size:13px; text-decoration:underline; text-underline-offset:4px; }
 .heading>a { flex-shrink:0; }
 .testNotice { display:flex; align-items:flex-start; gap:10px; padding:10px 14px; border-radius:8px; background:color-mix(in srgb,var(--zils-accent) 8%,transparent); }
@@ -31,13 +31,13 @@
 .topUp>p { color:var(--zils-muted); font-size:12px; line-height:1.6; margin:8px 0 16px; }
 .topUp .unavailable { color:var(--zils-danger); }
 .amounts { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.amounts button { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:48px; border:1px solid var(--zils-edge-strong); border-radius:6px; background:var(--zils-page); color:var(--zils-ink); padding:10px 14px; cursor:pointer; }
+.amounts button { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:48px; border:1px solid var(--zils-edge-strong); border-radius:0; font-family:var(--font-plex-mono),ui-monospace,monospace; text-transform:uppercase; letter-spacing:.06em; background:var(--zils-page); color:var(--zils-ink); padding:10px 14px; cursor:pointer; }
 .amounts button>span { font-size:13px; }
-.amounts strong { font-size:18px; font-weight:500; margin-left:3px; letter-spacing:-.025em; }
+.amounts strong { font-family:var(--font-inter-tight),sans-serif; font-size:20px; font-weight:300; margin-left:4px; letter-spacing:-.02em; text-transform:none; }
 .amounts svg { color:var(--zils-accent); flex-shrink:0; }
 .amounts button:hover:enabled { border-color:var(--zils-accent); background:var(--zils-soft); }
 .amounts button:disabled { opacity:.5; cursor:default; }
-.button { display:inline-flex; align-items:center; justify-content:center; min-height:44px; border:0; border-radius:6px; padding:11px 18px; background:var(--zils-action); color:var(--zils-on-action); font-size:13px; font-weight:500; cursor:pointer; text-decoration:none; }
+.button { display:inline-flex; align-items:center; justify-content:center; min-height:44px; border:0; border-radius:0; padding:11px 18px; font-family:var(--font-plex-mono),ui-monospace,monospace; text-transform:uppercase; letter-spacing:.06em; background:var(--zils-action); color:var(--zils-on-action); font-size:13px; font-weight:500; cursor:pointer; text-decoration:none; }
 .button:hover:enabled,.button[href]:hover { background:var(--zils-action-hover); }
 .button:disabled { opacity:.55; cursor:default; }
 .pending { margin-top:16px; }
@@ -97,19 +97,19 @@
 .sectionHeading { margin:0; font-size:17px; font-weight:600; letter-spacing:-.02em; }
 .sectionRow { display:flex; justify-content:space-between; align-items:baseline; gap:16px; margin-bottom:14px; }
 .sectionRow > span { font-size:12px; color:var(--zils-muted); white-space:nowrap; }
-.plan { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); border:1px solid var(--zils-edge); border-radius:16px; overflow:hidden; }
-.start { display:flex; flex-direction:column; align-items:flex-start; padding:34px; background:var(--zils-soft); }
-.start h2 { margin:0; font-size:20px; font-weight:500; letter-spacing:-.025em; }
+.plan { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); border:1px solid var(--zils-edge); border-radius:0; overflow:hidden; }
+.start { display:flex; flex-direction:column; align-items:flex-start; padding:34px; background:var(--zs-raised); border-right:1px solid var(--zs-line); }
+.start h2 { margin:0; font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:10.5px; font-weight:400; letter-spacing:.14em; text-transform:uppercase; color:var(--zs-t2); }
 .startAmount { display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 14px; margin:24px 0 18px; }
-.startAmount strong { font-size:clamp(48px,6vw,72px); line-height:1; font-weight:500; letter-spacing:-.065em; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.startAmount strong { font-size:clamp(56px,7vw,88px); line-height:1; font-weight:300; letter-spacing:-.04em; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; background:var(--zs-spectrum-text); -webkit-background-clip:text; background-clip:text; color:transparent; }
 .startAmount span { color:var(--zils-muted); font-size:14px; }
 .startNote { max-width:36ch; margin:0; color:var(--zils-muted); font-size:14px; line-height:1.7; }
 .rates { margin:0; padding:14px 34px 22px; }
 .rate { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; padding:20px 0; border-bottom:1px solid var(--zils-edge); }
 .rate:last-child { border-bottom:0; }
-.rate dt { font-size:15px; font-weight:500; }
+.rate dt { font-size:15px; font-weight:400; }
 .rate dt span { display:block; margin-top:5px; max-width:34ch; color:var(--zils-muted); font-size:12px; font-weight:400; line-height:1.65; }
-.rate dd { margin:0; flex-shrink:0; font-size:20px; font-weight:500; letter-spacing:-.035em; font-variant-numeric:tabular-nums; }
+.rate dd { margin:0; flex-shrink:0; font-size:24px; font-weight:300; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
 @media (max-width:860px) { .plan { grid-template-columns:minmax(0,1fr); } .start { padding:26px 24px; } .rates { padding:6px 24px 18px; } .rate dd { font-size:18px; } .rate dt { font-size:14px; } }
 .usageDetails { margin-top:40px; }
 

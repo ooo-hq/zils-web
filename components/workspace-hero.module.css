@@ -1,55 +1,36 @@
-.hero {
-  --ice: #d0eff4; --lilac: #ded0f6; --rose: #f3d3e9; --glass: #ffffffb8; --sheen: #ffffff;
-  position: relative; isolation: isolate; overflow: hidden;
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 28px; align-items: center;
-  margin-bottom: 20px; padding: 34px 32px; border: 1px solid var(--zils-edge); border-radius: 14px;
-  background:
-    radial-gradient(60% 90% at 12% 0%, var(--lilac) 0%, transparent 70%),
-    radial-gradient(55% 80% at 88% 100%, var(--ice) 0%, transparent 70%),
-    radial-gradient(40% 60% at 70% 10%, var(--rose) 0%, transparent 75%),
-    var(--zils-page);
-}
-:global([data-theme=dark]) .hero { --ice: #1d3640; --lilac: #2a2350; --rose: #3b2340; --glass: #15151ab8; --sheen: #ffffff1f; }
-.texture { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+/* Home hero in the zils.ai rebrand: a light headline, then three answer specimens in a hairline grid. */
+.hero { margin: 36px 0 32px; border: 1px solid var(--zs-line); }
+.copy { padding: 36px 32px 32px; border-bottom: 1px solid var(--zs-line); }
+.greeting { margin: 0; font-size: clamp(36px, 4vw, 56px); font-weight: 300; line-height: 1.04; letter-spacing: -.03em; color: var(--zs-fg); overflow-wrap: anywhere; }
+.copy > p { max-width: 52ch; margin: 14px 0 0; font-size: 15px; line-height: 1.6; color: var(--zs-t2); }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.primary, .secondary { display: inline-flex; align-items: center; padding: 11px 15px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; }
+.primary { background: var(--zs-orange); color: #140a04; }
+:global([data-theme=light]) .primary { color: #fff; }
+.secondary { border: 1px solid rgba(var(--zs-fg-rgb), .3); color: var(--zs-fg); }
+.secondary:hover { border-color: var(--zs-fg); }
 
-.copy { min-width: 0; }
-.greeting { margin: 0; font-size: clamp(34px, 4.4vw, 52px); font-weight: 600; line-height: 1; letter-spacing: -.01em; color: var(--zils-accent); overflow-wrap: anywhere; }
-.copy > p { max-width: 38ch; margin: 14px 0 0; font-size: 14px; line-height: 1.6; color: var(--zils-muted); }
-.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
-.primary, .secondary { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 6px; font-size: 13px; font-weight: 500; text-decoration: none; }
-.primary { background: var(--zils-action); color: var(--zils-on-action); }
-.primary:hover { background: var(--zils-action-hover); }
-.secondary { border: 1px solid var(--zils-edge-strong); background: var(--glass); color: var(--zils-ink); }
-.secondary:hover { border-color: var(--zils-ink); }
-
-/* Three specimen cards, fanned like a hand of trading cards. */
-.specimens { list-style: none; margin: 0; padding: 6px 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.card { min-width: 0; padding: 14px 14px 12px; border: 1px solid var(--zils-edge); border-radius: 10px; background: var(--glass); backdrop-filter: blur(6px); box-shadow: 0 1px 0 var(--sheen) inset, 0 8px 24px -16px color-mix(in srgb, var(--zils-accent) 60%, transparent); }
-.card:nth-child(1) { transform: rotate(-2.5deg) translateY(6px); }
-.card:nth-child(3) { transform: rotate(2.5deg) translateY(6px); }
-.kind { display: inline-block; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--zils-accent) 12%, transparent); color: var(--zils-accent); font-size: 11px; font-weight: 500; }
-.question { margin: 10px 0 12px; min-height: 2.8em; font-size: 12.5px; line-height: 1.4; color: var(--zils-ink); }
-.card dl { margin: 0; display: grid; gap: 6px; }
-.card dl > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; font-size: 11px; color: var(--zils-muted); }
-.card dl > div[data-top] { color: var(--zils-ink); font-weight: 500; }
-.card dt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.specimens { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.card { min-width: 0; padding: 22px 24px 20px; }
+.card + .card { border-left: 1px solid var(--zs-line); }
+.kind { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--zs-t3); }
+.question { margin: 10px 0 16px; min-height: 2.8em; font-size: 15px; font-weight: 300; line-height: 1.4; color: var(--zs-fg); }
+.card dl { margin: 0; display: grid; gap: 9px; }
+.card dl > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--zs-t3); }
+.card dl > div[data-top] { color: var(--zs-fg); }
 .card dd { margin: 0; }
-.value { text-align: right; font-variant-numeric: tabular-nums; }
+.value { font-variant-numeric: tabular-nums; }
+.track { grid-column: 1 / -1; position: relative; height: 3px; background: var(--zs-line); }
+.fill { position: absolute; inset: 0 auto 0 0; background: rgba(var(--zs-fg-rgb), .28); transform-origin: left; animation: fill 1.4s cubic-bezier(.2,.8,.2,1) both; }
+[data-top] .fill { background: var(--zs-spectrum); }
+@keyframes fill { from { transform: scaleX(0); } }
+.answer { display: flex; justify-content: space-between; align-items: baseline; margin: 16px 0 0; padding-top: 12px; border-top: 1px dashed var(--zs-line); font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-peach); }
+.answer span { color: var(--zs-t3); font-size: 10px; }
 
-/* Dot-matrix bars: a printed row of dots, filled in violet up to the probability. */
-.track { grid-column: 1 / -1; position: relative; height: 8px; background: radial-gradient(circle, color-mix(in srgb, var(--zils-ink) 16%, transparent) 1.3px, transparent 1.7px) 0 50% / 6px 8px repeat-x; }
-.fill { position: absolute; inset: 0 auto 0 0; background: radial-gradient(circle, var(--zils-accent) 2px, transparent 2.4px) 0 50% / 6px 8px repeat-x; opacity: .4; animation: print 900ms steps(18, end) both; }
-[data-top] .fill { opacity: 1; }
-.card:nth-child(2) .fill { animation-delay: 120ms; }
-.card:nth-child(3) .fill { animation-delay: 240ms; }
-@keyframes print { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
-.answer { margin: 10px 0 0; padding-top: 8px; border-top: 1px dashed var(--zils-edge-strong); font-size: 12px; font-weight: 600; color: var(--zils-accent); }
-
-@media (max-width: 1100px) { .hero { grid-template-columns: minmax(0, 1fr); } }
-@media (max-width: 640px) {
-  .hero { padding: 24px 18px; }
-  .specimens { grid-template-columns: repeat(3, minmax(200px, 1fr)); overflow-x: auto; margin: 0 -18px; padding: 8px 18px 10px; scroll-snap-type: x mandatory; }
-  .card { scroll-snap-align: start; }
-  .card:nth-child(n) { transform: none; }
+@media (max-width: 900px) {
+  .copy { padding: 26px 18px 22px; }
+  .specimens { grid-template-columns: minmax(0, 1fr); }
+  .card + .card { border-left: 0; border-top: 1px solid var(--zs-line); }
+  .question { min-height: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .fill { animation: none; } }

@@ -45,7 +45,7 @@ test('account menu follows navigation and signing out clears both header and wor
   await page.getByRole('button', { name: 'Account', exact: true }).click();
   await expect(page.getByText('client@example.com', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Your workspace', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Home', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^(Good (morning|afternoon|evening)|Up late)/, level: 1 })).toBeVisible();
   await page.goto('/train');
   await expect(page.getByRole('link', { name: 'Train a model', exact: true })).toBeVisible();
   const sidebar = page.getByRole('complementary', { name: 'Workspace' });
