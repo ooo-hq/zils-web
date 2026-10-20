@@ -7,7 +7,7 @@ const LANES = [
   {
     name: 'Base tier', share: '50%', status: 'Open on testnet', tone: 'open',
     lead: 'Improve the whole model; the winner becomes the base.',
-    facts: [['To beat', 'd3-mini'], ['Pays', 'Last five kings'], ['Entry', 'Full model weights']],
+    facts: [['To beat', 'Your tier’s base'], ['Pays', 'Last five kings'], ['Entry', 'Full model weights']],
     href: '#base-tier', cta: 'How to enter',
   },
   {

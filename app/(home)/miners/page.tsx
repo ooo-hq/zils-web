@@ -51,8 +51,8 @@ const TIMELINE: Entry[] = [
     body: 'We adopted d3-mini anyway, for what it adds: adapters that train better, up to four images and a video per call, and yes/no, choice and score answers. This is recorded as an override of the promotion rule, not a win under it. H2O and the separate image model stopped serving the same day.',
   },
   {
-    date: 'Next', title: 'Round two: beat d3-mini', outcome: 'Open on testnet', tone: 'next',
-    body: 'Stock d3-mini is now the model to beat, with the same exam and rules. Anyone registered on testnet 579 can enter: upload to Hugging Face, commit on chain, and every validator pulls and scores it. We also want the exam to cover images and video, since that is what the base is used for.',
+    date: 'Next', title: 'Round two: beat the base', outcome: 'Open on testnet', tone: 'next',
+    body: 'Challenge the current base in your tier. Anyone registered on testnet 579 can enter: upload to Hugging Face, commit on chain, and every validator pulls and scores it. We also want the exam to cover images and video, since that is what the base is used for.',
   },
 ];
 
@@ -114,8 +114,8 @@ export default async function MinersPage() {
       <SectionRow n="04" label="Base tier" />
       <div id="base-tier" className={s.base}>
         <div>
-          <h2>Beat <em>d3-mini</em> to become the base.</h2>
-          <p>Win a sealed exam, then win again on a fresh one.</p>
+          <h2>Beat <em>the base.</em></h2>
+          <p>Every tier has a base to beat. Win a sealed exam, then win again on a fresh one.</p>
         </div>
         <span className={s.pill}>Round two · open on testnet</span>
       </div>
