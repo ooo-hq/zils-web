@@ -14,6 +14,7 @@ const LINK_GROUPS = [
   { label: 'Explore', links: [
     { href: '/model', label: 'Research' },
     { href: '/miners', label: 'Miners' },
+    { href: '/bases', label: 'Bases' },
     { href: 'https://github.com/ooo-hq/zils', label: 'Model source' },
   ] },
   { label: 'Keep in touch', links: [
