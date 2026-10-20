@@ -1,8 +1,7 @@
 import Link from 'next/link';
 import s from './miners.module.css';
 
-// Proposed in skills/.private notes and zils/.private/plans/2026-10-19-feature-tracks.md (19 Oct 2026).
-// Not deployed: the live validator pays base tier 0.7 and customer adapters 0.3.
+// Prepared pilot allocation; activation must be verified before marking features open.
 const LANES = [
   {
     name: 'Base tier', share: '50%', status: 'Open on testnet', tone: 'open',
@@ -11,10 +10,10 @@ const LANES = [
     href: '#base-tier', cta: 'How to enter',
   },
   {
-    name: 'Feature tracks', share: '20%', status: 'Planned', tone: 'planned',
+    name: 'Feature tracks', share: '20%', status: 'Pilot preparation', tone: 'planned',
     lead: 'Teach the base a new skill. Each skill is its own competition.',
-    tracks: [{ name: 'Boxes', status: 'Planned', href: '/miners/tracks/box', note: 'bar 0.582 IoU' }, { name: 'Video', status: 'Later', note: 'not designed yet' }],
-    facts: [['Entry', 'An adapter on the current base'], ['Pays', 'Last five kings per track']],
+    tracks: [{ name: 'Boxes', status: 'Synthetic pilot', href: '/miners/tracks/box', note: 'mini / lite · not open yet' }, { name: 'Video', status: 'Later', note: 'not designed yet' }],
+    facts: [['Entry', 'An adapter on the exact parent'], ['Pays', 'Last five distinct kings per track']],
     href: '/miners/tracks/box', cta: 'See the box track',
   },
   {
@@ -29,7 +28,7 @@ export function Competitions() {
   return <section aria-labelledby="competitions-heading" className={s.lanes}>
     <div className={s.lanesHead}>
       <h2 id="competitions-heading">Three ways to earn</h2>
-      <p><span className={s.proposed}>Proposed split</span> Shares of miner emissions under the feature-tracks proposal. Today the validator pays the base tier 70% and customer adapters 30%. An empty lane’s share is burned, not handed to the others.</p>
+      <p><span className={s.proposed}>Prepared split</span> Planned shares of this validator’s allocation, pending pilot activation. Mini/lite split 80/20 within base and box budgets: 40/10/16/4/30 across mini base, lite base, mini boxes, lite boxes and customer adapters. Empty shares burn.</p>
     </div>
     <ol className={s.laneGrid}>
       {LANES.map(lane => <li key={lane.name} className={s.lane} data-tone={lane.tone}>
@@ -44,6 +43,6 @@ export function Competitions() {
         <Link className={s.laneLink} href={lane.href}>{lane.cta}</Link>
       </li>)}
     </ol>
-    <p className={s.graduated}><span>Graduated into the base</span> None yet. A feature graduates when its king is merged into a base release; its exam then guards every later base.</p>
+    <p className={s.graduated}><span>Graduated into the base</span> None yet. A synthetic pilot crown is separate from graduation, which requires real-image qualification and the full base regression review.</p>
   </section>;
 }

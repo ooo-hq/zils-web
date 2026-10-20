@@ -10,36 +10,32 @@ import s from './box.module.css';
 
 export const metadata: Metadata = {
   title: 'Zils — box track',
-  description: 'A proposed feature track: miners compete to teach the shared base model to return bounding boxes.',
+  description: 'Preparing a synthetic-only testnet pilot: independent mini and lite competitions for bounding-box adapters.',
   alternates: { canonical: 'https://zils.ai/miners/tracks/box' },
 };
 
 type Box = { top: number; bottom: number; left: number; right: number };
 type Example = (typeof examples)[number];
 
-// Numbers from output/box-mvp-2026-10-19/report.md (222 test images, 19 Oct 2026).
+// Historical MVP results: output/{box-mvp-2026-10-19,d3-lite-box-2026-10-20}/report.md.
 const RESULTS = [
-  { name: 'Stock d3-mini', all: .075, visa: .037, synthetic: .122, hit: '2%' },
-  { name: 'Jev 1.14 box', all: .479, visa: .243, synthetic: .767, hit: '52%' },
-  { name: 'Starter adapter', all: .582, visa: .355, synthetic: .859, hit: '62%', best: true },
+  { name: 'Stock d3-lite', all: .032, visa: .001, synthetic: .071, hit: '0.5%' },
+  { name: 'Stock d3-mini', all: .075, visa: .037, synthetic: .122, hit: '1.8%' },
+  { name: 'd3-lite + box adapter', all: .251, visa: .101, synthetic: .435, hit: '18.0%' },
+  { name: 'Jev 1.14 box', all: .479, visa: .243, synthetic: .767, hit: '51.8%' },
+  { name: 'Stock d3-mini + box adapter', all: .582, visa: .355, synthetic: .859, hit: '62.2%', best: true },
 ];
 
 const RULES = [
-  ['Publish', 'Zils publishes the box question format, public training data and the starter adapter as the score to beat.'],
-  ['Train', 'A miner trains an adapter on the current base: rank-16 LoRA, vision tower frozen, the same recipe limits as customer adapters.'],
-  ['Commit', 'Upload it to Hugging Face and commit the hash on chain with zils commit-candidate. Validators pull it themselves.'],
-  ['Score', 'Validators score it on a sealed box exam of privately labelled images, replaced every round: box overlap (IoU) plus how well its confidence predicts its accuracy.'],
-  ['Crown', 'A challenger becomes king when it beats the current king by a margin on one draw and holds on a second, fresh draw. The last five kings share the track’s pay.'],
-  ['Graduate', 'At a base release the king is merged into the base after the full regression suite. Its exam then guards every later base, so no future winner can lose boxes.'],
+  ['Train', 'Choose the exact mini r5 or lite v1 parent. Train a box adapter with a frozen vision tower. The public synthetic generator is training material; private exam images and seeds stay sealed.'],
+  ['Commit', 'Package with python -m zils.feature_miner pack, upload the bundle, then submit with python -m zils.feature_miner commit. The commitment binds the track, parent and adapter. One hotkey has one active commitment.'],
+  ['Score', 'On present targets, weight synthetic families equally: gain at least 0.02 mean IoU over the incumbent, with a positive paired 95% lower confidence bound and mean IoU at least 0.40. No family may drop more than 0.02.'],
+  ['Confirm', 'Absent-target false positives must be at most 10%; presence Brier may be at most 0.005 worse than the incumbent. The same adapter must pass every gate on two fresh, disjoint private draws at least 12 hours apart.'],
+  ['Crown', 'Reviewed crowning is independent for mini and lite. Among each track’s five most recent distinct kings, those still registered share its rewards equally. A starter earns nothing; an empty track burns its share.'],
+  ['Graduate', 'Winning this synthetic pilot does not merge an adapter into the base. Graduation requires a separate review, real-image qualification and the full base regression suite.'],
 ];
 
-const DATA = [
-  ['Open Images V7', 'CC BY 4.0 annotations', '14.6M training boxes, 600 classes'],
-  ['RefCOCO / RefCOCO+', 'Apache 2.0', 'phrases like “the man on the left in red”, each with its box'],
-  ['COCO, LVIS', 'CC BY 4.0 annotations', 'everyday objects; LVIS adds 1,200 rarer classes'],
-  ['VisA', 'CC BY 4.0', 'industrial defects; masks convert to boxes'],
-  ['DocLayNet, PubLayNet', 'CDLA-Permissive', 'tables, figures and text blocks on pages'],
-];
+const GUIDE = 'https://github.com/ooo-hq/zils/blob/main/docs/feature-tracks.md';
 
 function Frame({ box, kind }: { box: Box; kind: 'truth' | 'ours' | 'jev' }) {
   // Final position in custom properties, so the CSS can start every box at the full image and close it onto the target.
@@ -64,7 +60,7 @@ function Card({ example, index }: { example: Example; index: number }) {
     <figcaption>
       <span className={s.cardLabel}>{label}</span>
       <span className={s.scores}>
-        <span data-best={winner === 'ours' || undefined}>Ours {example.ours_iou.toFixed(2)}</span>
+        <span data-best={winner === 'ours' || undefined}>Mini {example.ours_iou.toFixed(2)}</span>
         <span data-best={winner === 'jev' || undefined}>Jev {example.jev_iou.toFixed(2)}</span>
       </span>
     </figcaption>
@@ -75,23 +71,39 @@ export default function BoxTrackPage() {
   const max = Math.max(...RESULTS.map(r => r.all));
   return (
     <SiteFrame current="miners">
-      <SectionRow n="01" label="Feature track · boxes" note="Proposed" />
+      <SectionRow n="01" label="Feature track · boxes" note="Testnet 579 · preparing" />
       <header className={m.hero}>
         <p className={s.crumb}><Link href="/miners">Miners</Link> / Feature tracks</p>
         <h1><span className={s.target}>Boxes<span className={s.lock} aria-hidden="true"><i /><i /><i /><i /><b>0.97</b></span></span></h1>
-        <p>Teach the shared base to point at things: ask “where is the scratch?” and get a box back. <b>Not open yet.</b> This page shows the proposed rules and the starter result miners would have to beat.</p>
+        <p>Teach a model to point at a named shape, or say it is absent. <b>Synthetic-only testnet pilot. Not open yet.</b> Mini and lite compete separately on fresh private shape images. This pilot does not establish real-world box quality.</p>
       </header>
 
       <dl className={m.nums}>
-        <div><dt>Status</dt><dd className={m.sm}>Planned</dd></div>
-        <div><dt>Score to beat</dt><dd>0.582<small> IoU</small></dd></div>
-        <div><dt>King</dt><dd className={m.sm}>None yet</dd></div>
-        <div><dt>Pays</dt><dd className={m.sm}>Features pool, 20%</dd></div>
+        <div><dt>Status</dt><dd className={m.sm}>Preparing</dd></div>
+        <div><dt>Score to beat</dt><dd className={m.sm}>Your track’s incumbent</dd></div>
+        <div><dt>Competitions</dt><dd className={m.sm}>Mini / lite</dd></div>
+        <div><dt>Planned allocation</dt><dd className={m.sm}>16% / 4%</dd></div>
       </dl>
 
-      <SectionRow n="02" label="Starter result" note="19 Oct 2026" />
+      <SectionRow n="02" label="Pilot parents and rewards" />
+      <section className={s.section} aria-labelledby="parents-heading">
+        <h2 id="parents-heading" className={s.h2}>Two parents. Two independent kings.</h2>
+        <div className={s.scroll} tabIndex={0} role="region" aria-label="Pilot parents and allocations">
+          <table className={s.table}>
+            <thead><tr><th scope="col">Box track parent</th><th scope="col">Share of validator allocation</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">d3-mini-4.5b-zils-r5</th><td>16%</td></tr>
+              <tr><th scope="row">d3-lite-0.8b-v1</th><td>4%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p className={s.caveat}>The prepared split is 50% base improvement, 20% features and 30% customer adapters, with mini/lite split 80/20 inside both base and box budgets: 40% mini base, 10% lite base, 16% mini boxes, 4% lite boxes, 30% customer adapters. These are this validator’s allocation shares, not guaranteed earnings. Boxes initially receive the whole feature budget; future tracks require an announced reallocation.</p>
+        <p className={s.fine}>Activation and exact-parent starter qualification are pending. A track with no eligible king burns its allocation. The historical results below do not qualify either pilot starter.</p>
+      </section>
+
+      <SectionRow n="03" label="Historical MVP results" note="19–20 Oct 2026" />
       <section className={s.section} aria-labelledby="result-heading">
-        <h2 id="result-heading" className={s.h2}>A 31-minute adapter already beats Jev’s box mode on our test set.</h2>
+        <h2 id="result-heading" className={s.h2}>Both models learned boxes; mini led on this test set.</h2>
         <figure className={m.compare}>
           <figcaption>Mean box overlap (IoU) on 222 test images, higher is better</figcaption>
           <dl>{RESULTS.map(row => <div key={row.name} data-best={row.best || undefined}>
@@ -108,20 +120,21 @@ export default function BoxTrackPage() {
             </tr>)}</tbody>
           </table>
         </div>
-        <p className={s.caveat}><b>Not a general win.</b> The adapter trained on the same 12 defect types and the same shape generator as the test images; Jev had seen none of them. It shows boxes work on d3-mini through its existing answer codes, and learn fast. One training run, one seed. Our boxes take four model passes, about 3.3 s each on one RTX 4090, against one call to Jev.</p>
+        <p className={s.caveat}><b>Historical research, not the pilot exam.</b> These adapters used stock mini and lite, with the same 12 defect types and shape generator in training and test; Jev was zero-shot. The mini result is not an r5 baseline. Each model had one training run and one seed, without absent-target or confidence qualification. Lite reached IoU ≥ 0.5 on only 3 of 122 real-defect images, versus mini’s 42. This does not establish general localization quality.</p>
+        <p className={s.fine}>Four serial model passes per box: lite averaged 0.624 s and mini 3.270 s on the RTX 4090 in separate runs; this was not a fresh paired speed comparison. Training took 18.2 / 32.0 minutes and 1.93 / 9.31 GiB peak CUDA allocation for lite / mini.</p>
       </section>
 
-      <SectionRow n="03" label="Examples" note="6 of 222 · Jev better on 2" />
+      <SectionRow n="04" label="Historical mini examples" note="6 of 222 · Jev better on 2" />
       <section className={s.section} aria-labelledby="examples-heading">
         <h2 id="examples-heading" className={s.visuallyHidden}>Example boxes</h2>
         <ul className={s.legend} aria-label="Legend">
-          <li data-kind="truth">True box</li><li data-kind="ours">Starter adapter</li><li data-kind="jev">Jev 1.14</li>
+          <li data-kind="truth">True box</li><li data-kind="ours">Stock mini + adapter</li><li data-kind="jev">Jev 1.14</li>
         </ul>
         <div className={s.gallery}>{examples.map((example, index) => <Card key={example.id} example={example} index={index} />)}</div>
         <p className={s.fine}>Chosen to include cases where Jev is better (about one in three test images). Defect photos: VisA, Amazon Science, CC BY 4.0, resized. Shape scenes generated by Zils.</p>
       </section>
 
-      <SectionRow n="04" label="How the track would run" />
+      <SectionRow n="05" label="Pilot rules" />
       <section className={s.section} aria-labelledby="rules-heading">
         <h2 id="rules-heading" className={s.visuallyHidden}>Rules</h2>
         <ol className={s.rules}>{RULES.map(([title, body], i) => <li key={title}>
@@ -129,36 +142,33 @@ export default function BoxTrackPage() {
         </li>)}</ol>
       </section>
 
-      <SectionRow n="05" label="Leaderboard" />
+      <SectionRow n="06" label="Leaderboard" />
       <section className={s.section} aria-labelledby="board-heading">
         <h2 id="board-heading" className={s.visuallyHidden}>Leaderboard</h2>
         <div className={s.scroll} tabIndex={0} role="region" aria-label="Box track entries">
           <table className={s.table}>
             <thead><tr><th scope="col">Miner</th><th scope="col">Commit</th><th scope="col">IoU</th><th scope="col">Confirmed</th><th scope="col">Date</th></tr></thead>
-            <tbody><tr><td colSpan={5} className={s.empty}>No entries yet. Entries appear here once validators score box adapters.</td></tr></tbody>
+            <tbody><tr><td colSpan={5} className={s.empty}>Pilot intake is not open. No verified pilot results published here yet.</td></tr></tbody>
           </table>
         </div>
-        <p className={s.fine}>King history: none. The starter adapter sets the bar but earns nothing, like the vendor base.</p>
+        <p className={s.fine}>Mini and lite keep separate king histories. Reviewed crowning unlocks a track’s rewards; it does not release a new base or customer box API.</p>
       </section>
 
-      <SectionRow n="06" label="Train for it" />
+      <SectionRow n="07" label="Train for it" />
       <section className={s.section} aria-labelledby="data-heading">
-        <h2 id="data-heading" className={s.h2}>Public data you can train on</h2>
-        <ul className={s.data}>{DATA.map(([name, licence, what]) => <li key={name}>
-          <span className={s.dataName}>{name}</span><span className={s.licence}>{licence}</span><span>{what}</span>
-        </li>)}</ul>
-        <DetailsRow summary="Starter recipe">
+        <h2 id="data-heading" className={s.h2}>Start with the synthetic pilot guide</h2>
+        <p className={s.caveat}>The <a href={GUIDE}>feature-track guide</a> defines the public shape generator, exact parent pins, presence and box format, training limits, packaging and submission commands. Training examples are separate from the fresh private draws. Follow the guide for your chosen parent; these are miner submissions.</p>
+        <DetailsRow summary="Historical MVP recipe">
           <div className={m.prose}>
             <p>Each box is four multiple-choice questions, one per edge, each choosing among 101 positions (0–100% of the image from the top or left). Training targets are soft: a narrow bell curve around the true edge, so near misses cost less than far ones.</p>
-            <p>Rank-16 LoRA on the 152 language modules, vision tower frozen, learning rate 5e-5 with warm-up and linear decay, batch 4, one epoch over 866 images (3,464 edge questions). 31 minutes and 9.3 GiB peak on an RTX 4090.</p>
-            <p>Not usable for the base: Real-IAD, MVTec AD and Objects365 are non-commercial.</p>
+            <p>Rank-16 LoRA on 152 mini or 114 lite language modules, vision tower frozen, learning rate 5e-5 with warm-up and linear decay, batch 4, one epoch over 866 images (3,464 edge questions). This older recipe had no absent-target answer or presence calibration; it is not a qualified pilot submission.</p>
           </div>
         </DetailsRow>
       </section>
 
       <div className={m.more}>
         <Link href="/miners">All competitions</Link>
-        <a href="https://docs.zils.ai">Miner guide</a>
+        <a href={GUIDE}>Box pilot guide</a>
       </div>
     </SiteFrame>
   );
