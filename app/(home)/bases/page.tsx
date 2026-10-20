@@ -10,23 +10,23 @@ import s from './bases.module.css';
 
 export const metadata: Metadata = {
   title: 'Zils — bases',
-  description: 'How each Zils base model moves from revision to revision, and how new skills like bounding boxes are added to it.',
+  description: 'Zils base revisions, synthetic box competitions, and the separate qualification required before a feature can graduate into a base.',
   alternates: { canonical: 'https://zils.ai/bases' },
 };
 
 const ELECT = [
   ['Train', 'A miner fine-tunes a candidate from the current base in its tier, uploads it to Hugging Face and commits the hash on chain.'],
   ['Exam', 'Validators pull it and score it on sealed questions. It must beat the current base, and the win must hold on a fresh draw.'],
-  ['Suite', 'Customer adapters are retrained on the candidate and must not get worse. Every graduated skill’s exam runs here too.'],
+  ['Suite', 'Customer adapters are retrained on the candidate and must not get worse. A graduated skill would also need a retained exam in this suite; no box skill has graduated yet.'],
   ['Crown', 'Once the release is reviewed, the winner’s miner joins the last five kings, who share the tier’s pay. A tier with no king burns its share.'],
   ['Release', 'The new base ships as latest. Customer models move over when they stay within 0.005 Brier of their old score; stable follows.'],
 ];
 
 const FEATURE = [
-  ['Open', 'A new skill gets its own track, pinned to an exact base revision, with a starter adapter as the score to beat.'],
-  ['Compete', 'Miners submit adapters and the best one on a private feature exam is king of that track.'],
-  ['Graduate', 'At the next base release the king is merged into the base, so every customer model gets the skill.'],
-  ['Guard', 'From then on the skill’s exam is part of the regression suite. A later base that loses it cannot win.'],
+  ['Open', 'The synthetic box pilot has separate mini r5 and lite v1 tracks, each pinned to its exact parent. An operator reference sets the initial score to beat; no box king has qualified yet.'],
+  ['Compete', 'Miners submit adapters. A winner must pass every IoU, absence and presence-confidence gate on two disjoint private draws at least 12 hours apart, then receive a reviewed crown.'],
+  ['Graduate', 'A box crown is separate from a base release. Graduation would require real-image qualification, the full base regression suite and a separate release review. It is not automatic at the next revision.'],
+  ['Guard', 'Before graduation, the skill’s qualifying exam must become part of the base regression suite, so later candidates are checked for losing it. No box skill has graduated yet.'],
 ];
 
 function Steps({ items }: { items: string[][] }) {
@@ -48,7 +48,7 @@ export default function BasesPage() {
         <div><dt>Base tiers live</dt><dd>2</dd></div>
         <div><dt>Latest mini</dt><dd className={m.sm}>r5</dd></div>
         <div><dt>Candidates stopped</dt><dd>4</dd></div>
-        <div><dt>Feature tracks</dt><dd className={m.sm}>Boxes, planned</dd></div>
+        <div><dt>Feature tracks</dt><dd className={m.sm}>Boxes · testnet</dd></div>
       </dl>
 
       <SectionRow n="02" label="Lineage" note="Bases left to right, skills below" />
@@ -61,7 +61,7 @@ export default function BasesPage() {
         </ul>
         <DetailsRow summary="About the box scores">
           <div className={m.prose}>
-            <p>Both are research runs on the same 222 test images (industrial defects and generated shapes), one seed each, with adapters trained on the same kinds of images. The mini adapter trained on v1, not r5. Neither is a track result yet.</p>
+            <p>Both are historical research runs on the same 222 test images (industrial defects and generated shapes), one seed each, with adapters trained on the same kinds of images. The mini adapter trained on v1, not the pilot’s r5 parent. These scores are separate from the synthetic-only testnet competition and do not qualify a king.</p>
             <p>On lite, training lifts mean overlap from 0.032 to 0.251, at 0.6 s per box against 3.3 s on mini, but only 3 of 122 defect images reach IoU 0.5 against 42 on mini.</p>
           </div>
         </DetailsRow>
@@ -73,9 +73,9 @@ export default function BasesPage() {
         <Steps items={ELECT} />
       </section>
 
-      <SectionRow n="04" label="How a skill is added" note="Planned" />
+      <SectionRow n="04" label="From feature track to base" note="Separate qualification" />
       <section className={box.section} aria-labelledby="feature-heading">
-        <h2 id="feature-heading" className={box.visuallyHidden}>How a skill is added</h2>
+        <h2 id="feature-heading" className={box.visuallyHidden}>From feature track to base</h2>
         <Steps items={FEATURE} />
       </section>
 
