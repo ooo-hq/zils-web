@@ -19,7 +19,7 @@
 .node .hit { fill: transparent; }
 .node .ring { fill: none; stroke: transparent; stroke-width: 1.5; }
 .node:hover .ring { stroke: var(--zs-t3); }
-.node:focus-visible .ring { stroke: var(--zs-orange); stroke-width: 2; }
+.node:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 2px; }
 .node[aria-pressed=true] .ring { stroke: var(--zs-fg); }
 .node .dot { fill: var(--zs-peri); stroke: var(--zs-raised); stroke-width: 3; }
 .node[data-kind=lost] .dot { fill: var(--zs-raised); stroke: var(--zs-t3); stroke-width: 1.5; }
