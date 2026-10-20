@@ -59,7 +59,7 @@ test('an outage shows the unavailable panel and the rest of the page renders', a
   await page.goto('/miners');
   await expect(page.getByText('The leaderboard is unavailable right now.')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Miner leaderboard', level: 1 })).toBeVisible();
-  await expect(page.getByText('Beat d3-mini to become the base.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Beat the base.', exact: true })).toBeVisible();
   await expect(page.getByRole('table', { name: 'Miner leaderboard' })).toHaveCount(0);
   expect(errors).toEqual([]);
 });
