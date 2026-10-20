@@ -29,6 +29,7 @@ function Intake({apiUrl,active=true,onChooseType,assistantConfigured,trainingApi
   const [busy,setBusy]=useState(false),[frozen,setFrozen]=useState(false),[error,setError]=useState(''),[progress,setProgress]=useState(''),[submitted,setSubmitted]=useState(false);
   const draft=useRef<ImageDraft>({assets:{}}),operation=useRef<AbortController|null>(null),urls=useRef<string[]>([]),life=useRef({active:true});
   const locked=busy||frozen;
+  const existingJob=savedJob||resumeJob;
   const outcomes=answers.split('\n').map(s=>s.trim()).filter(Boolean);
   const maxAnswers=profile.capabilities?.max_options??255, imajev=profile.model==='imajev-4b-v1', binary=outcomes.length===2&&imajev;
   useEffect(()=>{const state=life.current;state.active=true;const localUrls=urls.current;return()=>{state.active=false;operation.current?.abort();localUrls.forEach(url=>URL.revokeObjectURL(url));};},[]);
@@ -125,7 +126,7 @@ function Intake({apiUrl,active=true,onChooseType,assistantConfigured,trainingApi
       </>}
       {step===3&&prepared&&<div className={photoStyles.ready}><p>{prepared.counts.train} training · {prepared.counts.calibration} calibration · {prepared.counts.test} evaluation photos. Whole items stay together.</p>
         <div className={styles.tableWrap}><table><thead><tr><th>Answer</th><th>Training</th><th>Calibration</th><th>Evaluation</th></tr></thead><tbody>{prepared.distribution.map(row=><tr key={row.outcome}><th>{row.outcome}</th><td>{row.train}</td><td>{row.calibration}</td><td>{row.test}</td></tr>)}</tbody></table></div>
-        <ModelPoolSelect apiUrl={apiUrl} modality="images" disabled={locked} onChange={setSelection} />
+        {existingJob?<p>Saved model: {existingJob.model?.name} ({existingJob.model?.id})</p>:<ModelPoolSelect apiUrl={apiUrl} modality="images" disabled={locked} onChange={setSelection} />}
         <fieldset disabled={locked} className={photoStyles.fields}><label>Run name<input value={name} onChange={e=>setName(e.target.value)} pattern="[a-z0-9][a-z0-9-]{0,63}"/></label>{binary&&<><label>Positive class<select aria-label="Positive class" value={positive} onChange={e=>setPositive(e.target.value)}><option value="">Choose the outcome you need to detect</option>{outcomes.map(v=><option key={v}>{v}</option>)}</select></label><label>Minimum positive recall (%)<input type="number" min="0" max="100" value={recall} onChange={e=>setRecall(e.target.value)}/></label><label>Maximum false alarms (%)<input type="number" min="0" max="100" value={alarms} onChange={e=>setAlarms(e.target.value)}/></label></>}
           <label>Minimum accuracy (%)<input type="number" min="0" max="100" value={accuracy} onChange={e=>setAccuracy(e.target.value)}/></label><label>Minimum Brier improvement<input type="number" min="0" max="2" step="0.01" value={improvement} onChange={e=>setImprovement(e.target.value)}/></label></fieldset>
         <p>Only training photos go to approved workers. Calibration and evaluation photos stay private to evaluation. Draft uploads expire after 24 hours; submitted photos are retained until 30 days after the run finishes.</p>
@@ -133,7 +134,7 @@ function Intake({apiUrl,active=true,onChooseType,assistantConfigured,trainingApi
         <p>Each standard image run uses one included training run or $2 from your credit balance. Completed runs are charged even if no model meets your targets. <Link href="/billing" target="_blank" rel="noopener noreferrer">View billing</Link>.</p>
         <label className={photoStyles.check}><input type="checkbox" checked={consent} disabled={busy||submitted} onChange={e=>setConsent(e.target.checked)}/>I have permission to share training images with approved workers</label>
         {!locked&&<button type="button" className={styles.secondary} onClick={()=>{setPrepared(null);setConsent(false);go(2);}}>Back</button>}
-        {!submitted&&<button className={styles.button} disabled={busy||!consent||(!frozen&&!selection)} onClick={()=>void submit()}>{busy?'Uploading…':frozen?'Resume missing image uploads':'Start image training'}</button>}
+        {!submitted&&<button className={styles.button} disabled={busy||!consent||(!existingJob&&!selection)} onClick={()=>void submit()}>{busy?'Uploading…':existingJob?'Resume missing image uploads':'Start image training'}</button>}
       </div>}
       {busy&&<button className={styles.secondary} onClick={()=>{operation.current?.abort();setProgress('Upload stopped. Completed photos remain saved.');}}>Stop image upload</button>}
       {(frozen||resumeJob?.status==='uploading')&&<button className={styles.secondary} disabled={busy} onClick={()=>void reset()}>Start a new run</button>}
