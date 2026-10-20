@@ -6,7 +6,8 @@ export type Split = typeof SPLITS[number];
 export const MAX_DATASET_BYTES = 128 * 1024 * 1024;
 /** Text adapters train on the pinned d3-mini profile, which accepts up to 255 outcomes per question; image questions use the image training profile's max_options. */
 export const MAX_TEXT_OUTCOMES = 255;
-export const acceptanceSchema = z.object({ min_accuracy: z.number().min(0).max(1), min_brier_improvement: z.number().min(0).max(2), previous_job_id: z.string().uuid().optional() });
+export const acceptanceSchema = z.object({ min_accuracy: z.number().min(0).max(1), min_brier_improvement: z.number().min(0).max(2), previous_job_id: z.string().uuid().optional(), base_change: z.literal(true).optional() })
+  .refine(policy => !policy.base_change || Boolean(policy.previous_job_id), { message: 'A base change requires a previous model.', path: ['previous_job_id'] });
 export const submissionSchema = z.object({
   name: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/, 'Use 1–64 lowercase letters, digits, or hyphens; start with a letter or digit.'),
   acceptance: acceptanceSchema,
@@ -17,7 +18,7 @@ export const submissionSchema = z.object({
   model: z.string().min(1).optional(),
 });
 export type Submission = z.infer<typeof submissionSchema>;
-export const imageAcceptanceSchema = acceptanceSchema.extend({ positive_class: z.string().min(1).optional(), min_positive_recall: z.number().min(0).max(1).optional(), max_false_positive_rate: z.number().min(0).max(1).optional(), min_class_recall: z.record(z.string(), z.number().min(0).max(1)).optional() });
+export const imageAcceptanceSchema = acceptanceSchema.safeExtend({ positive_class: z.string().min(1).optional(), min_positive_recall: z.number().min(0).max(1).optional(), max_false_positive_rate: z.number().min(0).max(1).optional(), min_class_recall: z.record(z.string(), z.number().min(0).max(1)).optional() });
 export const imageIntakeSchema = z.object({ version: z.literal('zils-image-intake/v1'), seed: z.string().min(1).max(100), snapshot_sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict();
 export const imageSubmissionSchema = submissionSchema.extend({ model: z.string().min(1), image_intake: imageIntakeSchema,
   acceptance: imageAcceptanceSchema,
@@ -29,7 +30,9 @@ const metrics = z.object({ accuracy: z.number().min(0).max(1), brier: z.number()
 const count = z.number().int().nonnegative();
 const rate = z.number().min(0).max(1);
 const imageMetricFields = { count: count.optional(), cases: count.optional(), nll: z.number().nonnegative().optional(), unknown_rate: rate.optional(), unknown_count: count.optional(), outcome_order: z.array(z.string()).optional(), confusion: z.record(z.string(), z.record(z.string(), count)).optional(), per_class: z.record(z.string(), z.object({ support: count, true_positives: count, false_negatives: count, false_positives: count, negatives: count, recall: rate.nullable(), false_positive_rate: rate.nullable() })).optional() };
-const modelSchema = z.object({ id: z.enum(['kev-0.8b-v1', 'jevk5-4b-v0.3', 'h2o-lightning-4b-v1.2.3', 'imajev-4b-v1', 'd3-mini-4.5b-v1', 'd3-mini-4.5b-zils-r5', 'd3-lite-0.8b-v1', 'd3-nano-2.2b-v1', 'd3-flash-8.4b-v1', 'd3-26b-v1']), name: z.string(), base: z.string(), base_revision: z.string().regex(/^[a-f0-9]{40}$/), inputs: z.object({ images: z.number().int().nonnegative().optional(), video: z.boolean().optional() }).nullable().optional() });
+export const modelProfileIdSchema = z.enum(['kev-0.8b-v1', 'jevk5-4b-v0.3', 'h2o-lightning-4b-v1.2.3', 'imajev-4b-v1', 'd3-mini-4.5b-v1', 'd3-lite-0.8b-v1', 'd3-nano-2.2b-v1', 'd3-flash-8.4b-v1', 'd3-26b-v1'])
+  .or(z.string().regex(/^d3-(?:mini-4\.5b|lite-0\.8b|nano-2\.2b|flash-8\.4b|26b)-zils-r[1-9]\d{0,8}$/));
+const modelSchema = z.object({ id: modelProfileIdSchema, name: z.string(), base: z.string(), base_revision: z.string().regex(/^[a-f0-9]{40}$/), inputs: z.object({ images: z.number().int().nonnegative().optional(), video: z.boolean().optional() }).nullable().optional() });
 const jevComparisonSchema = z.discriminatedUnion('status', [
   z.object({ status: z.literal('completed'), model: z.string().min(1), accuracy: rate, brier: z.number().min(0).max(2), trained_accuracy: rate, count: count.positive(), evaluated_at: z.string().datetime({ offset: true }), test_sha256: z.string().regex(/^[a-f0-9]{64}$/), checkpoint_sha256: z.string().regex(/^[a-f0-9]{64}$/) }),
   z.object({ status: z.enum(['pending', 'running', 'failed', 'skipped']), model: z.string().min(1), count: count.optional(), completed_cases: count.optional() }),

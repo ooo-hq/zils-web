@@ -11,6 +11,7 @@ import { TrainedModelQuickstart } from '@/components/trained-model-quickstart';
 import { ImageTrainingResults, PrivateImageTest } from '@/components/image-training-results';
 import { canDownload, isImageJob, trainingApi, TrainingApiError, type Job } from '@/lib/training';
 import { trainingProgress } from '@/lib/training-status';
+import { newerBase, trainingBase, type BaseConfig } from '@/lib/base-model';
 import { billingApi, formatCredit, type BillingSummary } from '@/lib/billing';
 import type { TrainingConfig } from '@/lib/training-config';
 import training from '@/app/(home)/train/train.module.css';
@@ -37,6 +38,13 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [revision, setRevision] = useState(0);
+  const [bases, setBases] = useState<BaseConfig | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    trainingBase(config.apiUrl, controller.signal).then(value => { if (!controller.signal.aborted) setBases(value); })
+      .catch(() => { if (!controller.signal.aborted) setBases(null); });
+    return () => controller.abort();
+  }, [config.apiUrl, revision]);
   const token = useCallback(async () => {
     const { data, error } = await client.auth.getSession();
     if (error) throw error;
@@ -86,6 +94,7 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
   const referenceAccuracy = image ? result.baseline.accuracy : comparison?.accuracy;
   const difference = comparison ? (comparison.trained_accuracy - comparison.accuracy) * 100 : null;
   const progress = trainingProgress(job);
+  const migration = bases && newerBase(bases, job);
   return <div className={styles.detail}>
     <header className={styles.heading}>
       <div>
@@ -102,6 +111,10 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
     <nav aria-label="Model sections" className={styles.sectionNav}><a href="#model-results">Results</a>{ready && <><a href="#model-usage">Usage</a><a href="#model-access">Access</a></>}<Link href={`/train?run=${job.id}`}>Training run<LinkLoading /></Link></nav>
     {error && <p role="alert" className={training.error}>{error}</p>}
     {!ready && <section className={training.notice} aria-label="Model activation"><strong>{progress.title}</strong><p>{progress.detail} {progress.next}</p></section>}
+    {migration && <section id="model-migration" className={`${training.notice} ${styles.migration}`} aria-label="Newer base available">
+      <div><strong>Newer base available</strong><p>{migration.name} is available for this model. Train a replacement with your reviewed examples; your current model stays live until the replacement passes your success criteria.</p></div>
+      <Link className={training.secondary} href={{ pathname: '/train', query: { upgrade: job.id, migrate: migration.selection.model } }}>Migrate<LinkLoading /></Link>
+    </section>}
 
     <section id="model-results" className={styles.section} aria-labelledby="model-results-heading">
       <div className={styles.sectionHeading}><div><h2 id="model-results-heading">How this model performed</h2><p>{comparison ? `Both models evaluated on the same ${comparison.count.toLocaleString()} held-out examples.` : 'Evaluation on examples held out from training.'}</p></div><span>{difference === null ? 'Selected version' : `${difference > 0 ? '+' : ''}${difference.toFixed(2)} percentage points vs JEV`}</span></div>

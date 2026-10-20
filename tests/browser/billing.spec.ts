@@ -259,6 +259,14 @@ test.describe('production checkout', () => {
     expect(errors).toEqual([]);
   });
 
+  test('sidebar rounds the balance while billing details retain exact credit and charges', async ({ page }) => {
+    await billing(page, { mode: 'live', availableNanos: '2000199342' });
+    await page.goto('/billing');
+    await expect(page.getByRole('link', { name: 'Balance $2.00', exact: true })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Available credit', exact: true }).getByText('$2.000199342', { exact: true })).toBeVisible();
+    await expect(page.getByText('−$0.000000042', { exact: true })).toBeVisible();
+  });
+
   test('mobile prioritizes credit and top-ups, with exact negative balances and safe continuation', async ({ page }) => {
     await billing(page, { mode: 'live', availableNanos: '-42' });
     await page.setViewportSize({ width: 390, height: 844 });

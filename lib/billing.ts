@@ -108,6 +108,14 @@ export function formatCredit(value: string): string {
   return `${number < 0n ? '−' : ''}$${whole}.${fraction}`;
 }
 
+/** Readable balance; transaction and usage details keep exact nano-dollar amounts. */
+export function formatBalance(value: string): string {
+  const number = BigInt(value), absolute = number < 0n ? -number : number;
+  if (absolute > 0n && absolute < 10_000_000n) return number < 0n ? '<$0.01 owed' : '<$0.01';
+  const rounded = (absolute + 5_000_000n) / 10_000_000n * 10_000_000n;
+  return formatCredit((number < 0n ? -rounded : rounded).toString());
+}
+
 type IntentStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 const storageKey = (scope: string) => `zils-billing-checkout:${scope}`;
 const storageError = () => new BillingError('Allow browser storage to safely start or continue a top-up.', 0);

@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { billingApi, BillingError, formatCredit, checkoutIntent, pendingCheckout, attachCheckout, settleCheckout } = require('../.private/test-build/billing.js');
+const { billingApi, BillingError, formatCredit, formatBalance, checkoutIntent, pendingCheckout, attachCheckout, settleCheckout } = require('../.private/test-build/billing.js');
 
 const id = '8d36a658-4773-435f-bc96-3b42901baa9e';
 const purchase = '91f22b36-83bd-5da1-90f8-a4b5dc8a6e52';
@@ -89,6 +89,14 @@ test('credit formatting preserves nano-dollar usage and values beyond safe Numbe
   assert.equal(formatCredit('4999999958'), '$4.999999958');
   assert.equal(formatCredit('-42'), '−$0.000000042');
   assert.equal(formatCredit('10000000000000000042'), '$10,000,000,000.000000042');
+});
+
+test('balance summaries round to cents without hiding sub-cent credit or debt', () => {
+  for (const [value, expected] of [
+    ['2000199342', '$2.00'], ['1995000000', '$2.00'], ['2005000000', '$2.01'],
+    ['0', '$0.00'], ['199342', '<$0.01'], ['-42', '<$0.01 owed'],
+    ['-2000199342', '−$2.00'], ['10000000000000000042', '$10,000,000,000.00'],
+  ]) assert.equal(formatBalance(value), expected);
 });
 
 test('checkout intent persists across reloads and is isolated by account and mode', () => {

@@ -7,7 +7,7 @@ import { BookOpen, Boxes, ChartLine, ChevronsUpDown, CreditCard, FlaskConical, G
 import { useAuthSession } from '@/components/auth-session';
 import { ThemeToggle } from '@/components/theme';
 import { ZilsWordmark } from '@/components/zils-wordmark';
-import { billingApi, formatCredit } from '@/lib/billing';
+import { billingApi, formatBalance } from '@/lib/billing';
 import { docsUrl } from '@/lib/shared';
 import styles from './console-shell.module.css';
 
@@ -47,7 +47,7 @@ export function ConsoleNav({ auth, billingUrl }: { auth?: { url: string; key: st
     if (!api) return;
     const controller = new AbortController();
     // The balance is a convenience; the billing page reports failures.
-    api.summary(controller.signal).then(summary => setBalance(formatCredit(summary.available_nanos))).catch(() => {});
+    api.summary(controller.signal).then(summary => setBalance(formatBalance(summary.available_nanos))).catch(() => {});
     return () => controller.abort();
   }, [api]);
   async function signOut() {
