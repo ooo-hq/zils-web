@@ -1,10 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Miner } from '@/lib/network-miners';
 import { STATUS_LABEL, isActive, sortMiners, type SortKey } from '@/lib/miner-board';
 import css from './miner-board.module.css';
 
-const MODEL_NAMES: Record<string, string> = { 'd3-mini-4.5b-v1': 'd3-mini 4.5B', 'h2o-lightning-4b-v1.2.3': 'H2O 4B' };
+const MODEL_NAMES: Record<string, string> = { 'd3-mini-4.5b-v1': 'd3-mini 4.5B', 'd3-mini-4.5b-zils-r5': 'd3-mini 4.5B · r5', 'd3-lite-0.8b-v1': 'd3-lite 0.8B', 'h2o-lightning-4b-v1.2.3': 'H2O 4B' };
 const short = (hotkey: string) => hotkey.length > 14 ? `${hotkey.slice(0, 6)}…${hotkey.slice(-6)}` : hotkey;
 function ago(iso: string | null, now: number) {
   if (!iso) return '—';
@@ -16,8 +17,22 @@ const COLUMNS: { key: SortKey; label: string; right?: boolean }[] = [
   { key: 'skill', label: 'Median skill' }, { key: 'lastSeen', label: 'Last seen', right: true },
 ];
 
-/** `bases` are the model ids Zils trains on today (miners keep rows for retired bases), or null when unknown. */
-export function MinerBoard({ miners, asOf, bases }: { miners: Miner[]; asOf: string; bases: string[] | null }) {
+/** Keep refreshing even when the API is unavailable, so the page can recover. */
+export function MinerRefresh() {
+  const router = useRouter();
+  useEffect(() => {
+    const refresh = () => { if (document.visibilityState === 'visible') router.refresh(); };
+    const timer = setInterval(refresh, 30_000);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [router]);
+  return null;
+}
+
+export function MinerBoard({ miners, asOf }: { miners: Miner[]; asOf: string }) {
   const [key, setKey] = useState<SortKey>('selected');
   const now = Date.parse(asOf);
   const rows = sortMiners(miners, key);
@@ -35,7 +50,7 @@ export function MinerBoard({ miners, asOf, bases }: { miners: Miner[]; asOf: str
       </div>
       <div role="rowgroup">
         {rows.map((m, i) => {
-          const base = m.models.filter(id => !bases || bases.includes(id)).map(id => MODEL_NAMES[id] ?? id).join(', ') || '—';
+          const base = m.models.map(id => MODEL_NAMES[id] ?? id).join(', ') || '—';
           const skill = m.training.median_skill;
           return (
             <div role="row" key={m.hotkey} className={`${css.row} ${css.body}`} data-dim={isActive(m) ? undefined : ''}>

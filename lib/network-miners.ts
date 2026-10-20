@@ -21,14 +21,12 @@ const network = z.object({
 export type NetworkMiners = z.infer<typeof network>;
 export type Miner = z.infer<typeof miner>;
 
-/** Per-hotkey miner aggregates from the public training API (refreshed every minute). */
+/** Read current miner check-ins without a second cache delaying status/model changes. */
 export async function networkMiners(): Promise<NetworkMiners | null> {
   const raw = process.env.NEXT_PUBLIC_ZILS_TRAINING_API_URL ?? process.env.NEXT_PUBLIC_FEZ_TRAINING_API_URL;
   if (!raw) return null;
   try {
-    // `next.revalidate` is Next's fetch cache option; typed here so the plain-TypeScript test build accepts it.
-    const init: RequestInit & { next: { revalidate: number } } = { next: { revalidate: 60 }, signal: AbortSignal.timeout(5_000) };
-    const response = await fetch(`${serviceUrl(raw)}/v1/network/miners`, init);
+    const response = await fetch(`${serviceUrl(raw)}/v1/network/miners`, { cache: 'no-store', signal: AbortSignal.timeout(5_000) });
     if (!response.ok) return null;
     const parsed = network.safeParse(await response.json());
     return parsed.success ? parsed.data : null;

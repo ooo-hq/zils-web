@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { SiteFrame } from '@/components/site/site-frame';
 import { SectionRow } from '@/components/site/section-row';
 import { DetailsRow } from '@/components/site/details-row';
-import { MinerBoard } from '@/components/site/miner-board';
+import { MinerBoard, MinerRefresh } from '@/components/site/miner-board';
 import { InstallCommand } from '@/components/site/install-command';
 import { currentBase } from '@/lib/base-model';
 import { boardNumbers } from '@/lib/miner-board';
@@ -14,7 +14,7 @@ import s from './miners.module.css';
 
 export const metadata: Metadata = {
   title: 'Zils — miners',
-  description: 'Every miner on the Zils subnet: whether it is online, which base models it can train, and how its candidates did. Plus each attempt to improve the shared base model.',
+  description: 'Zils training miners: whether they are online, which models they report, and how their candidates did. Plus each attempt to improve the shared base model.',
   alternates: { canonical: 'https://zils.ai/miners' },
 };
 
@@ -73,11 +73,10 @@ function Bars({ compare }: { compare: Compare }) {
 export default async function MinersPage() {
   const [base, network] = await Promise.all([currentBase(), networkMiners()]);
   const latest = base?.channels.latest;
-  // Miners keep qualification rows for retired bases; show only bases Zils trains on today.
-  const bases = base ? [base.channels.stable.id, base.channels.latest?.id].filter((id): id is string => Boolean(id)) : null;
   const numbers = network && boardNumbers(network);
   return (
     <SiteFrame current="miners">
+      <MinerRefresh />
       <SectionRow n="01" label="Testnet · subnet 579" note={network ? `Updated ${utc(network.as_of)} UTC` : undefined} />
       <header className={s.hero}>
         <h1>Miner leaderboard</h1>
@@ -97,8 +96,8 @@ export default async function MinersPage() {
       <SectionRow n="03" label="Miners" />
       {network
         ? <section id="miners" aria-label="Leaderboard">
-          <MinerBoard miners={network.miners} asOf={network.as_of} bases={bases} />
-          <p className={s.asof}><span>Live from the Zils training API · refreshed every minute</span><span>Updated {utc(network.as_of)} UTC · sort by any column</span></p>
+          <MinerBoard miners={network.miners} asOf={network.as_of} />
+          <p className={s.asof}><span>Live from the Zils training API · refreshes every 30 seconds</span><span>Updated {utc(network.as_of)} UTC · sort by any column</span></p>
         </section>
         : <p className={s.unavailable}>The leaderboard is unavailable right now.</p>}
 
@@ -106,7 +105,8 @@ export default async function MinersPage() {
         <div className={s.prose}>
           <p><b>Selected</b> is how many of the miner’s candidates a customer job kept as its model, out of the jobs it was given. <b>Jobs</b> are customer training jobs assigned to the miner; <b>evaluated</b> candidates were scored on the job’s held-out test set.</p>
           <p><b>Skill</b> compares a candidate’s probability error (Brier) with guessing evenly between the answers: 0 is no better than guessing, 1 is perfect, so it compares across different jobs.</p>
-          <p><b>Online</b> checked in within the last minute. <b>Seen recently</b> checked in within the last hour. <b>Offline</b> has not checked in for longer than that. <b>Never seen</b> registered but never checked in. <b>Disabled</b> gets no new jobs. Miners that are not online are dimmed.</p>
+          <p><b>Online</b> checked in within the last 45 seconds. <b>Seen recently</b> checked in within the last hour. <b>Offline</b> has not checked in for longer than that. <b>Never seen</b> registered but never checked in. <b>Disabled</b> gets no new jobs. Miners that are not online are dimmed.</p>
+          <p><b>Models</b> come from each miner’s latest signed check-in, including while it is busy. Inactive rows show the last reported models. These are training-worker UIDs, not on-chain UIDs; a listed model does not imply customer serving is available.</p>
           <p>Subnet 579 runs on the Bittensor testnet. Outside miners can already compete in the base tier there (below). Customer jobs stay with Zils miners until miner terms and intake are ready.</p>
         </div>
       </DetailsRow>

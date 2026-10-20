@@ -1,10 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { createServer, type Server } from 'node:http';
-import { readFileSync, rmSync } from 'node:fs';
-
-// CI runs production: /miners is prerendered (ISR) before this listener exists, so the HTML is the unavailable state.
-// lib/miner-board unit tests cover sorting and labels in CI.
-test.skip(!!process.env.CI, 'ISR prerender cannot see the fixture listener');
+import { readFileSync } from 'node:fs';
 
 // networkMiners() runs on the Next server, so page.route cannot see it. A real listener stands in for the training API.
 // The port must match NEXT_PUBLIC_ZILS_TRAINING_API_URL in playwright.config.ts.
@@ -24,19 +20,26 @@ const FIXTURE = {
     miner(100, '5CRwgbxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxBrTxDn', 'unseen', 0, 0, null, null),
   ],
 };
+let snapshot = structuredClone(FIXTURE);
 
 test.describe.configure({ mode: 'serial' });
 test.beforeAll(async () => {
   server = createServer((req, res) => {
+    if (req.url === '/v1/config') {
+      res.setHeader('content-type', 'application/json');
+      return res.end(JSON.stringify({
+        model: { id: 'd3-mini-4.5b-v1', name: 'd3-mini 4.5B', max_input_tokens: 4096 },
+        channels: { stable: { id: 'd3-mini-4.5b-v1', name: 'd3-mini 4.5B' }, latest: { id: 'd3-mini-4.5b-zils-r5', name: 'd3-mini 4.5B · r5' } },
+      }));
+    }
     if (!req.url?.startsWith('/v1/network/miners')) { res.statusCode = 404; return res.end(); }
     if (mode === 'fail') { res.statusCode = 500; return res.end('{}'); }
     res.setHeader('content-type', 'application/json');
-    res.end(JSON.stringify(FIXTURE));
+    res.end(JSON.stringify(snapshot));
   });
   await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(PORT, '127.0.0.1', resolve); });
 });
-// networkMiners() caches for 60 s on disk; clear it so each test sees the mode it set.
-test.beforeEach(() => { for (const dir of ['.next/dev/cache/fetch-cache', '.next/cache/fetch-cache']) rmSync(dir, { recursive: true, force: true }); });
+test.beforeEach(() => { mode = 'ok'; snapshot = structuredClone(FIXTURE); });
 test.afterAll(() => new Promise<void>(resolve => { server.close(() => resolve()); server.closeAllConnections(); }));
 
 const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
@@ -82,6 +85,58 @@ test('the leaderboard sorts by Selected, re-sorts from the keyboard and dims off
   expect(await uids(page)).toEqual(['UID 102', 'UID 101', 'UID 100', 'UID 1']);
 });
 
+test('an open page follows miners and models outside the default channels without losing its sort', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/miners');
+  const first = page.getByRole('row').filter({ has: page.getByText('UID 1', { exact: true }) });
+  await expect(first).toContainText('d3-mini 4.5B');
+  await page.getByRole('button', { name: 'Miner', exact: true }).click();
+  snapshot.miners[0].models = ['d3-lite-0.8b-v1', 'future-model-v2'];
+  snapshot.miners[1].status = 'offline';
+  snapshot.miners[1].last_seen = '2026-10-18T17:00:00Z';
+  snapshot.miners.push({ ...miner(103, '5NewMiner', 'online', 0, 0, null, '2026-10-18T19:59:00Z'), models: ['d3-mini-4.5b-zils-r5'] });
+  snapshot.summary = { ...snapshot.summary, miners: 5, offline: 1 };
+  snapshot.as_of = '2026-10-18T19:59:00Z';
+  await page.clock.fastForward(30_000);
+  await expect(first).toContainText('d3-lite 0.8B, future-model-v2');
+  await expect(first).not.toContainText('d3-mini');
+  await expect(page.getByText('Updated 19:59 UTC').first()).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Offline', exact: true })).toBeVisible();
+  await expect(page.getByText('UID 103', { exact: true })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Miner' })).toHaveAttribute('aria-sort', 'descending');
+  expect(await uids(page)).toEqual(['UID 103', 'UID 102', 'UID 101', 'UID 100', 'UID 1']);
+});
+
+test('an open page removes unavailable data and recovers on the next refresh', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/miners');
+  await page.getByRole('button', { name: 'Miner', exact: true }).click();
+  mode = 'fail';
+  await page.clock.fastForward(30_000);
+  await expect(page.getByText('The leaderboard is unavailable right now.')).toBeVisible();
+  await expect(page.getByRole('table', { name: 'Miner leaderboard' })).toHaveCount(0);
+  mode = 'ok';
+  snapshot.miners[0].models = ['d3-lite-0.8b-v1'];
+  await page.clock.fastForward(30_000);
+  await expect(page.getByRole('table', { name: 'Miner leaderboard' })).toContainText('d3-lite 0.8B');
+  await expect(page.getByText('The leaderboard is unavailable right now.')).toHaveCount(0);
+});
+
+test('refresh pauses in a hidden tab and resumes immediately when visible', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/miners');
+  await page.getByRole('button', { name: 'Miner', exact: true }).click();
+  await page.evaluate(() => Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' }));
+  snapshot.miners[0].models = ['d3-lite-0.8b-v1'];
+  await page.clock.fastForward(30_000);
+  await expect(page.getByRole('table', { name: 'Miner leaderboard' })).not.toContainText('d3-lite');
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect(page.getByRole('table', { name: 'Miner leaderboard' })).toContainText('d3-lite 0.8B');
+});
+
 test('the rehearsal row holds every sentence of the old /bittensor page', async ({ page }) => {
   mode = 'ok';
   await page.goto('/miners');
@@ -107,7 +162,7 @@ test('status wording is the approved copy', async ({ page }) => {
   mode = 'ok';
   await page.goto('/miners');
   await page.getByText('How to read the leaderboard').click();
-  for (const phrase of ['checked in within the last minute', 'registered but never checked in', 'gets no new jobs']) await expect(page.getByText(phrase)).toBeVisible();
+  for (const phrase of ['checked in within the last 45 seconds', 'registered but never checked in', 'gets no new jobs', 'latest signed check-in', 'not on-chain UIDs']) await expect(page.getByText(phrase)).toBeVisible();
 });
 
 test.describe('phone', () => {
