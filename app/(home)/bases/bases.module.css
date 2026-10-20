@@ -1,0 +1,59 @@
+.scroll { overflow-x: auto; border: 1px solid var(--zs-line); background: var(--zs-raised); }
+.scroll:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 2px; }
+.map { display: block; width: 100%; min-width: 760px; height: auto; font-family: var(--font-inter-tight), system-ui, sans-serif; }
+.map text { fill: var(--zs-fg); }
+.axis { font: 400 10.5px var(--font-plex-mono), ui-monospace, monospace; letter-spacing: .1em; fill: var(--zs-t3) !important; }
+.lane { font-size: 15px; font-weight: 400; letter-spacing: -0.01em; }
+.label { font-size: 12.5px; }
+.sub { font-size: 11px; fill: var(--zs-t3) !important; }
+.grid { stroke: var(--zs-line); stroke-width: 1; }
+.rail { stroke: var(--zs-peri); stroke-width: 3; fill: none; }
+.future { stroke: var(--zs-t3); stroke-width: 1.5; stroke-dasharray: 5 6; fill: none; }
+.stem { stroke: var(--zs-t3); stroke-width: 1; stroke-dasharray: 3 4; }
+.feature { stroke: var(--zs-peach); stroke-width: 3; fill: none; }
+.graduate { stroke: var(--zs-peach); stroke-width: 1.5; stroke-dasharray: 4 5; fill: none; }
+.featureLabel { font-size: 12.5px; fill: var(--zs-peach) !important; }
+.score { font: 400 11px var(--font-plex-mono), ui-monospace, monospace; fill: var(--zs-t2) !important; }
+
+.node { cursor: pointer; outline: none; }
+.node .hit { fill: transparent; }
+.node .ring { fill: none; stroke: transparent; stroke-width: 1.5; }
+.node:hover .ring { stroke: var(--zs-t3); }
+.node:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 2px; }
+.node[aria-pressed=true] .ring { stroke: var(--zs-fg); }
+.node .dot { fill: var(--zs-peri); stroke: var(--zs-raised); stroke-width: 3; }
+.node[data-kind=lost] .dot { fill: var(--zs-raised); stroke: var(--zs-t3); stroke-width: 1.5; }
+.node[data-kind=lost] path { stroke: var(--zs-t3); stroke-width: 1.5; }
+.node[data-kind=next] .dot { fill: var(--zs-raised); stroke: var(--zs-t3); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.node[data-kind=feature] .dot { fill: var(--zs-peach); }
+
+.tag rect { fill: none; stroke: var(--zs-lilac); stroke-width: 1; }
+.tag text { font: 400 10px var(--font-plex-mono), ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; fill: var(--zs-lilac) !important; }
+
+.legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 13px; color: var(--zs-t2); }
+.legend li { display: flex; align-items: center; gap: 8px; }
+.legend li::before { content: ""; width: 10px; height: 10px; border-radius: 50%; box-sizing: border-box; }
+.legend [data-kind=base]::before { background: var(--zs-peri); }
+.legend [data-kind=lost]::before { border: 1.5px solid var(--zs-t3); }
+.legend [data-kind=feature]::before { background: var(--zs-peach); }
+.legend [data-kind=next]::before { border: 1.5px dashed var(--zs-t3); }
+
+.lineage { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 1px; background: var(--zs-line); border: 1px solid var(--zs-line); }
+.lineage .scroll { border: 0; }
+.card { background: var(--zs-panel); padding: 20px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.cardTag { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-peri); }
+.cardTag[data-tone=Candidate], .cardTag[data-tone="Next revision"] { color: var(--zs-t3); }
+.cardTag[data-tone="Feature track"] { color: var(--zs-peach); }
+.card h3 { margin: 0; font-weight: 300; font-size: 22px; letter-spacing: -0.02em; }
+.card p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--zs-t2); }
+.card dl { margin: 0; display: grid; }
+.card dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--zs-line); font-size: 13px; }
+.card dt { color: var(--zs-t3); }
+.card dd { margin: 0; color: var(--zs-fg); font-variant-numeric: tabular-nums; text-align: right; }
+.cardLink { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--zs-fg); text-decoration: none; border-bottom: 1px solid rgba(var(--zs-fg-rgb), .25); padding-bottom: 2px; justify-self: start; }
+.cardLink::after { content: " →"; }
+.cardLink:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 3px; }
+.hint { font-size: 12px; color: var(--zs-t3); }
+
+@media (max-width: 1099px) { .lineage { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: no-preference) { .node .ring { transition: stroke .15s; } }
