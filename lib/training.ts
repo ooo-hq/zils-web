@@ -40,6 +40,7 @@ const jevComparisonSchema = z.discriminatedUnion('status', [
 export const jobSchema = z.object({
   id: z.string().uuid(), name: z.string(), status: z.enum(STATUSES), created_at: z.string().optional(), error: z.string().nullable().optional(),
   model: modelSchema.nullable().optional(),
+  dataset_source: z.object({ job_id: z.string().uuid(), job_sha256: z.string().regex(/^[a-f0-9]{64}$/), request_id: z.string().uuid() }).nullable().optional(),
   jev_comparison: jevComparisonSchema.nullable().optional().catch(null),
   acceptance: imageAcceptanceSchema.optional(),
   image_intake: imageIntakeSchema.nullable().optional(),
@@ -55,6 +56,14 @@ export const jobSchema = z.object({
   }).nullable().optional(),
 });
 export type Job = z.infer<typeof jobSchema>;
+export const migrationPreviewSchema = z.object({
+  job: jobSchema,
+  counts: z.object({ train: count.positive(), calibration: count.positive(), test: count.positive() }),
+  acceptance: acceptanceSchema.safeExtend({ migration: z.literal(true).optional() }),
+  allow_jev_comparison: z.boolean(),
+});
+export const migrationRequestSchema = submissionSchema.pick({ model: true, pool: true, base_channel: true }).extend({ model: modelProfileIdSchema, request_id: z.string().uuid() });
+export type MigrationPreview = z.infer<typeof migrationPreviewSchema>;
 /** Multimodal base capability alone does not make a text dataset an image job. */
 export const isImageJob = (job: Job) => Boolean(job.image_intake) || job.model?.id === 'imajev-4b-v1';
 export const terminal = (job: Job) => job.status === 'completed' || job.status === 'failed';
@@ -176,6 +185,17 @@ export function trainingApi(baseUrl: string, storage: StorageLocations, token: (
   return {
     list: (signal?: AbortSignal) => call('', z.object({ jobs: z.array(jobSchema), models: z.array(jobSchema).optional() }), undefined, signal),
     get: (id: string, signal?: AbortSignal) => call(idPath(id), z.object({ job: jobSchema }), undefined, signal),
+    migrationPreview: async (id: string, signal?: AbortSignal) => {
+      const result = await call(`${idPath(id)}/migration`, migrationPreviewSchema, undefined, signal);
+      if (result.job.id !== id) throw new Error('The saved dataset belongs to a different model.');
+      return result;
+    },
+    migrate: async (id: string, input: z.infer<typeof migrationRequestSchema>, signal?: AbortSignal) => {
+      const body = migrationRequestSchema.parse(input);
+      const result = await call(`${idPath(id)}/migration`, z.object({ job: jobSchema }), body, signal);
+      if (result.job.model?.id !== body.model || result.job.dataset_source?.job_id !== id || result.job.dataset_source.request_id !== body.request_id) throw new Error('The migration response did not match. Retry to recover your saved run.');
+      return result;
+    },
     create: (input: Submission, signal?: AbortSignal) => call('', z.object({ job: jobSchema, uploads: uploadsSchema }), submissionSchema.parse(input), signal).then(result => { if (input.model && result.job.model?.id !== input.model) throw new Error('The returned job profile differs from your selected model. Check saved runs before submitting again.'); return checkedUploads(result); }),
     createImage: (input: ImageSubmission, signal?: AbortSignal) => call('', z.object({ job: jobSchema, uploads: uploadsSchema }), imageSubmissionSchema.parse(input), signal).then(result => { if (result.job.model?.id !== input.model) throw new Error('The returned job profile differs from your selected model. Check saved runs before submitting again.'); return checkedUploads(result); }),
     imageAssets: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/image-assets`, z.object({ assets: z.array(z.object({ id: z.string().uuid(), filename: z.string(), source_sha256: z.string() })) }), undefined, signal),

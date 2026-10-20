@@ -18,7 +18,7 @@ import { TrainingRunStatus } from '@/components/training-run-status';
 import { useAuthSession } from '@/components/auth-session';
 import { sendSignInLink, signInWithGoogle } from '@/lib/training-auth';
 import { currentTrainingJob, trainingProgress } from '@/lib/training-status';
-import { newerBase, trainingBase } from '@/lib/base-model';
+import { MigrationConfirmation } from '@/components/migration-confirmation';
 import { runToasts } from '@/lib/run-toasts';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -143,17 +143,6 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
   const selected = runId ? jobs[0] : currentTrainingJob(jobs.filter(job => !terminal(job)));
   const imageService = useMemo(() => config.decisionApiUrl ? imageApi(config.decisionApiUrl, config.storage, imageToken) : null, [config.decisionApiUrl, config.storage, imageToken]);
   const api = useMemo(() => trainingApi(config.apiUrl, config.storage, imageToken), [config.apiUrl, config.storage, imageToken]);
-  const [migrationJob, setMigrationJob] = useState<Job>();
-  const [migrationError, setMigrationError] = useState('');
-  useEffect(() => {
-    if (!migrateTo || !upgradeOf) return;
-    const controller = new AbortController();
-    api.get(upgradeOf, controller.signal).then(({ job }) => {
-      if (job.id !== upgradeOf) throw new Error('The service returned a different model.');
-      if (!controller.signal.aborted) setMigrationJob(job);
-    }).catch(() => { if (!controller.signal.aborted) setMigrationError('Your current model could not be loaded. Return to your model and try Migrate again.'); });
-    return () => controller.abort();
-  }, [api, upgradeOf, migrateTo]);
   const history = [...jobs, ...availableModels.filter(model => !jobs.some(job => job.id === model.id))];
   const loadJobs = useCallback(async (signal?: AbortSignal) => {
     if (!runId) return api.list(signal);
@@ -212,15 +201,8 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     let createdId = '';
     try {
       await validateDatasets(datasets, controller.signal);
-      let selection = {};
-      if (migrateTo) {
-        const bases = await trainingBase(config.apiUrl, controller.signal);
-        const target = migrationJob && newerBase(bases, migrationJob, migrateTo);
-        if (!target) throw new Error('This migration is no longer available. Return to your model to check available bases.');
-        selection = target.selection;
-      }
       setProgress('Preparing your training run…');
-      const { job, uploads } = await api.create({ ...parsed.data, ...selection }, controller.signal);
+      const { job, uploads } = await api.create(parsed.data, controller.signal);
       createdId = job.id; setPendingUpload(job.id); replaceJob(job);
       for (const split of SPLITS) {
         setProgress(`Uploading ${split} directly to private storage…`);
@@ -378,8 +360,10 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
       </div>
     </SheetContent>}
     {imageProfile && imageService && <ImageTrainingIntake apiUrl={config.apiUrl} active={intakeMode === 'images'} onChooseType={() => setIntakeMode('choose')} assistantConfigured={config.assistantConfigured} owner={owner} token={imageToken} trainingApi={api} imageApi={imageService} profile={imageProfile} resumeJob={jobs.find(job => isImageJob(job) && job.status === 'uploading')} onSubmitted={replaceJob} />}
-    <TrainingIntake apiUrl={config.apiUrl} active={intakeMode === 'text'} upgrade={upgradeOf ? { id: upgradeOf, name: migrationJob?.name ?? history.find(job => job.id === upgradeOf)?.name } : undefined} migration={migrateTo ? { target: migrateTo, job: migrationJob } : undefined} onChooseType={upgradeOf ? undefined : () => setIntakeMode('choose')} assistantConfigured={config.assistantConfigured} key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={migrationError || error} needsCredit={needsCredit} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
+    {migrateTo && upgradeOf ? <MigrationConfirmation api={api} apiUrl={config.apiUrl} owner={owner} previousId={upgradeOf} targetId={migrateTo} onExpired={onExpired} onSubmitted={job => {
+      replaceJob(job); setPanelOpen(false); router.push(`/train?run=${job.id}`);
+    }} /> : <TrainingIntake apiUrl={config.apiUrl} active={intakeMode === 'text'} upgrade={upgradeOf ? { id: upgradeOf, name: history.find(job => job.id === upgradeOf)?.name } : undefined} onChooseType={upgradeOf ? undefined : () => setIntakeMode('choose')} assistantConfigured={config.assistantConfigured} key={formVersion} busy={busy} onSubmit={create} onFiles={setFiles} pending={Boolean(pendingUpload)} pendingName={jobs.find(job => job.id === pendingUpload)?.name} submissionError={error} needsCredit={needsCredit} progress={progress} onStopUpload={busy && cancellable ? () => operation.current?.abort() : undefined} onCloseAutoFocus={event => {
       if (focusSubmitted.current) { event.preventDefault(); focusSubmitted.current = false; statusMessage.current?.focus(); }
-    }} />
+    }} />}
   </Sheet>;
 }
