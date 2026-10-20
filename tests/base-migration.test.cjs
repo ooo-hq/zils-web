@@ -1,7 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { newerBase } = require('../.private/test-build/base-model.js');
-const { jobSchema, submissionSchema, imageSubmissionSchema, trainingApi } = require('../.private/test-build/training.js');
+const { jobSchema, migrationPreviewSchema, submissionSchema, imageSubmissionSchema, trainingApi } = require('../.private/test-build/training.js');
 
 const stock = { id: 'd3-mini-4.5b-v1', name: 'd3-mini 4.5B' };
 const round = n => ({ id: `d3-mini-4.5b-zils-r${n}`, name: `d3-mini r${n}` });
@@ -65,7 +65,7 @@ test('base-change submissions retain the predecessor and criteria through API va
   });
   await api.create(input);
   assert.deepEqual(sent.acceptance, acceptance);
-  assert.equal(sent.acceptance.migration, undefined, 'customer migration keeps ordinary approval criteria');
+  assert.equal(sent.acceptance.migration, undefined, 'an ordinary base-change upgrade keeps its improvement target');
   assert.equal(submissionSchema.safeParse({ ...input, acceptance: { ...acceptance, previous_job_id: undefined } }).success, false);
   assert.equal(submissionSchema.safeParse({ ...input, acceptance: { ...acceptance, base_change: false } }).success, false);
   assert.equal(imageSubmissionSchema.safeParse({ ...input, acceptance: { ...acceptance, previous_job_id: undefined }, image_intake: { version: 'zils-image-intake/v1', seed: 'test', snapshot_sha256: 'a'.repeat(64) } }).success, false);
@@ -82,6 +82,19 @@ test('saved-data confirmation sends only a pinned target and retry identity', as
   });
   await api.migrate(predecessor.id, { model: round(5).id, request_id: requestId, acceptance: { min_accuracy: 0 } });
   assert.deepEqual(sent, { model: round(5).id, request_id: requestId });
+});
+
+test('migration policy survives preview and result parsing without changing regular upgrades', () => {
+  for (const migration of ['no_regression', true]) {
+    const acceptance = { min_accuracy: .8, min_brier_improvement: .01, previous_job_id: job().id, base_change: true, migration };
+    const parsed = jobSchema.parse({ ...job(round(5)), acceptance, result: { ...job().result, delivery: { status: 'accepted', acceptance } } });
+    assert.deepEqual(parsed.acceptance, acceptance);
+    assert.deepEqual(parsed.result.delivery.acceptance, acceptance);
+    assert.deepEqual(migrationPreviewSchema.parse({ job: job(), counts: { train: 2, calibration: 2, test: 2 }, acceptance, allow_jev_comparison: false }).acceptance, acceptance);
+    assert.equal(submissionSchema.safeParse({ name: 'upgrade', acceptance: { ...acceptance, base_change: undefined }, allow_training_data_export: true }).success, false);
+  }
+  const acceptance = { min_accuracy: .8, min_brier_improvement: .01, previous_job_id: job().id };
+  assert.deepEqual(submissionSchema.parse({ name: 'upgrade', acceptance, allow_training_data_export: true }).acceptance, acceptance);
 });
 
 test('migration responses cannot silently switch the source or target', async () => {

@@ -31,7 +31,7 @@ async function fixture(page: Page, model = mini, target = round(5)) {
     if (url.pathname === `/v1/jobs/${id}`) return route.fulfill({ headers, json: { job: currentJob(model) } });
     if (url.pathname === `/v1/jobs/${id}/migration`) {
       if (state.denied || state.missing) return route.fulfill({ headers, status: state.denied ? 404 : 409, json: { error: state.denied ? 'Job not found.' : 'The saved dataset is no longer available. Train a replacement with new examples.' } });
-      if (request.method() === 'GET') return route.fulfill({ headers, json: { job: currentJob(model), counts: { train: 4096, calibration: 500, test: 500 }, acceptance: { min_accuracy: .87, min_brier_improvement: .02 }, allow_jev_comparison: true } });
+      if (request.method() === 'GET') return route.fulfill({ headers, json: { job: currentJob(model), counts: { train: 4096, calibration: 500, test: 500 }, acceptance: { min_accuracy: .87, min_brier_improvement: .02, previous_job_id: id, base_change: true, migration: 'no_regression' }, allow_jev_comparison: true } });
       const body = request.postDataJSON(); state.posts.push(body);
       if (!created) {
         created = { id: newId, name: 'support-routing', status: 'validating', model: target, dataset_source: { job_id: id, job_sha256: 'a'.repeat(64), request_id: body.request_id } };
@@ -60,7 +60,8 @@ test('Migrate confirms existing data and settings without reopening the training
   const dialog = await openMigration(page);
   await expect(dialog.getByText('4,096', { exact: true })).toBeVisible();
   await expect(dialog.getByText('87%', { exact: true })).toBeVisible();
-  await expect(dialog.getByText('0.02', { exact: true })).toBeVisible();
+  await expect(dialog.getByText('Match or improve', { exact: true })).toBeVisible();
+  await expect(dialog.getByText('Minimum Brier improvement', { exact: true })).toHaveCount(0);
   await expect(dialog.locator('input, textarea, select')).toHaveCount(0);
   await expect(dialog.getByText('d3-mini r5', { exact: true })).toBeVisible();
   expect(state.writes).toEqual([]);

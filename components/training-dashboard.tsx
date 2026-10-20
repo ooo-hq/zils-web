@@ -296,12 +296,12 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
         {job.workflow?.state === 'ready' && job.workflow.model_id && <p className={styles.hash}>Full API model ID<br /><code>{job.workflow.model_id}</code></p>}
         {job.created_at && <p>Submitted {new Date(job.created_at).toLocaleString()}</p>}
         {job.model && <p>Starting model: <strong>{job.model.name}</strong></p>}
-        {job.selection?.previous && <p>Replaces: <Link href={`/models/${job.selection.previous.job_id}`}>{job.selection.previous.model_id}<LinkLoading /></Link>. The new model goes live only if it beats that version on your test examples.</p>}
+        {job.selection?.previous && <p>Replaces: <Link href={`/models/${job.selection.previous.job_id}`}>{job.selection.previous.model_id}<LinkLoading /></Link>. The new model goes live only after it meets its acceptance criteria against that version on your test examples.</p>}
         {job.status === 'completed' && !job.result && <p>Result details are not available yet. Refresh to try again.</p>}
         {job.result && job.model?.id !== 'imajev-4b-v1' && <>
           <p className={styles.help}>Measured on examples held aside from training. Results are not a guarantee on future inputs.</p>
           <div className={styles.metrics}><div><span>Base model accuracy</span><strong>{metric(job.result.baseline.accuracy, true)}</strong></div><div><span>Base model Brier loss</span><strong>{metric(job.result.baseline.brier)}</strong></div></div>
-          {job.result.delivery.acceptance && <p className={styles.help}>Required: {metric(job.result.delivery.acceptance.min_accuracy, true)} accuracy; {metric(job.result.delivery.acceptance.min_brier_improvement)} absolute Brier improvement.</p>}
+          {job.result.delivery.acceptance && <p className={styles.help}>Required: {metric(job.result.delivery.acceptance.min_accuracy, true)} accuracy; {job.result.delivery.acceptance.migration === 'no_regression' ? 'Brier score must match or improve on your previous model' : job.result.delivery.acceptance.migration ? 'at most 0.005 increase in Brier loss' : `${metric(job.result.delivery.acceptance.min_brier_improvement)} absolute Brier improvement`}.</p>}
           <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Candidate evaluations"><table><thead><tr><th>Candidate</th><th>Status</th><th>Accuracy</th><th>Brier loss</th></tr></thead><tbody>{job.result.miners.map(miner => <tr key={miner.uid}><th>{miner.uid}{job.result?.delivery.uid === miner.uid ? ' · selected' : ''}</th><td>{miner.status}</td><td>{metric(miner.accuracy, true)}</td><td>{metric(miner.brier)}</td></tr>)}</tbody></table></div>
           {job.result.delivery.sha256 && <p className={styles.hash}>Checkpoint SHA-256<br /><code>{job.result.delivery.sha256}</code></p>}
           {canDownload(job) && <p className={styles.help}>Download links expire. Files: {downloadFiles(job).join(', ')}.</p>}
