@@ -10,10 +10,13 @@ import { TrainingDecisionSetup } from '@/components/training-decision-setup';
 import { TrainingExampleSetup } from '@/components/training-example-setup';
 import { TrainingExampleReview } from '@/components/training-example-review';
 import { SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
+import { ModelPoolSelect } from '@/components/model-pool-select';
+import type { PoolSelection } from '@/lib/base-model';
 import styles from '@/app/(home)/train/train.module.css';
 
 type Props = {
   active?: boolean;
+  apiUrl: string;
   onChooseType?: () => void;
   assistantConfigured?: boolean;
   busy: boolean;
@@ -35,7 +38,8 @@ const splitNames = { train: 'Training', calibration: 'Calibration', test: 'Evalu
 const errorMessage = (error: unknown) => error instanceof Error ? error.message.replace(/CSV record/g, 'Source record') : 'Could not read your data. Check the file or pasted text and try again.';
 
 // State lives outside SheetContent so closing the panel preserves this browser's draft.
-export function TrainingIntake({ active = true, onChooseType, assistantConfigured, busy, onSubmit, onFiles, onCloseAutoFocus, pending = false, pendingName, submissionError, needsCredit = false, progress, onStopUpload, upgrade }: Props) {
+export function TrainingIntake({ apiUrl, active = true, onChooseType, assistantConfigured, busy, onSubmit, onFiles, onCloseAutoFocus, pending = false, pendingName, submissionError, needsCredit = false, progress, onStopUpload, upgrade }: Props) {
+  const [selection, setSelection] = useState<PoolSelection | null>(null);
   const [advanced, setAdvanced] = useState(false);
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
@@ -142,7 +146,8 @@ export function TrainingIntake({ active = true, onChooseType, assistantConfigure
   }
   async function submit(event: FormEvent) {
     event.preventDefault(); setError('');
-    const parsed = submissionSchema.safeParse({ name, acceptance: { min_accuracy: accuracy === '' ? NaN : Number(accuracy) / 100, min_brier_improvement: improvement === '' ? NaN : Number(improvement), ...(upgrade ? { previous_job_id: upgrade.id } : {}) }, allow_training_data_export: consent, allow_jev_comparison: consent });
+    if (!selection) { setError('Choose a pool with qualified training capacity.'); return; }
+    const parsed = submissionSchema.safeParse({ name, ...selection, acceptance: { min_accuracy: accuracy === '' ? NaN : Number(accuracy) / 100, min_brier_improvement: improvement === '' ? NaN : Number(improvement), ...(upgrade ? { previous_job_id: upgrade.id } : {}) }, allow_training_data_export: consent, allow_jev_comparison: consent });
     if (!parsed.success) { setError('Check your run name, success criteria, and data-sharing permission.'); return; }
     let files = advanced ? advancedFiles : prepared?.files;
     if (!files?.train || !files.calibration || !files.test) { setError('Prepare all three dataset files before submitting.'); return; }
@@ -175,6 +180,7 @@ export function TrainingIntake({ active = true, onChooseType, assistantConfigure
     finally { setWorking(false); }
   }
   const criteria = <>
+    <ModelPoolSelect apiUrl={apiUrl} modality="text" disabled={locked || pending} onChange={setSelection} />
     <details className={styles.details}><summary>Success criteria: at least {accuracy || '—'}% accuracy</summary>
       <label htmlFor="min-accuracy">Minimum accuracy (%)</label><input id="min-accuracy" type="number" required min="0" max="100" step="any" value={accuracy} onChange={event => setAccuracy(event.target.value)} />
       <small>Measured on examples kept aside from training. The trained model must also improve its probability estimates over the base model.</small>
@@ -203,7 +209,7 @@ export function TrainingIntake({ active = true, onChooseType, assistantConfigure
           setSplitFile(split, event.dataTransfer.files[0]);
         }}><label htmlFor={`dataset-${split}`}>Drop the {splitNames[split].toLowerCase()} file here or choose a file</label><input id={`dataset-${split}`} type="file" accept=".jsonl,application/jsonl,application/x-ndjson" required={!advancedFiles[split]} onChange={event => { setSplitFile(split, event.target.files?.[0]); }} /><small>{advancedFiles[split]?.name || 'JSONL · 128 MiB maximum'}</small></div>)}
         <details className={styles.details}><summary>JSONL format</summary><p>Each line requires id, group_id, family, state, question, and label. IDs must be unique across all files. Calibration and test must share the same families, all present in training.</p><pre>{'{"id":"ticket-001","group_id":"conversation-001","family":"support-routing","state":{"message":"Please send my invoice."},"question":{"type":"choice","criteria":{"billing":"Billing","technical":"Technical support"}},"label":"billing"}'}</pre></details>
-        {criteria}<div className={styles.wizardActions}><button type="button" className={styles.secondary} onClick={switchMode}>Guided setup</button><button className={styles.button} disabled={locked || pending}>{busy ? 'Sending…' : 'Send for training'}</button></div>
+        {criteria}<div className={styles.wizardActions}><button type="button" className={styles.secondary} onClick={switchMode}>Guided setup</button><button className={styles.button} disabled={locked || pending || !selection}>{busy ? 'Sending…' : 'Send for training'}</button></div>
       </fieldset></form> : <>
         {step === 0 && <form onSubmit={nextDecision}><fieldset disabled={locked}>
           <TrainingDecisionSetup kind="text" question={question} answers={answers} assistantConfigured={assistantConfigured} onQuestion={setQuestion} onAnswers={value => { setAnswers(value); suggestedAnswers.current = false; setEdits({}); }} />
@@ -265,7 +271,7 @@ export function TrainingIntake({ active = true, onChooseType, assistantConfigure
           </details>
           <label className={styles.checkLabel}><input type="checkbox" required checked={reviewed} onChange={event => setReviewed(event.target.checked)} /><span>I checked the answers and the information Zils will read. Examples from the same case are kept together.</span></label>
           {criteria}
-          <div className={styles.wizardActions}><button type="button" className={styles.secondary} onClick={() => go(2)}>Back</button><button className={styles.button} disabled={locked || pending}>{busy ? 'Sending…' : 'Send for training'}</button></div>
+          <div className={styles.wizardActions}><button type="button" className={styles.secondary} onClick={() => go(2)}>Back</button><button className={styles.button} disabled={locked || pending || !selection}>{busy ? 'Sending…' : 'Send for training'}</button></div>
         </fieldset></form>}
       </>}
       <p className={styles.draftNote}>Your draft stays here when you close this panel. Refreshing or leaving this page clears it. Files are uploaded only when you send them for training.</p>

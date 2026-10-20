@@ -1,3 +1,4 @@
+import { legacyConfig } from './model-pools-fixture';
 import { test, expect } from '@playwright/test';
 const owner='10000000-0000-4000-8000-000000000002', jobId='10000000-0000-4000-8000-000000000003';
 for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,false],[false,true,false],[false,false,true],[true,true,true]]) test(`reviewed photos, labels and groups become an image job (${mobile?'mobile':'desktop'}${insufficient?' after top-up':''}${spaces?' with Spaces':''})`, async ({page}) => {
@@ -19,6 +20,7 @@ for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,fa
     const headers={'access-control-allow-origin':'*','access-control-allow-headers':'*','access-control-allow-methods':'GET, POST, PUT, DELETE, OPTIONS'};
     if(req.method()==='OPTIONS') return route.fulfill({status:204,headers});
     calls.push(req.method()+' '+path);
+    if(path==='/v1/config') return route.fulfill({headers,json:legacyConfig});
     if(path==='/v1/image-models') return route.fulfill({headers,json:{models:[{name:'image-stock',stock:true,capabilities:{modalities:['image','text']}}],training_enabled:true,training_profile:{model:'d3-mini-4.5b-v1',capabilities:{modalities:['text','image','video'],question_types:['noul','choice','score'],max_images:4,max_videos:1,max_questions:8,max_options:255,max_input_tokens:4096,unknown_key:null},images_per_example:1,max_train:1024,max_calibration:256,max_test:512,max_source_bytes:10485760,max_pixels:16000000,max_edge:8192}}});
     if(path==='/v1/jobs' && req.method()==='GET') return route.fulfill({headers,json:{jobs:[]}});
     if(path==='/v1/jobs' && req.method()==='POST') {created=req.postDataJSON();return route.fulfill({headers,json:{job:job(),uploads:uploads()}});}

@@ -7,6 +7,8 @@ import { useAuthSession } from '@/components/auth-session';
 import { imageApi, ImageApiError, type ImageQuestion } from '@/lib/images';
 import { uploadImageTraining, type ImageDraft, type PreparedImageTraining } from '@/lib/image-training';
 import { SPLITS, submissionSchema, trainingApi, TrainingApiError, validateDatasets, type Split, type Submission } from '@/lib/training';
+import { ModelPoolSelect } from '@/components/model-pool-select';
+import type { PoolSelection } from '@/lib/base-model';
 import type { TrainingConfig } from '@/lib/training-config';
 import s from './teach-by-example.module.css';
 
@@ -25,6 +27,7 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
   const { client, session, error: sessionError } = useAuthSession(config ?? undefined);
   const router = useRouter(), id = useId();
   const [name, setName] = useState(initialName), [accuracy, setAccuracy] = useState(initialAccuracy), [improvement, setImprovement] = useState(initialImprovement);
+  const [selection, setSelection] = useState<PoolSelection | null>(null);
   const [consent, setConsent] = useState(false), [comparison, setComparison] = useState(false);
   const [busy, setBusy] = useState(false), [frozen, setFrozen] = useState(false), [uncertain, setUncertain] = useState(false);
   const [error, setError] = useState(''), [progress, setProgress] = useState(''), [needsCredit, setNeedsCredit] = useState(false);
@@ -47,11 +50,12 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
     if (operation.current || uncertain || !config || !client || !session || accountChanged) return;
     setError(''); setNeedsCredit(false);
     if (!consent) { setError('Confirm permission to share the training examples.'); return; }
+    if (!snapshot.current && !selection) { setError('Choose a pool with qualified training capacity.'); return; }
     const controller = new AbortController(); operation.current = controller;
     setBusy(true); onLock(true);
     try {
       if (!snapshot.current) {
-        const input = submissionSchema.parse({ name, acceptance: { min_accuracy: accuracy.trim() ? Number(accuracy) / 100 : NaN, min_brier_improvement: improvement.trim() ? Number(improvement) : NaN }, allow_training_data_export: true, ...(comparison && !imageAnswers ? { allow_jev_comparison: true } : {}) });
+        const input = submissionSchema.parse({ name, ...selection, acceptance: { min_accuracy: accuracy.trim() ? Number(accuracy) / 100 : NaN, min_brier_improvement: improvement.trim() ? Number(improvement) : NaN }, allow_training_data_export: true, ...(comparison && !imageAnswers ? { allow_jev_comparison: true } : {}) });
         setProgress('Checking your training data locally…');
         const data = await prepare(input.name);
         if (data.kind === 'text') await validateDatasets(data.files, controller.signal);
@@ -84,13 +88,13 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
             if (!valid) throw new Error(`${row.filename} exceeds the current photo dimensions.`);
           }
         }
-        job = await uploadImageTraining(data.prepared, data.question, { ...input, model: profile.model }, {
+        job = await uploadImageTraining(data.prepared, data.question, { ...input, model: input.model || profile.model }, {
           ...api, createImage: async (...args) => { attemptedCreate.current = true; return api.createImage(...args); },
         }, images, draft.current, controller.signal, update);
       } else {
         if (draft.current.job) {
           const current = (await api.get(draft.current.job.id, controller.signal)).job;
-          if (current.id !== draft.current.job.id) throw new Error('The service returned a different run. Open your saved run to check its status.');
+          if (current.id !== draft.current.job.id || (input.model && current.model?.id !== input.model)) throw new Error('The service returned a different run. Open your saved run to check its status.');
           draft.current.job = current;
         }
         if (!draft.current.job || draft.current.job.status === 'uploading') {
@@ -146,6 +150,7 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
     <h2>Start a real training run</h2>
     <p className={s.hint}>Uses one included training run or $2 from your balance. A completed evaluation is charged even if no model meets your targets. <Link href="/billing" target="_blank" rel="noopener noreferrer">View billing</Link>.</p>
     {session === undefined ? <p role="status">Checking your sign-in…</p> : !session || accountChanged ? <p className={s.hint}>{accountChanged ? 'Sign in to the original account to resume this run.' : 'Sign in before submitting.'} <Link className={s.secondary} href="/train" target="_blank" rel="noopener noreferrer">Sign in to train</Link> Your draft stays in this tab; return here after signing in.</p> : <form onSubmit={submit}>
+      <ModelPoolSelect apiUrl={config.apiUrl} modality={imageAnswers ? 'images' : 'text'} disabled={busy || frozen} onChange={setSelection} />
       <fieldset disabled={busy || frozen}>
         <label htmlFor={`${id}-name`}>Training run name</label><input id={`${id}-name`} required maxLength={64} pattern="[a-z0-9][a-z0-9-]{0,63}" placeholder="support-routing-v1" value={name} onChange={event => setName(event.target.value)} />
         <div className={s.pairFields}><div><label htmlFor={`${id}-accuracy`}>Required accuracy (%)</label><input id={`${id}-accuracy`} type="number" required min="0" max="100" step="any" value={accuracy} onChange={event => setAccuracy(event.target.value)} /></div><div><label htmlFor={`${id}-improvement`}>Required Brier improvement</label><input id={`${id}-improvement`} type="number" required min="0" max="2" step="any" value={improvement} onChange={event => setImprovement(event.target.value)} /></div></div>
@@ -153,7 +158,7 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
         <label className={s.checkLabel}><input type="checkbox" required checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I am authorized to share these examples. Approved workers can read and retain the training data. Calibration and test labels stay with Zils. This is not confidential compute.</span></label>
         {!imageAnswers && <label className={s.checkLabel}><input type="checkbox" checked={comparison} onChange={event => setComparison(event.target.checked)} /><span>Also compare against TypeSafe JEV. Send final-evaluation inputs and questions to TypeSafe; correct answers stay with Zils. Optional.</span></label>}
       </fieldset>
-      <div className={s.actions}><span className={s.hint}>{session.user.email}</span><button className={s.primary} disabled={busy || uncertain || !consent}>{busy ? 'Submitting…' : frozen ? 'Resume training submission' : 'Start training'}</button></div>
+      <div className={s.actions}><span className={s.hint}>{session.user.email}</span><button className={s.primary} disabled={busy || uncertain || !consent || (!frozen && !selection)}>{busy ? 'Submitting…' : frozen ? 'Resume training submission' : 'Start training'}</button></div>
     </form>}
     {(error || sessionError) && <p role="alert" className={s.error}>{error || sessionError}{needsCredit && <Link href="/billing" target="_blank" rel="noopener noreferrer">Add credit</Link>}</p>}
     {progress && <p role="status" className={s.hint}>{progress}</p>}

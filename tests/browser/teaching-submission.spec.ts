@@ -1,3 +1,4 @@
+import { legacyConfig, poolConfig, mini, lite } from './model-pools-fixture';
 import { test, expect, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
@@ -5,7 +6,7 @@ const jobId = '30000000-0000-4000-8000-000000000001';
 const owner = '30000000-0000-4000-8000-000000000002';
 const splits = ['train', 'calibration', 'test'] as const;
 
-async function workspace(page: Page, options: { signedIn?: boolean; failUpload?: boolean; credit?: boolean; lostCreate?: boolean | 400 | 409; lostSubmit?: boolean; imagesEnabled?: boolean } = {}) {
+async function workspace(page: Page, options: { signedIn?: boolean; failUpload?: boolean; credit?: boolean; lostCreate?: boolean | 400 | 409; lostSubmit?: boolean; imagesEnabled?: boolean; pools?: boolean } = {}) {
   const expires = Math.floor(Date.now() / 1000) + 3600;
   const user = { id: owner, email: 'trainer@example.com', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
   if (options.signedIn !== false) await page.addInitScript(({ user, expires }) => {
@@ -13,7 +14,7 @@ async function workspace(page: Page, options: { signedIn?: boolean; failUpload?:
   }, { user, expires });
   let created: Record<string, unknown> | undefined, status = 'uploading', failUpload = options.failUpload;
   const state = { credit: options.credit, creates: 0, submits: 0, uploads: {} as Record<string, string>, putAttempts: [] as string[], mutations: [] as string[], assets: [] as { id: string; filename: string; source_sha256: string }[] };
-  const job = () => ({ id: jobId, name: created?.name || 'teaching-run', status, acceptance: created?.acceptance, ...(created?.model ? { model: { id: 'd3-mini-4.5b-v1', name: 'd3-mini 4.5B', base: 'zils-ai/d3-mini-4.5b-v1', base_revision: '8'.repeat(40), inputs: { images: 4, video: true } }, image_intake: created.image_intake } : {}) });
+  const job = () => ({ id: jobId, name: created?.name || 'teaching-run', status, acceptance: created?.acceptance, ...(created?.model ? { model: created.model === lite.id ? lite : mini, image_intake: created.image_intake } : {}) });
   const grant = (path: string) => ({ url: `http://127.0.0.1:8998/storage/v1/object/upload/sign/${path}`, method: 'PUT', headers: { 'Content-Type': 'application/octet-stream', 'x-upsert': 'false' } });
   const uploads = () => Object.fromEntries(splits.map(split => [split, state.uploads[split] ? { uploaded: true } : grant(`fez-training-data/${jobId}/inputs/${split}.jsonl`)]));
   await page.route('**/*', async route => {
@@ -27,6 +28,7 @@ async function workspace(page: Page, options: { signedIn?: boolean; failUpload?:
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
     if (request.method() !== 'GET') state.mutations.push(`${request.method()} ${path}`);
     if (path.startsWith('/auth/v1/')) return route.fulfill({ headers, json: user });
+    if (path === '/v1/config') return route.fulfill({ headers, json: options.pools ? poolConfig() : legacyConfig });
     if (path === '/v1/image-models') return route.fulfill({ headers, json: { models: [], training_enabled: options.imagesEnabled !== false, training_profile: { model: 'd3-mini-4.5b-v1', capabilities: { modalities: ['text', 'image', 'video'], question_types: ['noul', 'choice', 'score'], max_images: 4, max_videos: 1, max_questions: 8, max_options: 255, max_input_tokens: 4096, unknown_key: null }, images_per_example: 1, max_train: 1024, max_calibration: 256, max_test: 512, max_source_bytes: 10485760, max_pixels: 16000000, max_edge: 8192 } } });
     if (path === '/v1/jobs' && request.method() === 'GET') return route.fulfill({ headers, json: { jobs: created ? [job()] : [] } });
     if (path === '/v1/jobs' && request.method() === 'POST') {
@@ -202,9 +204,9 @@ test('anonymous preparation stays local and sign-in opens separately to preserve
   expect(state.mutations).toEqual([]);
 });
 
-for (const enabled of [true, false]) test(`image teaching respects service availability (${enabled}) and submits reviewed photos`, async ({ page }) => {
+for (const [enabled, pools] of [[true, false], [false, false], [true, true]]) test(`image teaching respects service availability (${enabled}, pools=${pools}) and submits reviewed photos`, async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  const { state, created } = await workspace(page, { imagesEnabled: enabled });
+  const { state, created } = await workspace(page, { imagesEnabled: enabled, pools });
   await page.getByRole('button', { name: 'Images', exact: true }).click();
   await page.getByLabel('What should the model decide?', { exact: true }).fill('Is this item damaged?');
   const photos = await page.evaluate(() => Array.from({ length: 6 }, (_, i) => { const canvas = document.createElement('canvas'); canvas.width = 8; canvas.height = 8; const context = canvas.getContext('2d')!; context.fillStyle = `rgb(${i * 31},30,80)`; context.fillRect(0, 0, 8, 8); return canvas.toDataURL().split(',')[1]; }));
@@ -216,6 +218,7 @@ for (const enabled of [true, false]) test(`image teaching respects service avail
   await page.getByLabel('Training run name', { exact: true }).fill('image-live');
   await expect(page.getByLabel('Answer the model must catch')).toHaveCount(0);
   expect(state.mutations).toEqual([]);
+  if (pools) await page.getByLabel('Model pool', { exact: true }).selectOption('d3-lite');
   await consent(page);
   await page.screenshot({ path: '.private/teaching-live-review-mobile.png', fullPage: true });
   expect(await page.locator('body').evaluate(element => element.scrollWidth <= window.innerWidth)).toBe(true);
@@ -226,10 +229,29 @@ for (const enabled of [true, false]) test(`image teaching respects service avail
     return;
   }
   await expect(page).toHaveURL(`/train?run=${jobId}`);
-  expect(created()).toMatchObject({ model: 'd3-mini-4.5b-v1' });
+  expect(created()).toMatchObject({ model: pools ? lite.id : mini.id });
   expect(created()!.acceptance).toEqual({ min_accuracy: .8, min_brier_improvement: .01 });
   expect(state.assets).toHaveLength(6);
   const rows = Object.values(state.uploads).flatMap(file => file.trim().split('\n').map(line => JSON.parse(line)));
   expect(rows).toHaveLength(6);
   for (const row of rows) { expect(row.state).toEqual({}); expect(row.image.asset_id).toBeTruthy(); expect(row).not.toHaveProperty('filename'); }
+});
+
+
+test('pool selection remains fixed through interrupted text upload', async ({ page }) => {
+  const { state, created } = await workspace(page, { pools: true, failUpload: true });
+  await prepared(page);
+  const pool = page.getByLabel('Model pool', { exact: true });
+  await expect(pool).toHaveValue('d3-mini');
+  await expect(pool.locator('option[value="d3-nano"]')).toBeDisabled();
+  await pool.selectOption('d3-lite');
+  await page.getByLabel('Base channel', { exact: true }).selectOption('latest');
+  await consent(page);
+  await page.getByRole('button', { name: 'Start training', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Submit training run' }).getByRole('alert')).toBeVisible();
+  await expect(pool).toBeDisabled();
+  expect(created()).toMatchObject({ pool: 'd3-lite', base_channel: 'latest', model: lite.id });
+  await page.getByRole('button', { name: 'Resume training submission', exact: true }).click();
+  await expect(page).toHaveURL(`/train?run=${jobId}`);
+  expect(state.creates).toBe(1);
 });

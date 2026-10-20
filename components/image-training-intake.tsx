@@ -7,12 +7,15 @@ import { SheetContent, SheetTitle, SheetDescription } from '@/components/ui/shee
 import { mapImageExamples, prepareImageTraining, uploadImageTraining, type ImageExample, type ImageDraft, type PreparedImageTraining } from '@/lib/image-training';
 import { ImageApiError, imageQuestion, type imageApi, type ImageModels } from '@/lib/images';
 import { TrainingApiError, type trainingApi, type Job } from '@/lib/training';
+import { ModelPoolSelect } from '@/components/model-pool-select';
+import type { PoolSelection } from '@/lib/base-model';
 import styles from '@/app/(home)/train/train.module.css';
 import photoStyles from './image-training-intake.module.css';
 
-type Props={active?:boolean;onChooseType?:()=>void;assistantConfigured?:boolean;owner:string;token:()=>Promise<string>;trainingApi:ReturnType<typeof trainingApi>;imageApi:ReturnType<typeof imageApi>;profile:NonNullable<ImageModels['training_profile']>;resumeJob?:Job;onSubmitted:(job:Job)=>void};
+type Props={apiUrl:string;active?:boolean;onChooseType?:()=>void;assistantConfigured?:boolean;owner:string;token:()=>Promise<string>;trainingApi:ReturnType<typeof trainingApi>;imageApi:ReturnType<typeof imageApi>;profile:NonNullable<ImageModels['training_profile']>;resumeJob?:Job;onSubmitted:(job:Job)=>void};
 export function ImageTrainingIntake(props:Props){return <Intake key={props.owner} {...props}/>;}
-function Intake({active=true,onChooseType,assistantConfigured,trainingApi:training,imageApi:images,profile,resumeJob,onSubmitted}:Props){
+function Intake({apiUrl,active=true,onChooseType,assistantConfigured,trainingApi:training,imageApi:images,profile,resumeJob,onSubmitted}:Props){
+  const [selection,setSelection]=useState<PoolSelection|null>(null);
   const [step,setStep]=useState(0);
   const heading=useRef<HTMLHeadingElement>(null);
   function go(next:number){setStep(next);setError('');requestAnimationFrame(()=>heading.current?.focus());}
@@ -79,7 +82,9 @@ function Intake({active=true,onChooseType,assistantConfigured,trainingApi:traini
     const controller=new AbortController();operation.current=controller;setBusy(true);
     if(!draft.current.job&&resumeJob)draft.current.job=resumeJob;
     try{
-      const job=await uploadImageTraining(prepared,decision,{name,model:profile.model,acceptance,allow_training_data_export:true},training,images,draft.current,controller.signal,text=>{if(!controller.signal.aborted){setProgress(text);setFrozen(Boolean(draft.current.job));setSavedJob(draft.current.job);}});
+      if (!draft.current.job && !selection) throw new Error('Choose a pool with qualified image training capacity.');
+      const selected = draft.current.job ? {model: draft.current.job.model?.id || profile.model} : {...selection, model: selection?.model || profile.model};
+      const job=await uploadImageTraining(prepared,decision,{name,...selected,acceptance,allow_training_data_export:true},training,images,draft.current,controller.signal,text=>{if(!controller.signal.aborted){setProgress(text);setFrozen(Boolean(draft.current.job));setSavedJob(draft.current.job);}});
       if(!controller.signal.aborted){onSubmitted(job);setSubmitted(true);setProgress('');setFrozen(true);}
     }catch(error){if(!controller.signal.aborted){setNeedsCredit((error instanceof TrainingApiError || error instanceof ImageApiError) && error.status===402);setError(error instanceof Error?error.message:'Upload interrupted. Retry to resume missing photos.');}}
     finally{if(life.current.active){setBusy(false);setFrozen(Boolean(draft.current.job));setSavedJob(draft.current.job);}operation.current=null;}
@@ -120,6 +125,7 @@ function Intake({active=true,onChooseType,assistantConfigured,trainingApi:traini
       </>}
       {step===3&&prepared&&<div className={photoStyles.ready}><p>{prepared.counts.train} training · {prepared.counts.calibration} calibration · {prepared.counts.test} evaluation photos. Whole items stay together.</p>
         <div className={styles.tableWrap}><table><thead><tr><th>Answer</th><th>Training</th><th>Calibration</th><th>Evaluation</th></tr></thead><tbody>{prepared.distribution.map(row=><tr key={row.outcome}><th>{row.outcome}</th><td>{row.train}</td><td>{row.calibration}</td><td>{row.test}</td></tr>)}</tbody></table></div>
+        <ModelPoolSelect apiUrl={apiUrl} modality="images" disabled={locked} onChange={setSelection} />
         <fieldset disabled={locked} className={photoStyles.fields}><label>Run name<input value={name} onChange={e=>setName(e.target.value)} pattern="[a-z0-9][a-z0-9-]{0,63}"/></label>{binary&&<><label>Positive class<select aria-label="Positive class" value={positive} onChange={e=>setPositive(e.target.value)}><option value="">Choose the outcome you need to detect</option>{outcomes.map(v=><option key={v}>{v}</option>)}</select></label><label>Minimum positive recall (%)<input type="number" min="0" max="100" value={recall} onChange={e=>setRecall(e.target.value)}/></label><label>Maximum false alarms (%)<input type="number" min="0" max="100" value={alarms} onChange={e=>setAlarms(e.target.value)}/></label></>}
           <label>Minimum accuracy (%)<input type="number" min="0" max="100" value={accuracy} onChange={e=>setAccuracy(e.target.value)}/></label><label>Minimum Brier improvement<input type="number" min="0" max="2" step="0.01" value={improvement} onChange={e=>setImprovement(e.target.value)}/></label></fieldset>
         <p>Only training photos go to approved workers. Calibration and evaluation photos stay private to evaluation. Draft uploads expire after 24 hours; submitted photos are retained until 30 days after the run finishes.</p>
@@ -127,7 +133,7 @@ function Intake({active=true,onChooseType,assistantConfigured,trainingApi:traini
         <p>Each standard image run uses one included training run or $2 from your credit balance. Completed runs are charged even if no model meets your targets. <Link href="/billing" target="_blank" rel="noopener noreferrer">View billing</Link>.</p>
         <label className={photoStyles.check}><input type="checkbox" checked={consent} disabled={busy||submitted} onChange={e=>setConsent(e.target.checked)}/>I have permission to share training images with approved workers</label>
         {!locked&&<button type="button" className={styles.secondary} onClick={()=>{setPrepared(null);setConsent(false);go(2);}}>Back</button>}
-        {!submitted&&<button className={styles.button} disabled={busy||!consent} onClick={()=>void submit()}>{busy?'Uploading…':frozen?'Resume missing image uploads':'Start image training'}</button>}
+        {!submitted&&<button className={styles.button} disabled={busy||!consent||(!frozen&&!selection)} onClick={()=>void submit()}>{busy?'Uploading…':frozen?'Resume missing image uploads':'Start image training'}</button>}
       </div>}
       {busy&&<button className={styles.secondary} onClick={()=>{operation.current?.abort();setProgress('Upload stopped. Completed photos remain saved.');}}>Stop image upload</button>}
       {(frozen||resumeJob?.status==='uploading')&&<button className={styles.secondary} disabled={busy} onClick={()=>void reset()}>Start a new run</button>}
