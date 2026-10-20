@@ -1,5 +1,45 @@
+import { legacyConfig, lite } from './model-pools-fixture';
+import { imageDraftFingerprint, mapImageExamples, prepareImageTraining } from '../../lib/image-training';
+import { imageQuestion } from '../../lib/images';
 import { test, expect } from '@playwright/test';
 const owner='10000000-0000-4000-8000-000000000002', jobId='10000000-0000-4000-8000-000000000003';
+test('saved lite image upload resumes when discovery is unavailable',async({page})=>{
+ const expires=Math.floor(Date.now()/1000)+3600;
+ await page.addInitScript(({owner,expires})=>{const user={id:owner,email:'owner@example.com',aud:'authenticated',role:'authenticated',app_metadata:{},user_metadata:{},created_at:'2026-01-01T00:00:00Z'};localStorage.setItem('zils-training-auth',JSON.stringify({user,access_token:`${btoa('{"alg":"HS256"}')}.${btoa(JSON.stringify({sub:owner,exp:expires}))}.fixture`,refresh_token:'fixture',expires_at:expires,expires_in:3600,token_type:'bearer'}));},{owner,expires});
+ const photo=Buffer.from(await page.evaluate(()=>{const c=document.createElement('canvas');c.width=8;c.height=8;return c.toDataURL().split(',')[1];}),'base64');
+ const files=Array.from({length:18},(_,i)=>new File([photo],`photo-${i}.png`,{type:'image/png'}));
+ const csv='filename,answer,group\n'+files.map((f,i)=>`${f.name},${i%2?'Damaged':'Normal'},item-${i}`).join('\n');
+ const question=imageQuestion('Is the item damaged?','Normal\nDamaged');
+ const prepared=prepareImageTraining(mapImageExamples(files,csv),question,['Normal','Damaged'],'image-split-v1');
+ const job={id:jobId,name:'inspection',status:'uploading',model:lite,acceptance:{min_accuracy:.8,min_brier_improvement:.01},image_intake:{version:'zils-image-intake/v1',seed:prepared.seed,snapshot_sha256:await imageDraftFingerprint(prepared,question)}};
+ let resumed=false;const mutations:string[]=[];
+ await page.route('**/*',async route=>{
+  const req=route.request(),url=new URL(req.url());if(url.origin==='http://127.0.0.1:3107')return route.continue();
+  const headers={'access-control-allow-origin':'*','access-control-allow-headers':'*','access-control-allow-methods':'GET, POST, OPTIONS'};
+  if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});
+  if(req.method()!=='GET')mutations.push(url.pathname);
+  if(url.pathname==='/v1/config')return route.fulfill({status:503,headers,json:{error:'No capacity'}});
+  if(url.pathname==='/v1/jobs')return route.fulfill({headers,json:{jobs:[job]}});
+  if(url.pathname===`/v1/jobs/${jobId}`){resumed=true;return route.fulfill({headers,json:{job:{...job,status:'validating'}}});}
+  if(url.pathname==='/v1/image-models')return route.fulfill({headers,json:{models:[],training_enabled:true,training_profile:{model:legacyConfig.model.id,images_per_example:1,max_train:1024,max_calibration:256,max_test:512,max_source_bytes:10485760,max_pixels:16000000,max_edge:8192}}});
+  return route.fulfill({status:404,headers,json:{}});
+ });
+ await page.goto('/train');await page.getByRole('button',{name:'Continue image setup',exact:true}).click();
+ await page.getByLabel('Image training decision',{exact:true}).fill('Is the item damaged?');
+ await page.getByLabel('Image training answers',{exact:true}).fill('Normal\nDamaged');
+ await page.getByRole('button',{name:'Continue',exact:true}).click();
+ await page.getByLabel('Training photos',{exact:true}).setInputFiles(files.map(f=>({name:f.name,mimeType:f.type,buffer:photo})));
+ await expect(page.getByLabel('Image labels CSV',{exact:true})).toBeEnabled();
+ await page.getByLabel('Image labels CSV',{exact:true}).setInputFiles({name:'labels.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
+ await page.getByRole('button',{name:'Review photos',exact:true}).click();
+ await page.getByLabel('I have reviewed the labels and item groups',{exact:true}).check();
+ await page.getByRole('button',{name:'Review image splits',exact:true}).click();
+ await expect(page.getByText(`Saved model: ${lite.name} (${lite.id})`,{exact:true})).toBeVisible();
+ await page.getByLabel('I have permission to share training images with approved workers',{exact:true}).check();
+ await page.getByRole('button',{name:'Resume missing image uploads',exact:true}).click({timeout:2000});
+ await expect(page.getByText('Image run submitted for validation.',{exact:true})).toBeVisible();
+ expect(resumed).toBe(true);expect(mutations).toEqual([]);
+});
 for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,false],[false,true,false],[false,false,true],[true,true,true]]) test(`reviewed photos, labels and groups become an image job (${mobile?'mobile':'desktop'}${insufficient?' after top-up':''}${spaces?' with Spaces':''})`, async ({page}) => {
   if(mobile) await page.setViewportSize({width:390,height:844});
   const expires=Math.floor(Date.now()/1000)+3600;
@@ -19,6 +59,7 @@ for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,fa
     const headers={'access-control-allow-origin':'*','access-control-allow-headers':'*','access-control-allow-methods':'GET, POST, PUT, DELETE, OPTIONS'};
     if(req.method()==='OPTIONS') return route.fulfill({status:204,headers});
     calls.push(req.method()+' '+path);
+    if(path==='/v1/config') return route.fulfill({headers,json:legacyConfig});
     if(path==='/v1/image-models') return route.fulfill({headers,json:{models:[{name:'image-stock',stock:true,capabilities:{modalities:['image','text']}}],training_enabled:true,training_profile:{model:'d3-mini-4.5b-v1',capabilities:{modalities:['text','image','video'],question_types:['noul','choice','score'],max_images:4,max_videos:1,max_questions:8,max_options:255,max_input_tokens:4096,unknown_key:null},images_per_example:1,max_train:1024,max_calibration:256,max_test:512,max_source_bytes:10485760,max_pixels:16000000,max_edge:8192}}});
     if(path==='/v1/jobs' && req.method()==='GET') return route.fulfill({headers,json:{jobs:[]}});
     if(path==='/v1/jobs' && req.method()==='POST') {created=req.postDataJSON();return route.fulfill({headers,json:{job:job(),uploads:uploads()}});}

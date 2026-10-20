@@ -1,3 +1,4 @@
+import { legacyConfig } from './model-pools-fixture';
 import type { Page } from '@playwright/test';
 
 /** Seeds a stored Supabase session and answers the auth and service calls the console makes. */
@@ -11,6 +12,7 @@ export async function signIn(page: Page) {
   const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS' };
   for (const origin of ['http://127.0.0.1:8998', 'http://127.0.0.1:8999']) await page.route(`${origin}/**`, route => {
     if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
+    if (new URL(route.request().url()).pathname === '/v1/config') return route.fulfill({ headers, json: legacyConfig });
     if (new URL(route.request().url()).pathname.startsWith('/auth/v1/')) return route.fulfill({ json: user, headers });
     return route.fulfill({ status: 404, json: { error: 'Not part of this test' }, headers });
   });
