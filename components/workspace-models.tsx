@@ -8,6 +8,7 @@ import { SignInPrompt } from '@/components/signed-in-only';
 import { readyModels, TrainedModelLibrary } from '@/components/trained-model-library';
 import { WorkspaceLoading } from '@/components/workspace-loading';
 import { trainingApi, type Job } from '@/lib/training';
+import { trainingBase, type BaseConfig } from '@/lib/base-model';
 import type { TrainingConfig } from '@/lib/training-config';
 import training from '@/app/(home)/train/train.module.css';
 
@@ -31,6 +32,13 @@ export function useWorkspaceModels(config: TrainingConfig) {
 
 export function WorkspaceModels({ config }: { config: TrainingConfig }) {
   const { session, models, error } = useWorkspaceModels(config);
+  const [bases, setBases] = useState<BaseConfig | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    trainingBase(config.apiUrl, controller.signal).then(value => { if (!controller.signal.aborted) setBases(value); })
+      .catch(() => { if (!controller.signal.aborted) setBases(null); });
+    return () => controller.abort();
+  }, [config.apiUrl]);
   if (session === undefined) return <WorkspaceLoading label="Loading your models" />;
   if (!session) return <SignInPrompt title="Sign in to see your models">Models you train on your own examples appear here, ready to call from your app.</SignInPrompt>;
   if (error) return <p role="alert" className={training.error}>{error}</p>;
@@ -40,5 +48,5 @@ export function WorkspaceModels({ config }: { config: TrainingConfig }) {
     <p>Train a model on examples your team has reviewed. When it passes evaluation, it appears here with its API name.</p>
     <div className={training.actions}><Link href="/train/teach" className={training.button}><Plus size={16} aria-hidden="true" />Train a model</Link></div>
   </section>;
-  return <TrainedModelLibrary jobs={models} bare />;
+  return <TrainedModelLibrary jobs={models} bases={bases} bare />;
 }

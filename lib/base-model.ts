@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { serviceUrl, submissionSchema, type Submission } from './training';
+import { canDownload, isImageJob, serviceUrl, submissionSchema, type Job, type Submission } from './training';
 
 const profile = z.object({ id: z.string(), name: z.string() });
 const availability = z.object({ training_enabled: z.boolean(), serving_enabled: z.boolean(), max_input_tokens: z.number().int().positive(), inputs: z.object({ text: z.boolean(), images: z.boolean(), video: z.boolean() }) });
@@ -10,6 +10,28 @@ export const baseConfigSchema = z.object({
 });
 export type BaseConfig = z.infer<typeof baseConfigSchema>;
 export type PoolSelection = Pick<Submission, 'pool' | 'base_channel' | 'model'>;
+export type BaseMigration = { target: string; job?: Job };
+
+function baseVersion(id: string) {
+  // shortcut: order the released d3 stock/round naming scheme; use catalog lineage if other schemes launch.
+  const match = /^(d3-(?:mini-4\.5b|lite-0\.8b|nano-2\.2b|flash-8\.4b|26b))-(?:v1|zils-r([1-9]\d{0,8}))$/.exec(id);
+  return match ? { family: match[1], pool: match[1].replace(/-[\d.]+b$/, ''), round: Number(match[2] ?? 0) } : null;
+}
+
+/** Offer only a newer qualified base from this model's own pool. A chosen target stays pinned. */
+export function newerBase(config: BaseConfig, job: Job, target?: string) {
+  const current = job.model && baseVersion(job.model.id);
+  if (!current || !canDownload(job) || isImageJob(job) || job.workflow?.state !== 'ready' || !job.workflow.model_id) return null;
+  const channels = config.pools ? config.pools[current.pool]?.channels : current.pool === 'd3-mini' ? config.channels : undefined;
+  let newer: { name: string; selection: PoolSelection; round: number } | null = null;
+  for (const channel of ['stable', 'latest'] as const) {
+    const profile = channels?.[channel], version = profile && baseVersion(profile.id);
+    if (!profile || !version || version.family !== current.family || version.round <= current.round || (target && profile.id !== target)) continue;
+    const selection = config.pools ? poolSelection(config, current.pool, channel, 'text') : { base_channel: channel, model: profile.id };
+    if (selection && (!newer || version.round > newer.round)) newer = { name: profile.name, selection, round: version.round };
+  }
+  return newer;
+}
 
 export function poolSelection(config: BaseConfig, pool: string, channel: 'stable' | 'latest', modality: 'text' | 'images'): PoolSelection | null {
   if (!config.pools) return {};

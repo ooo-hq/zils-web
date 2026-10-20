@@ -1,0 +1,49 @@
+.toaster[data-sonner-toaster] {
+  font-family: var(--font-inter-tight), system-ui, sans-serif;
+}
+
+.toaster [data-sonner-toast][data-styled=true] {
+  gap: 16px;
+  box-shadow: none;
+}
+
+.toaster [data-sonner-toast][data-styled=true] [data-title] {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: .02em;
+  color: var(--zs-fg);
+}
+
+.toaster [data-sonner-toast][data-styled=true] [data-description] {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--zs-t2);
+}
+
+.toaster [data-sonner-toast][data-styled=true] [data-button] {
+  height: auto;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid rgba(var(--zs-fg-rgb), .24);
+  border-radius: 0;
+  background: transparent;
+  color: var(--zs-fg);
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.toaster [data-sonner-toast][data-styled=true] [data-button]:hover {
+  border-color: var(--zs-fg);
+}
+
+.toaster [data-sonner-toast]:focus-visible,
+.toaster [data-sonner-toast][data-styled=true] [data-button]:focus-visible {
+  outline: 2px solid var(--zs-orange);
+  outline-offset: 3px;
+  box-shadow: none;
+}

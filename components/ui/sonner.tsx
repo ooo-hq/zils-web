@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
+import styles from "./sonner.module.css"
 
 /** Follows the site theme set on <html data-theme> by lib/theme, so toasts match without next-themes. */
 function useSiteTheme(): ToasterProps["theme"] {
@@ -23,7 +24,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       theme={theme}
-      className="toaster group"
+      className={`zs toaster group ${styles.toaster}`}
       icons={{
         success: <CircleCheckIcon className="size-4" />,
         info: <InfoIcon className="size-4" />,
@@ -33,13 +34,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       style={
         {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
+          "--normal-bg": "var(--zs-raised)",
+          "--normal-text": "var(--zs-fg)",
+          "--normal-border": "var(--zs-line)",
+          "--border-radius": "0",
         } as React.CSSProperties
       }
-      toastOptions={{ classNames: { toast: "cn-toast" } }}
       {...props}
     />
   )

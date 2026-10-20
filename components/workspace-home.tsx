@@ -8,7 +8,7 @@ import { CopyField } from '@/components/trained-model-quickstart';
 import { useWorkspaceModels } from '@/components/workspace-models';
 import { WorkspaceHero } from '@/components/workspace-hero';
 import { WorkspaceLoading } from '@/components/workspace-loading';
-import { billingApi, formatCredit, type BillingSummary } from '@/lib/billing';
+import { billingApi, formatBalance, formatCredit, type BillingSummary } from '@/lib/billing';
 import { curlCommand } from '@/lib/model-quickstart';
 import type { TrainingConfig } from '@/lib/training-config';
 import s from './workspace-home.module.css';
@@ -55,7 +55,7 @@ export function WorkspaceHome({ config, sharedModel, baseName }: { config: Train
     <aside className={s.usage} aria-labelledby="usage-title">
       <div className={s.cardHeading}><h2 id="usage-title">Usage</h2><Link href="/usage">View</Link></div>
       <dl>
-        <div><dt>Available credit</dt><dd className={s.figure}>{summary ? formatCredit(summary.available_nanos) : '—'}</dd></div>
+        <div><dt>Available credit</dt><dd className={s.figure}>{summary ? formatBalance(summary.available_nanos) : '—'}</dd></div>
         <div><dt>API calls, last 30 days</dt><dd>{usage ? Number(usage.calls).toLocaleString() : '—'}</dd></div>
         <div><dt>Spend, last 30 days</dt><dd>{usage ? formatCredit((BigInt(usage.inference_spend_nanos) + BigInt(usage.training_spend_nanos)).toString()) : '—'}</dd></div>
       </dl>
