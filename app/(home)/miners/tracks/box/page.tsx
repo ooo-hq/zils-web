@@ -10,7 +10,7 @@ import s from './box.module.css';
 
 export const metadata: Metadata = {
   title: 'Zils — box track',
-  description: 'Preparing a synthetic-only testnet pilot: independent mini and lite competitions for bounding-box adapters.',
+  description: 'Synthetic-only testnet pilot: independent mini and lite competitions for bounding-box adapters, with separate reviewed crowns.',
   alternates: { canonical: 'https://zils.ai/miners/tracks/box' },
 };
 
@@ -30,8 +30,8 @@ const RULES = [
   ['Train', 'Choose the exact mini r5 or lite v1 parent. Train a box adapter with a frozen vision tower. The public synthetic generator is training material; private exam images and seeds stay sealed.'],
   ['Commit', 'Package with python -m zils.feature_miner pack, upload the bundle, then submit with python -m zils.feature_miner commit. The commitment binds the track, parent and adapter. One hotkey has one active commitment.'],
   ['Score', 'On present targets, weight synthetic families equally: gain at least 0.02 mean IoU over the incumbent, with a positive paired 95% lower confidence bound and mean IoU at least 0.40. No family may drop more than 0.02.'],
-  ['Confirm', 'Absent-target false positives must be at most 10%; presence Brier may be at most 0.005 worse than the incumbent. The same adapter must pass every gate on two fresh, disjoint private draws at least 12 hours apart.'],
-  ['Crown', 'Reviewed crowning is independent for mini and lite. Among each track’s five most recent distinct kings, those still registered share its rewards equally. A starter earns nothing; an empty track burns its share.'],
+  ['Confirm', 'Absent-target false positives must be at most 10%; presence Brier may be at most 0.005 worse than the incumbent. The same adapter must pass every gate on two disjoint private draws, evaluated at least 12 hours apart.'],
+  ['Crown', 'Reviewed crowning is independent for mini and lite. Among each track’s five most recent distinct kings, those still registered share its rewards equally. Operator baselines earn no crown; an empty track burns its share.'],
   ['Graduate', 'Winning this synthetic pilot does not merge an adapter into the base. Graduation requires a separate review, real-image qualification and the full base regression suite.'],
 ];
 
@@ -71,23 +71,23 @@ export default function BoxTrackPage() {
   const max = Math.max(...RESULTS.map(r => r.all));
   return (
     <SiteFrame current="miners">
-      <SectionRow n="01" label="Feature track · boxes" note="Testnet 579 · preparing" />
+      <SectionRow n="01" label="Feature track · boxes" note="Testnet 579 · open" />
       <header className={m.hero}>
         <p className={s.crumb}><Link href="/miners">Miners</Link> / Feature tracks</p>
         <h1><span className={s.target}>Boxes<span className={s.lock} aria-hidden="true"><i /><i /><i /><i /><b>0.97</b></span></span></h1>
-        <p>Teach a model to point at a named shape, or say it is absent. <b>Synthetic-only testnet pilot. Not open yet.</b> Mini and lite compete separately on fresh private shape images. This pilot does not establish real-world box quality.</p>
+        <p>Teach a model to point at a named shape, or say it is absent. <b>Synthetic-only pilot, open on testnet 579.</b> Mini and lite compete separately on newly generated private pilot images. This pilot does not establish real-world box quality.</p>
       </header>
 
       <dl className={m.nums}>
-        <div><dt>Status</dt><dd className={m.sm}>Preparing</dd></div>
+        <div><dt>Status</dt><dd className={m.sm}>Open on testnet</dd></div>
         <div><dt>Score to beat</dt><dd className={m.sm}>Your track’s incumbent</dd></div>
         <div><dt>Competitions</dt><dd className={m.sm}>Mini / lite</dd></div>
-        <div><dt>Planned allocation</dt><dd className={m.sm}>16% / 4%</dd></div>
+        <div><dt>Validator allocation</dt><dd className={m.sm}>16% / 4%</dd></div>
       </dl>
 
       <SectionRow n="02" label="Pilot parents and rewards" />
       <section className={s.section} aria-labelledby="parents-heading">
-        <h2 id="parents-heading" className={s.h2}>Two parents. Two independent kings.</h2>
+        <h2 id="parents-heading" className={s.h2}>Two parents. Two independent competitions.</h2>
         <div className={s.scroll} tabIndex={0} role="region" aria-label="Pilot parents and allocations">
           <table className={s.table}>
             <thead><tr><th scope="col">Box track parent</th><th scope="col">Share of validator allocation</th></tr></thead>
@@ -97,8 +97,8 @@ export default function BoxTrackPage() {
             </tbody>
           </table>
         </div>
-        <p className={s.caveat}>The prepared split is 50% base improvement, 20% features and 30% customer adapters, with mini/lite split 80/20 inside both base and box budgets: 40% mini base, 10% lite base, 16% mini boxes, 4% lite boxes, 30% customer adapters. These are this validator’s allocation shares, not guaranteed earnings. Boxes initially receive the whole feature budget; future tracks require an announced reallocation.</p>
-        <p className={s.fine}>Activation and exact-parent starter qualification are pending. A track with no eligible king burns its allocation. The historical results below do not qualify either pilot starter.</p>
+        <p className={s.caveat}>The testnet split is 50% base improvement, 20% features and 30% customer adapters, with mini/lite split 80/20 inside both base and box budgets: 40% mini base, 10% lite base, 16% mini boxes, 4% lite boxes, 30% customer adapters. These are this validator’s allocation shares, not guaranteed earnings. Boxes initially receive the whole feature budget; future tracks require an announced reallocation.</p>
+        <p className={s.fine}>No qualified box kings yet. Operator references are the initial scores to beat and earn no crown. Both box allocations burn until qualifying miners are crowned. Historical research and small adapter smoke tests do not qualify a winning starter.</p>
       </section>
 
       <SectionRow n="03" label="Historical MVP results" note="19–20 Oct 2026" />
@@ -148,7 +148,7 @@ export default function BoxTrackPage() {
         <div className={s.scroll} tabIndex={0} role="region" aria-label="Box track entries">
           <table className={s.table}>
             <thead><tr><th scope="col">Miner</th><th scope="col">Commit</th><th scope="col">IoU</th><th scope="col">Confirmed</th><th scope="col">Date</th></tr></thead>
-            <tbody><tr><td colSpan={5} className={s.empty}>Pilot intake is not open. No verified pilot results published here yet.</td></tr></tbody>
+            <tbody><tr><td colSpan={5} className={s.empty}>No qualified box kings yet. Both tracks are open for synthetic-pilot submissions.</td></tr></tbody>
           </table>
         </div>
         <p className={s.fine}>Mini and lite keep separate king histories. Reviewed crowning unlocks a track’s rewards; it does not release a new base or customer box API.</p>
@@ -157,7 +157,7 @@ export default function BoxTrackPage() {
       <SectionRow n="07" label="Train for it" />
       <section className={s.section} aria-labelledby="data-heading">
         <h2 id="data-heading" className={s.h2}>Start with the synthetic pilot guide</h2>
-        <p className={s.caveat}>The <a href={GUIDE}>feature-track guide</a> defines the public shape generator, exact parent pins, presence and box format, training limits, packaging and submission commands. Training examples are separate from the fresh private draws. Follow the guide for your chosen parent; these are miner submissions.</p>
+        <p className={s.caveat}>The <a href={GUIDE}>feature-track guide</a> defines the public shape generator, exact parent pins, presence and box format, training limits, packaging and submission commands. Training examples are separate from the configured private pilot draws. Follow the guide for your chosen parent; these are miner submissions.</p>
         <DetailsRow summary="Historical MVP recipe">
           <div className={m.prose}>
             <p>Each box is four multiple-choice questions, one per edge, each choosing among 101 positions (0–100% of the image from the top or left). Training targets are soft: a narrow bell curve around the true edge, so near misses cost less than far ones.</p>

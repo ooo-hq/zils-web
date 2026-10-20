@@ -20,14 +20,14 @@ const DETAILS: Record<string, Detail> = {
   r4: { tag: 'Candidate · vetoed', name: 'Round 4', body: 'Half of the round 3 change merged into v1. Still failed the regression suite on individual seeds.', facts: [['Date', '19 Oct']] },
   r5: { tag: 'Base · latest', name: 'd3-mini 4.5B · r5', body: 'A quarter merge of the round 3 change. Passed the exams twice and the suite on the mean across seeds. Its miner was the first king paid, and customer models have started moving onto it.',
     facts: [['Crowned', '19 Oct'], ['Channel', 'latest']] },
-  'mini-next': { tag: 'Next revision', name: 'Mini, next', body: 'Whatever beats r5 next. If the boxes track has a king by then, the skill can graduate into this release, and the box exam guards every base after it.',
+  'mini-next': { tag: 'Next revision', name: 'Mini, next', body: 'Whatever beats r5 next. A box crown does not enter this release automatically: graduation requires real-image qualification, the full base regression suite and a separate review. No box skill has graduated.',
     facts: [['Status', 'Open']], link: ['/miners', 'Compete for a base'] },
-  'mini-box': { tag: 'Feature track · planned', name: 'Bounding boxes on mini', body: 'Each box is four multiple-choice questions, one per edge. A research adapter beat Jev 1.14’s box mode on our test set. It trained on v1; the track itself would be pinned to r5.',
-    facts: [['Adapter IoU', '0.582'], ['Jev 1.14', '0.479'], ['Stock mini', '0.075']], link: ['/miners/tracks/box', 'Box track'] },
+  'mini-box': { tag: 'Feature track · testnet', name: 'Bounding boxes on mini', body: 'A synthetic-only pilot on the exact mini r5 parent, using four edge questions plus target presence. No qualified king yet. The historical scores below came from stock v1 research, not r5 or a pilot exam.',
+    facts: [['Research adapter IoU', '0.582'], ['Jev 1.14 · research', '0.479'], ['Stock v1 · research', '0.075']], link: ['/miners/tracks/box', 'Box track'] },
   'lite-v1': { tag: 'Base · stock', name: 'd3-lite 0.8B · v1', body: 'A smaller base, about twice as fast as mini at a quarter of the memory. It has its own competition and its own kings; lite and mini never compete against each other.',
     facts: [['Added', '20 Oct']] },
-  'lite-box': { tag: 'Feature track · planned', name: 'Bounding boxes on lite', body: 'Training helps a lot, but lite stays far behind mini on real defects: 3 of 122 defect images reach IoU 0.5, against 42 on mini.',
-    facts: [['Stock lite', '0.032'], ['Adapter IoU', '0.251'], ['Time per box', '0.6 s (mini 3.3 s)']] },
+  'lite-box': { tag: 'Feature track · testnet', name: 'Bounding boxes on lite', body: 'A separate synthetic-only pilot on lite v1, with no qualified king yet. Historical research reached IoU 0.5 on only 3 of 122 real-defect images, versus mini’s 42. It does not establish real-image quality; the timings below are from separate runs.',
+    facts: [['Stock lite · research', '0.032'], ['Research adapter IoU', '0.251'], ['Research time per box', '0.6 s (mini 3.3 s)']], link: ['/miners/tracks/box', 'Box track'] },
   'lite-next': { tag: 'Next revision', name: 'Lite, next', body: 'The first lite candidate to beat v1 on the lite exams.', facts: [['Status', 'Open']], link: ['/miners', 'Compete for a base'] },
 };
 
@@ -64,7 +64,7 @@ export function Lineage() {
     <div className={s.scroll} tabIndex={0} role="region" aria-label="Base lineage map">
       <svg className={s.map} viewBox="0 0 960 520" role="group" aria-labelledby="map-title map-desc">
         <title id="map-title">Base lineage</title>
-        <desc id="map-desc">d3-mini runs from v1 to r5, with rounds 1 to 4 branching off as candidates that lost. d3-lite starts at v1 on 20 October. A bounding-box feature track hangs below each base and graduates into that base’s next revision. Select a point for its details.</desc>
+        <desc id="map-desc">d3-mini runs from v1 to r5, with rounds 1 to 4 branching off as candidates that lost. d3-lite starts at v1 on 20 October. Separate synthetic-only box tracks hang below mini r5 and lite v1. Neither has a qualified king. Base graduation requires real-image qualification and a separate regression review. Select a point for its details.</desc>
         {([[80, '17 OCT'], [300, '18 OCT'], [500, '19 OCT'], [700, '20 OCT'], [890, 'NEXT']] as const).map(([x, d]) => <g key={d}>
           <line className={s.grid} x1={x} y1={40} x2={x} y2={505} />
           <text className={s.axis} x={x} y={24} textAnchor="middle">{d}</text>
@@ -84,8 +84,7 @@ export function Lineage() {
 
         <path className={s.feature} d="M560 170 V262 H800" />
         <text className={s.featureLabel} x={580} y={252}>Bounding boxes</text>
-        <text className={s.score} x={580} y={284}>IoU 0.582 · Jev 1.14 0.479</text>
-        <path className={s.graduate} d="M807 256 C 860 240, 890 210, 890 172" />
+        <text className={s.score} x={580} y={284}>v1 research IoU 0.582</text>
         <Node selected={selected} onPick={setSelected} id="mini-box" x={800} y={262} kind="feature" />
         <Node selected={selected} onPick={setSelected} id="mini-next" x={890} y={160} kind="next" label="next" above />
 
@@ -94,8 +93,7 @@ export function Lineage() {
         <Node selected={selected} onPick={setSelected} id="lite-v1" x={700} y={410} label="v1" sub="stock" left />
         <path className={s.feature} d="M700 420 V478 H800" />
         <text className={s.featureLabel} x={716} y={468}>Boxes</text>
-        <text className={s.score} x={608} y={500}>IoU 0.032 → 0.251</text>
-        <path className={s.graduate} d="M807 472 C 860 458, 890 440, 890 422" />
+        <text className={s.score} x={608} y={500}>Research IoU 0.032 → 0.251</text>
         <Node selected={selected} onPick={setSelected} id="lite-box" x={800} y={478} kind="feature" />
         <Node selected={selected} onPick={setSelected} id="lite-next" x={890} y={410} kind="next" label="next" above />
       </svg>
