@@ -23,3 +23,22 @@ test('per-track numbers and the track summary are read when present', async () =
   assert.equal(data.miners[0].training.tracks.image.assigned, 1);
   assert.equal(data.miners[0].training.tracks.image.median_skill, null);
 });
+
+test('each read fetches current models without caching and fails closed during an outage', async () => {
+  const calls = [];
+  let current = body;
+  global.fetch = async (url, init) => {
+    calls.push({ url, init });
+    return current ? new Response(JSON.stringify(current)) : new Response('{}', { status: 503 });
+  };
+  assert.deepEqual((await networkMiners()).miners[0].models, ['d3-mini-4.5b-v1']);
+  current = { ...body, miners: [{ ...miner, models: ['d3-lite-0.8b-v1'] }] };
+  assert.deepEqual((await networkMiners()).miners[0].models, ['d3-lite-0.8b-v1']);
+  current = null;
+  assert.equal(await networkMiners(), null);
+  assert.equal(calls.length, 3);
+  for (const { url, init } of calls) {
+    assert.equal(url, 'https://training.example.invalid/v1/network/miners');
+    assert.equal(init.cache, 'no-store');
+  }
+});
