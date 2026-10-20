@@ -70,3 +70,28 @@ test('base-change submissions retain the predecessor and criteria through API va
   assert.equal(submissionSchema.safeParse({ ...input, acceptance: { ...acceptance, base_change: false } }).success, false);
   assert.equal(imageSubmissionSchema.safeParse({ ...input, acceptance: { ...acceptance, previous_job_id: undefined }, image_intake: { version: 'zils-image-intake/v1', seed: 'test', snapshot_sha256: 'a'.repeat(64) } }).success, false);
 });
+
+test('saved-data confirmation sends only a pinned target and retry identity', async () => {
+  const requestId = '30000000-0000-4000-8000-000000000003';
+  const predecessor = job();
+  let sent;
+  const api = trainingApi('https://training.example', { supabase: 'https://storage.example' }, async () => 'fixture', async (url, init) => {
+    assert.equal(url, `https://training.example/v1/jobs/${predecessor.id}/migration`);
+    sent = JSON.parse(init.body);
+    return new Response(JSON.stringify({ job: { ...job(round(5)), dataset_source: { job_id: predecessor.id, job_sha256: 'a'.repeat(64), request_id: requestId } } }));
+  });
+  await api.migrate(predecessor.id, { model: round(5).id, request_id: requestId, acceptance: { min_accuracy: 0 } });
+  assert.deepEqual(sent, { model: round(5).id, request_id: requestId });
+});
+
+test('migration responses cannot silently switch the source or target', async () => {
+  const requestId = '30000000-0000-4000-8000-000000000003';
+  const predecessor = job();
+  for (const value of [
+    { ...job(round(5)), dataset_source: { job_id: requestId, job_sha256: 'a'.repeat(64), request_id: requestId } },
+    { ...job(), dataset_source: { job_id: predecessor.id, job_sha256: 'a'.repeat(64), request_id: requestId } },
+  ]) {
+    const api = trainingApi('https://training.example', { supabase: 'https://storage.example' }, async () => 'fixture', async () => new Response(JSON.stringify({ job: value })));
+    await assert.rejects(api.migrate(predecessor.id, { model: round(5).id, request_id: requestId }), /did not match/);
+  }
+});

@@ -11,7 +11,7 @@ import { TrainingExampleSetup } from '@/components/training-example-setup';
 import { TrainingExampleReview } from '@/components/training-example-review';
 import { SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
 import { ModelPoolSelect } from '@/components/model-pool-select';
-import type { BaseMigration, PoolSelection } from '@/lib/base-model';
+import type { PoolSelection } from '@/lib/base-model';
 import styles from '@/app/(home)/train/train.module.css';
 
 type Props = {
@@ -31,7 +31,6 @@ type Props = {
   onStopUpload?: () => void;
   /** Train a replacement for this accepted model; the run only goes live if it beats it. */
   upgrade?: { id: string; name?: string };
-  migration?: BaseMigration;
 };
 const steps = ['Describe', 'Examples', 'Review', 'Train'];
 const stepTitles = ['What should Zils decide?', 'Bring examples of your work.', 'Check what your model will learn.', 'Your data is ready for an experiment.'];
@@ -39,7 +38,7 @@ const splitNames = { train: 'Training', calibration: 'Calibration', test: 'Evalu
 const errorMessage = (error: unknown) => error instanceof Error ? error.message.replace(/CSV record/g, 'Source record') : 'Could not read your data. Check the file or pasted text and try again.';
 
 // State lives outside SheetContent so closing the panel preserves this browser's draft.
-export function TrainingIntake({ apiUrl, active = true, onChooseType, assistantConfigured, busy, onSubmit, onFiles, onCloseAutoFocus, pending = false, pendingName, submissionError, needsCredit = false, progress, onStopUpload, upgrade, migration }: Props) {
+export function TrainingIntake({ apiUrl, active = true, onChooseType, assistantConfigured, busy, onSubmit, onFiles, onCloseAutoFocus, pending = false, pendingName, submissionError, needsCredit = false, progress, onStopUpload, upgrade }: Props) {
   const [selection, setSelection] = useState<PoolSelection | null>(null);
   const [advanced, setAdvanced] = useState(false);
   const [step, setStep] = useState(0);
@@ -148,7 +147,7 @@ export function TrainingIntake({ apiUrl, active = true, onChooseType, assistantC
   async function submit(event: FormEvent) {
     event.preventDefault(); setError('');
     if (!selection) { setError('Choose a pool with qualified training capacity.'); return; }
-    const parsed = submissionSchema.safeParse({ name, ...selection, acceptance: { min_accuracy: accuracy === '' ? NaN : Number(accuracy) / 100, min_brier_improvement: improvement === '' ? NaN : Number(improvement), ...(upgrade ? { previous_job_id: upgrade.id } : {}), ...(migration ? { base_change: true } : {}) }, allow_training_data_export: consent, allow_jev_comparison: consent });
+    const parsed = submissionSchema.safeParse({ name, ...selection, acceptance: { min_accuracy: accuracy === '' ? NaN : Number(accuracy) / 100, min_brier_improvement: improvement === '' ? NaN : Number(improvement), ...(upgrade ? { previous_job_id: upgrade.id } : {}) }, allow_training_data_export: consent, allow_jev_comparison: consent });
     if (!parsed.success) { setError('Check your run name, success criteria, and data-sharing permission.'); return; }
     let files = advanced ? advancedFiles : prepared?.files;
     if (!files?.train || !files.calibration || !files.test) { setError('Prepare all three dataset files before submitting.'); return; }
@@ -181,7 +180,7 @@ export function TrainingIntake({ apiUrl, active = true, onChooseType, assistantC
     finally { setWorking(false); }
   }
   const criteria = <>
-    {!migration && <ModelPoolSelect apiUrl={apiUrl} modality="text" disabled={locked || pending} onChange={setSelection} />}
+    <ModelPoolSelect apiUrl={apiUrl} modality="text" disabled={locked || pending} onChange={setSelection} />
     <details className={styles.details}><summary>Success criteria: at least {accuracy || '—'}% accuracy</summary>
       <label htmlFor="min-accuracy">Minimum accuracy (%)</label><input id="min-accuracy" type="number" required min="0" max="100" step="any" value={accuracy} onChange={event => setAccuracy(event.target.value)} />
       <small>Measured on examples kept aside from training. The trained model must also improve its probability estimates over {upgrade ? 'your current model' : 'the base model'}.</small>
@@ -192,10 +191,9 @@ export function TrainingIntake({ apiUrl, active = true, onChooseType, assistantC
   </>;
   if (!active) return null;
   return <SheetContent className={`${styles.page} ${styles.trainingSheet}`} onCloseAutoFocus={onCloseAutoFocus} onOpenAutoFocus={event => { event.preventDefault(); heading.current?.focus(); }}>
-    <div className={styles.sheetHeader}><SheetTitle>{migration ? 'Migrate your model' : 'Train a model'}</SheetTitle><SheetDescription>Text examples · Turn reviewed decisions into a tested model.</SheetDescription>{onChooseType && <button type="button" className={styles.textButton} disabled={locked || pending} onClick={onChooseType}>Change example type</button>}</div>
+    <div className={styles.sheetHeader}><SheetTitle>Train a model</SheetTitle><SheetDescription>Text examples · Turn reviewed decisions into a tested model.</SheetDescription>{onChooseType && <button type="button" className={styles.textButton} disabled={locked || pending} onClick={onChooseType}>Change example type</button>}</div>
     <div className={styles.sheetBody}>
       {upgrade && <p className={styles.notice} role="status"><strong>Replacing {upgrade.name || 'your model'}.</strong> The new model is scored against the live version on your new test examples. It replaces that version only if it beats it; otherwise the current model stays live and your API calls are unchanged.</p>}
-      {migration && <ModelPoolSelect apiUrl={apiUrl} modality="text" migration={migration} onChange={setSelection} />}
       {!advanced && <ol className={styles.steps} aria-label="Training setup progress">{steps.map((title, index) => <li key={title} aria-current={step === index ? 'step' : undefined}><span>{index + 1}</span>{title}</li>)}</ol>}
       <h3 className={styles.stepTitle} ref={heading} tabIndex={-1}>{advanced ? 'Upload prepared files.' : stepTitles[step]}</h3>
       {(error || submissionError) && <p ref={alert} tabIndex={-1} role="alert" className={styles.error}>{error || submissionError}{!error && needsCredit && <> <Link href="/billing" className={styles.textButton}>Add credit</Link>.</>}</p>}

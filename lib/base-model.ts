@@ -10,7 +10,6 @@ export const baseConfigSchema = z.object({
 });
 export type BaseConfig = z.infer<typeof baseConfigSchema>;
 export type PoolSelection = Pick<Submission, 'pool' | 'base_channel' | 'model'>;
-export type BaseMigration = { target: string; job?: Job };
 
 function baseVersion(id: string) {
   // shortcut: order the released d3 stock/round naming scheme; use catalog lineage if other schemes launch.

@@ -112,7 +112,7 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
     {error && <p role="alert" className={training.error}>{error}</p>}
     {!ready && <section className={training.notice} aria-label="Model activation"><strong>{progress.title}</strong><p>{progress.detail} {progress.next}</p></section>}
     {migration && <section id="model-migration" className={`${training.notice} ${styles.migration}`} aria-label="Newer base available">
-      <div><strong>Newer base available</strong><p>{migration.name} is available for this model. Train a replacement with your reviewed examples; your current model stays live until the replacement passes your success criteria.</p></div>
+      <div><strong>Newer base available</strong><p>{migration.name} is available for this model. Reuse your saved examples and settings. Your current model stays live until the replacement passes your success criteria.</p></div>
       <Link className={training.secondary} href={{ pathname: '/train', query: { upgrade: job.id, migrate: migration.selection.model } }}>Migrate<LinkLoading /></Link>
     </section>}
 

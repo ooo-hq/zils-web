@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useId, useState } from 'react';
-import { newerBase, poolSelection, trainingBase, type BaseConfig, type BaseMigration, type PoolSelection } from '@/lib/base-model';
+import { poolSelection, trainingBase, type BaseConfig, type PoolSelection } from '@/lib/base-model';
 
-export function ModelPoolSelect({ apiUrl, modality, disabled, onChange, migration }: { apiUrl?: string; modality: 'text' | 'images'; disabled?: boolean; onChange: (selection: PoolSelection | null) => void; migration?: BaseMigration }) {
+export function ModelPoolSelect({ apiUrl, modality, disabled, onChange }: { apiUrl?: string; modality: 'text' | 'images'; disabled?: boolean; onChange: (selection: PoolSelection | null) => void }) {
   const id = useId();
   const [config, setConfig] = useState<BaseConfig>();
   const [error, setError] = useState('');
@@ -15,24 +15,11 @@ export function ModelPoolSelect({ apiUrl, modality, disabled, onChange, migratio
     trainingBase(apiUrl, controller.signal).then(setConfig).catch(() => { if (!controller.signal.aborted) setError('Model availability could not be loaded. Reopen training to retry.'); });
     return () => controller.abort();
   }, [apiUrl]);
-  const migrationJob = migration?.job, migrationTarget = migration?.target;
   useEffect(() => {
-    if (!config) { onChange(null); return; }
-    if (migrationTarget) {
-      onChange(migrationJob ? newerBase(config, migrationJob, migrationTarget)?.selection ?? null : null);
-    } else {
-      onChange(poolSelection(config, pool, channel, modality));
-    }
-  }, [config, pool, channel, modality, onChange, migrationJob, migrationTarget]);
+    onChange(config ? poolSelection(config, pool, channel, modality) : null);
+  }, [config, pool, channel, modality, onChange]);
   if (error) return <p role="alert">{error}</p>;
   if (!config) return <p role="status">Checking model availability…</p>;
-  if (migration) {
-    if (!migration.job) return <p role="status">Checking your current model…</p>;
-    const target = newerBase(config, migration.job, migration.target);
-    return target
-      ? <p>Starting base: <strong>{target.name}</strong> · {target.selection.base_channel === 'stable' ? 'Stable' : 'Latest'} channel. This base stays fixed for your run.</p>
-      : <p role="alert">This migration is no longer available. Return to your model to check available bases.</p>;
-  }
   if (!config.pools) return null;
   const selected = config.pools[pool];
   return <fieldset disabled={disabled}>
