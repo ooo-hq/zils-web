@@ -27,7 +27,7 @@ const config = {
       { source: '/train/models/:jobId', destination: '/models/:jobId', permanent: false },
       // Retired pages: the front page carries the pitch now. Temporary, so
       // an old link lands somewhere useful without freezing the decision.
-      ...['/bazaar', '/whitepaper', '/mine', '/roadmap'].map((source) => ({ source, destination: '/', permanent: false })),
+      ...['/bazaar', '/whitepaper', '/mine'].map((source) => ({ source, destination: '/', permanent: false })),
     ];
   },
 };

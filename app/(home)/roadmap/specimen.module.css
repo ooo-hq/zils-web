@@ -1,0 +1,54 @@
+/* Output orange matches the box track's model boxes: orange is always the model's answer. */
+.box { --out: #ff7a2f; position: relative; height: 112px; background: var(--zs-panel); border: 1px solid var(--zs-line); overflow: hidden; display: grid; place-items: center; }
+.tag { position: absolute; right: 8px; bottom: 8px; font: 400 11px/1 var(--font-plex-mono), ui-monospace, monospace; letter-spacing: .04em; color: #16120f; background: var(--out); padding: 4px 6px; }
+
+.apples { display: grid; grid-template-columns: repeat(6, 14px); gap: 9px 12px; }
+.apples i { width: 14px; height: 14px; border-radius: 50%; background: rgba(var(--zs-fg-rgb), .16); }
+.apples i[data-red] { background: #c8473d; box-shadow: 0 0 0 2px var(--zs-panel), 0 0 0 3.5px var(--out); }
+
+.mail { margin: 0 14px; font-size: 12.5px; line-height: 1.55; color: var(--zs-t2); }
+.span { color: var(--zs-fg); background: linear-gradient(var(--out), var(--out)) 0 100% / 100% 2px no-repeat; box-shadow: inset 0 0 0 1px var(--out); padding: 0 2px; }
+
+.ui { display: flex; gap: 6px; }
+.ui span { font-size: 11px; padding: 6px 9px; border: 1px solid var(--zs-line); color: var(--zs-t2); }
+.ui [data-hit] { border-color: rgba(var(--zs-fg-rgb), .35); color: var(--zs-fg); }
+.cross { position: absolute; left: 74%; top: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px; border: 1.5px solid var(--out); border-radius: 50%; }
+.cross::before { content: ""; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: var(--out); }
+
+.film { position: relative; display: grid; grid-template-columns: repeat(8, 18px); gap: 3px; padding: 6px 0; }
+.film i { height: 26px; background: rgba(var(--zs-fg-rgb), .14); }
+.clip { position: absolute; top: 0; bottom: 0; left: calc(4 * 21px - 2px); width: calc(2 * 21px + 1px); border: 2px solid var(--out); }
+.head { position: absolute; top: -4px; bottom: -4px; left: 100%; width: 1px; background: var(--zs-fg); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; max-width: 170px; justify-content: center; }
+.chips span { font-size: 11px; padding: 4px 8px; border: 1px solid var(--zs-line); color: var(--zs-t3); }
+.chips [data-on] { border-color: var(--out); color: var(--zs-fg); }
+
+.mask { width: 100%; height: 100%; }
+.ground { fill: rgba(var(--zs-fg-rgb), .1); }
+.object { fill: rgba(var(--zs-fg-rgb), .2); }
+.handle { fill: none; stroke: rgba(var(--zs-fg-rgb), .2); stroke-width: 7; }
+.shape { fill: rgba(255, 122, 47, .25); stroke: var(--out); stroke-width: 2; stroke-linejoin: round; }
+
+/* One sequence: each row plays once as the page loads (--row staggers them), then holds the answer.
+   Hovering a specimen remounts it to replay. Reduced motion shows the final answer only. */
+@media (prefers-reduced-motion: no-preference) {
+  .box { --start: calc(var(--row, 0) * .18s + .2s); }
+  .tag { animation: tag-in .3s ease-out calc(var(--start) + var(--d, 1s)) both; }
+  .apples i[data-red] { animation: ring .25s ease-out calc(var(--start) + var(--d)) both; }
+  .span { animation: underline .5s ease-out calc(var(--start) + .3s) both; }
+  .cross { animation: home .8s cubic-bezier(.2, .8, .2, 1) var(--start) both; }
+  .clip { animation: show .2s linear calc(var(--start) + .55s) both; }
+  .head { animation: sweep 1s linear var(--start) both; }
+  .chips [data-on] { animation: pick .25s ease-out calc(var(--start) + var(--d)) both; }
+  .shape { stroke-dasharray: 1; animation: trace .9s ease-in-out var(--start) both, fill-in .3s ease-out calc(var(--start) + .9s) both; }
+}
+@keyframes tag-in { from { opacity: 0; transform: translateY(4px); } }
+@keyframes ring { from { box-shadow: 0 0 0 2px var(--zs-panel), 0 0 0 9px transparent; } }
+@keyframes underline { from { background-size: 0 2px; box-shadow: inset 0 0 0 1px transparent; } }
+@keyframes home { from { left: 8%; top: 18%; opacity: 0; } 30% { opacity: 1; } }
+@keyframes show { from { opacity: 0; } }
+@keyframes sweep { from { left: 0; } }
+@keyframes pick { from { border-color: var(--zs-line); color: var(--zs-t3); } }
+@keyframes trace { from { stroke-dashoffset: 1; } }
+@keyframes fill-in { from { fill-opacity: 0; } }
