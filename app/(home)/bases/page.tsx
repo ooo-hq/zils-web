@@ -82,6 +82,7 @@ export default function BasesPage() {
       <div className={m.more}>
         <Link href="/miners/tracks/box">Box track</Link>
         <Link href="/miners">Compete for a base</Link>
+        <Link href="/roadmap">Vote on what comes next</Link>
         <Link href="/model">Research</Link>
       </div>
     </SiteFrame>

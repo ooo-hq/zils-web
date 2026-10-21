@@ -12,7 +12,7 @@ const LANES = [
   {
     name: 'Feature tracks', share: '20%', status: 'Open on testnet', tone: 'open',
     lead: 'Teach the base a new skill. Each skill is its own competition.',
-    tracks: [{ name: 'Boxes', status: 'Synthetic-only pilot', href: '/miners/tracks/box', note: 'mini / lite · no kings yet' }, { name: 'Video', status: 'Later', note: 'not designed yet' }],
+    tracks: [{ name: 'Boxes', status: 'Synthetic-only pilot', href: '/miners/tracks/box', note: 'mini / lite · no kings yet' }, { name: 'Video', status: 'Later', href: '/roadmap', note: 'vote on the roadmap' }],
     facts: [['Entry', 'An adapter on the exact parent'], ['Pays', 'Last five distinct kings per track']],
     href: '/miners/tracks/box', cta: 'See the box track',
   },
@@ -36,7 +36,7 @@ export function Competitions() {
         <p className={s.laneStatus}>{lane.status}</p>
         <p className={s.laneLead}>{lane.lead}</p>
         {'tracks' in lane && <ul className={s.trackList}>{lane.tracks.map(track => <li key={track.name}>
-          {'href' in track ? <Link href={track.href}>{track.name}</Link> : <span>{track.name}</span>}
+          <Link href={track.href}>{track.name}</Link>
           <span className={s.trackMeta}>{track.status} · {track.note}</span>
         </li>)}</ul>}
         <dl className={s.laneFacts}>{lane.facts.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
