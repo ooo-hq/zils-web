@@ -6,8 +6,9 @@ export type Split = typeof SPLITS[number];
 export const MAX_DATASET_BYTES = 128 * 1024 * 1024;
 /** Text adapters train on the pinned d3-mini profile, which accepts up to 255 outcomes per question; image questions use the image training profile's max_options. */
 export const MAX_TEXT_OUTCOMES = 255;
-export const acceptanceSchema = z.object({ min_accuracy: z.number().min(0).max(1), min_brier_improvement: z.number().min(0).max(2), previous_job_id: z.string().uuid().optional(), base_change: z.literal(true).optional() })
-  .refine(policy => !policy.base_change || Boolean(policy.previous_job_id), { message: 'A base change requires a previous model.', path: ['previous_job_id'] });
+export const acceptanceSchema = z.object({ min_accuracy: z.number().min(0).max(1), min_brier_improvement: z.number().min(0).max(2), previous_job_id: z.string().uuid().optional(), base_change: z.literal(true).optional(), migration: z.union([z.literal('no_regression'), z.literal(true)]).optional() })
+  .refine(policy => !policy.base_change || Boolean(policy.previous_job_id), { message: 'A base change requires a previous model.', path: ['previous_job_id'] })
+  .refine(policy => !policy.migration || policy.base_change === true, { message: 'Migration requires a base change.', path: ['base_change'] });
 export const submissionSchema = z.object({
   name: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/, 'Use 1–64 lowercase letters, digits, or hyphens; start with a letter or digit.'),
   acceptance: acceptanceSchema,
@@ -59,7 +60,7 @@ export type Job = z.infer<typeof jobSchema>;
 export const migrationPreviewSchema = z.object({
   job: jobSchema,
   counts: z.object({ train: count.positive(), calibration: count.positive(), test: count.positive() }),
-  acceptance: acceptanceSchema.safeExtend({ migration: z.literal(true).optional() }),
+  acceptance: acceptanceSchema,
   allow_jev_comparison: z.boolean(),
 });
 export const migrationRequestSchema = submissionSchema.pick({ model: true, pool: true, base_channel: true }).extend({ model: modelProfileIdSchema, request_id: z.string().uuid() });

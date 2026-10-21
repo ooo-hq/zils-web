@@ -27,7 +27,7 @@ function session(userId: string) {
   const user = { id: userId, email: 'fixture@example.invalid', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
   return { user, access_token: `${Buffer.from(JSON.stringify({ alg: 'HS256' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: userId, exp: expires })).toString('base64url')}.browser-test`, refresh_token: 'fixture', token_type: 'bearer', expires_in: 3600, expires_at: expires };
 }
-async function fixture(page: Page, options: { signedOut?: boolean; denied?: boolean; unapproved?: boolean; activating?: boolean; image?: boolean; missingSelected?: boolean; comparison?: unknown; usage?: 'failed' | 'missing' | 'empty'; hold?: boolean } = {}) {
+async function fixture(page: Page, options: { signedOut?: boolean; denied?: boolean; unapproved?: boolean; activating?: boolean; image?: boolean; missingSelected?: boolean; comparison?: unknown; usage?: 'failed' | 'missing' | 'empty'; hold?: boolean; migration?: 'no_regression' | true } = {}) {
   if (!options.signedOut) await page.addInitScript(value => localStorage.setItem('zils-training-auth', JSON.stringify(value)), session(owner));
   const requests: string[] = [], writes: string[] = [];
   let release: (() => void) | undefined;
@@ -36,7 +36,7 @@ async function fixture(page: Page, options: { signedOut?: boolean; denied?: bool
     jev_comparison: options.comparison ?? null,
     ...(options.image ? { model: { id: 'imajev-4b-v1', name: 'Imajev 4B', base: 'Qwen/Qwen3.5-4B', base_revision: 'a'.repeat(40) } } : {}),
     workflow: { ...job.workflow, state: options.activating ? 'activating' : 'ready' },
-    result: { ...job.result, delivery: { ...job.result.delivery, uid: options.missingSelected ? undefined : 2, status: options.unapproved ? 'no_qualifying_model' : 'accepted' } },
+    result: { ...job.result, delivery: { ...job.result.delivery, uid: options.missingSelected ? undefined : 2, status: options.unapproved ? 'no_qualifying_model' : 'accepted', acceptance: options.migration ? { ...policy, previous_job_id: owner, base_change: true, migration: options.migration } : policy } },
   };
   await page.route('**/*', async route => {
     const req = route.request(), url = new URL(req.url());
@@ -65,6 +65,16 @@ async function fixture(page: Page, options: { signedOut?: boolean; denied?: bool
   });
   return { requests, writes, release: () => release?.() };
 }
+
+for (const migration of ['no_regression', true, undefined] as const) test(`result pages explain the frozen ${migration ?? 'upgrade'} policy`, async ({ page }) => {
+  await fixture(page, { migration });
+  const expected = migration === 'no_regression' ? 'Brier score must match or improve on your previous model' : migration ? 'at most 0.005 increase in Brier loss' : '0.0100 improvement in Brier loss';
+  await page.goto(path);
+  await expect(page.getByRole('region', { name: 'How this model performed' })).toContainText(expected);
+  await page.goto(`/train?run=${id}`);
+  await page.getByText('Evaluation and technical details', { exact: true }).click();
+  await expect(page.getByText('Required:', { exact: false })).toContainText(migration ? expected : '0.0100 absolute Brier improvement');
+});
 
 test('workspace links to private model stats, exact-version usage, and runnable API examples', async ({ page, context }) => {
   await page.setViewportSize({ width: 1280, height: 1050 });

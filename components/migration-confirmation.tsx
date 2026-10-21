@@ -89,7 +89,7 @@ export function MigrationConfirmation({ api, apiUrl, owner, previousId, targetId
         </section>
         <section className={styles.section} aria-label="Existing settings">
           <h3>Your success criteria</h3>
-          <dl className={styles.settings}><div><dt>Minimum accuracy</dt><dd>{Number((preview.acceptance.min_accuracy * 100).toFixed(6))}%</dd></div><div><dt>{preview.acceptance.migration ? 'Maximum Brier regression' : 'Minimum Brier improvement'}</dt><dd>{preview.acceptance.migration ? '0.005' : preview.acceptance.min_brier_improvement}</dd></div></dl>
+          <dl className={styles.settings}><div><dt>Minimum accuracy</dt><dd>{Number((preview.acceptance.min_accuracy * 100).toFixed(6))}%</dd></div><div><dt>{preview.acceptance.migration === 'no_regression' ? 'Brier score' : preview.acceptance.migration ? 'Maximum Brier regression' : 'Minimum Brier improvement'}</dt><dd>{preview.acceptance.migration === 'no_regression' ? 'Match or improve' : preview.acceptance.migration ? '0.005' : preview.acceptance.min_brier_improvement}</dd></div></dl>
           <p>Your current model stays live. The replacement takes over only after it passes your criteria.</p>
         </section>
         <details className={styles.details}><summary>Data and evaluation</summary>
