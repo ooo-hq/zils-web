@@ -23,7 +23,7 @@ const ELECT = [
 ];
 
 const FEATURE = [
-  ['Open', 'The synthetic box pilot has separate mini r5 and lite v1 tracks, each pinned to its exact parent. An operator reference sets the initial score to beat; no box king has qualified yet.'],
+  ['Open', 'The synthetic box pilot has separate mini v1 and lite v1 tracks, each pinned to its exact parent. An operator reference sets the initial score to beat; no box king has qualified yet.'],
   ['Compete', 'Miners submit adapters. A winner must pass every IoU, absence and presence-confidence gate on two disjoint private draws at least 12 hours apart, then receive a reviewed crown.'],
   ['Graduate', 'A box crown is separate from a base release. Graduation would require real-image qualification, the full base regression suite and a separate release review. It is not automatic at the next revision.'],
   ['Guard', 'Before graduation, the skill’s qualifying exam must become part of the base regression suite, so later candidates are checked for losing it. No box skill has graduated yet.'],
@@ -38,7 +38,7 @@ function Steps({ items }: { items: string[][] }) {
 export default function BasesPage() {
   return (
     <SiteFrame current="model">
-      <SectionRow n="01" label="Bases" note="As of 20 Oct 2026" />
+      <SectionRow n="01" label="Bases" note="As of 21 Oct 2026" />
       <header className={m.hero}>
         <h1>Bases</h1>
         <p>Every customer model is an adapter on a shared base. A base moves forward only when a miner’s candidate <b>beats it without hurting anything customers already run</b>.</p>
@@ -46,8 +46,8 @@ export default function BasesPage() {
 
       <dl className={m.nums}>
         <div><dt>Base tiers live</dt><dd>2</dd></div>
-        <div><dt>Latest mini</dt><dd className={m.sm}>r5</dd></div>
-        <div><dt>Candidates stopped</dt><dd>4</dd></div>
+        <div><dt>Latest mini</dt><dd className={m.sm}>v1</dd></div>
+        <div><dt>Candidates stopped</dt><dd>5</dd></div>
         <div><dt>Feature tracks</dt><dd className={m.sm}>Boxes · testnet</dd></div>
       </dl>
 
@@ -61,7 +61,7 @@ export default function BasesPage() {
         </ul>
         <DetailsRow summary="About the box scores">
           <div className={m.prose}>
-            <p>Both are historical research runs on the same 222 test images (industrial defects and generated shapes), one seed each, with adapters trained on the same kinds of images. The mini adapter trained on v1, not the pilot’s r5 parent. These scores are separate from the synthetic-only testnet competition and do not qualify a king.</p>
+            <p>Both are historical research runs on the same 222 test images (industrial defects and generated shapes), one seed each, with adapters trained on the same kinds of images. The mini adapter trained on v1, the pilot’s parent, but not on the pilot exam. These scores are separate from the synthetic-only testnet competition and do not qualify a king.</p>
             <p>On lite, training lifts mean overlap from 0.032 to 0.251, at 0.6 s per box against 3.3 s on mini, but only 3 of 122 defect images reach IoU 0.5 against 42 on mini.</p>
           </div>
         </DetailsRow>

@@ -27,7 +27,7 @@ const RESULTS = [
 ];
 
 const RULES = [
-  ['Train', 'Choose the exact mini r5 or lite v1 parent. Train a box adapter with a frozen vision tower. The public synthetic generator is training material; private exam images and seeds stay sealed.'],
+  ['Train', 'Choose the exact mini v1 or lite v1 parent. Train a box adapter with a frozen vision tower. The public synthetic generator is training material; private exam images and seeds stay sealed.'],
   ['Commit', 'Package with python -m zils.feature_miner pack, upload the bundle, then submit with python -m zils.feature_miner commit. The commitment binds the track, parent and adapter. One hotkey has one active commitment.'],
   ['Score', 'On present targets, weight synthetic families equally: gain at least 0.02 mean IoU over the incumbent, with a positive paired 95% lower confidence bound and mean IoU at least 0.40. No family may drop more than 0.02.'],
   ['Confirm', 'Absent-target false positives must be at most 10%; presence Brier may be at most 0.005 worse than the incumbent. The same adapter must pass every gate on two disjoint private draws, evaluated at least 12 hours apart.'],
@@ -92,7 +92,7 @@ export default function BoxTrackPage() {
           <table className={s.table}>
             <thead><tr><th scope="col">Box track parent</th><th scope="col">Share of validator allocation</th></tr></thead>
             <tbody>
-              <tr><th scope="row">d3-mini-4.5b-zils-r5</th><td>16%</td></tr>
+              <tr><th scope="row">d3-mini-4.5b-v1</th><td>16%</td></tr>
               <tr><th scope="row">d3-lite-0.8b-v1</th><td>4%</td></tr>
             </tbody>
           </table>
@@ -120,7 +120,7 @@ export default function BoxTrackPage() {
             </tr>)}</tbody>
           </table>
         </div>
-        <p className={s.caveat}><b>Historical research, not the pilot exam.</b> These adapters used stock mini and lite, with the same 12 defect types and shape generator in training and test; Jev was zero-shot. The mini result is not an r5 baseline. Each model had one training run and one seed, without absent-target or confidence qualification. Lite reached IoU ≥ 0.5 on only 3 of 122 real-defect images, versus mini’s 42. This does not establish general localization quality.</p>
+        <p className={s.caveat}><b>Historical research, not the pilot exam.</b> These adapters used stock mini and lite, with the same 12 defect types and shape generator in training and test; Jev was zero-shot. The mini result is not the pilot baseline. Each model had one training run and one seed, without absent-target or confidence qualification. Lite reached IoU ≥ 0.5 on only 3 of 122 real-defect images, versus mini’s 42. This does not establish general localization quality.</p>
         <p className={s.fine}>Four serial model passes per box: lite averaged 0.624 s and mini 3.270 s on the RTX 4090 in separate runs; this was not a fresh paired speed comparison. Training took 18.2 / 32.0 minutes and 1.93 / 9.31 GiB peak CUDA allocation for lite / mini.</p>
       </section>
 
