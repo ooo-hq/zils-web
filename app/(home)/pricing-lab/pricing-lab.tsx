@@ -102,7 +102,7 @@ export function PricingLab() {
         </div>
         <div className={s.rateStrip}>
           <span>${BETA_PRICING.millionInputTokens} / million input tokens</span>
-          <span>${BETA_PRICING.trainingRun} / extra run</span>
+          <span>${BETA_PRICING.millionTrainingTokens.toFixed(2)} / million training tokens (${BETA_PRICING.trainingRun} min run)</span>
           <span>${BETA_PRICING.startingCredit} prepaid credit</span>
         </div>
         <p className={s.costNotice}>Miners fund adapter training. Zils surplus deducts the Zils costs entered here, payment fees, and fixed overhead. Buybacks are then allocated after the cash reserve.</p>

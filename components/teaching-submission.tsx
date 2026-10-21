@@ -148,7 +148,7 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
   if (!config) return <p className={s.hint}>Live training is not configured in this environment. You can still download your draft.</p>;
   return <section className={s.preparedReview} aria-label="Submit training run" aria-busy={busy}>
     <h2>Start a real training run</h2>
-    <p className={s.hint}>Uses one included training run or $2 from your balance. A completed evaluation is charged even if no model meets your targets. <Link href="/billing" target="_blank" rel="noopener noreferrer">View billing</Link>.</p>
+    <p className={s.hint}>Costs $0.20 per million training tokens, with a $2 minimum; an included run covers the first $2. If your balance cannot cover a large dataset, the run stops before training and shows the price. A completed evaluation is charged even if no model meets your targets. <Link href="/billing" target="_blank" rel="noopener noreferrer">View billing</Link>.</p>
     {session === undefined ? <p role="status">Checking your sign-in…</p> : !session || accountChanged ? <p className={s.hint}>{accountChanged ? 'Sign in to the original account to resume this run.' : 'Sign in before submitting.'} <Link className={s.secondary} href="/train" target="_blank" rel="noopener noreferrer">Sign in to train</Link> Your draft stays in this tab; return here after signing in.</p> : <form onSubmit={submit}>
       <ModelPoolSelect apiUrl={config.apiUrl} modality={imageAnswers ? 'images' : 'text'} disabled={busy || frozen} onChange={setSelection} />
       <fieldset disabled={busy || frozen}>

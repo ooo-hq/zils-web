@@ -5,7 +5,7 @@ test('estimate defaults, overage marker and end-of-credit line', async ({ page }
   await expect(page.getByTestId('estimate-total')).toHaveText('$4.20');
   await expect(page.getByTestId('estimate-left')).toContainText('$0.80 left');
   await expect(page.getByTestId('credit-end')).toHaveCount(0);
-  const runs = page.getByRole('slider', { name: 'Additional standard training runs' });
+  const runs = page.getByRole('slider', { name: 'Additional training runs (at the $2 minimum)' });
   await runs.focus();
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('ArrowRight');
@@ -29,7 +29,7 @@ test.describe('phone', () => {
     await page.goto('/pricing');
     const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(await overflow()).toBeLessThanOrEqual(0);
-    const runs = page.getByRole('slider', { name: 'Additional standard training runs' });
+    const runs = page.getByRole('slider', { name: 'Additional training runs (at the $2 minimum)' });
     await runs.focus();
     await page.keyboard.press('End');
     expect(await overflow()).toBeLessThanOrEqual(0);

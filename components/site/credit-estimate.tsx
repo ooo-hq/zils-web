@@ -48,7 +48,7 @@ export function CreditEstimate() {
         <p className={css.lead}>Try a workload at the beta launch rates. Your first standard training run is included.</p>
         <Slider id="pricing-requests" label="Decision requests" value={reqPos} min={0} max={100} valueText={count(requests)} onChange={setReqPos} />
         <Slider id="pricing-tokens" label="Input tokens per request" value={tokPos} min={0} max={100} valueText={count(tokensPerRequest)} onChange={setTokPos} />
-        <Slider id="pricing-training" label="Additional standard training runs" value={extraRuns} min={0} max={10} valueText={String(extraRuns)} onChange={setExtraRuns} />
+        <Slider id="pricing-training" label="Additional training runs (at the $2 minimum)" value={extraRuns} min={0} max={10} valueText={String(extraRuns)} onChange={setExtraRuns} />
         <p className={css.fine}>Estimate only. Changing these numbers does not run a model or create a charge.</p>
       </div>
       <div className={css.out}>
