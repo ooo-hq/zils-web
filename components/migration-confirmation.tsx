@@ -97,7 +97,7 @@ export function MigrationConfirmation({ api, apiUrl, owner, previousId, targetId
           <p>The original evaluation set is reused to check for regressions. These results are not a fresh independent estimate of performance.</p>
           {preview.allow_jev_comparison && <p>Your existing JEV comparison setting is retained: evaluation inputs and questions are shared with TypeSafe JEV; correct answers are not.</p>}
         </details>
-        <p className={styles.cost}>Uses one included training run if available; otherwise $2 in credit. Your existing data-sharing permissions apply.</p>
+        <p className={styles.cost}>Costs $0.20 per million training tokens, with a $2 minimum; an included run covers the first $2. Your existing data-sharing permissions apply.</p>
       </>}
     </div>
     <footer className={styles.footer}>
