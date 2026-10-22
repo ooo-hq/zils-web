@@ -12,7 +12,7 @@ const currentJob = (model = mini): Job => ({
   result: { delivery: { status: 'accepted', uid: 1 }, baseline: { accuracy: .8, brier: .2, skill: .4 }, miners: [{ uid: 1, status: 'evaluated', accuracy: .9, brier: .15 }], weights: {} },
 });
 
-async function fixture(page: Page, model = mini, target = round(5)) {
+async function fixture(page: Page, model = mini, target = round(7)) {
   await signIn(page);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const config = baseConfigSchema.parse(poolConfig());
@@ -63,13 +63,13 @@ test('Migrate confirms existing data and settings without reopening the training
   await expect(dialog.getByText('Match or improve', { exact: true })).toBeVisible();
   await expect(dialog.getByText('Minimum Brier improvement', { exact: true })).toHaveCount(0);
   await expect(dialog.locator('input, textarea, select')).toHaveCount(0);
-  await expect(dialog.getByText('d3-mini r5', { exact: true })).toBeVisible();
+  await expect(dialog.getByText('d3-mini r7', { exact: true })).toBeVisible();
   expect(state.writes).toEqual([]);
-  state.config.pools!['d3-mini'].channels = { stable: round(5), latest: round(6) };
+  state.config.pools!['d3-mini'].channels = { stable: round(7), latest: round(8) };
   await dialog.getByRole('button', { name: 'Confirm migration' }).click();
   await expect(page).toHaveURL(`/train?run=${newId}`);
   expect(state.posts).toHaveLength(1);
-  expect(state.posts[0]).toMatchObject({ model: round(5).id, pool: 'd3-mini', base_channel: 'stable' });
+  expect(state.posts[0]).toMatchObject({ model: round(7).id, pool: 'd3-mini', base_channel: 'stable' });
   expect(Object.keys(state.posts[0]).sort()).toEqual(['base_channel', 'model', 'pool', 'request_id']);
   expect(state.writes).toEqual([`POST /v1/jobs/${id}/migration`]);
 });
@@ -108,7 +108,7 @@ test('availability is checked again at confirmation', async ({ page }) => {
 
 for (const reason of ['denied', 'missing'] as const) test(`${reason} saved data blocks migration without ordinary training fallback`, async ({ page }) => {
   const state = await fixture(page); state[reason] = true;
-  await page.goto(`/train?upgrade=${id}&migrate=${round(5).id}`);
+  await page.goto(`/train?upgrade=${id}&migrate=${round(7).id}`);
   const dialog = page.getByRole('dialog', { name: 'Migrate your model' });
   await expect(dialog.getByRole('alert')).toContainText(reason === 'denied' ? 'Job not found' : 'no longer available');
   await expect(dialog.getByRole('button', { name: 'Confirm migration' })).toHaveCount(0);
@@ -123,7 +123,7 @@ test('the Models list links eligible models to the migration notice', async ({ p
 });
 
 test('a model already on the newest base has no migration offer', async ({ page }) => {
-  await fixture(page, round(5)); await page.goto(`/models/${id}`);
+  await fixture(page, round(7)); await page.goto(`/models/${id}`);
   await expect(page.getByRole('link', { name: 'Migrate', exact: true })).toHaveCount(0);
 });
 
