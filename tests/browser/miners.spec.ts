@@ -29,7 +29,7 @@ test.beforeAll(async () => {
       res.setHeader('content-type', 'application/json');
       return res.end(JSON.stringify({
         model: { id: 'd3-mini-4.5b-v1', name: 'd3-mini 4.5B', max_input_tokens: 4096 },
-        channels: { stable: { id: 'd3-mini-4.5b-v1', name: 'd3-mini 4.5B' }, latest: { id: 'd3-mini-4.5b-zils-r5', name: 'd3-mini 4.5B · r5' } },
+        channels: { stable: { id: 'd3-mini-4.5b-v1', name: 'd3-mini 4.5B' }, latest: { id: 'd3-mini-4.5b-v1', name: 'd3-mini 4.5B' } },
       }));
     }
     if (!req.url?.startsWith('/v1/network/miners')) { res.statusCode = 404; return res.end(); }
@@ -94,7 +94,7 @@ test('an open page follows miners and models outside the default channels withou
   snapshot.miners[0].models = ['d3-lite-0.8b-v1', 'future-model-v2'];
   snapshot.miners[1].status = 'offline';
   snapshot.miners[1].last_seen = '2026-10-18T17:00:00Z';
-  snapshot.miners.push({ ...miner(103, '5NewMiner', 'online', 0, 0, null, '2026-10-18T19:59:00Z'), models: ['d3-mini-4.5b-zils-r5'] });
+  snapshot.miners.push({ ...miner(103, '5NewMiner', 'online', 0, 0, null, '2026-10-18T19:59:00Z'), models: ['d3-mini-4.5b-v1'] });
   snapshot.summary = { ...snapshot.summary, miners: 5, offline: 1 };
   snapshot.as_of = '2026-10-18T19:59:00Z';
   await page.clock.fastForward(30_000);
