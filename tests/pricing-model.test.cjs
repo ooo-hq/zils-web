@@ -1,6 +1,9 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { DEFAULT_MODEL_INPUTS, WORKLOADS, DELIVERY_COSTS, parseModelInputs, modelPricing } = require('../.private/test-build/pricing-model.js');
+const { DEFAULT_MODEL_INPUTS, WORKLOADS, DELIVERY_COSTS, parseModelInputs, modelPricing: priced } = require('../.private/test-build/pricing-model.js');
+// The economics below were analyzed at the original $0.042/M and $2/run; pin them so price changes don't rewrite the math checks.
+const ANALYZED = { millionInputTokens: 0.042, trainingRun: 2 };
+const modelPricing = (assumptions, customers) => priced(assumptions, customers, ANALYZED);
 
 const assumptions = (overrides = {}) => parseModelInputs({ ...DEFAULT_MODEL_INPUTS, zils: '1', ...overrides });
 const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-8, `${actual} != ${expected}`);
@@ -247,4 +250,10 @@ test('buyback inputs reject invalid percentages, reserves, and zero or missing e
     assert.equal(assumptions(override), null, JSON.stringify(override));
   }
   assert.notEqual(assumptions({ buybackPercent: '12.5', alphaPrice: '0.000001', buybackFeePercent: '0.05' }), null);
+});
+
+test('the lab defaults to the live beta prices', () => {
+  const a = parseModelInputs({ ...DEFAULT_MODEL_INPUTS, newCustomers: '0', requests: '1000000', tokens: '1000', runs: '0', zils: '1' });
+  assert.ok(a);
+  assert.ok(Math.abs(priced(a, 1).inferenceRevenuePerCustomer - 60) < 1e-9);
 });

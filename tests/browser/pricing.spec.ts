@@ -2,17 +2,17 @@ import { test, expect } from '@playwright/test';
 
 test('estimate defaults, overage marker and end-of-credit line', async ({ page }) => {
   await page.goto('/pricing');
-  await expect(page.getByTestId('estimate-total')).toHaveText('$4.20');
-  await expect(page.getByTestId('estimate-left')).toContainText('$0.80 left');
-  await expect(page.getByTestId('credit-end')).toHaveCount(0);
+  await expect(page.getByTestId('estimate-total')).toHaveText('$6.00');
+  await expect(page.getByTestId('estimate-left')).toContainText('$1.00 beyond your first $5 credit.');
+  await expect(page.getByTestId('credit-end')).toBeVisible();
   const runs = page.getByRole('slider', { name: 'Additional training runs (at the $2 minimum)' });
   await runs.focus();
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('ArrowRight');
   await expect(runs).toHaveAttribute('aria-valuetext', '2');
-  await expect(page.getByTestId('estimate-total')).toHaveText('$8.20');
+  await expect(page.getByTestId('estimate-total')).toHaveText('$10.00');
   await expect(page.getByTestId('credit-end')).toBeVisible();
-  await expect(page.getByTestId('estimate-left')).toContainText('$3.20 beyond your first $5 credit.');
+  await expect(page.getByTestId('estimate-left')).toContainText('$5.00 beyond your first $5 credit.');
   await expect(page.getByRole('slider', { name: 'Decision requests' })).toHaveAttribute('aria-valuetext', '100,000');
 });
 

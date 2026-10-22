@@ -157,8 +157,8 @@ in a `NEXT_PUBLIC_*` setting.
 ## Pricing page
 
 `/pricing` presents the proposed beta launch plan: $5 prepaid credit with one
-standard training run included, $2 for each additional standard run, and $0.042
-per million input tokens with free output tokens. The scope of a standard run
+training run included, $0.20 per million training tokens ($2 minimum) for each
+additional run, and $0.06 per million input tokens with free output tokens. The scope of a standard run
 must be agreed before starting. Larger jobs require an upfront estimate.
 
 The page includes a local usage estimator and a link from the shared footer.
