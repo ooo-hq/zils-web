@@ -64,7 +64,7 @@ export function parseModelInputs(inputs: ModelInputs): ModelAssumptions | null {
   return values;
 }
 
-export function modelPricing(assumptions: ModelAssumptions, customers: number) {
+export function modelPricing(assumptions: ModelAssumptions, customers: number, prices: Pick<typeof BETA_PRICING, 'millionInputTokens' | 'trainingRun'> = BETA_PRICING) {
   const requestsPerCustomer = assumptions.zils * assumptions.requests;
   const millionTokens = requestsPerCustomer * assumptions.tokens / 1_000_000;
   const jobsPerCustomer = assumptions.zils * assumptions.runs;
@@ -72,8 +72,8 @@ export function modelPricing(assumptions: ModelAssumptions, customers: number) {
   // an entered job; it never creates an extra job or repeats for every Zil.
   const freeJobsPerCustomer = Math.min(jobsPerCustomer, assumptions.newCustomers / 100);
   const paidJobsPerCustomer = jobsPerCustomer - freeJobsPerCustomer;
-  const inferenceRevenuePerCustomer = millionTokens * BETA_PRICING.millionInputTokens;
-  const trainingRevenuePerCustomer = paidJobsPerCustomer * BETA_PRICING.trainingRun;
+  const inferenceRevenuePerCustomer = millionTokens * prices.millionInputTokens;
+  const trainingRevenuePerCustomer = paidJobsPerCustomer * prices.trainingRun;
   const revenuePerCustomer = inferenceRevenuePerCustomer + trainingRevenuePerCustomer;
   const servingPerCustomer = millionTokens * assumptions.inference;
   const trainingPerCustomer = jobsPerCustomer * assumptions.training;
