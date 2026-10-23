@@ -10,7 +10,7 @@ test('z3 launch distinguishes the founding baseline from planned and elected rel
   await expect(lineup.getByText('Planned release', { exact: true })).toHaveCount(4);
   await expect(page.getByText('It was not trained by Zils or elected as a miner winner.', { exact: false })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Explore the founding weights on Hugging Face' })).toHaveAttribute('href', /z3-mini-v1\/tree\/c9b7515250c0444192767fc00975402f12421413$/);
-  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'z3 models' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Z3' })).toHaveAttribute('aria-current', 'page');
   for (const width of [1280, 390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

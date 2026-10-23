@@ -33,7 +33,7 @@ test('no Bittensor link; current page is marked', async ({ page }) => {
   await page.goto('/model');
   await expect(page.locator('header, footer').getByRole('link', { name: /bittensor/i })).toHaveCount(0);
   const nav = page.getByRole('navigation', { name: 'Main navigation' });
-  await expect(nav.getByRole('link')).toHaveText(['z3 models', 'Examples', 'Research', 'Miners', 'Pricing']);
+  await expect(nav.getByRole('link')).toHaveText(['Z3', 'Examples', 'Research', 'Miners', 'Pricing']);
   await expect(nav.getByRole('link', { name: 'Research' })).toHaveAttribute('aria-current', 'page');
   await expect(nav.locator('[aria-current]')).toHaveCount(1);
 });
@@ -63,7 +63,7 @@ test.describe('mobile menu', () => {
     await menu.click();
     await expect(menu).toHaveAttribute('aria-expanded', 'true');
     const panel = page.getByRole('group', { name: 'Site menu' });
-    await expect(panel.getByRole('link')).toHaveText(['z3 models', 'Examples', 'Research', 'Miners', 'Pricing', 'Sign in']);
+    await expect(panel.getByRole('link')).toHaveText(['Z3', 'Examples', 'Research', 'Miners', 'Pricing', 'Sign in']);
     await expect(panel.getByRole('link', { name: 'Pricing' })).toHaveAttribute('aria-current', 'page');
     await page.keyboard.press('Escape');
     await expect(panel).toHaveCount(0);
