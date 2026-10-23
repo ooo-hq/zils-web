@@ -9,7 +9,7 @@ import { Lineage } from './lineage';
 import s from './bases.module.css';
 
 export const metadata: Metadata = {
-  title: 'Zils — bases',
+  title: 'Zils — z3 base history',
   description: 'Zils base revisions, synthetic box competitions, and the separate qualification required before a feature can graduate into a base.',
   alternates: { canonical: 'https://zils.ai/bases' },
 };
@@ -40,7 +40,7 @@ export default function BasesPage() {
     <SiteFrame current="model">
       <SectionRow n="01" label="Bases" note="As of 21 Oct 2026" />
       <header className={m.hero}>
-        <h1>Bases</h1>
+        <h1>z3 base history</h1>
         <p>Every customer model is an adapter on a shared base. A base moves forward only when a miner’s candidate <b>beats it without hurting anything customers already run</b>.</p>
       </header>
 
@@ -54,6 +54,7 @@ export default function BasesPage() {
       <SectionRow n="02" label="Lineage" note="Bases left to right, skills below" />
       <section className={box.section} aria-labelledby="lineage-heading">
         <h2 id="lineage-heading" className={box.h2}>Each tier has its own line. New skills hang off the current base.</h2>
+        <p className="mb-6 text-sm text-muted">The z3-mini founding baseline retains the original d3 checkpoint. This history also includes upstream lite research and withdrawn candidates; these are not additional z3 releases. <Link href="/z3" className="underline underline-offset-4">See the z3 model line.</Link></p>
         <Lineage />
         <ul className={s.legend} aria-label="Legend">
           <li data-kind="base">Base revision</li><li data-kind="lost">Candidate that lost</li>

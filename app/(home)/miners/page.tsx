@@ -1,3 +1,4 @@
+import { modelDisplayName } from '@/lib/model-name';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteFrame } from '@/components/site/site-frame';
@@ -87,7 +88,7 @@ export default async function MinersPage() {
         <div><dt>Online now</dt><dd>{numbers.online}<small> / {numbers.total}</small></dd></div>
         <div><dt>Jobs</dt><dd>{numbers.jobs}</dd></div>
         <div><dt>Models selected</dt><dd>{numbers.selected}</dd></div>
-        <div><dt>Current base</dt><dd className={s.sm}>{base?.channels.stable.name ?? '—'}</dd></div>
+        <div><dt>Current base</dt><dd className={s.sm}>{modelDisplayName(base?.channels.stable.name) || '—'}</dd></div>
       </dl>}
 
       <SectionRow n="02" label="Competitions" note="Proposed" />
@@ -129,15 +130,15 @@ export default async function MinersPage() {
           <section aria-labelledby="current-base">
             <h3 id="current-base" className={s.subTitle}>Current base</h3>
             {base ? <>
-              <p className={s.baseName}>{base.channels.stable.name}</p>
+              <p className={s.baseName}>{modelDisplayName(base.channels.stable.name)}</p>
               <dl className={s.facts}>
                 <div><dt>Profile</dt><dd><code>{base.channels.stable.id}</code></dd></div>
                 <div><dt>Input limit</dt><dd>{base.model.max_input_tokens.toLocaleString('en-US')} tokens</dd></div>
                 <div><dt>Inputs</dt><dd>Text{base.model.inputs?.images ? `, up to ${base.model.inputs.images} images` : ''}{base.model.inputs?.video ? ', video' : ''}</dd></div>
-                <div><dt>Channels</dt><dd>stable {latest && latest.id !== base.channels.stable.id ? `${base.channels.stable.name}, latest ${latest.name}` : 'and latest on the same base'}</dd></div>
+                <div><dt>Channels</dt><dd>stable {latest && latest.id !== base.channels.stable.id ? `${modelDisplayName(base.channels.stable.name)}, latest ${modelDisplayName(latest.name)}` : 'and latest on the same base'}</dd></div>
               </dl>
               <p className={s.live}>Live from the Zils training API.</p>
-            </> : <p className={s.live}>Live status is unavailable right now. Last recorded: d3-mini 4.5B on both channels (17 October 2026).</p>}
+            </> : <p className={s.live}>Live status is unavailable right now. Last recorded: z3-mini 4.5B on both channels (17 October 2026).</p>}
           </section>
 
           <section aria-labelledby="how-heading">

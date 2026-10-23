@@ -63,7 +63,7 @@ test('Migrate confirms existing data and settings without reopening the training
   await expect(dialog.getByText('Match or improve', { exact: true })).toBeVisible();
   await expect(dialog.getByText('Minimum Brier improvement', { exact: true })).toHaveCount(0);
   await expect(dialog.locator('input, textarea, select')).toHaveCount(0);
-  await expect(dialog.getByText('d3-mini r7', { exact: true })).toBeVisible();
+  await expect(dialog.getByText('z3-mini r7', { exact: true })).toBeVisible();
   expect(state.writes).toEqual([]);
   state.config.pools!['d3-mini'].channels = { stable: round(7), latest: round(8) };
   await dialog.getByRole('button', { name: 'Confirm migration' }).click();

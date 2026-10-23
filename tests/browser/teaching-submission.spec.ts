@@ -243,6 +243,8 @@ test('pool selection remains fixed through interrupted text upload', async ({ pa
   await prepared(page);
   const pool = page.getByLabel('Model pool', { exact: true });
   await expect(pool).toHaveValue('d3-mini');
+  await expect(pool.locator('option[value="d3-mini"]')).toContainText('z3-mini');
+  await expect(pool.locator('option[value="d3-lite"]')).toContainText('z3-lite');
   await expect(pool.locator('option[value="d3-nano"]')).toBeDisabled();
   await pool.selectOption('d3-lite');
   await page.getByLabel('Base channel', { exact: true }).selectOption('latest');
