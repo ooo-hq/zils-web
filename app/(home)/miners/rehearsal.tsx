@@ -90,9 +90,9 @@ export function Rehearsal() {
       </Section>
 
       <Section id="base-tier" eyebrow="Base tier · status as of 19 October 2026" title="A competition for the base model itself.">
-        <p className={s.rhBody}>Customer adapters train on one pinned base model. Since 17 October 2026 that base is d3-mini 4.5B. Its public release name is now z3-mini v1, the founding baseline. In the base tier, miners submit a full-weight replacement for that base. Validators score each candidate on a sealed holdout against the incumbent, and a candidate is promoted only after it also passes a second sealed draw and an adapter regression suite.</p>
+        <p className={s.rhBody}>Customer adapters train on one pinned base model. That base is z3-mini v1, the founding baseline using the unchanged d3-mini 4.5B checkpoint adopted on 17 October 2026. In the base tier, miners submit a full-weight replacement for that base. Validators score each candidate on a sealed holdout against the incumbent, and a candidate is promoted only after it also passes a second sealed draw and an adapter regression suite.</p>
         <dl className={s.rhCard}>{PAYOUT.map(([rule, description]) => <div key={rule} className={s.rhRule}><dt>{rule}</dt><dd>{description}</dd></div>)}</dl>
-        <p className={s.rhFine}>Today’s base is stock d3-mini, a vendor base with no miner behind it, so there is no king yet. No candidate has been promoted, and nothing runs on mainnet yet.</p>
+        <p className={s.rhFine}>Today’s base is z3-mini v1, a founding baseline with no miner behind it, so there is no king yet. No candidate has been promoted, and nothing runs on mainnet yet.</p>
         <Link href="/model#base-tier" className={s.rhLink}>Full promotion rules</Link>
       </Section>
     </div>
