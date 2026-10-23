@@ -12,6 +12,7 @@ const LINK_GROUPS = [
     { href: '/early-access', label: 'Early access' },
   ] },
   { label: 'Explore', links: [
+    { href: '/z3', label: 'z3 models' },
     { href: '/model', label: 'Research' },
     { href: '/miners', label: 'Miners' },
     { href: '/bases', label: 'Bases' },

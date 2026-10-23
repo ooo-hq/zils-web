@@ -1,5 +1,6 @@
 'use client';
 
+import { modelDisplayName } from '@/lib/model-name';
 import type { StorageLocations } from '@/lib/storage';
 
 import { type SupabaseClient } from '@supabase/supabase-js';
@@ -295,7 +296,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
         <p className={styles.id}>Run ID: {job.id}</p>
         {job.workflow?.state === 'ready' && job.workflow.model_id && <p className={styles.hash}>Full API model ID<br /><code>{job.workflow.model_id}</code></p>}
         {job.created_at && <p>Submitted {new Date(job.created_at).toLocaleString()}</p>}
-        {job.model && <p>Starting model: <strong>{job.model.name}</strong></p>}
+        {job.model && <p>Starting model: <strong>{modelDisplayName(job.model.name)}</strong></p>}
         {job.selection?.previous && <p>Replaces: <Link href={`/models/${job.selection.previous.job_id}`}>{job.selection.previous.model_id}<LinkLoading /></Link>. The new model goes live only after it meets its acceptance criteria against that version on your test examples.</p>}
         {job.status === 'completed' && !job.result && <p>Result details are not available yet. Refresh to try again.</p>}
         {job.result && job.model?.id !== 'imajev-4b-v1' && <>

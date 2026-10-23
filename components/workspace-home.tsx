@@ -1,5 +1,6 @@
 'use client';
 
+import { modelDisplayName } from '@/lib/model-name';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
@@ -63,7 +64,7 @@ export function WorkspaceHome({ config, sharedModel, baseName }: { config: Train
 
     <section className={s.base} aria-labelledby="base-title">
       <div className={s.cardHeading}><h2 id="base-title">Base model</h2><Link href="/miners">How it improves</Link></div>
-      <p className={s.baseName}>{baseName ?? 'd3-mini 4.5B'}</p>
+      <p className={s.baseName}>{modelDisplayName(baseName ?? 'd3-mini 4.5B')}</p>
       <p>Every model you train is an adapter on this base. When a better base wins, you can upgrade your models to it.</p>
     </section>
 

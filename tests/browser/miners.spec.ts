@@ -89,7 +89,7 @@ test('an open page follows miners and models outside the default channels withou
   await page.clock.install();
   await page.goto('/miners');
   const first = page.getByRole('row').filter({ has: page.getByText('UID 1', { exact: true }) });
-  await expect(first).toContainText('d3-mini 4.5B');
+  await expect(first).toContainText('z3-mini 4.5B');
   await page.getByRole('button', { name: 'Miner', exact: true }).click();
   snapshot.miners[0].models = ['d3-lite-0.8b-v1', 'future-model-v2'];
   snapshot.miners[1].status = 'offline';
@@ -98,8 +98,8 @@ test('an open page follows miners and models outside the default channels withou
   snapshot.summary = { ...snapshot.summary, miners: 5, offline: 1 };
   snapshot.as_of = '2026-10-18T19:59:00Z';
   await page.clock.fastForward(30_000);
-  await expect(first).toContainText('d3-lite 0.8B, future-model-v2');
-  await expect(first).not.toContainText('d3-mini');
+  await expect(first).toContainText('z3-lite 0.8B, future-model-v2');
+  await expect(first).not.toContainText('z3-mini');
   await expect(page.getByText('Updated 19:59 UTC').first()).toBeVisible();
   await expect(page.getByRole('cell', { name: 'Offline', exact: true })).toBeVisible();
   await expect(page.getByText('UID 103', { exact: true })).toBeVisible();
@@ -118,7 +118,7 @@ test('an open page removes unavailable data and recovers on the next refresh', a
   mode = 'ok';
   snapshot.miners[0].models = ['d3-lite-0.8b-v1'];
   await page.clock.fastForward(30_000);
-  await expect(page.getByRole('table', { name: 'Miner leaderboard' })).toContainText('d3-lite 0.8B');
+  await expect(page.getByRole('table', { name: 'Miner leaderboard' })).toContainText('z3-lite 0.8B');
   await expect(page.getByText('The leaderboard is unavailable right now.')).toHaveCount(0);
 });
 
@@ -129,12 +129,12 @@ test('refresh pauses in a hidden tab and resumes immediately when visible', asyn
   await page.evaluate(() => Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' }));
   snapshot.miners[0].models = ['d3-lite-0.8b-v1'];
   await page.clock.fastForward(30_000);
-  await expect(page.getByRole('table', { name: 'Miner leaderboard' })).not.toContainText('d3-lite');
+  await expect(page.getByRole('table', { name: 'Miner leaderboard' })).not.toContainText('z3-lite');
   await page.evaluate(() => {
     Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
     document.dispatchEvent(new Event('visibilitychange'));
   });
-  await expect(page.getByRole('table', { name: 'Miner leaderboard' })).toContainText('d3-lite 0.8B');
+  await expect(page.getByRole('table', { name: 'Miner leaderboard' })).toContainText('z3-lite 0.8B');
 });
 
 test('the rehearsal row holds every sentence of the old /bittensor page', async ({ page }) => {

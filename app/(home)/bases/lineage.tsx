@@ -10,8 +10,8 @@ type Detail = { tag: string; name: string; body: string; facts: [string, string]
 // Sources: output/base-promotion-rehearsal-2026-10-17, base-round-2-2026-10-18, base-round-3-2026-10-18,
 // box-mvp-2026-10-19 and d3-lite-box-2026-10-20 reports. Box scores are research runs, not track results.
 const DETAILS: Record<string, Detail> = {
-  'mini-v1': { tag: 'Base · stable and latest', name: 'd3-mini 4.5B · v1', body: 'The vendor checkpoint, chosen as the first base for its video, multi-image and extra question types. It is the base every customer model runs on.',
-    facts: [['Elected', '17 Oct'], ['Channel', 'stable and latest']] },
+  'mini-v1': { tag: 'Base · stable and latest', name: 'z3-mini 4.5B · v1', body: 'The vendor checkpoint, chosen as the first base for its video, multi-image and extra question types. It is the base every customer model runs on.',
+    facts: [['Adopted baseline', '17 Oct'], ['Channel', 'stable and latest']] },
   r1: { tag: 'Candidate · tied', name: 'Round 1', body: 'Tied v1 on the sealed exams, so it was not eligible. The regression suite passed.',
     facts: [['Exam Brier', '0.1782 vs 0.1790'], ['Date', '17–18 Oct']] },
   r2: { tag: 'Candidate · vetoed', name: 'Round 2', body: 'Beat v1 on two sealed exams, but customer adapters retrained on it got worse. The regression suite vetoed it.',
@@ -64,13 +64,13 @@ export function Lineage() {
     <div className={s.scroll} tabIndex={0} role="region" aria-label="Base lineage map">
       <svg className={s.map} viewBox="0 0 960 520" role="group" aria-labelledby="map-title map-desc">
         <title id="map-title">Base lineage</title>
-        <desc id="map-desc">d3-mini stays at v1, with rounds 1 to 5 branching off as candidates that lost or were withdrawn. d3-lite starts at v1 on 20 October. Separate synthetic-only box tracks hang below mini v1 and lite v1. Neither has a qualified king. Base graduation requires real-image qualification and a separate regression review. Select a point for its details.</desc>
+        <desc id="map-desc">z3-mini uses the original d3-mini v1 baseline, with rounds 1 to 5 branching off as candidates that lost or were withdrawn. d3-lite starts at v1 on 20 October. Separate synthetic-only box tracks hang below mini v1 and lite v1. Neither has a qualified king. Base graduation requires real-image qualification and a separate regression review. Select a point for its details.</desc>
         {([[80, '17 OCT'], [300, '18 OCT'], [500, '19 OCT'], [700, '20 OCT'], [890, 'NEXT']] as const).map(([x, d]) => <g key={d}>
           <line className={s.grid} x1={x} y1={40} x2={x} y2={505} />
           <text className={s.axis} x={x} y={24} textAnchor="middle">{d}</text>
         </g>)}
 
-        <text className={s.lane} x={16} y={64}>d3-mini 4.5B</text>
+        <text className={s.lane} x={16} y={64}>z3-mini 4.5B</text>
         <path className={s.future} d="M80 160 H890" />
         {([[190, 'tied'], [300, 'vetoed'], [390, 'vetoed'], [470, 'vetoed'], [560, 'withdrawn']] as const).map(([x, sub], i) => <g key={x}>
           <line className={s.stem} x1={x} y1={160} x2={x} y2={106} />

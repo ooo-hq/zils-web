@@ -34,7 +34,7 @@ test('saved lite image upload resumes when discovery is unavailable',async({page
  await page.getByRole('button',{name:'Review photos',exact:true}).click();
  await page.getByLabel('I have reviewed the labels and item groups',{exact:true}).check();
  await page.getByRole('button',{name:'Review image splits',exact:true}).click();
- await expect(page.getByText(`Saved model: ${lite.name} (${lite.id})`,{exact:true})).toBeVisible();
+ await expect(page.getByText(`Saved model: z3-lite (${lite.id})`,{exact:true})).toBeVisible();
  await page.getByLabel('I have permission to share training images with approved workers',{exact:true}).check();
  await page.getByRole('button',{name:'Resume missing image uploads',exact:true}).click({timeout:2000});
  await expect(page.getByText('Image run submitted for validation.',{exact:true})).toBeVisible();

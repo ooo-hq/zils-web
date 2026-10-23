@@ -1,4 +1,5 @@
 'use client';
+import { modelDisplayName } from '@/lib/model-name';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
@@ -126,7 +127,7 @@ function Intake({apiUrl,active=true,onChooseType,assistantConfigured,trainingApi
       </>}
       {step===3&&prepared&&<div className={photoStyles.ready}><p>{prepared.counts.train} training · {prepared.counts.calibration} calibration · {prepared.counts.test} evaluation photos. Whole items stay together.</p>
         <div className={styles.tableWrap}><table><thead><tr><th>Answer</th><th>Training</th><th>Calibration</th><th>Evaluation</th></tr></thead><tbody>{prepared.distribution.map(row=><tr key={row.outcome}><th>{row.outcome}</th><td>{row.train}</td><td>{row.calibration}</td><td>{row.test}</td></tr>)}</tbody></table></div>
-        {existingJob?<p>Saved model: {existingJob.model?.name} ({existingJob.model?.id})</p>:<ModelPoolSelect apiUrl={apiUrl} modality="images" disabled={locked} onChange={setSelection} />}
+        {existingJob?<p>Saved model: {modelDisplayName(existingJob.model?.name)} ({existingJob.model?.id})</p>:<ModelPoolSelect apiUrl={apiUrl} modality="images" disabled={locked} onChange={setSelection} />}
         <fieldset disabled={locked} className={photoStyles.fields}><label>Run name<input value={name} onChange={e=>setName(e.target.value)} pattern="[a-z0-9][a-z0-9-]{0,63}"/></label>{binary&&<><label>Positive class<select aria-label="Positive class" value={positive} onChange={e=>setPositive(e.target.value)}><option value="">Choose the outcome you need to detect</option>{outcomes.map(v=><option key={v}>{v}</option>)}</select></label><label>Minimum positive recall (%)<input type="number" min="0" max="100" value={recall} onChange={e=>setRecall(e.target.value)}/></label><label>Maximum false alarms (%)<input type="number" min="0" max="100" value={alarms} onChange={e=>setAlarms(e.target.value)}/></label></>}
           <label>Minimum accuracy (%)<input type="number" min="0" max="100" value={accuracy} onChange={e=>setAccuracy(e.target.value)}/></label><label>Minimum Brier improvement<input type="number" min="0" max="2" step="0.01" value={improvement} onChange={e=>setImprovement(e.target.value)}/></label></fieldset>
         <p>Only training photos go to approved workers. Calibration and evaluation photos stay private to evaluation. Draft uploads expire after 24 hours; submitted photos are retained until 30 days after the run finishes.</p>

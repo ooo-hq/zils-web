@@ -18,7 +18,7 @@ import { benchmark, readComparison, percent, decimal, milliseconds, comparisonHe
 
 export const metadata: Metadata = {
   title: 'zils — tuned open models can compete',
-  description: 'In our October 2026 support and mate-in-one tests, task-tuned open JevK5 4B models outperformed official hosted TypeSafe JEV 1.13.0. JevK5 has since been retired; the base is now d3-mini 4.5B. Also: B300 miner follow-ups, how the base-model competition works, and recorded d3-mini evidence.',
+  description: 'In our October 2026 support and mate-in-one tests, task-tuned open JevK5 4B models outperformed official hosted TypeSafe JEV 1.13.0. JevK5 has since been retired; the z3-mini founding baseline uses d3-mini 4.5B. Also: B300 miner follow-ups, how the base-model competition works, and recorded d3-mini evidence.',
   alternates: { canonical: 'https://zils.ai/model' },
 };
 
@@ -130,6 +130,7 @@ export default function ModelPage() {
 
   return (
     <SiteFrame current="model">
+      <p className="border-b border-edge px-6 py-5 text-sm text-muted">Meet <Link href="/z3" className="underline underline-offset-4">z3, the Zils model line</Link>. The founding mini release uses d3-mini weights; the studies below retain their recorded model names.</p>
       <div className={`${s.res} ${s.page}`}>
         <SectionRow n="01" label="Zils research" note="Recorded experiments · published evidence" />
         <header className={s.hero}>

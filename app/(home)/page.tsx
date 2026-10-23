@@ -71,6 +71,11 @@ export default function HomePage() {
     <SiteFrame>
       <SortingHero title={TITLE} description={DESCRIPTION} />
 
+      <section className="border-b border-edge px-6 py-8 sm:px-10" aria-label="The z3 model line">
+        <p className="text-sm text-muted">Meet z3, the Zils decision-model line. Start with the mini founding baseline and follow new releases from the miner competition.</p>
+        <Link href="/z3" className="mt-3 inline-flex min-h-11 items-center text-sm underline underline-offset-4">Explore z3 models</Link>
+      </section>
+
       <SectionRow n="02" label="How it works" />
       <Reveal><HomeDecisionStory /></Reveal>
 

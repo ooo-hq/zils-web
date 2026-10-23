@@ -5,7 +5,7 @@ import type { Miner } from '@/lib/network-miners';
 import { STATUS_LABEL, isActive, sortMiners, type SortKey } from '@/lib/miner-board';
 import css from './miner-board.module.css';
 
-const MODEL_NAMES: Record<string, string> = { 'd3-mini-4.5b-v1': 'd3-mini 4.5B', 'd3-lite-0.8b-v1': 'd3-lite 0.8B', 'h2o-lightning-4b-v1.2.3': 'H2O 4B' };
+const MODEL_NAMES: Record<string, string> = { 'd3-mini-4.5b-v1': 'z3-mini 4.5B', 'd3-lite-0.8b-v1': 'z3-lite 0.8B', 'h2o-lightning-4b-v1.2.3': 'H2O 4B' };
 const short = (hotkey: string) => hotkey.length > 14 ? `${hotkey.slice(0, 6)}…${hotkey.slice(-6)}` : hotkey;
 function ago(iso: string | null, now: number) {
   if (!iso) return '—';

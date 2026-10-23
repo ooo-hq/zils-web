@@ -1,5 +1,6 @@
 'use client';
 
+import { modelDisplayName } from '@/lib/model-name';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { SheetContent, SheetTitle, SheetDescription, SheetClose } from '@/components/ui/sheet';
@@ -81,7 +82,7 @@ export function MigrationConfirmation({ api, apiUrl, owner, previousId, targetId
       {!preview && !error && <p role="status">Checking saved examples and settings…</p>}
       {preview && target && <>
         <h3 className={styles.modelName}>{preview.job.name}</h3>
-        <dl className={styles.bases}><div><dt>Current base</dt><dd>{preview.job.model?.name}</dd></div><div><dt>New base</dt><dd>{target.name}</dd></div></dl>
+        <dl className={styles.bases}><div><dt>Current base</dt><dd>{modelDisplayName(preview.job.model?.name)}</dd></div><div><dt>New base</dt><dd>{modelDisplayName(target.name)}</dd></div></dl>
         <section className={styles.section} aria-label="Saved examples">
           <h3>Your saved examples</h3>
           <dl className={styles.counts}>{(['train', 'calibration', 'test'] as const).map(split => <div key={split}><dt>{{ train: 'Training', calibration: 'Calibration', test: 'Evaluation' }[split]}</dt><dd>{preview.counts[split].toLocaleString()}</dd></div>)}</dl>

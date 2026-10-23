@@ -1,5 +1,6 @@
 'use client';
 
+import { modelDisplayName } from '@/lib/model-name';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -112,7 +113,7 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
     {error && <p role="alert" className={training.error}>{error}</p>}
     {!ready && <section className={training.notice} aria-label="Model activation"><strong>{progress.title}</strong><p>{progress.detail} {progress.next}</p></section>}
     {migration && <section id="model-migration" className={`${training.notice} ${styles.migration}`} aria-label="Newer base available">
-      <div><strong>Newer base available</strong><p>{migration.name} is available for this model. Reuse your saved examples and settings. Your current model stays live until the replacement passes your success criteria.</p></div>
+      <div><strong>Newer base available</strong><p>{modelDisplayName(migration.name)} is available for this model. Reuse your saved examples and settings. Your current model stays live until the replacement passes your success criteria.</p></div>
       <Link className={training.secondary} href={{ pathname: '/train', query: { upgrade: job.id, migrate: migration.selection.model } }}>Migrate<LinkLoading /></Link>
     </section>}
 
@@ -156,7 +157,7 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
         {job.workflow?.model_id && <div><dt>Full API model ID</dt><dd><code>{job.workflow.model_id}</code></dd></div>}
         {job.workflow?.model_name && <div><dt>API model name</dt><dd><code>{job.workflow.model_name}</code></dd></div>}
         {job.workflow?.model_alias && <div><dt>Task alias</dt><dd><code>{job.workflow.model_alias}</code> · follows this task across replacements</dd></div>}
-        {job.model && <div><dt>Starting model</dt><dd>{job.model.name}</dd></div>}
+        {job.model && <div><dt>Starting model</dt><dd>{modelDisplayName(job.model.name)}</dd></div>}
         <div><dt>Training run</dt><dd><Link href={`/train?run=${job.id}`}>View full run<LinkLoading /></Link><code className={styles.identifier}>{job.id}</code></dd></div>
         {job.selection?.previous && <div><dt>Previous version</dt><dd><Link href={`/models/${job.selection.previous.job_id}`}>{job.selection.previous.model_id}</Link></dd></div>}
         {result.delivery.sha256 && <div><dt>Checkpoint SHA-256</dt><dd><code>{result.delivery.sha256}</code></dd></div>}
