@@ -8,7 +8,7 @@ import css from '@/components/site-header.module.css';
 export type NavId = 'examples' | 'z3' | 'model' | 'miners' | 'pricing';
 
 const LINKS = [
-  { href: '/z3', label: 'z3 models', id: 'z3' },
+  { href: '/z3', label: 'Z3', id: 'z3' },
   { href: '/examples', label: 'Examples', id: 'examples' },
   { href: '/model', label: 'Research', id: 'model' },
   { href: '/miners', label: 'Miners', id: 'miners' },
