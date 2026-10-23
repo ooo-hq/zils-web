@@ -53,7 +53,7 @@ export default function Z3Page() {
       <div className={s.prose}>
         <p>z3-mini v1 uses the unchanged upstream d3-mini weights. Zils selected this checkpoint as the founding mini baseline. It was not trained by Zils or elected as a miner winner.</p>
         <p>The Zils profile has a 4,096-token input ceiling. Existing downloads and API profile IDs retain their original names. The model guide explains how public release names map to those artifacts.</p>
-        <p><a className="underline underline-offset-4" href="https://huggingface.co/zils-ai/d3-mini-4.5b-v1/tree/b54402a963373cc44713f18c9596c580e31cc68b">Explore the founding weights on Hugging Face</a></p>
+        <p><a className="underline underline-offset-4" href="https://huggingface.co/zils-ai/z3-mini-v1/tree/c9b7515250c0444192767fc00975402f12421413">Explore the founding weights on Hugging Face</a></p>
       </div>
     </section>
     <SectionRow n="04" label="Subsequent releases" />
