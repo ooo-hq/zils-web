@@ -35,7 +35,7 @@ const PROMOTION_RULES = [
   ['Sealed score', 'Validators score the submitted weights on a sealed holdout, against the incumbent.'],
   ['Eligibility', 'Skill is positive, accuracy is not below the incumbent’s, and Brier improves by at least 0.01 with a paired-bootstrap 95% lower bound above zero.'],
   ['King of the hill', 'Only kings are paid. A winner becomes king when the owner promotes it. The base-tier share splits equally over the last five distinct kings still registered.'],
-  ['No king', 'An empty track’s share is burned. The vendor base (stock d3-mini today) has no miner, so there is no king yet.'],
+  ['No king', 'An empty track’s share is burned. The founding baseline (z3-mini v1) has no miner, so there is no king yet.'],
   ['Confirmation', 'The best eligible candidate is re-scored on a second, disjoint sealed draw at least 12 hours later and must stay eligible.'],
   ['Regression suite', 'Before promotion, a fixed suite of reference adapter jobs is retrained on the incumbent and on the candidate. The candidate must be no worse than 0.005 Brier on every job and better on at least one.'],
 ] as const;
@@ -164,7 +164,7 @@ export default function ModelPage() {
           <FlightStudyDetails />
 
           <Section id="base-tier" label="Base tier" eyebrow="Base tier · status as of 19 October 2026" title="A competition for the base model itself.">
-            <p className="max-w-[70ch] text-[15px] leading-7 text-muted">Customer adapters train on a pinned base model. Since 17 October 2026 that base is d3-mini 4.5B (below); before that it was H2O Lightning 4B v1.2.3. The base tier is the competition that decides when that base changes. Miners submit a full-weight replacement for the pinned base of a text profile. Validators score it on a sealed holdout against the incumbent, and a candidate is promoted only if it passes every step below.</p>
+            <p className="max-w-[70ch] text-[15px] leading-7 text-muted">Customer adapters train on a pinned base model. That base is z3-mini v1, using the unchanged d3-mini 4.5B checkpoint adopted on 17 October 2026 (below); before that it was H2O Lightning 4B v1.2.3. The base tier is the competition that decides when that base changes. Miners submit a full-weight replacement for the pinned base of a text profile. Validators score it on a sealed holdout against the incumbent, and a candidate is promoted only if it passes every step below.</p>
             <Table label="How a candidate base is scored and promoted" head={['Step', 'Rule']} rows={PROMOTION_RULES} />
             <h3 className="mt-10 text-xl font-semibold tracking-[-0.035em]">Two channels</h3>
             <Table label="Base channels" head={['Channel', 'Advances', 'Who gets it']} rows={CHANNELS} />
