@@ -123,7 +123,7 @@ export default async function MinersPage() {
       <section className={s.install} aria-labelledby="install-heading">
         <h3 id="install-heading" className={s.subTitle}>Start mining</h3>
         <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
-        <p><a href="https://docs.zils.ai/operations/miner-tuning">Tune your miner</a>: prepare training data, change the recipe, and compare your candidate with the base before submitting.</p>
+        <p><a href="https://docs.zils.ai/operations/miner-tuning" className={s.rhInline}>Tune your miner</a>: prepare training data, change the recipe, and compare your candidate with the base before submitting.</p>
         <p>Installs the <code>zils</code> and <code>btcli</code> commands, then <code>zils setup</code> asks for your wallet and Hugging Face repo. After that, <code>zils doctor</code> checks each step and prints the command for the next one: register on testnet 579, train a candidate, commit it. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the command to update.</p>
       </section>
       <DetailsRow summary="What we have tried">
