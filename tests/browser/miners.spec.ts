@@ -32,6 +32,10 @@ test.beforeAll(async () => {
         channels: { stable: { id: 'd3-mini-4.5b-v1', name: 'd3-mini 4.5B' }, latest: { id: 'd3-mini-4.5b-v1', name: 'd3-mini 4.5B' } },
       }));
     }
+    if (req.url === '/v1/network/base-submissions') {
+      res.setHeader('content-type', 'application/json');
+      return res.end(JSON.stringify({network: 'test', netuid: 579, block: 8289200, as_of: new Date().toISOString(), submissions: [{uid: 7, hotkey: '5DFDtesthotkey', commitment_block: 8289168, sha256: 'a'.repeat(64), revision: 'b'.repeat(40), repo: 'owner/lite-candidate', model: 'd3-lite-0.8b-v1'}]}));
+    }
     if (!req.url?.startsWith('/v1/network/miners')) { res.statusCode = 404; return res.end(); }
     if (mode === 'fail') { res.statusCode = 500; return res.end('{}'); }
     res.setHeader('content-type', 'application/json');
@@ -44,7 +48,7 @@ test.afterAll(() => new Promise<void>(resolve => { server.close(() => resolve())
 
 const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
 const baseline: { bittensor: { text: string } } = JSON.parse(readFileSync('tests/browser/fixtures/content-baseline.json', 'utf8'));
-const uids = (page: import('@playwright/test').Page) => page.getByText(/^UID \d+$/).evaluateAll(els => els.map(e => e.textContent));
+const uids = (page: import('@playwright/test').Page) => page.getByText(/^Worker \d+$/).evaluateAll(els => els.map(e => e.textContent));
 
 test('/bittensor redirects permanently to /miners', async ({ request }) => {
   const res = await request.get('/bittensor', { maxRedirects: 0 });
@@ -60,7 +64,7 @@ test('an outage shows the unavailable panel and the rest of the page renders', a
   await expect(page.getByText('The leaderboard is unavailable right now.')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Miner leaderboard', level: 1 })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Beat the base.', exact: true })).toBeVisible();
-  await expect(page.getByRole('table', { name: 'Miner leaderboard' })).toHaveCount(0);
+  await expect(page.getByRole('table', { name: 'Customer-training workers' })).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
@@ -68,8 +72,8 @@ test('the leaderboard sorts by Selected, re-sorts from the keyboard and dims off
   mode = 'ok';
   await page.goto('/miners');
   await expect(page.getByText('Updated 19:58 UTC').first()).toBeAttached();
-  await expect(page.getByText('Online now')).toBeVisible();
-  expect(await uids(page)).toEqual(['UID 1', 'UID 101', 'UID 102', 'UID 100']);
+  await expect(page.getByText('Workers online')).toBeVisible();
+  expect(await uids(page)).toEqual(['Worker 1', 'Worker 101', 'Worker 102', 'Worker 100']);
   await expect(page.getByRole('columnheader', { name: 'Selected' })).toHaveAttribute('aria-sort', 'descending');
   const dim = page.locator('[role=row][data-dim]');
   await expect(dim).toHaveCount(2);
@@ -81,16 +85,16 @@ test('the leaderboard sorts by Selected, re-sorts from the keyboard and dims off
   await page.keyboard.press('Enter');
   await expect(page.getByRole('columnheader', { name: 'Median skill' })).toHaveAttribute('aria-sort', 'descending');
   await expect(page.getByRole('columnheader', { name: 'Selected' })).toHaveAttribute('aria-sort', 'none');
-  await page.getByRole('button', { name: 'Miner', exact: true }).click(); // UID, descending
-  expect(await uids(page)).toEqual(['UID 102', 'UID 101', 'UID 100', 'UID 1']);
+  await page.getByRole('button', { name: 'Worker', exact: true }).click(); // UID, descending
+  expect(await uids(page)).toEqual(['Worker 102', 'Worker 101', 'Worker 100', 'Worker 1']);
 });
 
 test('an open page follows miners and models outside the default channels without losing its sort', async ({ page }) => {
   await page.clock.install();
   await page.goto('/miners');
-  const first = page.getByRole('row').filter({ has: page.getByText('UID 1', { exact: true }) });
+  const first = page.getByRole('row').filter({ has: page.getByText('Worker 1', { exact: true }) });
   await expect(first).toContainText('z3-mini 4.5B');
-  await page.getByRole('button', { name: 'Miner', exact: true }).click();
+  await page.getByRole('button', { name: 'Worker', exact: true }).click();
   snapshot.miners[0].models = ['d3-lite-0.8b-v1', 'future-model-v2'];
   snapshot.miners[1].status = 'offline';
   snapshot.miners[1].last_seen = '2026-10-18T17:00:00Z';
@@ -102,39 +106,39 @@ test('an open page follows miners and models outside the default channels withou
   await expect(first).not.toContainText('z3-mini');
   await expect(page.getByText('Updated 19:59 UTC').first()).toBeVisible();
   await expect(page.getByRole('cell', { name: 'Offline', exact: true })).toBeVisible();
-  await expect(page.getByText('UID 103', { exact: true })).toBeVisible();
-  await expect(page.getByRole('columnheader', { name: 'Miner' })).toHaveAttribute('aria-sort', 'descending');
-  expect(await uids(page)).toEqual(['UID 103', 'UID 102', 'UID 101', 'UID 100', 'UID 1']);
+  await expect(page.getByText('Worker 103', { exact: true })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Worker' })).toHaveAttribute('aria-sort', 'descending');
+  expect(await uids(page)).toEqual(['Worker 103', 'Worker 102', 'Worker 101', 'Worker 100', 'Worker 1']);
 });
 
 test('an open page removes unavailable data and recovers on the next refresh', async ({ page }) => {
   await page.clock.install();
   await page.goto('/miners');
-  await page.getByRole('button', { name: 'Miner', exact: true }).click();
+  await page.getByRole('button', { name: 'Worker', exact: true }).click();
   mode = 'fail';
   await page.clock.fastForward(30_000);
   await expect(page.getByText('The leaderboard is unavailable right now.')).toBeVisible();
-  await expect(page.getByRole('table', { name: 'Miner leaderboard' })).toHaveCount(0);
+  await expect(page.getByRole('table', { name: 'Customer-training workers' })).toHaveCount(0);
   mode = 'ok';
   snapshot.miners[0].models = ['d3-lite-0.8b-v1'];
   await page.clock.fastForward(30_000);
-  await expect(page.getByRole('table', { name: 'Miner leaderboard' })).toContainText('z3-lite 0.8B');
+  await expect(page.getByRole('table', { name: 'Customer-training workers' })).toContainText('z3-lite 0.8B');
   await expect(page.getByText('The leaderboard is unavailable right now.')).toHaveCount(0);
 });
 
 test('refresh pauses in a hidden tab and resumes immediately when visible', async ({ page }) => {
   await page.clock.install();
   await page.goto('/miners');
-  await page.getByRole('button', { name: 'Miner', exact: true }).click();
+  await page.getByRole('button', { name: 'Worker', exact: true }).click();
   await page.evaluate(() => Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' }));
   snapshot.miners[0].models = ['d3-lite-0.8b-v1'];
   await page.clock.fastForward(30_000);
-  await expect(page.getByRole('table', { name: 'Miner leaderboard' })).not.toContainText('z3-lite');
+  await expect(page.getByRole('table', { name: 'Customer-training workers' })).not.toContainText('z3-lite');
   await page.evaluate(() => {
     Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
     document.dispatchEvent(new Event('visibilitychange'));
   });
-  await expect(page.getByRole('table', { name: 'Miner leaderboard' })).toContainText('z3-lite 0.8B');
+  await expect(page.getByRole('table', { name: 'Customer-training workers' })).toContainText('z3-lite 0.8B');
 });
 
 test('the rehearsal row holds every sentence of the old /bittensor page', async ({ page }) => {
@@ -161,7 +165,7 @@ test('the timeline entries survive in the collapsed row', async ({ page }) => {
 test('status wording is the approved copy', async ({ page }) => {
   mode = 'ok';
   await page.goto('/miners');
-  await page.getByText('How to read the leaderboard').click();
+  await page.getByText('How to read customer-job results').click();
   for (const phrase of ['checked in within the last 45 seconds', 'registered but never checked in', 'gets no new jobs', 'latest signed check-in', 'not on-chain UIDs']) await expect(page.getByText(phrase)).toBeVisible();
 });
 
@@ -175,7 +179,7 @@ test.describe('phone', () => {
     await expect(page.getByRole('button', { name: 'Median skill' })).toBeHidden();
     const first = page.locator('[role=row][data-dim]').first().locator('xpath=preceding::*[@role="row"][1]');
     const top = (sel: string) => first.locator(sel).evaluate(e => e.getBoundingClientRect().top);
-    const uid = await top('text=/^UID \\d+$/');
+    const uid = await top('text=/^Worker \\d+$/');
     expect(await top('[data-status]')).toBeGreaterThan(uid); // status sits under the UID
     expect(await top('text=/^of \\d+ jobs$/')).toBeLessThan(await top('[data-status]')); // selected shares the first line
   });
@@ -201,3 +205,17 @@ for (const theme of ['dark', 'light']) {
     for (const r of results) expect(r.ratio, r.text).toBeGreaterThanOrEqual(4.5);
   });
 }
+
+
+test('base submissions use chain identity without claiming worker presence or evaluation', async ({ page }) => {
+  await page.goto('/miners');
+  const table = page.getByRole('table', { name: 'Base-model submissions on testnet 579' });
+  await expect(table).toContainText('Chain UID 7');
+  await expect(table).toContainText('z3-lite');
+  await expect(table).toContainText('Not reported');
+  await expect(table).not.toContainText('Online');
+  await expect(table).not.toContainText('1.00');
+  await expect(table.getByRole('link', { name: 'Submitted' })).toHaveAttribute('href', 'https://huggingface.co/owner/lite-candidate/tree/' + 'b'.repeat(40));
+  await expect(page.getByRole('table', { name: 'Customer-training workers' })).toContainText('Worker 1');
+  await page.screenshot({path: '.private/base-board-desktop.png', fullPage: true});
+});

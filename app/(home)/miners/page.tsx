@@ -1,4 +1,4 @@
-import { modelDisplayName } from '@/lib/model-name';
+import { MODEL_NAMES, modelDisplayName } from '@/lib/model-name';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteFrame } from '@/components/site/site-frame';
@@ -8,7 +8,7 @@ import { MinerBoard, MinerRefresh } from '@/components/site/miner-board';
 import { InstallCommand } from '@/components/site/install-command';
 import { currentBase } from '@/lib/base-model';
 import { boardNumbers } from '@/lib/miner-board';
-import { networkMiners } from '@/lib/network-miners';
+import { baseSubmissions, networkMiners } from '@/lib/network-miners';
 import { Rehearsal } from './rehearsal';
 import { Competitions } from './competitions';
 import s from './miners.module.css';
@@ -72,7 +72,7 @@ function Bars({ compare }: { compare: Compare }) {
 }
 
 export default async function MinersPage() {
-  const [base, network] = await Promise.all([currentBase(), networkMiners()]);
+  const [base, network, submissions] = await Promise.all([currentBase(), networkMiners(), baseSubmissions()]);
   const latest = base?.channels.latest;
   const numbers = network && boardNumbers(network);
   return (
@@ -81,12 +81,12 @@ export default async function MinersPage() {
       <SectionRow n="01" label="Testnet · subnet 579" note={network ? `Updated ${utc(network.as_of)} UTC` : undefined} />
       <header className={s.hero}>
         <h1>Miner leaderboard</h1>
-        <p>Who is online, and whose models customers kept. <b>Outside miners can enter the base tier now</b>; customer jobs open once miner terms are live.</p>
+        <p>Base-model submissions and customer-training workers, tracked separately. <b>Outside miners can enter the base tier now</b>; customer jobs open once miner terms are live.</p>
       </header>
 
       {numbers && <dl className={s.nums}>
-        <div><dt>Online now</dt><dd>{numbers.online}<small> / {numbers.total}</small></dd></div>
-        <div><dt>Jobs</dt><dd>{numbers.jobs}</dd></div>
+        <div><dt>Workers online</dt><dd>{numbers.online}<small> / {numbers.total}</small></dd></div>
+        <div><dt>Customer jobs</dt><dd>{numbers.jobs}</dd></div>
         <div><dt>Models selected</dt><dd>{numbers.selected}</dd></div>
         <div><dt>Current base</dt><dd className={s.sm}>{modelDisplayName(base?.channels.stable.name) || '—'}</dd></div>
       </dl>}
@@ -94,20 +94,21 @@ export default async function MinersPage() {
       <SectionRow n="02" label="Competitions" note="Proposed" />
       <Competitions />
 
-      <SectionRow n="03" label="Miners" />
+      <SectionRow n="03" label="Customer-training workers" />
       {network
-        ? <section id="miners" aria-label="Leaderboard">
+        ? <section id="miners" aria-label="Customer-training workers">
+          <p className={s.asof}>These workers train customer adapters. Worker IDs, job selections and skill scores are separate from on-chain base submissions below.</p>
           <MinerBoard miners={network.miners} asOf={network.as_of} />
           <p className={s.asof}><span>Live from the Zils training API · refreshes every 30 seconds</span><span>Updated {utc(network.as_of)} UTC · sort by any column</span></p>
         </section>
         : <p className={s.unavailable}>The leaderboard is unavailable right now.</p>}
 
-      <DetailsRow summary="How to read the leaderboard">
+      <DetailsRow summary="How to read customer-job results">
         <div className={s.prose}>
           <p><b>Selected</b> is how many of the miner’s candidates a customer job kept as its model, out of the jobs it was given. <b>Jobs</b> are customer training jobs assigned to the miner; <b>evaluated</b> candidates were scored on the job’s held-out test set.</p>
           <p><b>Skill</b> compares a candidate’s probability error (Brier) with guessing evenly between the answers: 0 is no better than guessing, 1 is perfect, so it compares across different jobs.</p>
           <p><b>Online</b> checked in within the last 45 seconds. <b>Seen recently</b> checked in within the last hour. <b>Offline</b> has not checked in for longer than that. <b>Never seen</b> registered but never checked in. <b>Disabled</b> gets no new jobs. Miners that are not online are dimmed.</p>
-          <p><b>Models</b> come from each miner’s latest signed check-in, including while it is busy. Inactive rows show the last reported models. These are training-worker UIDs, not on-chain UIDs; a listed model does not imply customer serving is available.</p>
+          <p><b>Models</b> come from each miner’s latest signed check-in, including while it is busy. Inactive rows show the last reported models. These are internal worker IDs, not on-chain UIDs; a listed model does not imply customer serving is available.</p>
           <p>Subnet 579 runs on the Bittensor testnet. Outside miners can already compete in the base tier there (below). Customer jobs stay with Zils miners until miner terms and intake are ready.</p>
         </div>
       </DetailsRow>
@@ -120,6 +121,24 @@ export default async function MinersPage() {
         </div>
         <span className={s.pill}>Round two · open on testnet</span>
       </div>
+      <section className={s.submissions} aria-labelledby="base-submissions-heading">
+        <h3 id="base-submissions-heading">Base-model submissions</h3>
+        <p>Latest base commitments from registered hotkeys on testnet 579. Submitted means recorded on chain; it does not mean evaluated, qualified or better than the base.</p>
+        {submissions ? <>
+          <p className={s.live}>Verified {utc(submissions.as_of)} UTC · block {submissions.block.toLocaleString('en-US')} · checked every 5 minutes</p>
+          {submissions.submissions.length ? <div className={s.submissionScroll}><table>
+            <caption className="sr-only">Base-model submissions on testnet 579</caption>
+            <thead><tr><th>On-chain miner</th><th>Base model</th><th>Submission</th><th>Evaluation</th></tr></thead>
+            <tbody>{submissions.submissions.map(row => <tr key={row.hotkey}>
+              <td><b>Chain UID {row.uid}</b><small title={row.hotkey}>{row.hotkey.slice(0, 6)}…{row.hotkey.slice(-6)}</small></td>
+              <td>{row.model ? (MODEL_NAMES[row.model] ?? row.model) : 'Model not verified'}</td>
+              <td><a href={`https://huggingface.co/${row.repo}/tree/${row.revision}`} target="_blank" rel="noopener noreferrer">Submitted ↗</a><small>Block {row.commitment_block.toLocaleString('en-US')}</small></td>
+              <td>Not reported</td>
+            </tr>)}</tbody>
+          </table></div> : <p>No base-model commitments found in this snapshot.</p>}
+          <p className={s.live}>Model labels come from candidate metadata. Validator results and rewards are not included in this feed.</p>
+        </> : <p role="status">Base submissions are temporarily unavailable. Customer-worker activity above does not indicate base-miner status.</p>}
+      </section>
       <section className={s.install} aria-labelledby="install-heading">
         <h3 id="install-heading" className={s.subTitle}>Start mining</h3>
         <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />

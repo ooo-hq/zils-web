@@ -5,7 +5,7 @@ import type { Miner } from '@/lib/network-miners';
 import { STATUS_LABEL, isActive, sortMiners, type SortKey } from '@/lib/miner-board';
 import css from './miner-board.module.css';
 
-const MODEL_NAMES: Record<string, string> = { 'd3-mini-4.5b-v1': 'z3-mini 4.5B', 'd3-lite-0.8b-v1': 'z3-lite 0.8B', 'h2o-lightning-4b-v1.2.3': 'H2O 4B' };
+import { MODEL_NAMES } from '@/lib/model-name';
 const short = (hotkey: string) => hotkey.length > 14 ? `${hotkey.slice(0, 6)}…${hotkey.slice(-6)}` : hotkey;
 function ago(iso: string | null, now: number) {
   if (!iso) return '—';
@@ -13,7 +13,7 @@ function ago(iso: string | null, now: number) {
   return minutes < 1 ? 'just now' : minutes < 60 ? `${minutes} min ago` : minutes < 48 * 60 ? `${Math.round(minutes / 60)} h ago` : `${Math.round(minutes / 1440)} days ago`;
 }
 const COLUMNS: { key: SortKey; label: string; right?: boolean }[] = [
-  { key: 'uid', label: 'Miner' }, { key: 'status', label: 'Status' }, { key: 'selected', label: 'Selected' },
+  { key: 'uid', label: 'Worker' }, { key: 'status', label: 'Status' }, { key: 'selected', label: 'Selected' },
   { key: 'skill', label: 'Median skill' }, { key: 'lastSeen', label: 'Last seen', right: true },
 ];
 
@@ -37,7 +37,7 @@ export function MinerBoard({ miners, asOf }: { miners: Miner[]; asOf: string }) 
   const now = Date.parse(asOf);
   const rows = sortMiners(miners, key);
   return (
-    <div className={css.board} role="table" aria-label="Miner leaderboard">
+    <div className={css.board} role="table" aria-label="Customer-training workers">
       <div role="rowgroup" className={css.headGroup}>
         <div role="row" className={`${css.row} ${css.head}`}>
           <span role="columnheader" className={css.label}>#</span>
@@ -55,7 +55,7 @@ export function MinerBoard({ miners, asOf }: { miners: Miner[]; asOf: string }) 
           return (
             <div role="row" key={m.hotkey} className={`${css.row} ${css.body}`} data-dim={isActive(m) ? undefined : ''}>
               <span role="cell" className={css.rank}>{String(i + 1).padStart(2, '0')}</span>
-              <span role="cell" className={css.miner}><b>UID {m.uid}</b><span title={m.hotkey}>{short(m.hotkey)} · {base}</span></span>
+              <span role="cell" className={css.miner}><b>Worker {m.uid}</b><span title={m.hotkey}>{short(m.hotkey)} · {base}</span></span>
               <span role="cell" className={css.st} data-status={m.status}>{STATUS_LABEL[m.status]}</span>
               <span role="cell" className={css.sel}><b>{m.training.selected}</b><span>of {m.training.assigned} jobs</span></span>
               <span role="cell" className={css.skillCell}>{skill === null
