@@ -537,3 +537,10 @@ same complete test split. New submissions authorize this one-time evaluation;
 page views read cached scores and never call Jev. Pending results refresh
 automatically. Missing, failed, or mismatched comparisons do not affect model
 access or replace the original approval baseline.
+
+The miners page separates customer-training Worker IDs from on-chain base
+submissions. The latter reads `/v1/network/base-submissions` and shows only
+commitment evidence, publisher model metadata and immutable candidate links.
+It does not infer online status, validator acceptance or rewards. Missing,
+malformed or older-than-fifteen-minute snapshots show unavailable; the existing
+visible-tab refresh checks for fresh data every thirty seconds.
