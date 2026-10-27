@@ -73,3 +73,4 @@
   .steps { grid-template-columns: 1fr; }
   .card div { grid-template-columns: 1fr; gap: 2px; }
 }
+.relay { scroll-margin-top: 128px; }

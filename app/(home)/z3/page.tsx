@@ -103,7 +103,7 @@ export default function Z3Page() {
     </section>
 
     <SectionRow n="04" label="Zils Relay" note="Larger models teach smaller ones" />
-    <section className={s.split} id="relay" aria-labelledby="relay-heading">
+    <section className={`${s.split} ${s.relay}`} id="relay" aria-labelledby="relay-heading">
       <div>
         <h2 id="relay-heading" className={s.h2}>One family, improved together.</h2>
         <div className={s.prose}>
@@ -114,7 +114,7 @@ export default function Z3Page() {
       <dl className={s.card}>
         <div><dt>Teacher</dt><dd>vllm-sr/d3-ultra, 27B</dd></div>
         <div><dt>Questions</dt><dd>204,582</dd></div>
-        <div><dt>Contents</dt><dd>Source IDs, licences, options and teacher probabilities; questions rebuild from public sources</dd></div>
+        <div><dt>Contents</dt><dd>Source IDs, licenses, options and teacher probabilities; questions rebuild from public sources</dd></div>
         <div><dt>Dataset</dt><dd><a href={RELAY_ANSWERS}>Explore the Relay answers on Hugging Face</a></dd></div>
       </dl>
     </section>
