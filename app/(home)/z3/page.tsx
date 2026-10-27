@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 };
 
 const WEIGHTS = 'https://huggingface.co/zils-ai/z3-mini-v1/tree/c9b7515250c0444192767fc00975402f12421413';
+const RELAY_ANSWERS = 'https://huggingface.co/datasets/zils-ai/zils-relay-answers/tree/80c4668a53c1c3a9d0deb7c3c89dd08df30ae96c';
 
 // Each lineage keeps one spectrum stop as its colour.
 const LINEUP = [
@@ -99,6 +100,23 @@ export default function Z3Page() {
       </ol>
       <p className={s.fine}>A submitted candidate is not yet an official release, and a win in one size does not qualify another.</p>
       <div className={s.links}><Link href="/bases">Explore the base history</Link><Link href="/model">Read the research</Link></div>
+    </section>
+
+    <SectionRow n="04" label="Zils Relay" note="Larger models teach smaller ones" />
+    <section className={s.split} id="relay" aria-labelledby="relay-heading">
+      <div>
+        <h2 id="relay-heading" className={s.h2}>One family, improved together.</h2>
+        <div className={s.prose}>
+          <p>Zils Relay passes what the largest model knows down to the smaller sizes. A strong teacher answers a shared pool of decision questions, and miners use those answers to train smaller candidates.</p>
+          <p>Relay improves study material, not the release rules. Each smaller candidate still has to pass the exams for its own size before it can become a release.</p>
+        </div>
+      </div>
+      <dl className={s.card}>
+        <div><dt>Teacher</dt><dd>vllm-sr/d3-ultra, 27B</dd></div>
+        <div><dt>Questions</dt><dd>204,582</dd></div>
+        <div><dt>Contents</dt><dd>Source IDs, licences, options and teacher probabilities; questions rebuild from public sources</dd></div>
+        <div><dt>Dataset</dt><dd><a href={RELAY_ANSWERS}>Explore the Relay answers on Hugging Face</a></dd></div>
+      </dl>
     </section>
   </SiteFrame>;
 }
