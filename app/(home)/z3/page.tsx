@@ -71,7 +71,24 @@ export default function Z3Page() {
       <p className={s.fine}>A size for each workload. Each lineage needs its own qualification. Hosted availability is separate from weight publication; use the models listed for your account.</p>
     </header>
 
-    <SectionRow n="02" label="z3-mini v1" note="Founding baseline" />
+    <SectionRow n="02" label="Zils Relay" note="Larger models teach smaller ones" />
+    <section className={`${s.split} ${s.relay}`} id="relay" aria-labelledby="relay-heading">
+      <div>
+        <h2 id="relay-heading" className={s.h2}>One family, improved together.</h2>
+        <div className={s.prose}>
+          <p>Zils Relay passes what the largest model knows down to the smaller sizes. A strong teacher answers a shared pool of decision questions, and miners use those answers to train smaller candidates.</p>
+          <p>Relay improves study material, not the release rules. Each smaller candidate still has to pass the exams for its own size before it can become a release.</p>
+        </div>
+      </div>
+      <dl className={s.card}>
+        <div><dt>Teacher</dt><dd>vllm-sr/d3-ultra, 27B</dd></div>
+        <div><dt>Questions</dt><dd>204,582</dd></div>
+        <div><dt>Contents</dt><dd>Source IDs, licenses, options and teacher probabilities; questions rebuild from public sources</dd></div>
+        <div><dt>Dataset</dt><dd><a href={RELAY_ANSWERS}>Explore the Relay answers on Hugging Face</a></dd></div>
+      </dl>
+    </section>
+
+    <SectionRow n="03" label="z3-mini v1" note="Founding baseline" />
     <section className={s.split} aria-labelledby="baseline-heading">
       <div>
         <h2 id="baseline-heading" className={s.h2}>A documented starting point.</h2>
@@ -88,7 +105,7 @@ export default function Z3Page() {
       </dl>
     </section>
 
-    <SectionRow n="03" label="Subsequent releases" />
+    <SectionRow n="04" label="Subsequent releases" />
     <section className={s.releases} aria-labelledby="election-heading">
       <h2 id="election-heading" className={s.h2}>Each new release earns its place.</h2>
       <ol className={s.steps}>
@@ -100,23 +117,6 @@ export default function Z3Page() {
       </ol>
       <p className={s.fine}>A submitted candidate is not yet an official release, and a win in one size does not qualify another.</p>
       <div className={s.links}><Link href="/bases">Explore the base history</Link><Link href="/model">Read the research</Link></div>
-    </section>
-
-    <SectionRow n="04" label="Zils Relay" note="Larger models teach smaller ones" />
-    <section className={`${s.split} ${s.relay}`} id="relay" aria-labelledby="relay-heading">
-      <div>
-        <h2 id="relay-heading" className={s.h2}>One family, improved together.</h2>
-        <div className={s.prose}>
-          <p>Zils Relay passes what the largest model knows down to the smaller sizes. A strong teacher answers a shared pool of decision questions, and miners use those answers to train smaller candidates.</p>
-          <p>Relay improves study material, not the release rules. Each smaller candidate still has to pass the exams for its own size before it can become a release.</p>
-        </div>
-      </div>
-      <dl className={s.card}>
-        <div><dt>Teacher</dt><dd>vllm-sr/d3-ultra, 27B</dd></div>
-        <div><dt>Questions</dt><dd>204,582</dd></div>
-        <div><dt>Contents</dt><dd>Source IDs, licenses, options and teacher probabilities; questions rebuild from public sources</dd></div>
-        <div><dt>Dataset</dt><dd><a href={RELAY_ANSWERS}>Explore the Relay answers on Hugging Face</a></dd></div>
-      </dl>
     </section>
   </SiteFrame>;
 }
