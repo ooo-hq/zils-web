@@ -169,6 +169,15 @@
 .emptyWorkspace { padding:44px 28px; border:1px solid var(--zils-edge); border-radius:8px; }
 .emptyWorkspace h2 { font-size:26px; font-weight:500; letter-spacing:-.035em; margin:0 0 12px; }
 .emptyWorkspace p { font-size:14px; color:var(--zils-muted); max-width:56ch; margin:0 0 24px; }
+.welcomeChoices { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; list-style:none; margin:0; padding:0; }
+.welcomeChoices li { display:flex; min-width:0; }
+.welcomeChoice { display:flex; flex-direction:column; gap:8px; width:100%; padding:20px; border:1px solid var(--zils-edge); border-radius:8px; background:var(--zils-page); color:var(--zils-ink); text-decoration:none; }
+.welcomeChoice:hover { border-color:var(--zils-accent); background:var(--zils-soft); }
+.welcomeChoice strong { display:flex; align-items:center; gap:8px; font-size:16px; font-weight:500; }
+.welcomeChoice strong svg { flex-shrink:0; color:var(--zils-accent); }
+.welcomeChoice span { font-size:13px; line-height:1.55; color:var(--zils-muted); }
+.welcomeChoice small { margin-top:auto; padding-top:6px; font-size:12px; color:var(--zils-accent); }
+@media(max-width:760px) { .welcomeChoices { grid-template-columns:minmax(0,1fr); } }
 .account { margin:36px 0 0; padding-top:20px; border-top:1px solid var(--zils-edge); color:var(--zils-muted); font-size:11px; }
 .account strong { font-weight:400; color:var(--zils-ink); }
 .signInGuide { margin-top:28px; font-size:13px; }

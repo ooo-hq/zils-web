@@ -13,7 +13,7 @@ import { TrainingGuide } from '@/components/training-guide';
 import { TrainingIntake } from '@/components/training-intake';
 import { ApiKeysPanel } from '@/components/api-keys-panel';
 import { TrainedModelQuickstart } from '@/components/trained-model-quickstart';
-import { Plus, ArrowUpRight, ArrowRight, ImageIcon, MessageSquareText } from 'lucide-react';
+import { Plus, ArrowUpRight, ArrowRight, ImageIcon, MessageSquareText, FlaskConical, GraduationCap, KeyRound } from 'lucide-react';
 import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { TrainingRunStatus } from '@/components/training-run-status';
 import { useAuthSession } from '@/components/auth-session';
@@ -335,9 +335,13 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     {refreshError && !runId && history.length > 0 && !selected && <p role="status" className={styles.notice}>Connection interrupted. Showing your last loaded runs; we’ll retry automatically.</p>}
     <div className={styles.workspace}>
       {loading ? <WorkspaceLoading label={runId ? "Loading your training run" : "Loading your models and runs"} /> : !selected && (runId || !history.length) ? <section className={styles.emptyWorkspace}>
-        <h2>{runId ? 'Run unavailable' : refreshError ? 'Your runs could not be loaded.' : 'Train your first model.'}</h2>
-        <p>{runId ? 'Return to Training to choose a run, or try loading it again.' : refreshError ? 'Try checking again in a moment.' : 'Bring a decision and a few reviewed examples. Zils will guide you through the rest.'}</p>
-        {refreshError || runId ? <button className={styles.secondary} onClick={refresh} disabled={refreshing}>Try again</button> : <Link className={styles.secondary} href="/train/teach">Get started</Link>}
+        <h2>{runId ? 'Run unavailable' : refreshError ? 'Your runs could not be loaded.' : 'Welcome to Zils.'}</h2>
+        <p>{runId ? 'Return to Training to choose a run, or try loading it again.' : refreshError ? 'Try checking again in a moment.' : 'Your account is ready. Send one request to a hosted model, get an API key, or train a model on your own examples. The training path walks you through it from the start.'}</p>
+        {refreshError || runId ? <button className={styles.secondary} onClick={refresh} disabled={refreshing}>Try again</button> : <ul className={styles.welcomeChoices}>
+          <li><Link className={styles.welcomeChoice} href="/train/teach"><strong><GraduationCap size={18} aria-hidden="true" />Start training</strong><span>Bring a decision and a few reviewed examples. Zils guides you through the rest.</span><small>Recommended first step</small></Link></li>
+          <li><Link className={styles.welcomeChoice} href="/playground"><strong><FlaskConical size={18} aria-hidden="true" />Try a model</strong><span>Ask a hosted model one request and read the answer before training anything.</span><small>Open the playground</small></Link></li>
+          <li><Link className={styles.welcomeChoice} href="/keys"><strong><KeyRound size={18} aria-hidden="true" />Create an API key</strong><span>Call the hosted API from your own code or a tool you already use.</span><small>Manage API keys</small></Link></li>
+        </ul>}
       </section> : selected ? <div>
         <div className={styles.currentLabel}><span>{runId ? 'Run details' : 'Current run'}</span><button className={styles.textButton} onClick={refresh} disabled={busy || refreshing}>{refreshing ? 'Checking…' : 'Refresh status'}</button></div>
         <section className={`${styles.panel} ${styles.currentRun}`} aria-labelledby="current-run-title">
