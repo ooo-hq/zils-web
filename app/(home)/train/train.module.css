@@ -176,7 +176,7 @@
 .welcomeChoice strong { display:flex; align-items:center; gap:8px; font-size:16px; font-weight:500; }
 .welcomeChoice strong svg { flex-shrink:0; color:var(--zils-accent); }
 .welcomeChoice span { font-size:13px; line-height:1.55; color:var(--zils-muted); }
-.welcomeChoice small { margin-top:auto; padding-top:6px; font-size:12px; color:var(--zils-accent); }
+.welcomeChoice small { margin-top:auto; padding-top:6px; font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--zils-accent); }
 @media(max-width:760px) { .welcomeChoices { grid-template-columns:minmax(0,1fr); } }
 .account { margin:36px 0 0; padding-top:20px; border-top:1px solid var(--zils-edge); color:var(--zils-muted); font-size:11px; }
 .account strong { font-weight:400; color:var(--zils-ink); }
