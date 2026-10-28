@@ -169,15 +169,31 @@
 .emptyWorkspace { padding:44px 28px; border:1px solid var(--zils-edge); border-radius:8px; }
 .emptyWorkspace h2 { font-size:26px; font-weight:500; letter-spacing:-.035em; margin:0 0 12px; }
 .emptyWorkspace p { font-size:14px; color:var(--zils-muted); max-width:56ch; margin:0 0 24px; }
+.welcomeOverlay { position:fixed; inset:0; z-index:60; background:rgb(21 21 26 / 30%); }
+.welcome { position:fixed; z-index:61; inset:0; margin:auto; width:min(880px,calc(100% - 32px)); height:fit-content; max-height:calc(100dvh - 32px); overflow-y:auto; padding:40px 32px 32px; border:1px solid var(--zils-edge); border-radius:8px; background:var(--zils-page); color:var(--zils-ink); box-shadow:0 24px 60px rgb(21 21 26 / 16%); }
+/* The one flourish: the brand spectrum fills across the top as the account opens. */
+.welcome::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:var(--zs-spectrum); transform-origin:left; }
+.welcome[data-state=open] { animation:welcome-rise 220ms cubic-bezier(.2,.8,.2,1); }
+.welcome[data-state=open]::before { animation:welcome-fill 700ms 120ms cubic-bezier(.6,0,.2,1) both; }
+.welcomeOverlay[data-state=open] { animation:welcome-fade 160ms ease-out; }
+@keyframes welcome-rise { from { opacity:0; transform:translateY(12px) scale(.98); } }
+@keyframes welcome-fill { from { transform:scaleX(0); } }
+@keyframes welcome-fade { from { opacity:0; } }
+@media(prefers-reduced-motion:reduce) { .welcome,.welcome::before,.welcomeOverlay { animation:none!important; } }
+.welcome h2 { font-size:36px; font-weight:300; letter-spacing:-.04em; line-height:1.1; margin:0 0 12px; padding-right:48px; }
+.welcome p { font-size:14px; color:var(--zils-muted); max-width:56ch; margin:0 0 24px; }
+.welcomeClose { position:absolute; top:20px; right:20px; display:flex; justify-content:center; align-items:center; width:40px; height:40px; border:1px solid var(--zils-edge); border-radius:5px; background:var(--zils-page); color:var(--zils-ink); cursor:pointer; }
+.welcomeClose:hover { background:var(--zils-soft); }
 .welcomeChoices { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; list-style:none; margin:0; padding:0; }
 .welcomeChoices li { display:flex; min-width:0; }
 .welcomeChoice { display:flex; flex-direction:column; gap:8px; width:100%; padding:20px; border:1px solid var(--zils-edge); border-radius:8px; background:var(--zils-page); color:var(--zils-ink); text-decoration:none; }
 .welcomeChoice:hover { border-color:var(--zils-accent); background:var(--zils-soft); }
+.welcomeRecommended { box-shadow:inset 2px 0 0 var(--zils-action); }
 .welcomeChoice strong { display:flex; align-items:center; gap:8px; font-size:16px; font-weight:500; }
 .welcomeChoice strong svg { flex-shrink:0; color:var(--zils-accent); }
 .welcomeChoice span { font-size:13px; line-height:1.55; color:var(--zils-muted); }
 .welcomeChoice small { margin-top:auto; padding-top:6px; font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--zils-accent); }
-@media(max-width:760px) { .welcomeChoices { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:760px) { .welcomeChoices { grid-template-columns:minmax(0,1fr); } .welcome { padding:32px 20px 24px; } .welcome h2 { font-size:30px; } }
 .account { margin:36px 0 0; padding-top:20px; border-top:1px solid var(--zils-edge); color:var(--zils-muted); font-size:11px; }
 .account strong { font-weight:400; color:var(--zils-ink); }
 .signInGuide { margin-top:28px; font-size:13px; }

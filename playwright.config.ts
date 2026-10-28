@@ -5,7 +5,8 @@ export default defineConfig({
   outputDir: '.private/browser-results',
   fullyParallel: true,
   timeout: 45_000,
-  use: { baseURL: 'http://127.0.0.1:3107', trace: 'retain-on-failure' },
+  // Every spec starts with the one-time welcome dialog dismissed; training-empty-state opts back in.
+  use: { baseURL: 'http://127.0.0.1:3107', trace: 'retain-on-failure', storageState: { cookies: [], origins: [{ origin: 'http://127.0.0.1:3107', localStorage: [{ name: 'zils-welcome-seen', value: '1' }] }] } },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     command: process.env.CI
