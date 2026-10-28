@@ -53,7 +53,7 @@ export function TrainingIntake({ apiUrl, active = true, onChooseType, assistantC
   const [draggingSplit, setDraggingSplit] = useState<Split | null>(null);
   function setSplitFile(split: Split, file: File | undefined) {
     const files = { ...advancedFiles, [split]: file }; setAdvancedFiles(files); onFiles(files);
-    if (file && file.size > MAX_DATASET_BYTES) setError(`${split}: maximum file size is 128 MiB.`);
+    if (file && file.size > MAX_DATASET_BYTES) setError(`${split}: maximum file size is 384 MiB.`);
   }
   const [filename, setFilename] = useState('');
   const [pasted, setPasted] = useState('');
@@ -207,7 +207,7 @@ export function TrainingIntake({ apiUrl, active = true, onChooseType, assistantC
           event.preventDefault(); setDraggingSplit(null); if (locked) return;
           if (event.dataTransfer.files.length !== 1) { setError('Choose one file at a time.'); return; }
           setSplitFile(split, event.dataTransfer.files[0]);
-        }}><label htmlFor={`dataset-${split}`}>Drop the {splitNames[split].toLowerCase()} file here or choose a file</label><input id={`dataset-${split}`} type="file" accept=".jsonl,application/jsonl,application/x-ndjson" required={!advancedFiles[split]} onChange={event => { setSplitFile(split, event.target.files?.[0]); }} /><small>{advancedFiles[split]?.name || 'JSONL · 128 MiB maximum'}</small></div>)}
+        }}><label htmlFor={`dataset-${split}`}>Drop the {splitNames[split].toLowerCase()} file here or choose a file</label><input id={`dataset-${split}`} type="file" accept=".jsonl,application/jsonl,application/x-ndjson" required={!advancedFiles[split]} onChange={event => { setSplitFile(split, event.target.files?.[0]); }} /><small>{advancedFiles[split]?.name || 'JSONL · 384 MiB maximum'}</small></div>)}
         <details className={styles.details}><summary>JSONL format</summary><p>Each line requires id, group_id, family, state, question, and label. IDs must be unique across all files. Calibration and test must share the same families, all present in training.</p><pre>{'{"id":"ticket-001","group_id":"conversation-001","family":"support-routing","state":{"message":"Please send my invoice."},"question":{"type":"choice","criteria":{"billing":"Billing","technical":"Technical support"}},"label":"billing"}'}</pre></details>
         {criteria}<div className={styles.wizardActions}><button type="button" className={styles.secondary} onClick={switchMode}>Guided setup</button><button className={styles.button} disabled={locked || pending || !selection}>{busy ? 'Sending…' : 'Send for training'}</button></div>
       </fieldset></form> : <>

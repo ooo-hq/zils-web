@@ -3,7 +3,7 @@ import { uploadSchema, uploadDescriptor, storageUrl, type StorageLocations } fro
 
 export const SPLITS = ['train', 'calibration', 'test'] as const;
 export type Split = typeof SPLITS[number];
-export const MAX_DATASET_BYTES = 128 * 1024 * 1024;
+export const MAX_DATASET_BYTES = 384 * 1024 * 1024;
 /** Text adapters train on the pinned d3-mini profile, which accepts up to 255 outcomes per question; image questions use the image training profile's max_options. */
 export const MAX_TEXT_OUTCOMES = 255;
 export const acceptanceSchema = z.object({ min_accuracy: z.number().min(0).max(1), min_brier_improvement: z.number().min(0).max(2), previous_job_id: z.string().uuid().optional(), base_change: z.literal(true).optional(), migration: z.union([z.literal('no_regression'), z.literal(true)]).optional() })
@@ -97,7 +97,7 @@ export async function validateDatasets(files: Record<Split, Blob>, signal?: Abor
   const counts = { train: 0, calibration: 0, test: 0 };
   for (const split of SPLITS) {
     const file = files[split];
-    if (!file || file.size === 0 || file.size > MAX_DATASET_BYTES) throw new Error(`${split}: choose a nonempty JSONL file, at most 128 MiB.`);
+    if (!file || file.size === 0 || file.size > MAX_DATASET_BYTES) throw new Error(`${split}: choose a nonempty JSONL file, at most 384 MiB.`);
     let line = 0;
     const consume = async (text: string) => {
       signal?.throwIfAborted();
@@ -218,7 +218,7 @@ export function trainingApi(baseUrl: string, storage: StorageLocations, token: (
     upload: async (split: Split, descriptor: z.infer<typeof uploadSchema>, file: Blob, signal?: AbortSignal) => {
       const valid = uploadDescriptor(descriptor, storage, 'dataset-upload');
       if (!new URL(valid.url).pathname.endsWith(`/inputs/${split}.jsonl`)) throw new Error('The upload does not match this split.');
-      if (!file.size || file.size > MAX_DATASET_BYTES) throw new Error(`${split}: file must be nonempty and at most 128 MiB.`);
+      if (!file.size || file.size > MAX_DATASET_BYTES) throw new Error(`${split}: file must be nonempty and at most 384 MiB.`);
       try {
         const response = await request(valid.url, { method: valid.method, headers: valid.headers, body: file, credentials: 'omit', redirect: 'error', signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(600_000)]) : AbortSignal.timeout(600_000) });
         if (!response.ok) throw new Error('Upload rejected.');
