@@ -144,3 +144,14 @@ test('accounts without trained models fall back to the shared model and its exam
   expect(await exampleNames(page)).toEqual([...PRESET_NAMES, 'Start blank']);
   await expect(page.getByLabel('Your API key')).toBeHidden();
 });
+
+test('the Example dropdown is drawn like the Model dropdown, not the browser default', async ({ page }) => {
+  await open(page, [], [SHARED]);
+  const look = (label: string) => page.getByLabel(label, { exact: true }).evaluate(el => {
+    const c = getComputedStyle(el);
+    return { appearance: c.appearance, height: c.height, padding: c.padding, arrow: c.backgroundImage, border: c.border, radius: c.borderRadius };
+  });
+  const [model, example] = await Promise.all([look('Model'), look('Example')]);
+  expect(model.appearance).toBe('none');
+  expect(example).toEqual(model);
+});
