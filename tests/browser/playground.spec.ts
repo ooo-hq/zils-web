@@ -6,11 +6,14 @@ const OWN = { id: 'acct-support-router', label: 'support-router', own: true };
 const LEARNED = { team: { type: 'choice', instructions: 'Which team should handle this?', criteria: { returns: 'Refunds', billing: 'Charges' } } };
 const TRAINED = { id: 'acct-team-router', label: 'team-router', own: true, questions: LEARNED };
 
-async function open(page: Page, runs: Request[]) {
+const SHARED = { id: 'browser-test-release', label: 'Zils shared' };
+const PRESET_NAMES = ['Choose the right model', 'Select the next tool', 'Know when to escalate', 'Support triage'];
+
+async function open(page: Page, runs: Request[], models: object[] = [SHARED, OWN, TRAINED]) {
   await signIn(page);
   await page.route('**/api/playground', route => {
     const request = route.request();
-    if (request.method() === 'GET') return route.fulfill({ json: { configured: true, models: [{ id: 'browser-test-release', label: 'Zils shared' }, OWN, TRAINED] } });
+    if (request.method() === 'GET') return route.fulfill({ json: { configured: true, models } });
     runs.push(request);
     const body = request.postDataJSON();
     return route.fulfill({ json: { model: body.model, answers: Object.fromEntries(Object.keys(body.questions).map(id => [id, { type: 'noul', noul: .7 }])), usage: { input_tokens: 30, output_tokens: 0 } } });
@@ -36,6 +39,8 @@ test('an own model runs with the pasted key, keeps it out of storage, and shows 
   const [select, key] = await Promise.all([page.getByLabel('Model', { exact: true }).boundingBox(), page.getByLabel('Your API key').boundingBox()]);
   expect([select?.y, select?.height]).toEqual([key?.y, key?.height]);
   await page.screenshot({ path: '.private/playground-model-bar.png', clip: { x: 0, y: 0, width: 1280, height: 360 } });
+  // A model without saved questions starts blank, so give it one to run.
+  await page.getByRole('group', { name: 'Add a question' }).getByRole('button', { name: '+ Yes / no' }).click();
   await page.getByRole('button', { name: /Run decisions/ }).click();
   await expect(page.getByRole('main').getByRole('alert')).toContainText('Paste one of your API keys');
   expect(runs).toHaveLength(0);
@@ -62,6 +67,7 @@ test('an own model runs with the pasted key, keeps it out of storage, and shows 
 test('the shared model never sends a user key', async ({ page }) => {
   const runs: Request[] = [];
   await open(page, runs);
+  await page.getByLabel('Model', { exact: true }).selectOption(SHARED.id);
   await expect(page.getByLabel('Your API key')).toBeHidden();
   await page.getByRole('button', { name: /Run decisions/ }).click();
   await expect.poll(() => runs.length).toBe(1);
@@ -83,6 +89,7 @@ test('signed-out visitors are sent to sign in or examples, and the model routes 
 test('start blank, add a question by type, and type over its instructions', async ({ page }) => {
   const runs: Request[] = [];
   await open(page, runs);
+  await page.getByLabel('Model', { exact: true }).selectOption(SHARED.id);
   await page.getByLabel('Example', { exact: true }).selectOption({ label: 'Start blank' });
   const box = page.getByLabel(/^Decisions/);
   await expect(box).toHaveValue('{}');
@@ -113,4 +120,27 @@ test('a model with saved questions starts from them and offers them in the picke
   await page.screenshot({ path: '.private/playground-own-questions.png', fullPage: true });
   await page.getByLabel('Model', { exact: true }).selectOption(OWN.id);
   await expect(page.getByRole('button', { name: '+ team' })).toHaveCount(0);
+});
+
+const exampleNames = (page: Page) => page.getByLabel('Example', { exact: true }).locator('option').allTextContents();
+
+test('accounts with trained models open on their own model, with only its own examples', async ({ page }) => {
+  await open(page, []);
+  const model = page.getByLabel('Model', { exact: true });
+  await expect(model).toHaveValue(OWN.id);
+  expect(await model.locator('option').allTextContents()).toEqual(['support-router (your model)', 'team-router (your model)', 'Zils shared']);
+  expect(await exampleNames(page)).toEqual(['Start blank']);
+  await expect(page.getByLabel(/^Context/)).toHaveValue('');
+  await expect(page.getByLabel(/^Decisions/)).toHaveValue('{}');
+  await model.selectOption(TRAINED.id);
+  expect(await exampleNames(page)).toEqual(['Your model’s questions', 'Start blank']);
+  await model.selectOption(SHARED.id);
+  expect(await exampleNames(page)).toEqual([...PRESET_NAMES, 'Start blank']);
+});
+
+test('accounts without trained models fall back to the shared model and its examples', async ({ page }) => {
+  await open(page, [], [SHARED]);
+  await expect(page.getByLabel('Model', { exact: true })).toHaveValue(SHARED.id);
+  expect(await exampleNames(page)).toEqual([...PRESET_NAMES, 'Start blank']);
+  await expect(page.getByLabel('Your API key')).toBeHidden();
 });

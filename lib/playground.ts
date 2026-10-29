@@ -30,6 +30,11 @@ export type DecisionResponse = z.infer<typeof responseSchema>;
 export type Answer = DecisionResponse['answers'][string];
 export type ModelOption = { id: string; label: string; own?: boolean; questions?: DecisionRequest['questions'] };
 
+/** The account's own models before the shared one, so the playground opens on the customer's model. */
+export function ownFirst(models: ModelOption[]): ModelOption[] {
+  return [...models.filter(m => m.own), ...models.filter(m => !m.own)];
+}
+
 /** A trained model's saved questions, keeping only the ones the playground can send. */
 export function savedQuestions(value: unknown): DecisionRequest['questions'] | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
