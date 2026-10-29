@@ -1,4 +1,4 @@
-import { parseRequest } from '../../../lib/playground';
+import { ownFirst, parseRequest } from '../../../lib/playground';
 import { signedIn, signInRequired } from '../../../lib/session-server';
 import { authorizeModel, infer, InferenceError, MAX_BODY_BYTES, ownedModels, playgroundConfig, readLimited } from '../../../lib/playground-server';
 
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const token = bearer(request);
   // Signed-in callers also see their own ready models; a failed lookup still leaves the shared model.
   const own = token ? await ownedModels(token).catch(() => []) : [];
-  return Response.json({ ...config, models: [...config.models, ...own] }, { headers: { 'Cache-Control': 'no-store' } });
+  return Response.json({ ...config, models: ownFirst([...config.models, ...own]) }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function POST(request: Request) {

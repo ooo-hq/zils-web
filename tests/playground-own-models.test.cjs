@@ -2,6 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { authorizeModel, ownedModels, infer, userApiUrl } = require('../.private/test-build/playground-server.js');
 const { curlCommand } = require('../.private/test-build/model-quickstart.js');
+const { ownFirst } = require('../.private/test-build/playground.js');
 
 const SHARED = 'zils-shared-fixture-release';
 const KEY = `zils_sk_${'a'.repeat(32)}_${'B'.repeat(43)}`;
@@ -76,3 +77,10 @@ test('an own model brings its saved questions, keeping only ones the playground 
   assert.deepEqual(models[0].questions, { team: { type: 'choice', instructions: 'Which team?', criteria: { x: 'X', y: 'Y' } } });
   assert.equal('questions' in models[1], false);
 }));
+
+test('own models come first so the playground opens on them, and the shared model stays as the fallback', () => {
+  const shared = { id: SHARED, label: 'Zils shared' };
+  const a = { id: 'acct-a', label: 'a', own: true }, b = { id: 'acct-b', label: 'b', own: true };
+  assert.deepEqual(ownFirst([shared, a, b]), [a, b, shared]);
+  assert.deepEqual(ownFirst([shared]), [shared]);
+});

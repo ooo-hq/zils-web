@@ -9,6 +9,7 @@ import s from '@/components/decision-playground.module.css';
 type Run = { request: DecisionRequest; response: DecisionResponse; elapsed: number };
 const asText = (value: unknown) => typeof value === 'string' ? value : JSON.stringify(value, null, 2);
 const BLANK = -2;
+const OWN_QUESTIONS = -1;
 const percentage = (value: number) => `${(value * 100).toFixed(1)}%`;
 
 /** One answer: every option as a probability bar, the most likely one highlighted. */
@@ -36,9 +37,11 @@ function AnswerCard({ id, question, answer }: { id: string; question: DecisionRe
 }
 
 export function DecisionPlayground({ configured, model: selected, apiKey, apiUrl, initialRequest }: { configured: boolean; model: ModelOption; apiKey: string; apiUrl: string | null; initialRequest?: DecisionRequest }) {
-  const [preset, setPreset] = useState(initialRequest ? -1 : 0);
-  const [state, setState] = useState(asText(initialRequest?.state ?? PRESETS[0].state));
-  const [questions, setQuestions] = useState(asText(initialRequest?.questions ?? PRESETS[0].questions));
+  // Own models offer only their saved questions; the generic presets belong to the shared model.
+  const examples = selected.own ? [] : PRESETS;
+  const [preset, setPreset] = useState(initialRequest ? OWN_QUESTIONS : selected.own ? BLANK : 0);
+  const [state, setState] = useState(asText(initialRequest?.state ?? (selected.own ? '' : PRESETS[0].state)));
+  const [questions, setQuestions] = useState(asText(initialRequest?.questions ?? (selected.own ? {} : PRESETS[0].questions)));
   const model = selected.id;
   const [run, setRun] = useState<Run | null>(null);
   const [view, setView] = useState<'Answers' | 'JSON' | 'API'>('Answers');
@@ -54,6 +57,7 @@ export function DecisionPlayground({ configured, model: selected, apiKey, apiUrl
   function selectPreset(index: number) {
     changed(); setPreset(index); setView('Answers');
     if (index === BLANK) { setState(''); setQuestions('{}'); return; }
+    if (index === OWN_QUESTIONS) { setState(''); setQuestions(asText(selected.questions ?? {})); return; }
     setState(asText(PRESETS[index].state)); setQuestions(asText(PRESETS[index].questions));
   }
   function insert(id: string, question: DecisionRequest['questions'][string]) {
@@ -114,8 +118,8 @@ export function DecisionPlayground({ configured, model: selected, apiKey, apiUrl
         <div className={s.field}>
           <label htmlFor="decision-example" className={`${s.label} ${s.labelRow}`}>Example</label>
           <select id="decision-example" className={s.select} value={preset} onChange={e => selectPreset(Number(e.target.value))}>
-            {preset === -1 && <option value={-1}>{selected.questions ? 'Your model’s questions' : 'Your request'}</option>}
-            {PRESETS.map((p, i) => <option key={p.name} value={i}>{p.name}</option>)}
+            {selected.questions && <option value={OWN_QUESTIONS}>Your model’s questions</option>}
+            {examples.map((p, i) => <option key={p.name} value={i}>{p.name}</option>)}
             <option value={BLANK}>Start blank</option>
           </select>
           {preset >= 0 ? <p className={s.hint}>{PRESETS[preset].description}</p> : preset === BLANK ? <p className={s.hint}>Paste your own context, then add questions below.</p> : selected.questions && <p className={s.hint}>The questions this model learned. Paste an input like the ones it was trained on.</p>}

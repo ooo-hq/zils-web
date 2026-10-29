@@ -10,6 +10,8 @@
 .hint { margin:6px 0 0; line-height:1.6; }
 .editor .select,.editor .textarea { display:block; width:100%; min-width:0; border:1px solid var(--zils-edge-strong); border-radius:6px; background:var(--zils-page); color:var(--zils-ink); }
 .editor .select { padding:9px 12px; font:inherit; font-size:14px; }
+/* Drawn like the Model select (playground.module.css): no native chevron, same height, padding and arrow. */
+.editor select.select { -webkit-appearance:none; appearance:none; box-sizing:border-box; height:40px; padding:10px 36px 10px 12px; border-radius:5px; background-image:linear-gradient(45deg,transparent 50%,var(--zils-muted) 50%),linear-gradient(135deg,var(--zils-muted) 50%,transparent 50%); background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%; background-size:5px 5px; background-repeat:no-repeat; }
 .editor .textarea { padding:12px; resize:vertical; font-family:var(--font-plex-mono),monospace; font-size:12.5px; line-height:1.65; }
 .editor .textarea:focus,.editor .select:focus { outline:none; border-color:var(--zils-accent); box-shadow:0 0 0 1px var(--zils-accent); }
 .context { min-height:128px; }
