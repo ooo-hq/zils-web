@@ -125,10 +125,12 @@
 .plan h2 { font-size:20px; font-weight:500; letter-spacing:-.025em; margin:0; }
 .plan h3 { font-size:13px; font-weight:500; margin:0 0 8px; }
 .plan p { color:var(--zils-muted); font-size:12px; line-height:1.65; margin:0 0 12px; max-width:60ch; }
-.planCurrent { margin-top:8px !important; }
+.plan p.planCurrent { margin-top:8px; }
 .planCurrent strong { color:var(--zils-ink); font-weight:500; }
 .planChoices { display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-top:16px; }
-.planClosed { color:var(--zils-danger) !important; }
+.plan p.planClosed { color:var(--zils-danger); }
+.plan p.error { color:var(--zils-danger); max-width:none; }
+.srOnly { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 .consent { display:flex; align-items:flex-start; gap:8px; font-size:12px; line-height:1.6; margin:0 0 12px; }
 .consent a { color:var(--zils-accent); text-decoration:underline; text-underline-offset:3px; }
 @media (max-width:720px) { .planChoices { grid-template-columns:1fr; gap:24px; } }

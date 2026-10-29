@@ -9,7 +9,7 @@ const stateSchema = z.object({
   consent: z.object({ at: z.string(), terms_version: z.string() }).nullable(),
 });
 export type TierState = z.infer<typeof stateSchema>;
-type TierCode = 'free_tier_closed' | 'consent_required' | 'terms_changed';
+type TierCode = 'free_tier_closed' | 'consent_required' | 'terms_changed' | 'free_tier_unavailable';
 
 export class TierError extends Error {
   constructor(message: string, public readonly status: number, public readonly code?: TierCode) { super(message); this.name = 'TierError'; }
@@ -19,6 +19,9 @@ export const parseTierState = (value: unknown): TierState | null => {
   const result = stateSchema.safeParse(value);
   return result.success ? result.data : null;
 };
+
+/** On Free with consent recorded against terms that are no longer current. */
+export const termsOutdated = (state: TierState | null): boolean => !!state && state.tier === 'free' && !!state.consent && state.consent.terms_version !== state.free.terms_version;
 
 /** Free needs a loaded, open tier and a ticked consent box. */
 export const canChooseFree = (state: TierState | null, consented: boolean): boolean => !!state && state.free.open && consented;
@@ -31,6 +34,7 @@ export function tierErrorAction(error: unknown): 'ask_again' | 'closed' | 'conse
 const messages: Record<string, string> = {
   terms_changed: 'The free tier terms changed. Read them and agree again.',
   free_tier_closed: 'Free tier is not open yet.',
+  free_tier_unavailable: 'Plans are unavailable right now. Try again later.',
   consent_required: 'Tick the box to agree to the terms before choosing Free.',
 };
 
@@ -55,7 +59,7 @@ export function tierApi(rawUrl: string, token: () => Promise<string>, request: t
     if (!response.ok) {
       const failure = z.object({ error: z.object({ code: z.string() }) }).safeParse(await response.json().catch(() => null));
       const raw = failure.success ? failure.data.error.code : '';
-      const code = (['terms_changed', 'free_tier_closed', 'consent_required'] as const).find(known => known === raw);
+      const code = (['terms_changed', 'free_tier_closed', 'consent_required', 'free_tier_unavailable'] as const).find(known => known === raw);
       throw new TierError(code ? messages[code]
         : response.status === 401 ? 'Your session has expired. Please sign in again.'
         : 'The plan could not be changed. Please try again.', response.status, code);

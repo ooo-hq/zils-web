@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { tierApi, TierError, parseTierState, canChooseFree, tierErrorAction, TERMS_PATH } = require('../.private/test-build/account-tier.js');
+const { tierApi, TierError, parseTierState, canChooseFree, tierErrorAction, termsOutdated, TERMS_PATH } = require('../.private/test-build/account-tier.js');
 
 const open = { tier: 'paid', free: { open: true, requests_per_minute: 60, tokens_per_day: 200000, terms_version: 'draft-2026-10-28' }, consent: null };
 const closed = { ...open, free: { ...open.free, open: false } };
@@ -53,3 +53,17 @@ test('api calls GET and POST with the session token and maps error codes', async
 });
 
 test('terms path is the draft terms page', () => assert.equal(TERMS_PATH, '/free-tier-terms'));
+
+test('503 free_tier_unavailable has its own message and code', async () => {
+  const api = tierApi('https://api.example/decision', async () => 'tok', async () => reply({ error: { code: 'free_tier_unavailable' } }, 503));
+  await assert.rejects(api.get(), e => e.code === 'free_tier_unavailable' && e.message === 'Plans are unavailable right now. Try again later.');
+});
+
+test('a free customer who agreed to older terms must agree again', () => {
+  assert.equal(termsOutdated(parseTierState(consented)), false);
+  const old = { ...consented, consent: { at: 'x', terms_version: 'old' } };
+  assert.equal(termsOutdated(parseTierState(old)), true);
+  assert.equal(termsOutdated(parseTierState(open)), false);
+  assert.equal(termsOutdated(parseTierState({ ...open, consent: { at: 'x', terms_version: 'old' } })), false);
+  assert.equal(termsOutdated(null), false);
+});

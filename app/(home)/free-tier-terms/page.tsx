@@ -25,7 +25,7 @@ export default function FreeTierTermsPage() {
       </PolicySection>
 
       <PolicySection title="Switching to Paid">
-        <p>You can switch to Paid any time. Switching does not delete past free records; they expire after 180 days.</p>
+        <p>You can switch to Paid from the billing page. Switching does not delete past free records; they expire after 180 days.</p>
       </PolicySection>
     </PolicyPage>
   );
