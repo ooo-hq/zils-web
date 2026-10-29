@@ -58,7 +58,7 @@ export function WorkspaceHome({ config, sharedModel, baseName }: { config: Train
       <dl>
         <div><dt>Available credit</dt><dd className={s.figure}>{summary ? formatBalance(summary.available_nanos) : '—'}</dd></div>
         <div><dt>API calls, last 30 days</dt><dd>{usage ? Number(usage.calls).toLocaleString() : '—'}</dd></div>
-        <div><dt>Spend, last 30 days</dt><dd>{usage ? formatCredit((BigInt(usage.inference_spend_nanos) + BigInt(usage.training_spend_nanos)).toString()) : '—'}</dd></div>
+        <div><dt>Spend, last 30 days</dt><dd title={usage ? formatCredit((BigInt(usage.inference_spend_nanos) + BigInt(usage.training_spend_nanos)).toString()) : undefined}>{usage ? formatBalance((BigInt(usage.inference_spend_nanos) + BigInt(usage.training_spend_nanos)).toString()) : '—'}</dd></div>
       </dl>
     </aside>
 
