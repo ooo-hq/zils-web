@@ -40,6 +40,7 @@ async function billing(page: Page, options: { signedIn?: boolean; mode?: string;
     requests.push(url.pathname);
     if (url.pathname.startsWith('/auth/v1/')) return route.fulfill({ json: user, headers });
     if (url.pathname === '/v1/jobs') return route.fulfill({ json: { jobs: options.training402 ? [{ id: purchase, name: 'Saved training run', status: 'uploading' }] : [] }, headers });
+    if (url.pathname === '/v1/account/tier') return route.fulfill({ json: { tier: 'paid', free: { open: true, requests_per_minute: 30, tokens_per_day: 100000, terms_version: '2026-10-28' }, consent: null }, headers });
     if (url.pathname === `/v1/jobs/${purchase}/submit`) return route.fulfill({ status: 402, json: { error: 'Add credit before submitting this job.' }, headers });
     if (url.pathname === '/v1/billing') {
       if (options.billingAuth) return route.fulfill({ status: 401, json: { error: {
