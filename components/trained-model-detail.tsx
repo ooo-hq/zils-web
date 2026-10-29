@@ -13,7 +13,7 @@ import { ImageTrainingResults, PrivateImageTest } from '@/components/image-train
 import { canDownload, isImageJob, trainingApi, TrainingApiError, type Job } from '@/lib/training';
 import { trainingProgress } from '@/lib/training-status';
 import { newerBase, trainingBase, type BaseConfig } from '@/lib/base-model';
-import { billingApi, formatCredit, type BillingSummary } from '@/lib/billing';
+import { billingApi, formatBalance, formatCredit, type BillingSummary } from '@/lib/billing';
 import type { TrainingConfig } from '@/lib/training-config';
 import training from '@/app/(home)/train/train.module.css';
 import styles from './trained-model-detail.module.css';
@@ -189,7 +189,7 @@ function ModelUsage({ modelId, apiUrl, token }: { modelId: string; apiUrl: strin
       {!model ? <p>No recorded API usage for this model in this period.</p> : <dl className={styles.stats}>
         <div><dt>Completed calls</dt><dd>{count(model.calls)}</dd><p>{count(model.failed_calls)} failed · {count(model.active_calls)} in progress</p></div>
         <div><dt>Billable input tokens</dt><dd>{count(model.input_tokens)}</dd><p>Recorded token usage</p></div>
-        <div><dt>API spend</dt><dd>{formatCredit(model.spend_nanos)}</dd><p>{summary?.mode === 'test' ? 'Test credit' : 'Excludes training and top-ups'}</p></div>
+        <div><dt>API spend</dt><dd title={formatCredit(model.spend_nanos)}>{formatBalance(model.spend_nanos)}</dd><p>{summary?.mode === 'test' ? 'Test credit' : 'Excludes training and top-ups'}</p></div>
       </dl>}
       <p className={styles.note}>Calls are grouped by when they started; spend by when it was charged. Each batch item counts as one call. Earlier calls without a recorded model or token count remain in account totals.</p>
     </>}

@@ -108,7 +108,7 @@ export function formatCredit(value: string): string {
   return `${number < 0n ? '−' : ''}$${whole}.${fraction}`;
 }
 
-/** Readable balance; transaction and usage details keep exact nano-dollar amounts. */
+/** Two-decimal amount for balances and spend; ledger rows use `formatCredit` for the exact charge. */
 export function formatBalance(value: string): string {
   const number = BigInt(value), absolute = number < 0n ? -number : number;
   if (absolute > 0n && absolute < 10_000_000n) return number < 0n ? '<$0.01 owed' : '<$0.01';

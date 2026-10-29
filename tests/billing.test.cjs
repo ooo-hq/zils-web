@@ -91,10 +91,11 @@ test('credit formatting preserves nano-dollar usage and values beyond safe Numbe
   assert.equal(formatCredit('10000000000000000042'), '$10,000,000,000.000000042');
 });
 
-test('balance summaries round to cents without hiding sub-cent credit or debt', () => {
+test('balance and spend display round to cents without hiding sub-cent amounts or debt', () => {
   for (const [value, expected] of [
     ['2000199342', '$2.00'], ['1995000000', '$2.00'], ['2005000000', '$2.01'],
     ['0', '$0.00'], ['199342', '<$0.01'], ['-42', '<$0.01 owed'],
+    ['263352720', '$0.26'], ['151146743632', '$151.15'],
     ['-2000199342', '−$2.00'], ['10000000000000000042', '$10,000,000,000.00'],
   ]) assert.equal(formatBalance(value), expected);
 });

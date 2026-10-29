@@ -92,7 +92,7 @@ test('workspace links to private model stats, exact-version usage, and runnable 
   const usage = page.getByRole('region', { name: 'API usage', exact: true });
   await expect(usage.getByText('12', { exact: true })).toBeVisible();
   await expect(usage.getByText('1,000', { exact: true })).toBeVisible();
-  await expect(usage.getByText('$0.001', { exact: true })).toBeVisible();
+  await expect(usage.getByText('<$0.01', { exact: true })).toBeVisible();
   await expect(usage.getByText('5,000', { exact: true })).toHaveCount(0);
   await expect(usage).toContainText('Test mode');
   await page.screenshot({ path: '.private/model-page-preview.png' });

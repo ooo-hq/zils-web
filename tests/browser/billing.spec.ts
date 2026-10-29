@@ -40,6 +40,7 @@ async function billing(page: Page, options: { signedIn?: boolean; mode?: string;
     requests.push(url.pathname);
     if (url.pathname.startsWith('/auth/v1/')) return route.fulfill({ json: user, headers });
     if (url.pathname === '/v1/jobs') return route.fulfill({ json: { jobs: options.training402 ? [{ id: purchase, name: 'Saved training run', status: 'uploading' }] : [] }, headers });
+    if (url.pathname === '/v1/account/tier') return route.fulfill({ json: { tier: 'paid', free: { open: true, requests_per_minute: 30, tokens_per_day: 100000, terms_version: '2026-10-28' }, consent: null }, headers });
     if (url.pathname === `/v1/jobs/${purchase}/submit`) return route.fulfill({ status: 402, json: { error: 'Add credit before submitting this job.' }, headers });
     if (url.pathname === '/v1/billing') {
       if (options.billingAuth) return route.fulfill({ status: 401, json: { error: {
@@ -78,12 +79,12 @@ test('account usage is independent of transaction history and models keep unknow
   const report = page.getByRole('region', { name: 'Account usage', exact: true });
   await expect(report.getByText('1,200', { exact: true })).toBeVisible();
   await expect(report.getByText('1,000,000', { exact: true })).toBeVisible();
-  await expect(report.getByText('$4.042', { exact: true })).toBeVisible();
+  await expect(report.getByText('$4.04', { exact: true })).toBeVisible();
   await expect(report.getByText('Token counts unavailable for 10 earlier calls')).toBeVisible();
   const modelReport = page.getByRole('region', { name: 'API usage by model', exact: true });
   const row = modelReport.getByRole('row').filter({ hasText: 'support-routing' });
   await expect(row).toContainText('1,100');
-  await expect(row).toContainText('$0.0378');
+  await expect(row).toContainText('$0.04');
   await expect(modelReport.getByRole('rowheader', { name: /Model not recorded/ })).toBeVisible();
   await modelReport.getByText('About this report', { exact: true }).click();
   await expect(modelReport.getByText(/One batch item counts as one API call/)).toBeVisible();
@@ -253,7 +254,7 @@ test.describe('production checkout', () => {
     expect(await add.evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(24, 25, 30)');
     await page.screenshot({ path: '.private/billing-redesign-dark.png', fullPage: true });
     await page.goto('/usage');
-    await expect(page.getByRole('region', { name: 'Account usage', exact: true }).getByText('$4.042', { exact: true })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Account usage', exact: true }).getByText('$4.04', { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'API usage by model', exact: true })).toBeVisible();
     expect(checkouts).toEqual([]);
     expect(errors).toEqual([]);
