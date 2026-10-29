@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ArrowRight, ArrowUpRight, FlaskConical, RefreshCw, LockKeyhole } from 'lucide-react';
+import { PlanCard } from '@/components/plan-card';
+import { tierApi } from '@/lib/account-tier';
 import { useAuthSession } from '@/components/auth-session';
 import { BillingUsage, BillingUsageDetails } from '@/components/billing-usage';
 import { billingApi, BillingError, TOPUP_AMOUNTS_CENTS, formatCredit, checkoutIntent, pendingCheckout, attachCheckout, settleCheckout, clearCheckout, type BillingSummary, type CheckoutIntent } from '@/lib/billing';
@@ -39,6 +41,10 @@ function AccountBilling({ config, client, owner, testPreview, checkoutReturn, vi
   const api = useMemo(() => billingApi(config.apiUrl, async () => {
     const { data, error } = await client.auth.getSession();
     if (error) throw error;
+    return data.session?.user.id === owner ? data.session.access_token : '';
+  }), [config.apiUrl, client, owner]);
+  const plan = useMemo(() => tierApi(config.apiUrl, async () => {
+    const { data } = await client.auth.getSession();
     return data.session?.user.id === owner ? data.session.access_token : '';
   }), [config.apiUrl, client, owner]);
   const scopeFor = useCallback((mode: string) => `${config.apiUrl}:${owner}:${mode}`, [config.apiUrl, owner]);
@@ -129,6 +135,7 @@ function AccountBilling({ config, client, owner, testPreview, checkoutReturn, vi
             <p className={styles.checkoutNote}><LockKeyhole size={14} aria-hidden="true" /><span>{busy ? 'Opening secure checkout…' : 'Secure checkout with Stripe.'} Credit is added after payment is confirmed.</span></p>
           </section>
       </div>
+      <PlanCard api={plan} />
       <section className={styles.allowance} aria-labelledby="allowance-heading"><div><h2 id="allowance-heading">Included training</h2><p><span className={styles.lamp} data-on={summary.free_training_runs > 0 || undefined} aria-hidden="true" />{summary.free_training_runs === 1 ? '1 standard run available' : `${summary.free_training_runs} standard runs available`}</p></div><p>Your first completed top-up includes one standard run without using your credit. Additional runs cost $0.20 per million training tokens, with a $2 minimum; the included run covers the first $2.</p></section>
       <div className={styles.histories}>
         <section className={styles.history} aria-labelledby="payments-heading"><h2 id="payments-heading">Payments & receipts</h2>

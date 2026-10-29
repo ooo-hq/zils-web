@@ -121,3 +121,14 @@
 .lamp { width:8px; height:8px; border-radius:50%; background:var(--zils-edge-strong); flex-shrink:0; }
 .lamp[data-on] { background:#1f9d55; box-shadow:0 0 0 3px #1f9d5530, 0 0 10px #1f9d5599; }
 @media (max-width:860px) { .topUp { padding:24px; } }
+.plan { margin:0 0 42px; }
+.plan h2 { font-size:20px; font-weight:500; letter-spacing:-.025em; margin:0; }
+.plan h3 { font-size:13px; font-weight:500; margin:0 0 8px; }
+.plan p { color:var(--zils-muted); font-size:12px; line-height:1.65; margin:0 0 12px; max-width:60ch; }
+.planCurrent { margin-top:8px !important; }
+.planCurrent strong { color:var(--zils-ink); font-weight:500; }
+.planChoices { display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-top:16px; }
+.planClosed { color:var(--zils-danger) !important; }
+.consent { display:flex; align-items:flex-start; gap:8px; font-size:12px; line-height:1.6; margin:0 0 12px; }
+.consent a { color:var(--zils-accent); text-decoration:underline; text-underline-offset:3px; }
+@media (max-width:720px) { .planChoices { grid-template-columns:1fr; gap:24px; } }
