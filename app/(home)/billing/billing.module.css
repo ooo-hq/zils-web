@@ -121,3 +121,38 @@
 .lamp { width:8px; height:8px; border-radius:50%; background:var(--zils-edge-strong); flex-shrink:0; }
 .lamp[data-on] { background:#1f9d55; box-shadow:0 0 0 3px #1f9d5530, 0 0 10px #1f9d5599; }
 @media (max-width:860px) { .topUp { padding:24px; } }
+/* Plan: Free and Paid side by side in the same square card language as credit and usage. */
+.srOnly { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+.tier { margin:0 0 42px; }
+.tierNotice { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; margin:0 0 12px; padding:12px 16px; border-left:2px solid var(--zils-danger); background:var(--zils-danger-soft); color:var(--zils-danger); font-size:13px; line-height:1.6; }
+.tierNotice[data-tone="info"] { border-left-color:var(--zils-accent); background:var(--zils-soft); color:var(--zils-ink); }
+.tierGrid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); border:1px solid var(--zils-edge); }
+.tierOption { display:flex; flex-direction:column; min-width:0; padding:30px 34px 32px; }
+.tierOption + .tierOption { border-left:1px solid var(--zils-edge); }
+.tierOption[data-current] { background:var(--zs-raised); }
+.tierTop { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:20px; }
+.tierName { margin:0; font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:10.5px; font-weight:400; letter-spacing:.14em; text-transform:uppercase; color:var(--zs-t2); }
+.tierCurrent { display:inline-flex; align-items:center; gap:8px; color:var(--zils-ink); font-size:12px; }
+.tierPrice { display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 10px; margin:20px 0 6px; }
+.tierPrice strong { font-size:clamp(40px,4.6vw,56px); line-height:1; font-weight:300; letter-spacing:-.04em; font-variant-numeric:tabular-nums; }
+.tierPrice[data-free] strong { background:var(--zs-spectrum-text); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.tierPrice span { color:var(--zils-muted); font-size:13px; }
+.tierLead { margin:0 0 18px; color:var(--zils-muted); font-size:13px; line-height:1.65; max-width:40ch; }
+.tierFacts { margin:0 0 24px; border-top:1px solid var(--zils-edge); }
+.tierFacts > div { display:flex; justify-content:space-between; align-items:baseline; gap:16px; padding:11px 0; border-bottom:1px solid var(--zils-edge); font-size:13px; }
+.tierFacts dt { color:var(--zils-muted); }
+.tierFacts dd { margin:0; text-align:right; }
+.tierAction { margin-top:auto; display:grid; gap:14px; }
+.tierAction .button { justify-self:start; }
+.tierAction > p { margin:0; color:var(--zils-muted); font-size:12px; line-height:1.6; }
+.consent { display:flex; align-items:flex-start; gap:10px; font-size:13px; line-height:1.55; cursor:pointer; }
+.consent input { width:16px; height:16px; margin:2px 0 0; accent-color:var(--zils-accent); flex-shrink:0; }
+.consent a { color:var(--zils-accent); text-decoration:underline; text-underline-offset:3px; }
+.tierState { padding:30px 34px; border:1px solid var(--zils-edge); display:grid; gap:14px; justify-items:start; color:var(--zils-muted); font-size:13px; min-height:120px; align-content:center; }
+@media (max-width:860px) {
+  .tierGrid { grid-template-columns:minmax(0,1fr); }
+  .tierOption { padding:22px 20px 24px; }
+  .tierOption + .tierOption { border-left:0; border-top:1px solid var(--zils-edge); }
+  .tierPrice strong { font-size:40px; }
+  .tierState { padding:22px 20px; }
+}
