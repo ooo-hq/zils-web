@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
+import { BETA_PRICING } from '@/lib/pricing';
 import { canChooseFree, termsOutdated, tierErrorAction, TERMS_PATH, type TierState, type tierApi } from '@/lib/account-tier';
 import styles from '@/app/(home)/billing/billing.module.css';
 
@@ -41,33 +42,58 @@ export function PlanCard({ api }: { api: Api }) {
     } finally { setBusy(false); }
   }
 
-  if (!state) return <section className={styles.plan} aria-labelledby="plan-heading"><h2 id="plan-heading">Plan</h2>
-    {loadFailed ? <><p role="alert" className={styles.error}>{message || 'Your plan could not be loaded.'}</p><button type="button" className={styles.button} onClick={() => { setLoadFailed(false); setMessage(''); load(); }}>Retry</button></> : <p role="status">Loading your plan…</p>}
+  const heading = <div className={styles.sectionRow}><h2 id="plan-heading" className={styles.sectionHeading}>Plan</h2></div>;
+  if (!state) return <section className={styles.tier} aria-labelledby="plan-heading">{heading}
+    <div className={styles.tierState}>
+      {loadFailed
+        ? <><p role="alert">{message || 'Your plan could not be loaded.'}</p><button type="button" className={styles.button} onClick={() => { setLoadFailed(false); setMessage(''); load(); }}>Try again</button></>
+        : <p role="status">Loading your plan…</p>}
+    </div>
   </section>;
   const free = state.tier === 'free';
   const outdated = termsOutdated(state);
-  return <section className={styles.plan} aria-labelledby="plan-heading">
-    <h2 id="plan-heading">Plan</h2>
+  const current = <span className={styles.tierCurrent}><span className={styles.lamp} data-on aria-hidden="true" />Current plan</span>;
+  const facts = (rows: [string, string][]) => <dl className={styles.tierFacts}>{rows.map(([term, value]) => <div key={term}><dt>{term}</dt><dd>{value}</dd></div>)}</dl>;
+  const consentBox = <label className={styles.consent}>
+    <input type="checkbox" checked={consented} onChange={event => setConsented(event.target.checked)} />
+    <span>I agree to the <Link href={TERMS_PATH} target="_blank">free tier terms<span className={styles.srOnly}> (opens in a new tab)</span></Link>.</span>
+  </label>;
+  return <section className={styles.tier} aria-labelledby="plan-heading">
+    {heading}
     <p className={styles.srOnly} role="status" aria-live="polite">{announce}</p>
-    <p className={styles.planCurrent}>Current plan: <strong>{free ? 'Free' : 'Paid'}</strong></p>
-    {outdated && <p role="alert" className={styles.error}>The free tier terms changed. Read them and agree again.</p>}
-    <div className={styles.planChoices}>
-      <div>
-        <h3>Free</h3>
-        <p>Served by the Zils network; requests and answers may be used to train models; {state.free.requests_per_minute} requests/min, {state.free.tokens_per_day / 1000}k tokens/day; base models only.</p>
-        {!state.free.open && <p className={styles.planClosed}>Free tier is not open yet.</p>}
-        <label className={styles.consent}>
-          <input type="checkbox" checked={consented} onChange={event => setConsented(event.target.checked)} disabled={!state.free.open || (free && !outdated)} />
-          <span>I agree to the <Link href={TERMS_PATH} target="_blank">free tier terms<span className={styles.srOnly}> (opens in a new tab)</span></Link> (draft).</span>
-        </label>
-        <button type="button" className={styles.button} disabled={(free && !outdated) || busy || !canChooseFree(state, consented)} onClick={() => choose('free')}>{outdated ? 'Keep Free' : free ? 'Current plan' : 'Choose Free'}</button>
+    {outdated && <p className={styles.tierNotice} data-tone="info">The free tier terms changed. Agree to the new terms to keep Free.</p>}
+    {message && <p role="alert" className={styles.tierNotice}>{message}</p>}
+    <div className={styles.tierGrid}>
+      <div className={styles.tierOption} data-current={free || undefined}>
+        <div className={styles.tierTop}><h3 className={styles.tierName}>Free</h3>{free && current}</div>
+        <p className={styles.tierPrice} data-free><strong>$0</strong></p>
+        <p className={styles.tierLead}>Answered by the Zils network. Requests and answers may be used to train models.</p>
+        {facts([
+          ['Requests', `${state.free.requests_per_minute} a minute`],
+          ['Input tokens', `${state.free.tokens_per_day.toLocaleString('en-US')} a day`],
+          ['Models', 'Base models'],
+          ['Training', 'May be used'],
+        ])}
+        <div className={styles.tierAction}>
+          {free && !outdated ? null
+            : !state.free.open ? <p>The free tier is not open yet.</p>
+            : <>{consentBox}<button type="button" className={styles.button} disabled={busy || !canChooseFree(state, consented)} onClick={() => choose('free')}>{outdated ? 'Keep Free' : 'Switch to Free'}</button></>}
+        </div>
       </div>
-      <div>
-        <h3>Paid</h3>
-        <p>Your prepaid credit pays for requests. Only Free tier requests may be used for training.</p>
-        <button type="button" className={styles.button} disabled={!free || busy} onClick={() => choose('paid')}>{free ? 'Switch to Paid' : 'Current plan'}</button>
+      <div className={styles.tierOption} data-current={!free || undefined}>
+        <div className={styles.tierTop}><h3 className={styles.tierName}>Paid</h3>{!free && current}</div>
+        <p className={styles.tierPrice}><strong>${BETA_PRICING.millionInputTokens.toFixed(2)}</strong><span>per million input tokens</span></p>
+        <p className={styles.tierLead}>Answered by our own runtime and paid from your prepaid credit.</p>
+        {facts([
+          ['Requests', 'Account limit'],
+          ['Input tokens', 'Your credit'],
+          ['Models', 'All, including yours'],
+          ['Training', 'Never used'],
+        ])}
+        <div className={styles.tierAction}>
+          {free && <button type="button" className={styles.button} disabled={busy} onClick={() => choose('paid')}>Switch to Paid</button>}
+        </div>
       </div>
     </div>
-    {message && <p role="alert" className={styles.error}>{message}</p>}
   </section>;
 }
