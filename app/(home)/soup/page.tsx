@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://zils.ai/soup' },
 };
 
-const GUIDE = 'https://docs.zils.ai/operations/miner-tuning';
+const GUIDE = 'https://docs.zils.ai/operations/soup';
 
 // Rules from the soup design of 30 October 2026 (zils soup_round constants). Change them here, not in the copy.
 const STEPS = [
@@ -139,7 +139,7 @@ export default function SoupPage() {
       <h2 id="start-heading" className={s.h2}>Pull up a stool.</h2>
       <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
       <p className={s.fine}>Upload your body to a public Hugging Face repo, then check and commit it with <code>zils commit-body</code>. Without <code>--yes</code> it is a dry run that prints the commitment and writes nothing. A hotkey has one commitment slot, shared with base candidates.</p>
-      <p className={s.fine}>Training needs Linux x86_64 with an NVIDIA GPU. <a href={GUIDE}>Read the miner guide</a> for preparing data and checking your body before you commit it. Rules as of 30 October 2026.</p>
+      <p className={s.fine}>Training needs Linux x86_64 with an NVIDIA GPU. <a href={GUIDE}>Read the miner guide</a> for body rules, committing and pay. Rules as of 30 October 2026.</p>
     </section>
   </SiteFrame>;
 }

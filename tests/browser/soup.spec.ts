@@ -30,7 +30,7 @@ test('/soup explains the greedy soup: seats, crown, house rules and the measured
   await expect(taste).toContainText('not a release');
 
   await expect(page.locator('main code', { hasText: 'Qwen/Qwen3.5-4B' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Read the miner guide' })).toHaveAttribute('href', /docs\.zils\.ai/);
+  await expect(page.getByRole('link', { name: 'Read the miner guide' })).toHaveAttribute('href', 'https://docs.zils.ai/operations/soup');
   await expect(page.locator('#start')).toContainText('zils commit-body');
   await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Miners' })).toHaveAttribute('aria-current', 'page');
 
