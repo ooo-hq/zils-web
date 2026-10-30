@@ -93,7 +93,10 @@ test('/z3 separates the nightly soup from the release window and records soup me
   await page.goto('/z3');
   await expect(page.getByText(/approved winners \(for mini, the best soup\)/)).toBeVisible();
   await expect(page.getByRole('link', { name: 'Start mining', exact: true })).toHaveAttribute('href', '/miners');
-  await expect(page.getByRole('region', { name: 'A documented starting point.' })).toContainText('one of the five house models');
+  const current = page.getByRole('region', { name: 'v1 today, a soup next.' });
+  await expect(current).toContainText('current release');
+  await expect(current).toContainText('one of the five house models');
+  await expect(page.locator('main')).not.toContainText('A documented starting point');
   const steps = page.getByRole('region', { name: 'Each new release earns its place.' }).getByRole('list').first().getByRole('listitem');
   await expect(steps).toHaveCount(4);
   await expect(steps.nth(1)).toContainText('Every night');

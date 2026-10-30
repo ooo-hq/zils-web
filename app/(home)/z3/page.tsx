@@ -76,20 +76,22 @@ export default function Z3Page() {
       <p className={s.fine}>A size for each workload. Each lineage needs its own qualification. Hosted availability is separate from weight publication; use the models listed for your account.</p>
     </header>
 
-    <SectionRow n="02" label="z3-mini v1" note="Founding baseline" />
+    <SectionRow n="02" label="z3-mini" note="Current release: v1" />
     <section className={s.split} aria-labelledby="baseline-heading">
       <div>
-        <h2 id="baseline-heading" className={s.h2}>A documented starting point.</h2>
+        <h2 id="baseline-heading" className={s.h2}>v1 today, a soup next.</h2>
         <div className={s.prose}>
-          <p>z3-mini v1 uses the unchanged upstream d3-mini weights. Zils selected this checkpoint as the founding mini baseline. It was not trained by Zils or elected as a miner winner.</p>
-          <p>It is also one of the five house models in every mini soup. If no body lifts the soup past it, the soup is v1 itself and cannot clear the release bar, so v1 stays until something better is found.</p>
+          <p>z3-mini v1 is the current release. It uses the unchanged upstream d3-mini weights, which Zils selected as the founding mini baseline; it was not trained by Zils or elected as a miner winner.</p>
+          <p>The next version will not be built on v1 alone. It is a soup that starts from five open house models, v1 among them, plus any miner bodies that make it better. Because v1 is one of the five house models in every mini soup, a soup that nothing lifts past v1 is just v1 again and cannot clear the release bar.</p>
           <p>Existing downloads and API profile IDs retain their original names. The model guide explains how public release names map to those artifacts.</p>
         </div>
       </div>
       <dl className={s.card}>
+        <div><dt>Current release</dt><dd>z3-mini v1</dd></div>
         <div><dt>Parameters</dt><dd>4.54B</dd></div>
         <div><dt>Input ceiling</dt><dd>4,096 tokens</dd></div>
         <div><dt>Weights</dt><dd>Upstream d3-mini, unchanged</dd></div>
+        <div><dt>Next version</dt><dd>A soup of up to five bodies</dd></div>
         <div><dt>Checkpoint</dt><dd><a href={WEIGHTS}>Explore the founding weights on Hugging Face</a></dd></div>
       </dl>
     </section>
