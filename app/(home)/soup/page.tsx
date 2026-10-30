@@ -27,7 +27,7 @@ const STEPS = [
 
 const BILL = [
   ['Soup seats', '80%', 'Split equally among members whose contribution is at least 0.3 points, each times its rate.'],
-  ['Solo crown', '20%', 'The best single body that is not a house ingredient, if it beats every house body and the soup itself by 0.3 points.'],
+  ['Solo crown', '20%', 'The round’s best single body that is not a house ingredient, times its rate.'],
   ['Anything unearned', 'Burned', 'Empty seats and an unclaimed crown pay no one.'],
 ] as const;
 
@@ -129,7 +129,7 @@ export default function SoupPage() {
     <section className={s.section} aria-labelledby="release-heading">
       <h2 id="release-heading" className={s.h2}>A good soup becomes the next z3-mini.</h2>
       <div className={s.prose}>
-        <p>Every 14 to 28 days the soup can become the next release. It must beat the current release by at least one point on two sealed release exams that rounds never use, hold that lead 12 hours later, and keep customer adapters at least as good. Its members are paid through their seats; the release itself has no single winner.</p>
+        <p>Every 14 to 28 days the soup can become the next release. It must beat the current release by at least one point on two sealed release exams that rounds never use, hold that lead 12 hours later, and keep customer adapters at least as good. A reviewed promotion then makes it the next z3-mini. Its members are paid through their seats; the release itself has no single winner.</p>
       </div>
       <div className={s.links}><Link href="/z3">The z3 model line</Link><Link href="/miners">Miner leaderboard</Link></div>
     </section>
@@ -138,6 +138,7 @@ export default function SoupPage() {
     <section id="start" className={s.section} aria-labelledby="start-heading">
       <h2 id="start-heading" className={s.h2}>Pull up a stool.</h2>
       <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
+      <p className={s.fine}>Upload your body to a public Hugging Face repo, then check and commit it with <code>zils commit-body</code>. Without <code>--yes</code> it is a dry run that prints the commitment and writes nothing. A hotkey has one commitment slot, shared with base candidates.</p>
       <p className={s.fine}>Training needs Linux x86_64 with an NVIDIA GPU. <a href={GUIDE}>Read the miner guide</a> for preparing data and checking your body before you commit it. Rules as of 30 October 2026.</p>
     </section>
   </SiteFrame>;

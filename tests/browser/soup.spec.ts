@@ -15,6 +15,9 @@ test('/soup explains the greedy soup: seats, crown, house rules and the measured
   const bill = page.getByRole('table', { name: 'Who gets paid' });
   await expect(bill.getByRole('row', { name: /Soup seats/ })).toContainText('80%');
   await expect(bill.getByRole('row', { name: /Solo crown/ })).toContainText('20%');
+  // zils soup_round.crown_weight: the best solo body that is not a house ingredient, times its rate; no margin.
+  await expect(bill.getByRole('row', { name: /Solo crown/ })).toContainText('best single body that is not a house ingredient');
+  await expect(bill).not.toContainText('beats every house body');
   for (const [who, rate] of [['Trainer', '1×'], ['Scout', '0.25×'], ['House ingredient', '0']]) {
     await expect(page.getByRole('table', { name: 'Seat rates' }).getByRole('row', { name: new RegExp(who) })).toContainText(rate);
   }
@@ -28,6 +31,7 @@ test('/soup explains the greedy soup: seats, crown, house rules and the measured
 
   await expect(page.locator('main code', { hasText: 'Qwen/Qwen3.5-4B' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Read the miner guide' })).toHaveAttribute('href', /docs\.zils\.ai/);
+  await expect(page.locator('#start')).toContainText('zils commit-body');
   await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Miners' })).toHaveAttribute('aria-current', 'page');
 
   for (const width of [1280, 390, 320]) {
