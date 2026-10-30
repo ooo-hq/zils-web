@@ -20,8 +20,9 @@ const PROCESS = [
   ['Reward', 'Family-macro Brier skill determines proposed weights across eligible candidates.'],
 ] as const;
 const PAYOUT = [
-  ['King of the hill', 'Only kings are paid. A winner becomes king when the owner promotes it. The base-tier share splits equally over the last five distinct kings still registered.'],
-  ['No king', 'An empty track’s share is burned.'],
+  ['Mini: greedy soup', 'Each night validators average up to five bodies and pay the soup’s seats, plus a crown for a body that beats the soup alone.'],
+  ['Other tiers: king of the hill', 'Only kings are paid. A winner becomes king when the owner promotes it. The share splits equally over the last five distinct kings still registered.'],
+  ['Unearned', 'An empty seat, crown or track’s share is burned.'],
 ] as const;
 
 function time(value: string) {
@@ -89,10 +90,10 @@ export function Rehearsal() {
         <div className={s.rhLinks}><a href={TESTNET_SOURCE} className={s.rhInline}>Scores, methodology & chain evidence</a><a href={`${REPO}/blob/main/docs/testnet.md`} className={s.rhInline}>Testnet guide</a><a href={`${REPO}/blob/main/docs/roadmap.md`} className={s.rhInline}>Roadmap</a></div>
       </Section>
 
-      <Section id="base-tier" eyebrow="Base tier · status as of 19 October 2026" title="A competition for the base model itself.">
+      <Section id="base-tier" eyebrow="Base tier" title="A competition for the base model itself.">
         <p className={s.rhBody}>Customer adapters train on one pinned base model. That base is z3-mini v1, the founding baseline using the unchanged d3-mini 4.5B checkpoint adopted on 17 October 2026. In the base tier, miners submit a full-weight replacement for that base. Validators score each candidate on a sealed holdout against the incumbent, and a candidate is promoted only after it also passes a second sealed draw and an adapter regression suite.</p>
         <dl className={s.rhCard}>{PAYOUT.map(([rule, description]) => <div key={rule} className={s.rhRule}><dt>{rule}</dt><dd>{description}</dd></div>)}</dl>
-        <p className={s.rhFine}>Today’s base is z3-mini v1, a founding baseline with no miner behind it, so there is no king yet. No candidate has been promoted, and nothing runs on mainnet yet.</p>
+        <p className={s.rhFine}>The base tier opened after this rehearsal; its rules are summarised here, not part of the recorded round.</p>
         <Link href="/model#base-tier" className={s.rhLink}>Full promotion rules</Link>
       </Section>
     </div>

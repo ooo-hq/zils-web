@@ -10,6 +10,7 @@ import { currentBase } from '@/lib/base-model';
 import { boardNumbers } from '@/lib/miner-board';
 import { baseSubmissions, networkMiners } from '@/lib/network-miners';
 import { Rehearsal } from './rehearsal';
+import { Ingredients } from '../soup/ingredients';
 import { Competitions } from './competitions';
 import s from './miners.module.css';
 
@@ -52,8 +53,8 @@ const TIMELINE: Entry[] = [
     body: 'We adopted d3-mini anyway, for what it adds: adapters that train better, up to four images and a video per call, and yes/no, choice and score answers. This is recorded as an override of the promotion rule, not a win under it. H2O and the separate image model stopped serving the same day.',
   },
   {
-    date: 'Next', title: 'Round two: beat the base', outcome: 'Open on testnet', tone: 'next',
-    body: 'Challenge the current base in your tier. Anyone registered on testnet 579 can enter: upload to Hugging Face, commit on chain, and every validator pulls and scores it. We also want the exam to cover images and video, since that is what the base is used for.',
+    date: 'Next', title: 'Mini becomes a soup', outcome: 'At the mainnet launch', tone: 'next',
+    body: 'The mini pool stops crowning one winner. Each night validators average up to five bodies, starting from five open house models, and pay the soup’s seats. Lite, nano, flash and z3 stay king of the hill. We also want the exam to cover images and video, since that is what the base is used for.',
   },
 ];
 
@@ -78,7 +79,7 @@ export default async function MinersPage() {
   return (
     <SiteFrame current="miners">
       <MinerRefresh />
-      <SectionRow n="01" label="Testnet · subnet 579" note={network ? `Updated ${utc(network.as_of)} UTC` : undefined} />
+      <SectionRow n="01" label="Network" note={network ? `Updated ${utc(network.as_of)} UTC` : undefined} />
       <header className={s.hero}>
         <h1>Miner leaderboard</h1>
         <p>Base-model submissions and customer-training workers, tracked separately. <b>Outside miners can enter the base tier now</b>; customer jobs open once miner terms are live.</p>
@@ -109,7 +110,7 @@ export default async function MinersPage() {
           <p><b>Skill</b> compares a candidate’s probability error (Brier) with guessing evenly between the answers: 0 is no better than guessing, 1 is perfect, so it compares across different jobs.</p>
           <p><b>Online</b> checked in within the last 45 seconds. <b>Seen recently</b> checked in within the last hour. <b>Offline</b> has not checked in for longer than that. <b>Never seen</b> registered but never checked in. <b>Disabled</b> gets no new jobs. Miners that are not online are dimmed.</p>
           <p><b>Models</b> come from each miner’s latest signed check-in, including while it is busy. Inactive rows show the last reported models. These are internal worker IDs, not on-chain UIDs; a listed model does not imply customer serving is available.</p>
-          <p>Subnet 579 runs on the Bittensor testnet. Outside miners can already compete in the base tier there (below). Customer jobs stay with Zils miners until miner terms and intake are ready.</p>
+          <p>Outside miners can compete in the base tier (below). Customer jobs stay with Zils miners until miner terms and intake are ready.</p>
         </div>
       </DetailsRow>
 
@@ -117,18 +118,28 @@ export default async function MinersPage() {
       <div id="base-tier" className={s.base}>
         <div>
           <h2>Beat <em>the base.</em></h2>
-          <p>Every tier has a base to beat. Win a sealed exam, then win again on a fresh one.</p>
-          <p className={s.soupLink}><span lang="ja" aria-hidden="true">スープ</span> In the mini pool the base is a soup of up to five miner bodies. <Link href="/soup">Bring a body to the soup</Link></p>
+          <p>Lite, nano, flash and z3 stay king of the hill: win a sealed exam, then win again on a fresh one.</p>
+          <p className={s.soupLink}><span lang="ja" aria-hidden="true">スープ</span> Mini is a soup. Each night validators average up to five bodies, keep a body only if it lifts the score by 0.3, and pay the soup’s seats. <Link href="/soup">Bring a body to the soup</Link></p>
         </div>
-        <span className={s.pill}>Round two · open on testnet</span>
+        <span className={s.pill}>Mini · greedy soup</span>
       </div>
+      <section className={s.soupRound} aria-labelledby="soup-round-heading">
+        <h3 id="soup-round-heading" className={s.subTitle}>A mini round, every night</h3>
+        <ol className={s.roundSteps}>
+          <li><b>In the pot</b>The five house models, the current members and the best new bodies, at most 20.</li>
+          <li><b>Greedy</b>Start from the best single body. Add the next only if the soup scores 0.3 higher. Stop at five.</li>
+          <li><b>Pay</b>80% to seats that lift the soup by 0.3 or more. 20% to a body that beats every house model and the soup alone.</li>
+          <li><b>Burn</b>Anything unearned burns. House models are never paid.</li>
+        </ol>
+        <Ingredients />
+      </section>
       <section className={s.submissions} aria-labelledby="base-submissions-heading">
         <h3 id="base-submissions-heading">Base-model submissions</h3>
-        <p>Latest base commitments from registered hotkeys on testnet 579. Submitted means recorded on chain; it does not mean evaluated, qualified or better than the base.</p>
+        <p>Latest base commitments from registered hotkeys. Submitted means recorded on chain; it does not mean evaluated, qualified or better than the base.</p>
         {submissions ? <>
           <p className={s.live}>Verified {utc(submissions.as_of)} UTC · block {submissions.block.toLocaleString('en-US')} · checked every 5 minutes</p>
           {submissions.submissions.length ? <div className={s.submissionScroll}><table>
-            <caption className="sr-only">Base-model submissions on testnet 579</caption>
+            <caption className="sr-only">Base-model submissions</caption>
             <thead><tr><th>On-chain miner</th><th>Base model</th><th>Submission</th><th>Evaluation</th></tr></thead>
             <tbody>{submissions.submissions.map(row => <tr key={row.hotkey}>
               <td><b>Chain UID {row.uid}</b><small title={row.hotkey}>{row.hotkey.slice(0, 6)}…{row.hotkey.slice(-6)}</small></td>
@@ -144,7 +155,7 @@ export default async function MinersPage() {
         <h3 id="install-heading" className={s.subTitle}>Start mining</h3>
         <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
         <p><a href="https://docs.zils.ai/operations/miner-tuning" className={s.rhInline}>Tune your miner</a>: prepare training data, change the recipe, and compare your candidate with the base before submitting.</p>
-        <p>Installs the <code>zils</code> and <code>btcli</code> commands, then <code>zils setup</code> asks for your wallet and Hugging Face repo. After that, <code>zils doctor</code> checks each step and prints the command for the next one: register on testnet 579, train a candidate, commit it. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the command to update.</p>
+        <p>Installs the <code>zils</code> and <code>btcli</code> commands, then <code>zils setup</code> asks for your wallet and Hugging Face repo. After that, <code>zils doctor</code> checks each step and prints the command for the next one: register, train a candidate, commit it. For the mini soup, commit a body with <code>zils commit-body</code> instead. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the command to update.</p>
       </section>
       <DetailsRow summary="What we have tried">
         <div className={s.tried}>
@@ -169,6 +180,7 @@ export default async function MinersPage() {
               <li><strong>Score.</strong> Validators score it on a sealed exam the miner never sees, against the current base.</li>
               <li><strong>Confirm.</strong> It must win again on a second, fresh exam, and customer-style adapters trained on it must not get worse.</li>
             </ol>
+            <p>Mini has no single winner: its nightly soup becomes the next z3-mini through the same release gate. See <Link href="/soup">the soup</Link>.</p>
             <p>The full rules are on the <Link href="/model#base-tier">research page</Link> and in the <a href={DOCS}>miner guide</a>.</p>
           </section>
 
@@ -193,6 +205,7 @@ export default async function MinersPage() {
 
       <div className={s.more}>
         <a href={DOCS}>Miner guide</a>
+        <Link href="/soup">Mini soup</Link>
         <Link href="/model#base-tier">Base tier rules</Link>
         <Link href="/bases">Base lineage</Link>
         <a href="/model/testnet-round-001.json">Public chain view</a>

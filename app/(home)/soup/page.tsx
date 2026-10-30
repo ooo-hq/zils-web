@@ -6,17 +6,18 @@ import { SiteButton } from '@/components/site/site-button';
 import { InstallCommand } from '@/components/site/install-command';
 import { Reveal } from '@/components/site/reveal';
 import { Bowl, SEATS } from './bowl';
+import { Ingredients } from './ingredients';
 import s from './soup.module.css';
 
 export const metadata: Metadata = {
   title: 'Greedy soup — how z3-mini is made',
-  description: 'z3-mini is a soup: up to five miner-trained models averaged into one, chosen greedily every day. How seats, the solo crown and releases work.',
+  description: 'z3-mini is a soup: up to five models averaged into one, chosen greedily every day from five open house models and the bodies miners bring. How seats, the crown and releases work.',
   alternates: { canonical: 'https://zils.ai/soup' },
 };
 
 const GUIDE = 'https://docs.zils.ai/operations/soup';
 
-// Rules from the soup design of 30 October 2026 (zils soup_round constants). Change them here, not in the copy.
+// Rules from zils main 16b87a6: docs/mining.md "Soup pool" and zils/soup_round.py. Change them here, not in the copy.
 const STEPS = [
   ['持込', 'Bring a body', 'Fine-tune Qwen/Qwen3.5-4B any way you like. Upload the full body to Hugging Face and commit its hash on chain.'],
   ['味見', 'Taste it alone', 'Each day a validator grades every body in the pool on a fresh, seeded slice of a private exam, through d3-mini’s fixed answer layer.'],
@@ -27,14 +28,15 @@ const STEPS = [
 
 const BILL = [
   ['Soup seats', '80%', 'Split equally among members whose contribution is at least 0.3 points, each times its rate.'],
-  ['Solo crown', '20%', 'The round’s best single body that is not a house ingredient, times its rate.'],
+  ['Solo crown', '20%', 'The round’s best single body that is not a house model, times its rate, only if it beats every house model and the current soup by at least 0.3 points. A soup usually beats its members, so expect the crown to burn in most rounds.'],
   ['Anything unearned', 'Burned', 'Empty seats and an unclaimed crown pay no one.'],
 ] as const;
 
 const RATES = [
-  ['Trainer', '1×', 'You trained the body.'],
-  ['Scout', '0.25×', 'You found an open model released after launch.'],
-  ['House ingredient', '0', 'Open models known at launch. They cook; they are not paid.'],
+  ['Trainer', '1×', 'You trained the body. Fine-tunes of a house model, the soup or a release count.'],
+  ['Scout', '0.25×', 'An open model released after launch, re-uploaded by the miner who found it.'],
+  ['House mix', '0.25×', 'A body that is almost entirely a blend of house models, with less than 5% of its change left over.'],
+  ['House model', '0', 'The five open models the soup starts from. They cook; they are not paid.'],
 ] as const;
 
 const RULES = [
@@ -43,12 +45,10 @@ const RULES = [
   <>Move at most about 15% away from Qwen.</>,
   <>Apache-2.0, MIT or BSD licence.</>,
   <>Your repo names your hotkey in <code>zils-owner.json</code>. The first valid commitment of a body wins it.</>,
-  <>No reheats: near-exact copies of another body, the soup or the release, and models that answer like a member, are turned away.</>,
-  <>Up to 20 bodies compete for the five seats each round.</>,
+  <>No reheats: near-exact re-uploads, bodies built largely from other miners’ bodies, and models that answer like a pool body are turned away.</>,
+  <>Up to 20 bodies compete for the five seats each round. At most 6 new bodies are admitted per round, in commitment order.</>,
+  <>Upload to a private repo, commit, then make it public before the day’s commit deadline, so nobody can commit your body first.</>,
 ];
-
-// Exam v3 qualification draws, 30 Oct 2026; points versus stock z3-mini.
-const TASTE = [['First sealed draw', 4.26], ['Second sealed draw', 6.63]] as const;
 
 export default function SoupPage() {
   return <SiteFrame current="miners">
@@ -57,7 +57,7 @@ export default function SoupPage() {
       <div className={s.intro}>
         <h1 className={s.title}>Greedy <span>soup.</span></h1>
         <p className={s.tagline}>The best z3-mini isn’t one model. It’s a bowl.</p>
-        <p className={s.lede}>Up to five of the best bodies miners can bring, averaged into one model and tasted again every day. A body keeps its seat only while the soup is better with it.</p>
+        <p className={s.lede}>Up to five bodies, from five open house models and whatever miners bring, averaged into one model and tasted again every day. A body keeps its seat only while the soup is better with it.</p>
         <div className={s.ctas}>
           <SiteButton href="#start" variant="primary">Start mining</SiteButton>
           <SiteButton href="#menu" variant="secondary">How the soup is made</SiteButton>
@@ -102,22 +102,11 @@ export default function SoupPage() {
       </table>
     </section>
 
-    <SectionRow n="04" label="Taste test" note="試食 · 30 Oct 2026" />
-    <section className={`${s.section} ${s.taste}`} aria-label="Taste test">
-      <div className={s.prose}>
-        <h2 className={s.h2}>The method, tasted.</h2>
-        <p>We averaged three open 4B decision models that other teams had fine-tuned from the same Qwen base, picked greedily on our sealed decision exam. The soup beat stock z3-mini on two separate sealed draws, and beat its own best ingredient.</p>
-        <p>More was not always better: stock z3-mini and a fourth fine-tune were left out because they lowered the score. Customer adapters trained on the soup did as well as on z3-mini.</p>
-        <p className={s.note}>These were outside open models, not miner submissions, and this bowl is not a release. It shows the method works.</p>
-      </div>
-      <figure className={s.bars}>
-        <figcaption>Points gained over stock z3-mini</figcaption>
-        <dl>{TASTE.map(([label, gain]) => <div key={label}>
-          <dt>{label}</dt>
-          <dd className={s.gain}>+{gain.toFixed(2)}</dd>
-          <dd aria-hidden="true" className={s.track}><span style={{ width: `${(gain / 8) * 100}%` }} /></dd>
-        </div>)}</dl>
-      </figure>
+    <SectionRow n="04" label="Ingredients" note="材料 · what goes in" />
+    <section className={s.section} aria-labelledby="ingredients-heading">
+      <h2 id="ingredients-heading" className={s.h2}>The stock is already on.</h2>
+      <Ingredients heading="Base and house models" />
+      <p className={s.fine}>The house models make sure there is always a soup to beat; miners earn by making it better.</p>
     </section>
 
     <SectionRow n="05" label="House rules" note="店のルール" />
@@ -129,7 +118,7 @@ export default function SoupPage() {
     <section className={s.section} aria-labelledby="release-heading">
       <h2 id="release-heading" className={s.h2}>A good soup becomes the next z3-mini.</h2>
       <div className={s.prose}>
-        <p>Every 14 to 28 days the soup can become the next release. It must beat the current release by at least one point on two sealed release exams that rounds never use, hold that lead 12 hours later, and keep customer adapters at least as good. A reviewed promotion then makes it the next z3-mini. Its members are paid through their seats; the release itself has no single winner.</p>
+        <p>Every 14 to 28 days the soup can become the next release. It must beat the current release by at least one point on two sealed release exams that rounds never use, hold that lead 12 hours later, and keep customer adapters at least as good. A reviewed promotion then makes it the next z3-mini. Its members are paid through their seats; the release itself has no single winner. Only mini is a soup: lite, nano, flash and z3 stay king of the hill.</p>
       </div>
       <div className={s.links}><Link href="/z3">The z3 model line</Link><Link href="/miners">Miner leaderboard</Link></div>
     </section>
@@ -138,8 +127,8 @@ export default function SoupPage() {
     <section id="start" className={s.section} aria-labelledby="start-heading">
       <h2 id="start-heading" className={s.h2}>Pull up a stool.</h2>
       <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
-      <p className={s.fine}>Upload your body to a public Hugging Face repo, then check and commit it with <code>zils commit-body</code>. Without <code>--yes</code> it is a dry run that prints the commitment and writes nothing. A hotkey has one commitment slot, shared with base candidates.</p>
-      <p className={s.fine}>Training needs Linux x86_64 with an NVIDIA GPU. <a href={GUIDE}>Read the miner guide</a> for body rules, committing and pay. Rules as of 30 October 2026.</p>
+      <p className={s.fine}>Upload your body to Hugging Face, then check and commit it with <code>zils commit-body</code>. Without <code>--yes</code> it is a dry run that prints the commitment and writes nothing. A hotkey has one commitment slot, shared with base candidates.</p>
+      <p className={s.fine}>Training needs Linux x86_64 with an NVIDIA GPU. <a href={GUIDE}>Read the miner guide</a> for body rules, committing and pay. These numbers are launch policy and may change.</p>
     </section>
   </SiteFrame>;
 }

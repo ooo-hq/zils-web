@@ -34,8 +34,9 @@ const DOCS = 'https://docs.zils.ai';
 const PROMOTION_RULES = [
   ['Sealed score', 'Validators score the submitted weights on a sealed holdout, against the incumbent.'],
   ['Eligibility', 'Skill is positive, accuracy is not below the incumbent’s, and Brier improves by at least 0.01 with a paired-bootstrap 95% lower bound above zero.'],
-  ['King of the hill', 'Only kings are paid. A winner becomes king when the owner promotes it. The base-tier share splits equally over the last five distinct kings still registered.'],
-  ['No king', 'An empty track’s share is burned. The founding baseline (z3-mini v1) has no miner, so there is no king yet.'],
+  ['Mini: greedy soup', 'Each night validators average up to five bodies and pay the soup’s seats, plus a crown for a body that beats the soup alone.'],
+  ['Other tiers: king of the hill', 'Only kings are paid. A winner becomes king when the owner promotes it. The share splits equally over the last five distinct kings still registered.'],
+  ['Unearned', 'An empty seat, crown or track’s share is burned.'],
   ['Confirmation', 'The best eligible candidate is re-scored on a second, disjoint sealed draw at least 12 hours later and must stay eligible.'],
   ['Regression suite', 'Before promotion, a fixed suite of reference adapter jobs is retrained on the incumbent and on the candidate. The candidate must be no worse than 0.005 Brier on every job and better on at least one.'],
 ] as const;
@@ -163,14 +164,14 @@ export default function ModelPage() {
           <SectionRow label="Flights" />
           <FlightStudyDetails />
 
-          <Section id="base-tier" label="Base tier" eyebrow="Base tier · status as of 19 October 2026" title="A competition for the base model itself.">
+          <Section id="base-tier" label="Base tier" eyebrow="Base tier" title="A competition for the base model itself.">
             <p className="max-w-[70ch] text-[15px] leading-7 text-muted">Customer adapters train on a pinned base model. That base is z3-mini v1, using the unchanged d3-mini 4.5B checkpoint adopted on 17 October 2026 (below); before that it was H2O Lightning 4B v1.2.3. The base tier is the competition that decides when that base changes. Miners submit a full-weight replacement for the pinned base of a text profile. Validators score it on a sealed holdout against the incumbent, and a candidate is promoted only if it passes every step below.</p>
             <Table label="How a candidate base is scored and promoted" head={['Step', 'Rule']} rows={PROMOTION_RULES} />
             <h3 className="mt-10 text-xl font-semibold tracking-[-0.035em]">Two channels</h3>
             <Table label="Base channels" head={['Channel', 'Advances', 'Who gets it']} rows={CHANNELS} />
             <p className="mt-4 max-w-[70ch] text-sm leading-7 text-muted">New customer jobs default to <code className="font-mono text-xs">stable</code>; <code className="font-mono text-xs">latest</code> is opt-in per job. Existing releases keep serving on their base.</p>
             <div className="mt-8 rounded-md bg-surface p-5 text-sm leading-7 text-muted sm:p-6">
-              <p><strong className="font-medium text-ink">Status, 19 October 2026.</strong> Open to anyone registered on testnet subnet 579: upload to Hugging Face, then commit on chain. Every validator reads the commitments and scores them. Customer-job admission stays off until miner terms and intake are ready. Mainnet is not live.</p>
+              <p><strong className="font-medium text-ink">Mini is a soup.</strong> In the mini pool, miners commit full bodies and validators build a nightly greedy soup of up to five, starting from five open house models; the soup replaces the base only through the release gate above. See <Link href="/soup" className={LINK}>the soup</Link>. Lite, nano, flash and z3 keep the king election.</p>
               <p className="mt-3">Round one’s sealed holdout has 1,458 teacher-authored cases in six families. The incumbent, stock H2O Lightning 4B v1.2.3, scores Brier 0.184 and 87.7% accuracy on it. d3-mini’s confirmation draw did not confirm a winner, but d3-mini became the base by decision on 17 October (see below), so both channels now point at it and stock d3-mini is the incumbent for round two.</p>
             </div>
             <p className="mt-6 text-sm leading-7 text-muted">Want to compete? Read the <a href={DOCS} className={LINK}>miner guide</a> in the Zils docs. For every attempt so far, in order, see the <Link href="/miners" className={LINK}>miners page</Link>; for how the bases have changed, see <Link href="/bases" className={LINK}>bases</Link>.</p>

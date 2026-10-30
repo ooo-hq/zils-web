@@ -15,19 +15,9 @@ test('/soup explains the greedy soup: seats, crown, house rules and the measured
   const bill = page.getByRole('table', { name: 'Who gets paid' });
   await expect(bill.getByRole('row', { name: /Soup seats/ })).toContainText('80%');
   await expect(bill.getByRole('row', { name: /Solo crown/ })).toContainText('20%');
-  // zils soup_round.crown_weight: the best solo body that is not a house ingredient, times its rate; no margin.
-  await expect(bill.getByRole('row', { name: /Solo crown/ })).toContainText('best single body that is not a house ingredient');
-  await expect(bill).not.toContainText('beats every house body');
-  for (const [who, rate] of [['Trainer', '1×'], ['Scout', '0.25×'], ['House ingredient', '0']]) {
+  for (const [who, rate] of [['Trainer', '1×'], ['Scout', '0.25×'], ['House model', '0']]) {
     await expect(page.getByRole('table', { name: 'Seat rates' }).getByRole('row', { name: new RegExp(who) })).toContainText(rate);
   }
-
-  // The 30 Oct result was outside open models, not miners, and not a release.
-  const taste = page.getByRole('region', { name: 'Taste test' });
-  await expect(taste).toContainText('+4.26');
-  await expect(taste).toContainText('+6.63');
-  await expect(taste).toContainText('not miner submissions');
-  await expect(taste).toContainText('not a release');
 
   await expect(page.locator('main code', { hasText: 'Qwen/Qwen3.5-4B' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Read the miner guide' })).toHaveAttribute('href', 'https://docs.zils.ai/operations/soup');
@@ -47,4 +37,54 @@ test('/miners and /z3 point to the soup', async ({ page }) => {
   await expect(page).toHaveURL('/soup');
   await page.goto('/miners');
   await expect(page.getByRole('link', { name: 'Bring a body to the soup', exact: true })).toHaveAttribute('href', '/soup');
+});
+
+// zils origin/main 16b87a6: zils/data/soup-house.json and docs/mining.md "Soup pool".
+const HOUSE = [
+  ['d3-mini', 'vllm-sr/d3-mini'],
+  ['pplx-decider-flash-v1.2', 'perplexity-ai/pplx-decider-flash-v1.2'],
+  ['torchcast-decision-4b', 'torchcast-ai/torchcast-decision-4b'],
+  ['Matilda-Decision-v1-Mini', 'Maincode/Matilda-Decision-v1-Mini'],
+  ['KnowLine-4B-Gen5', 'PelaAI/KnowLine-4B-Gen5'],
+];
+
+async function expectIngredients(page: import('@playwright/test').Page) {
+  const built = page.getByRole('region', { name: 'What the mini soup is built from' });
+  await expect(built.getByRole('link', { name: 'Qwen/Qwen3.5-4B' })).toHaveAttribute('href', /huggingface\.co\/Qwen\/Qwen3\.5-4B/);
+  for (const [name, repo] of HOUSE) {
+    await expect(built.getByRole('link', { name })).toHaveAttribute('href', new RegExp(`huggingface\\.co/${repo.replace('.', '\\.')}`));
+  }
+  await expect(built).toContainText('never paid');
+}
+
+test('/soup states the crown bar, house rates and house models without internal scores or dates', async ({ page }) => {
+  await page.goto('/soup');
+  const crown = page.getByRole('table', { name: 'Who gets paid' }).getByRole('row', { name: /Solo crown/ });
+  await expect(crown).toContainText('beats every house model and the current soup by at least 0.3');
+  await expect(page.getByRole('table', { name: 'Seat rates' }).getByRole('row', { name: /House mix/ })).toContainText('0.25×');
+  await expectIngredients(page);
+  const text = await page.locator('main').innerText();
+  for (const banned of ['+4.26', '+6.63', 'as of', '30 Oct', 'testnet']) expect(text).not.toContain(banned);
+});
+
+test('/miners shows the mini soup and its ingredients; other pools stay king of the hill', async ({ page }) => {
+  await page.goto('/miners');
+  const lane = page.getByRole('heading', { name: 'Three ways to earn' }).locator('..').locator('..').getByRole('listitem').filter({ hasText: 'Base tier' }).first();
+  await expect(lane).toContainText('Soup seats and a crown');
+  await expect(lane).toContainText('Last five kings');
+  await expect(lane).not.toContainText('testnet');
+  const base = page.locator('div#base-tier');
+  await expect(base).toContainText('Lite, nano, flash and z3 stay king of the hill');
+  await expect(base).not.toContainText('testnet');
+  await expectIngredients(page);
+  await expect(page.locator('main')).not.toContainText('status as of');
+  await expect(page.getByRole('heading', { name: 'Start mining' }).locator('..')).toContainText('zils commit-body');
+});
+
+test('/z3 explains that a z3-mini release is a soup that passed the release gate', async ({ page }) => {
+  await page.goto('/z3');
+  const releases = page.getByRole('region', { name: 'Each new release earns its place.' });
+  await expect(releases).toContainText('release gate');
+  await expectIngredients(page);
+  await expect(page.locator('main')).not.toContainText('testnet');
 });

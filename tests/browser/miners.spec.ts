@@ -209,7 +209,7 @@ for (const theme of ['dark', 'light']) {
 
 test('base submissions use chain identity without claiming worker presence or evaluation', async ({ page }) => {
   await page.goto('/miners');
-  const table = page.getByRole('table', { name: 'Base-model submissions on testnet 579' });
+  const table = page.getByRole('table', { name: 'Base-model submissions' });
   await expect(table).toContainText('Chain UID 7');
   await expect(table).toContainText('z3-lite');
   await expect(table).toContainText('Not reported');

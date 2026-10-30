@@ -4,6 +4,7 @@ import { SiteFrame } from '@/components/site/site-frame';
 import { SectionRow } from '@/components/site/section-row';
 import { SiteButton } from '@/components/site/site-button';
 import { Reveal } from '@/components/site/reveal';
+import { Ingredients } from '../soup/ingredients';
 import s from './z3.module.css';
 
 export const metadata: Metadata = {
@@ -27,9 +28,9 @@ const LINEUP = [
 const height = (p: number) => Math.log(p / 0.4) / Math.log(26.09 / 0.4);
 
 const STEPS = [
-  ['Submit', 'Miners submit candidates for an enabled lineage.'],
-  ['Compare', 'Validators compare each candidate with the incumbent on protected evaluation data.'],
-  ['Review', 'Required qualification and release review come before anything is published.'],
+  ['Submit', 'Miners submit candidates for an enabled lineage. For z3-mini they submit bodies to a nightly soup instead.'],
+  ['Compare', 'Validators compare each candidate, or the current mini soup, with the incumbent on protected evaluation data.'],
+  ['Review', 'The release gate comes before anything is published: two sealed draws, a confirmation draw 12 hours later and the adapter suite.'],
   ['Release', 'An approved release gets its own version, checkpoint and evidence.'],
 ];
 
@@ -97,7 +98,15 @@ export default function Z3Page() {
           <p>{body}</p>
         </li>)}
       </ol>
-      <p className={s.fine}>A submitted candidate is not yet an official release, and a win in one size does not qualify another. z3-mini candidates are soups: up to five miner bodies averaged into one.</p>
+      <p className={s.fine}>A submitted candidate is not yet an official release, and a win in one size does not qualify another.</p>
+      <div className={s.soup}>
+        <div className={s.prose}>
+          <h3 className={s.h3}>z3-mini: a soup that passed the release gate.</h3>
+          <p>The next z3-mini is not one miner’s model. Each night validators average up to five fine-tunes of the same Qwen base, keeping a body only if it lifts the score. Every 14 to 28 days that soup must beat the current release on two sealed draws, hold its lead on a confirmation draw and keep customer adapters at least as good. A reviewed promotion then makes it the next version.</p>
+          <p>Lite, nano, flash and z3 stay king of the hill: one winning candidate per release.</p>
+        </div>
+        <Ingredients />
+      </div>
       <div className={s.links}><Link href="/soup">How the soup is made</Link><Link href="/bases">Explore the base history</Link><Link href="/model">Read the research</Link></div>
     </section>
   </SiteFrame>;
