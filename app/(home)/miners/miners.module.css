@@ -23,7 +23,7 @@
 .base h2 em { font-style: normal; background: var(--zs-spectrum-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .base p { margin: 8px 0 0; font-size: 14px; color: var(--zs-t2); }
 .base .soupLink { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 14px; color: var(--zs-fg); }
-.soupLink span { padding: 2px 8px; background: #d7362b; color: #fbf3e1; font-size: 12px; font-weight: 600; }
+.soupLink span { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .1em; color: var(--zs-orange); }
 .soupLink a { color: var(--zs-fg); text-underline-offset: 4px; }
 .install { display: grid; gap: 14px; padding: 0 40px 40px; max-width: 860px; }
 .install .subTitle { margin: 0; }

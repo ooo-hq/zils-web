@@ -1,103 +1,52 @@
 import s from './soup.module.css';
 
-/** The soup mascot: a rubber-hose ramen bowl. Its five toppings are the five seats a soup can hold. Colours come from soup.module.css tokens. */
+// One spectrum stop per seat, warm to cool, as on the z3 lineup.
+export const SEATS = ['#ef8d5a', '#d9a08c', '#cfa2e4', '#a9b5f2', '#8ea6ff'] as const;
+
+/** A line-drawn ramen bowl. Its five toppings are the five seats a soup can hold, one spectrum colour each. */
 export function Bowl() {
-  return <svg className={s.bowl} viewBox="0 0 480 440" role="img" aria-labelledby="bowl-title">
-    <title id="bowl-title">A cartoon bowl of soup with five toppings, lifting noodles with chopsticks and giving a thumbs up</title>
+  return <svg className={s.bowl} viewBox="0 0 480 400" role="img" aria-labelledby="bowl-title">
+    <title id="bowl-title">A bowl of soup with five toppings, one for each seat, and chopsticks lifting noodles</title>
     <defs>
-      <clipPath id="bowl-body"><path d="M68 214 C70 312 150 360 240 360 C330 360 410 312 412 214 Z" /></clipPath>
-      <pattern id="bowl-dots" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="3.5" cy="3.5" r="1.4" className={s.inkFill} /></pattern>
+      <linearGradient id="bowl-spectrum" x1="0" x2="1">
+        <stop offset="0" stopColor="#ef8d5a" /><stop offset=".18" stopColor="#d9a08c" /><stop offset=".42" stopColor="#cfa2e4" />
+        <stop offset=".64" stopColor="#c3b4f6" /><stop offset=".82" stopColor="#a9b5f2" /><stop offset="1" stopColor="#8ea6ff" />
+      </linearGradient>
+      <clipPath id="bowl-clip"><path d="M60 196 C64 292 150 340 240 340 C330 340 416 292 420 196 Z" /></clipPath>
     </defs>
 
-    <ellipse cx="240" cy="418" rx="160" ry="11" className={s.inkFill} />
-
-    {/* legs and shoes */}
-    <g className={s.limb}>
-      <path d="M206 352 C200 372 190 386 176 398" />
-      <path d="M274 352 C284 370 296 384 314 394" />
-    </g>
-    <g className={s.line}>
-      <path className={s.creamFill} d="M146 402 C142 386 160 380 178 386 C196 392 204 404 196 412 L150 412 C146 410 146 406 146 402 Z" />
-      <path className={s.inkFill} d="M150 402 L198 404 L196 412 L150 412 Z" />
-      <path className={s.creamFill} d="M300 392 C306 378 326 378 340 388 C352 396 352 408 342 410 L300 408 C296 404 297 398 300 392 Z" />
-      <path className={s.inkFill} d="M298 400 L346 404 L342 410 L300 408 Z" />
-    </g>
-
-    {/* steam */}
     <g className={s.steam}>
-      <path d="M180 120 C164 100 196 88 180 66 C168 50 184 38 178 26" />
-      <path d="M244 104 C228 84 260 72 244 50 C232 34 248 22 242 10" />
-      <path d="M306 120 C290 100 322 88 306 66" />
+      <path d="M176 128 C162 110 190 98 176 78 C166 64 180 52 174 40" />
+      <path d="M232 112 C218 94 246 82 232 62 C222 48 236 36 230 24" />
     </g>
 
-    {/* left arm, thumbs up */}
-    <path className={s.limb} d="M76 246 C52 250 40 230 46 196" />
-    <g className={s.line}>
-      <path className={s.creamFill} d="M28 196 C24 178 34 170 44 172 L46 150 C46 138 62 138 62 152 L62 172 C76 172 80 182 76 192 C80 200 76 210 68 212 L40 214 C30 212 28 204 28 196 Z" />
-      <path fill="none" d="M44 186 L72 186 M44 199 L72 199" />
-    </g>
-
-    {/* bowl body with a raimon band */}
-    <path className={`${s.line} ${s.creamFill}`} d="M68 214 C70 312 150 360 240 360 C330 360 410 312 412 214 Z" />
-    <g clipPath="url(#bowl-body)">
-      <rect x="60" y="256" width="360" height="22" className={s.redFill} />
-      <path className={s.bandMark} transform="translate(0 33)" d="M70 234 h12 v-6 h-6 v12 h18 v-12 h-6 v6 M110 234 h12 v-6 h-6 v12 h18 v-12 h-6 v6 M150 234 h12 v-6 h-6 v12 h18 v-12 h-6 v6 M190 234 h12 v-6 h-6 v12 h18 v-12 h-6 v6 M230 234 h12 v-6 h-6 v12 h18 v-12 h-6 v6 M270 234 h12 v-6 h-6 v12 h18 v-12 h-6 v6 M310 234 h12 v-6 h-6 v12 h18 v-12 h-6 v6 M350 234 h12 v-6 h-6 v12 h18 v-12 h-6 v6 M390 234 h12 v-6 h-6 v12 h18 v-12 h-6 v6" />
-      <path d="M330 250 C350 290 340 330 300 356 L420 356 L420 250 Z" fill="url(#bowl-dots)" opacity=".55" />
-    </g>
-    <path className={s.line} fill="none" d="M68 214 C70 312 150 360 240 360 C330 360 410 312 412 214" />
-    <path className={`${s.line} ${s.creamFill}`} d="M196 356 L200 372 L280 372 L284 356" />
-
-    {/* face */}
-    <g transform="translate(0 20)">
-      <ellipse cx="204" cy="282" rx="15" ry="21" className={s.inkFill} />
-      <ellipse cx="276" cy="282" rx="15" ry="21" className={s.inkFill} />
-      <path className={s.creamFill} d="M198 270 a6 8 0 1 1 0.1 0 Z M270 270 a6 8 0 1 1 0.1 0 Z" />
-      <ellipse cx="172" cy="306" rx="13" ry="7" className={s.salmonFill} />
-      <ellipse cx="308" cy="306" rx="13" ry="7" className={s.salmonFill} />
-      <path className={`${s.line} ${s.inkFill}`} d="M214 308 C226 330 254 330 266 308 Z" />
-      <path className={s.redFill} d="M228 320 C234 312 246 312 252 320 C246 326 234 326 228 320 Z" />
-      <path className={s.thin} d="M186 254 C192 248 200 248 206 252 M274 252 C280 248 288 248 294 254" />
-    </g>
+    {/* body, spectrum band, foot */}
+    <path className={s.body} d="M60 196 C64 292 150 340 240 340 C330 340 416 292 420 196 Z" />
+    <rect x="40" y="258" width="400" height="8" fill="url(#bowl-spectrum)" clipPath="url(#bowl-clip)" />
+    <path className={s.stroke} fill="none" d="M196 338 L202 358 L278 358 L284 338" />
+    <path className={s.stroke} fill="none" d="M150 372 L330 372" opacity=".35" />
 
     {/* rim and broth */}
-    <ellipse cx="240" cy="214" rx="172" ry="40" className={`${s.line} ${s.creamFill}`} />
-    <ellipse cx="240" cy="217" rx="152" ry="29" className={s.brothFill} />
-    <path className={s.noodle} d="M120 214 C140 204 160 224 180 214 S220 204 240 216 S280 228 300 214 S340 206 360 216" />
-    <path className={s.noodle} d="M134 226 C154 216 174 234 194 224 S234 216 254 228 S294 236 314 226 S344 220 352 226" />
+    <ellipse cx="240" cy="196" rx="180" ry="42" className={s.rim} />
+    <ellipse cx="240" cy="199" rx="160" ry="31" className={s.broth} />
+    <path className={s.noodle} d="M118 200 C138 190 158 210 178 200 S218 190 238 202 S278 214 298 200 S338 192 358 202" />
+    <path className={s.noodle} d="M132 212 C152 202 172 220 192 210 S232 202 252 214 S292 222 312 212" />
 
-    {/* the five seats */}
-    <g className={s.line}>
-      {/* nori */}
-      <path className={s.noriFill} d="M136 210 L120 128 L178 120 L190 206 Z" />
-      {/* naruto */}
-      <ellipse cx="214" cy="206" rx="26" ry="15" className={s.creamFill} />
-      {/* egg */}
-      <ellipse cx="318" cy="200" rx="30" ry="20" className={s.creamFill} />
-      <ellipse cx="320" cy="200" rx="16" ry="11" className={s.yolkFill} stroke="none" />
-      {/* chashu */}
-      <ellipse cx="268" cy="214" rx="28" ry="14" className={s.porkFill} />
-      <ellipse cx="268" cy="214" rx="16" ry="7" fill="none" className={s.thin} />
-    </g>
-    <path className={s.swirl} d="M214 206 c0-4 6-4 6 0 c0 7-14 7-14 0 c0-10 22-10 22 0" />
-    {/* scallion rings */}
-    <g className={s.scallion}>
-      <ellipse cx="160" cy="226" rx="6" ry="4" /><ellipse cx="176" cy="232" rx="6" ry="4" /><ellipse cx="300" cy="230" rx="6" ry="4" />
-      <ellipse cx="348" cy="222" rx="6" ry="4" /><ellipse cx="240" cy="232" rx="6" ry="4" />
+    {/* five seats */}
+    <path fill={SEATS[4]} d="M134 196 L120 116 L174 110 L184 192 Z" />
+    <ellipse cx="216" cy="190" rx="25" ry="14" fill={SEATS[2]} />
+    <path className={s.swirl} d="M216 190 c0-4 6-4 6 0 c0 7-14 7-14 0 c0-10 22-10 22 0" />
+    <ellipse cx="270" cy="200" rx="27" ry="13" fill={SEATS[1]} />
+    <ellipse cx="270" cy="200" rx="15" ry="6" className={s.ring} />
+    <ellipse cx="322" cy="186" rx="28" ry="18" className={s.egg} />
+    <ellipse cx="324" cy="186" rx="15" ry="10" fill={SEATS[0]} />
+    <g fill={SEATS[3]}>
+      <circle cx="160" cy="212" r="5" /><circle cx="178" cy="218" r="5" /><circle cx="244" cy="216" r="5" /><circle cx="300" cy="216" r="5" /><circle cx="350" cy="208" r="5" />
     </g>
 
-    {/* right arm with chopsticks lifting noodles */}
-    <path className={s.limb} d="M406 244 C436 240 446 214 432 176" />
-    <g className={s.line}>
-      <path className={s.chopstick} d="M452 150 L300 94" />
-      <path className={s.chopstick} d="M456 164 L304 110" />
-    </g>
-    <path className={s.lift} d="M308 100 C302 130 316 160 306 196 M316 104 C312 134 326 164 318 194 M324 108 C322 136 334 162 328 192" />
-    <path className={`${s.line} ${s.creamFill}`} d="M420 176 C412 160 422 146 438 146 L456 148 C468 150 470 164 460 170 C470 176 466 188 454 188 L432 190 C424 188 420 184 420 176 Z" />
-
-    {/* wiggle marks */}
-    <g className={s.thin}>
-      <path d="M48 252 C40 262 40 274 46 284" /><path d="M432 258 C442 268 442 280 436 290" />
-      <path d="M120 386 C112 380 104 380 98 384" /><path d="M370 384 C378 378 386 378 392 382" />
-    </g>
+    {/* chopsticks lifting noodles */}
+    <path className={s.chop} d="M452 84 L300 132" />
+    <path className={s.chop} d="M456 100 L304 144" />
+    <path className={s.lift} d="M306 138 C300 160 314 180 304 204 M314 140 C310 164 322 184 314 206 M322 142 C320 166 330 184 324 204" />
   </svg>;
 }

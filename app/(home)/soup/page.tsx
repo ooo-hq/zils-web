@@ -1,13 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Dela_Gothic_One } from 'next/font/google';
 import { SiteFrame } from '@/components/site/site-frame';
+import { SectionRow } from '@/components/site/section-row';
+import { SiteButton } from '@/components/site/site-button';
 import { InstallCommand } from '@/components/site/install-command';
-import { Bowl } from './bowl';
+import { Reveal } from '@/components/site/reveal';
+import { Bowl, SEATS } from './bowl';
 import s from './soup.module.css';
-
-// Dela Gothic One carries both the Latin display type and the kana on the shop signs.
-const dela = Dela_Gothic_One({ subsets: ['latin'], weight: '400', variable: '--font-dela' });
 
 export const metadata: Metadata = {
   title: 'Greedy soup — how z3-mini is made',
@@ -53,98 +52,93 @@ const TASTE = [['First sealed draw', 4.26], ['Second sealed draw', 6.63]] as con
 
 export default function SoupPage() {
   return <SiteFrame current="miners">
-    <div className={`${s.soup} ${dela.variable}`}>
-      <ul className={s.noren} aria-hidden="true">
-        {['欲', '張', 'り', 'ス', 'ー', 'プ'].map((ch, i) => <li key={i}>{ch}</li>)}
-      </ul>
-
-      <header className={s.hero}>
-        <div className={s.heroText}>
-          <p className={s.kicker}><span>本日のスープ</span> z3-mini · mini pool</p>
-          <h1 className={s.title}>Greedy soup.</h1>
-          <p className={s.lede}>The best z3-mini isn’t one model. It’s a bowl: up to five of the best bodies miners can bring, averaged into one model and tasted again every day.</p>
-          <div className={s.ctas}>
-            <a className={s.ticket} href="#menu">How the soup is made</a>
-            <a className={s.ticketAlt} href="#start">Start mining</a>
-          </div>
+    <SectionRow n="01" label="Greedy soup" note="欲張りスープ · z3-mini" />
+    <header className={s.hero}>
+      <div className={s.intro}>
+        <h1 className={s.title}>Greedy <span>soup.</span></h1>
+        <p className={s.tagline}>The best z3-mini isn’t one model. It’s a bowl.</p>
+        <p className={s.lede}>Up to five of the best bodies miners can bring, averaged into one model and tasted again every day. A body keeps its seat only while the soup is better with it.</p>
+        <div className={s.ctas}>
+          <SiteButton href="#start" variant="primary">Start mining</SiteButton>
+          <SiteButton href="#menu" variant="secondary">How the soup is made</SiteButton>
         </div>
-        <div className={s.stage}>
-          <span className={s.vertical} aria-hidden="true">スープ</span>
+      </div>
+      <Reveal>
+        <figure className={s.stage}>
           <Bowl />
-          <p className={s.caption}>Five toppings, five seats.</p>
-        </div>
-      </header>
+          <figcaption className={s.seats}>
+            {SEATS.map((c, i) => <span key={c}><i style={{ background: c }} />Seat {i + 1}</span>)}
+          </figcaption>
+        </figure>
+      </Reveal>
+    </header>
 
-      <div className={s.halftone} aria-hidden="true" />
+    <SectionRow n="02" label="How a soup is made" note="お品書き · menu" />
+    <section id="menu" className={s.section} aria-labelledby="menu-heading">
+      <h2 id="menu-heading" className={s.h2}>Five steps, every day.</h2>
+      <ol className={s.steps} aria-label="How a soup is made">
+        {STEPS.map(([jp, title, body], i) => <li key={title} style={{ '--c': SEATS[i] } as React.CSSProperties}>
+          <div className={s.stepTop}><span className={s.num}>{String(i + 1).padStart(2, '0')}</span><span className={s.jp} lang="ja" aria-hidden="true">{jp}</span></div>
+          <h3>{title}</h3>
+          <p>{body}</p>
+        </li>)}
+      </ol>
+      <p className={s.fine}>Averages of fine-tunes from the same base often beat every one of their ingredients. Ladling greedily keeps only the bodies that make the bowl better.</p>
+    </section>
 
-      <section id="menu" className={s.section} aria-labelledby="menu-heading">
-        <div className={s.head}><span className={s.jp} aria-hidden="true">お品書き</span><h2 id="menu-heading">How a soup is made</h2></div>
-        <ol className={s.menu} aria-label="How a soup is made">
-          {STEPS.map(([jp, title, body], i) => <li key={title} className={s.card}>
-            <div className={s.cardTop}><span className={s.no}>{String(i + 1).padStart(2, '0')}</span><span className={s.cardJp} aria-hidden="true">{jp}</span></div>
-            <h3>{title}</h3>
-            <p>{body}</p>
-          </li>)}
-        </ol>
-        <p className={s.fine}>Averages of fine-tunes from the same base often beat every one of their ingredients. Ladling greedily keeps only the bodies that make the bowl better.</p>
-      </section>
+    <SectionRow n="03" label="The bill" note="お会計 · who gets paid" />
+    <section className={`${s.section} ${s.bill}`} aria-label="The bill">
+      <table className={s.card}>
+        <caption>Who gets paid</caption>
+        <tbody>{BILL.map(([who, share, note]) => <tr key={who}>
+          <th scope="row">{who}<small>{note}</small></th><td>{share}</td>
+        </tr>)}</tbody>
+      </table>
+      <table className={s.card}>
+        <caption>Seat rates</caption>
+        <tbody>{RATES.map(([who, rate, note]) => <tr key={who}>
+          <th scope="row">{who}<small>{note}</small></th><td>{rate}</td>
+        </tr>)}</tbody>
+      </table>
+    </section>
 
-      <section className={`${s.section} ${s.billWrap}`} aria-labelledby="bill-heading">
-        <div className={s.head}><span className={s.jp} aria-hidden="true">お会計</span><h2 id="bill-heading">The bill</h2></div>
-        <div className={s.receipts}>
-          <table className={s.receipt}>
-            <caption>Who gets paid</caption>
-            <tbody>{BILL.map(([who, share, note]) => <tr key={who}>
-              <th scope="row">{who}<small>{note}</small></th><td>{share}</td>
-            </tr>)}</tbody>
-            <tfoot><tr><th scope="row">The mini pool’s share</th><td>100%</td></tr></tfoot>
-          </table>
-          <table className={s.receipt}>
-            <caption>Seat rates</caption>
-            <tbody>{RATES.map(([who, rate, note]) => <tr key={who}>
-              <th scope="row">{who}<small>{note}</small></th><td>{rate}</td>
-            </tr>)}</tbody>
-          </table>
-        </div>
-      </section>
+    <SectionRow n="04" label="Taste test" note="試食 · 30 Oct 2026" />
+    <section className={`${s.section} ${s.taste}`} aria-label="Taste test">
+      <div className={s.prose}>
+        <h2 className={s.h2}>The method, tasted.</h2>
+        <p>We averaged three open 4B decision models that other teams had fine-tuned from the same Qwen base, picked greedily on our sealed decision exam. The soup beat stock z3-mini on two separate sealed draws, and beat its own best ingredient.</p>
+        <p>More was not always better: stock z3-mini and a fourth fine-tune were left out because they lowered the score. Customer adapters trained on the soup did as well as on z3-mini.</p>
+        <p className={s.note}>These were outside open models, not miner submissions, and this bowl is not a release. It shows the method works.</p>
+      </div>
+      <figure className={s.bars}>
+        <figcaption>Points gained over stock z3-mini</figcaption>
+        <dl>{TASTE.map(([label, gain]) => <div key={label}>
+          <dt>{label}</dt>
+          <dd className={s.gain}>+{gain.toFixed(2)}</dd>
+          <dd aria-hidden="true" className={s.track}><span style={{ width: `${(gain / 8) * 100}%` }} /></dd>
+        </div>)}</dl>
+      </figure>
+    </section>
 
-      <section className={s.section} aria-label="Taste test">
-        <div className={s.head}><span className={s.jp} aria-hidden="true">試食</span><h2>Taste test</h2></div>
-        <div className={s.taste}>
-          <div className={s.prose}>
-            <p>On 30 October 2026 we averaged three open 4B decision models that other teams had fine-tuned from the same Qwen base, picked greedily on our sealed decision exam. The soup beat stock z3-mini on two separate sealed draws, and beat its own best ingredient.</p>
-            <p>More was not always better: stock z3-mini and a fourth fine-tune were left out because they lowered the score. Customer adapters trained on the soup did as well as on z3-mini.</p>
-            <p className={s.note}>These were outside open models, not miner submissions, and this bowl is not a release. It shows the method works.</p>
-          </div>
-          <figure className={s.bars}>
-            <figcaption>Points gained over stock z3-mini</figcaption>
-            <dl>{TASTE.map(([label, gain]) => <div key={label}>
-              <dt>{label}</dt>
-              <dd className={s.gain}>+{gain.toFixed(2)}</dd>
-              <dd aria-hidden="true" className={s.track}><span style={{ width: `${(gain / 8) * 100}%` }} /></dd>
-            </div>)}</dl>
-          </figure>
-        </div>
-      </section>
+    <SectionRow n="05" label="House rules" note="店のルール" />
+    <section className={s.section} aria-label="House rules">
+      <ul className={s.rules}>{RULES.map((rule, i) => <li key={i}>{rule}</li>)}</ul>
+    </section>
 
-      <section className={s.section} aria-labelledby="rules-heading">
-        <div className={s.head}><span className={s.jp} aria-hidden="true">店のルール</span><h2 id="rules-heading">House rules</h2></div>
-        <ul className={s.rules}>{RULES.map((rule, i) => <li key={i}>{rule}</li>)}</ul>
-      </section>
+    <SectionRow n="06" label="From bowl to release" />
+    <section className={s.section} aria-labelledby="release-heading">
+      <h2 id="release-heading" className={s.h2}>A good soup becomes the next z3-mini.</h2>
+      <div className={s.prose}>
+        <p>Every 14 to 28 days the soup can become the next release. It must beat the current release by at least one point on two sealed release exams that rounds never use, hold that lead 12 hours later, and keep customer adapters at least as good. Its members are paid through their seats; the release itself has no single winner.</p>
+      </div>
+      <div className={s.links}><Link href="/z3">The z3 model line</Link><Link href="/miners">Miner leaderboard</Link></div>
+    </section>
 
-      <section className={s.section} aria-labelledby="release-heading">
-        <div className={s.head}><span className={s.jp} aria-hidden="true">新作</span><h2 id="release-heading">From bowl to release</h2></div>
-        <div className={s.prose}>
-          <p>Every 14 to 28 days the soup can become the next z3-mini. It must beat the current release by at least one point on two sealed release exams that rounds never use, hold that lead 12 hours later, and keep customer adapters at least as good. Its members are paid through their seats; the release itself has no single winner.</p>
-        </div>
-        <div className={s.links}><Link href="/z3">The z3 model line</Link><Link href="/miners">Miner leaderboard</Link></div>
-      </section>
-
-      <section id="start" className={`${s.section} ${s.start}`} aria-labelledby="start-heading">
-        <div className={s.head}><span className={s.jp} aria-hidden="true">いらっしゃい</span><h2 id="start-heading">Pull up a stool</h2></div>
-        <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
-        <p className={s.fine}>Training needs Linux x86_64 with an NVIDIA GPU. <a href={GUIDE}>Read the miner guide</a> for preparing data and checking your body before you commit it. Rules as of 30 October 2026.</p>
-      </section>
-    </div>
+    <SectionRow n="07" label="Start mining" note="いらっしゃい" />
+    <section id="start" className={s.section} aria-labelledby="start-heading">
+      <h2 id="start-heading" className={s.h2}>Pull up a stool.</h2>
+      <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
+      <p className={s.fine}>Training needs Linux x86_64 with an NVIDIA GPU. <a href={GUIDE}>Read the miner guide</a> for preparing data and checking your body before you commit it. Rules as of 30 October 2026.</p>
+    </section>
   </SiteFrame>;
 }
