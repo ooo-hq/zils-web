@@ -5,8 +5,8 @@ import s from './miners.module.css';
 const LANES = [
   {
     name: 'Base tier', share: '50%', status: 'Open on testnet', tone: 'open',
-    lead: 'Improve the whole model; the winner becomes the base.',
-    facts: [['To beat', 'Your tier’s base'], ['Pays', 'Last five kings'], ['Entry', 'Full model weights']],
+    lead: 'Improve the whole model. Mini is a greedy soup of the best bodies; other tiers crown one winner.',
+    facts: [['Mini pays', 'Soup seats and a solo crown'], ['Other tiers pay', 'Last five kings'], ['Entry', 'Full model weights']],
     href: '#base-tier', cta: 'How to enter',
   },
   {

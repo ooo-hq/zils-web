@@ -97,8 +97,8 @@ export default function Z3Page() {
           <p>{body}</p>
         </li>)}
       </ol>
-      <p className={s.fine}>A submitted candidate is not yet an official release, and a win in one size does not qualify another.</p>
-      <div className={s.links}><Link href="/bases">Explore the base history</Link><Link href="/model">Read the research</Link></div>
+      <p className={s.fine}>A submitted candidate is not yet an official release, and a win in one size does not qualify another. z3-mini candidates are soups: up to five miner bodies averaged into one.</p>
+      <div className={s.links}><Link href="/soup">How the soup is made</Link><Link href="/bases">Explore the base history</Link><Link href="/model">Read the research</Link></div>
     </section>
   </SiteFrame>;
 }

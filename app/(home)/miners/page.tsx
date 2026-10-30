@@ -118,6 +118,7 @@ export default async function MinersPage() {
         <div>
           <h2>Beat <em>the base.</em></h2>
           <p>Every tier has a base to beat. Win a sealed exam, then win again on a fresh one.</p>
+          <p className={s.soupLink}><span lang="ja" aria-hidden="true">スープ</span> In the mini pool the base is a soup of up to five miner bodies. <Link href="/soup">Bring a body to the soup</Link></p>
         </div>
         <span className={s.pill}>Round two · open on testnet</span>
       </div>
