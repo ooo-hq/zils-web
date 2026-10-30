@@ -102,7 +102,21 @@ test('/z3 separates the nightly soup from the release window and records soup me
   await expect(steps.nth(1)).toContainText('Every night');
   await expect(steps.nth(2)).toContainText('Every 14 to 28 days');
   await expect(steps.nth(3)).toContainText('member list');
-  await expect(page.getByRole('figure', { name: 'Release cadence' })).toContainText('Release window');
+  // Windows recur every interval_days (14 to 28, set by each validator); they are events, not open spans.
+  const cadence = page.getByRole('figure', { name: 'Release cadence' });
+  const readout = cadence.getByRole('status');
+  await expect(cadence.getByRole('slider', { name: 'Days between release windows' })).toHaveValue('14');
+  await expect(cadence.getByRole('button', { name: /^Night 14,.*release window/ })).toBeVisible();
+  await expect(cadence.getByRole('button', { name: /^Night 28,.*release window/ })).toBeVisible();
+  await cadence.getByRole('button', { name: /^Night 9,/ }).click();
+  await expect(readout).toContainText('Night 9');
+  await expect(readout).toContainText('The served model does not change');
+  await page.keyboard.press('ArrowRight');
+  await expect(readout).toContainText('Night 10');
+  await cadence.getByRole('slider', { name: 'Days between release windows' }).fill('20');
+  await expect(cadence.getByRole('button', { name: /^Night 14,.*release window/ })).toHaveCount(0);
+  await cadence.getByRole('button', { name: /^Night 20,.*release window/ }).click();
+  await expect(readout).toContainText('two sealed draws');
   for (const width of [1280, 390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

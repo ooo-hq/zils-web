@@ -5,6 +5,7 @@ import { SectionRow } from '@/components/site/section-row';
 import { SiteButton } from '@/components/site/site-button';
 import { Reveal } from '@/components/site/reveal';
 import { Ingredients } from '../soup/ingredients';
+import { Cadence } from './cadence';
 import s from './z3.module.css';
 
 export const metadata: Metadata = {
@@ -35,9 +36,6 @@ const STEPS = [
   ['Release', 'A reviewed promotion makes it the next version, with its checkpoint, evidence and, for a soup, its member list: each seat’s hotkey and body hash.'],
 ];
 
-// One mark per night of a 28-night cycle; the release window opens on night 14.
-const NIGHTS = 28;
-const WINDOW_OPENS = 14;
 
 export default function Z3Page() {
   return <SiteFrame current="z3">
@@ -106,17 +104,7 @@ export default function Z3Page() {
           <p>{body}</p>
         </li>)}
       </ol>
-      <figure className={s.cadence} aria-label="Release cadence">
-        <ol className={s.nights} aria-hidden="true">
-          {Array.from({ length: NIGHTS }, (_, i) => i + 1 < WINDOW_OPENS
-            ? <li key={i} />
-            : <li key={i} data-window="" style={{ '--k': i + 1 - WINDOW_OPENS, '--span': NIGHTS - WINDOW_OPENS + 1 } as React.CSSProperties} />)}
-        </ol>
-        <figcaption className={s.cadenceKey}>
-          <span>{NIGHTS} nights, a soup round each</span>
-          <span className={s.windowKey}>Release window, from night {WINDOW_OPENS} to {NIGHTS}</span>
-        </figcaption>
-      </figure>
+      <Cadence />
       <p className={s.fine}>A submitted candidate is not yet an official release, and a win in one size does not qualify another.</p>
       <div className={s.soup}>
         <div className={s.prose}>

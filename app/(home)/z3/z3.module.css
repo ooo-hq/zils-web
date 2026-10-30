@@ -78,10 +78,19 @@
 .h3 { margin: 0 0 8px; font-weight: 300; font-size: clamp(22px, 2.2vw, 28px); letter-spacing: -0.02em; line-height: 1.15; color: var(--zs-fg); }
 @media (max-width: 899px) { .soup { grid-template-columns: 1fr; } }
 
-/* Release cadence: one tick per night; ticks inside the release window take the spectrum, so the window reads as a band. */
-.cadence { margin: 0 0 24px; display: grid; gap: 10px; }
-.nights { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(28, minmax(0, 1fr)); gap: 3px; align-items: end; height: 28px; }
-.nights li { height: 40%; background: rgba(var(--zs-fg-rgb), .22); }
-.nights li[data-window] { height: 100%; background: var(--zs-spectrum); background-size: calc(var(--span) * 100%) 100%; background-position: calc(var(--k) / (var(--span) - 1) * 100%) 0; }
-.cadenceKey { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-t3); }
-.windowKey { color: var(--zs-fg); }
+/* Release cadence: one button per night. Window nights rise and take the spectrum; the chosen night gets an orange underline. */
+.cadence { margin: 0 0 24px; display: grid; gap: 14px; }
+.nights { display: grid; grid-template-columns: repeat(28, minmax(0, 1fr)); gap: 3px; align-items: end; height: 40px; }
+.night { all: unset; box-sizing: border-box; position: relative; height: 40%; background: rgba(var(--zs-fg-rgb), .22); cursor: pointer; }
+.night::after { content: ""; position: absolute; left: 0; right: 0; bottom: -7px; height: 2px; background: transparent; }
+.night:hover { background: rgba(var(--zs-fg-rgb), .4); }
+.night[data-window] { height: 100%; background: var(--zs-spectrum); }
+.night[aria-pressed="true"]::after { background: var(--zs-orange); }
+.night:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) { .night { transition: height .25s ease, background-color .15s; } }
+.readout { margin: 4px 0 0; min-height: 3.2em; max-width: 72ch; font-size: 14.5px; line-height: 1.6; color: var(--zs-fg); }
+.cadenceKey { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 24px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-t3); }
+.interval { display: inline-flex; align-items: center; gap: 12px; color: var(--zs-fg); }
+.interval input { width: 160px; accent-color: var(--zs-orange); }
+.intervalValue { min-width: 2ch; font-variant-numeric: tabular-nums; color: var(--zs-orange); }
+@media (max-width: 480px) { .nights { gap: 2px; height: 32px; } .interval { width: 100%; flex-wrap: wrap; } .interval > span:first-child { flex-basis: 100%; } .interval input { flex: 1; width: auto; min-width: 0; } }
