@@ -88,3 +88,20 @@ test('/z3 explains that a z3-mini release is a soup that passed the release gate
   await expectIngredients(page);
   await expect(page.locator('main')).not.toContainText('testnet');
 });
+
+test('/z3 separates the nightly soup from the release window and records soup members', async ({ page }) => {
+  await page.goto('/z3');
+  await expect(page.getByText(/approved winners \(for mini, the best soup\)/)).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Start mining', exact: true })).toHaveAttribute('href', '/miners');
+  await expect(page.getByRole('region', { name: 'A documented starting point.' })).toContainText('one of the five house models');
+  const steps = page.getByRole('region', { name: 'Each new release earns its place.' }).getByRole('list').first().getByRole('listitem');
+  await expect(steps).toHaveCount(4);
+  await expect(steps.nth(1)).toContainText('Every night');
+  await expect(steps.nth(2)).toContainText('Every 14 to 28 days');
+  await expect(steps.nth(3)).toContainText('member list');
+  await expect(page.getByRole('figure', { name: 'Release cadence' })).toContainText('Release window');
+  for (const width of [1280, 390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+});

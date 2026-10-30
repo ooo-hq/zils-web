@@ -27,12 +27,17 @@ const LINEUP = [
 // Tower height on a log scale from a 0.4B floor, so 0.85B stays visible next to 26B.
 const height = (p: number) => Math.log(p / 0.4) / Math.log(26.09 / 0.4);
 
+// The release path, from zils docs/mining.md "Soup pool" and docs/base-election.md (main 16b87a6).
 const STEPS = [
-  ['Submit', 'Miners submit candidates for an enabled lineage. For z3-mini they submit bodies to a nightly soup instead.'],
-  ['Compare', 'Validators compare each candidate, or the current mini soup, with the incumbent on protected evaluation data.'],
-  ['Review', 'The release gate comes before anything is published: two sealed draws, a confirmation draw 12 hours later and the adapter suite.'],
-  ['Release', 'An approved release gets its own version, checkpoint and evidence.'],
+  ['Submit', 'Miners commit a candidate on chain. For z3-mini, they commit a body for the soup.'],
+  ['Every night', 'z3-mini: validators rebuild the soup from the house models and miners’ bodies and pay its seats. Other sizes: candidates sit sealed exams against the current release.'],
+  ['Every 14 to 28 days', 'At a release window, the mini soup or the best candidate must beat the current release on two sealed draws, hold its lead 12 hours later and keep customer adapters at least as good.'],
+  ['Release', 'A reviewed promotion makes it the next version, with its checkpoint, evidence and, for a soup, its member list: each seat’s hotkey and body hash.'],
 ];
+
+// One mark per night of a 28-night cycle; the release window opens on night 14.
+const NIGHTS = 28;
+const WINDOW_OPENS = 14;
 
 export default function Z3Page() {
   return <SiteFrame current="z3">
@@ -42,10 +47,10 @@ export default function Z3Page() {
         <h1 className={s.mark}>z3</h1>
         <div className={s.lede}>
           <p className={s.tagline}>Decision models, improved through competition.</p>
-          <p>Start with a published baseline. Miners train candidates, validators evaluate them independently, and approved winners become new releases in their own model lineage.</p>
+          <p>Start with a published baseline. Miners train candidates, validators evaluate them independently, and approved winners (for mini, the best soup) become new releases in their own model lineage.</p>
           <div className={s.ctas}>
             <SiteButton href="https://docs.zils.ai/getting-started/models" variant="primary">Read the model guide</SiteButton>
-            <SiteButton href="/miners" variant="secondary">Train a candidate</SiteButton>
+            <SiteButton href="/miners" variant="secondary">Start mining</SiteButton>
           </div>
         </div>
       </div>
@@ -77,6 +82,7 @@ export default function Z3Page() {
         <h2 id="baseline-heading" className={s.h2}>A documented starting point.</h2>
         <div className={s.prose}>
           <p>z3-mini v1 uses the unchanged upstream d3-mini weights. Zils selected this checkpoint as the founding mini baseline. It was not trained by Zils or elected as a miner winner.</p>
+          <p>It is also one of the five house models in every mini soup. If no body lifts the soup past it, the soup is v1 itself and cannot clear the release bar, so v1 stays until something better is found.</p>
           <p>Existing downloads and API profile IDs retain their original names. The model guide explains how public release names map to those artifacts.</p>
         </div>
       </div>
@@ -98,11 +104,22 @@ export default function Z3Page() {
           <p>{body}</p>
         </li>)}
       </ol>
+      <figure className={s.cadence} aria-label="Release cadence">
+        <ol className={s.nights} aria-hidden="true">
+          {Array.from({ length: NIGHTS }, (_, i) => i + 1 < WINDOW_OPENS
+            ? <li key={i} />
+            : <li key={i} data-window="" style={{ '--k': i + 1 - WINDOW_OPENS, '--span': NIGHTS - WINDOW_OPENS + 1 } as React.CSSProperties} />)}
+        </ol>
+        <figcaption className={s.cadenceKey}>
+          <span>{NIGHTS} nights, a soup round each</span>
+          <span className={s.windowKey}>Release window, from night {WINDOW_OPENS} to {NIGHTS}</span>
+        </figcaption>
+      </figure>
       <p className={s.fine}>A submitted candidate is not yet an official release, and a win in one size does not qualify another.</p>
       <div className={s.soup}>
         <div className={s.prose}>
           <h3 className={s.h3}>z3-mini: a soup that passed the release gate.</h3>
-          <p>The next z3-mini is not one miner’s model. Each night validators average up to five fine-tunes of the same Qwen base, keeping a body only if it lifts the score. Every 14 to 28 days that soup must beat the current release on two sealed draws, hold its lead on a confirmation draw and keep customer adapters at least as good. A reviewed promotion then makes it the next version.</p>
+          <p>The next z3-mini is not one miner’s model. It is an average of up to five fine-tunes of the same Qwen base: the house models and any miner bodies that make it better. It passes the same release window as every other size.</p>
           <p>Lite, nano, flash and z3 stay king of the hill: one winning candidate per release.</p>
         </div>
         <Ingredients />
