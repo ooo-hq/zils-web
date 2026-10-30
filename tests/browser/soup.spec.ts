@@ -102,21 +102,18 @@ test('/z3 separates the nightly soup from the release window and records soup me
   await expect(steps.nth(1)).toContainText('Every night');
   await expect(steps.nth(2)).toContainText('Every 14 to 28 days');
   await expect(steps.nth(3)).toContainText('member list');
-  // Windows recur every interval_days (14 to 28, set by each validator); they are events, not open spans.
+  // A window is one night every interval_days (14 to 28, set per validator), so the band marks where the next one can fall.
   const cadence = page.getByRole('figure', { name: 'Release cadence' });
   const readout = cadence.getByRole('status');
-  await expect(cadence.getByRole('slider', { name: 'Days between release windows' })).toHaveValue('14');
-  await expect(cadence.getByRole('button', { name: /^Night 14,.*release window/ })).toBeVisible();
-  await expect(cadence.getByRole('button', { name: /^Night 28,.*release window/ })).toBeVisible();
-  await cadence.getByRole('button', { name: /^Night 9,/ }).click();
+  await expect(cadence).toContainText('Next release window falls on one of nights 14 to 28');
+  await expect(cadence.getByRole('slider')).toHaveCount(0);
+  await cadence.getByRole('button', { name: /^Night 9,/ }).hover();
   await expect(readout).toContainText('Night 9');
   await expect(readout).toContainText('The served model does not change');
-  await page.keyboard.press('ArrowRight');
-  await expect(readout).toContainText('Night 10');
-  await cadence.getByRole('slider', { name: 'Days between release windows' }).fill('20');
-  await expect(cadence.getByRole('button', { name: /^Night 14,.*release window/ })).toHaveCount(0);
-  await cadence.getByRole('button', { name: /^Night 20,.*release window/ }).click();
-  await expect(readout).toContainText('two sealed draws');
+  await cadence.getByRole('button', { name: /^Night 20,/ }).hover();
+  await expect(readout).toContainText('the release window can fall');
+  await cadence.getByRole('button', { name: /^Night 3,/ }).focus();
+  await expect(readout).toContainText('Night 3');
   for (const width of [1280, 390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

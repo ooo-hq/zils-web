@@ -1,61 +1,39 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import s from './z3.module.css';
 
-// Each validator sets interval_days between 14 and 28 (zils docs/base-election.md); a release window is one
-// event every interval, after that night's soup round. Every night is a soup round.
+// Every night is a soup round. A release window is one night every interval_days, which each validator sets
+// between 14 and 28 (zils docs/base-election.md), so the next window falls on one of nights 14 to 28.
 const NIGHTS = 28;
-const MIN_INTERVAL = 14;
-const MAX_INTERVAL = 28;
+const EARLIEST = 14;
 
-function describe(night: number, window: boolean) {
-  return window
-    ? `Night ${night}: soup round, then a release window. The current soup must beat the current release on two sealed draws, hold its lead on a confirmation draw 12 hours later and keep customer adapters at least as good. A reviewed promotion then makes it the next z3-mini.`
-    : `Night ${night}: soup round. Validators grade the bodies committed before the deadline, rebuild the soup and pay its seats. The served model does not change.`;
+function describe(night: number) {
+  return night < EARLIEST
+    ? `Night ${night}: soup round. Validators grade the bodies committed before the deadline, rebuild the soup and pay its seats. The served model does not change.`
+    : `Night ${night}: soup round, and the release window can fall on this night, depending on the interval the validator sets. At the window the soup must beat the current release on two sealed draws, hold its lead 12 hours later and keep customer adapters at least as good.`;
 }
 
 export function Cadence() {
-  const [interval, setGap] = useState(MIN_INTERVAL);
-  const [night, setNight] = useState(1);
-  const buttons = useRef<(HTMLButtonElement | null)[]>([]);
-  const isWindow = (n: number) => n % interval === 0;
-
-  function move(to: number) {
-    const next = Math.min(NIGHTS, Math.max(1, to));
-    setNight(next);
-    buttons.current[next - 1]?.focus();
-  }
-
-  function onKey(e: React.KeyboardEvent) {
-    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-    if (step) { e.preventDefault(); move(night + step); }
-    else if (e.key === 'Home') { e.preventDefault(); move(1); }
-    else if (e.key === 'End') { e.preventDefault(); move(NIGHTS); }
-  }
-
-  const windows = Array.from({ length: NIGHTS }, (_, i) => i + 1).filter(isWindow);
+  const [night, setNight] = useState<number | null>(null);
 
   return <figure className={s.cadence} aria-label="Release cadence">
-    <div className={s.nights} role="group" aria-label="Nights" onKeyDown={onKey}>
+    <div className={s.nights} onMouseLeave={() => setNight(null)}>
       {Array.from({ length: NIGHTS }, (_, i) => {
         const n = i + 1;
-        const win = isWindow(n);
-        return <button key={n} type="button" ref={el => { buttons.current[i] = el; }}
-          className={s.night} data-window={win ? '' : undefined} aria-pressed={n === night}
-          tabIndex={n === night ? 0 : -1} onClick={() => setNight(n)}
-          aria-label={`Night ${n}, ${win ? 'soup round and release window' : 'soup round'}`} />;
+        const band = n >= EARLIEST;
+        return <button key={n} type="button" className={s.night} data-window={band ? '' : undefined}
+          style={band ? { '--k': n - EARLIEST, '--span': NIGHTS - EARLIEST + 1 } as React.CSSProperties : undefined}
+          onMouseEnter={() => setNight(n)} onFocus={() => setNight(n)} onClick={() => setNight(n)}
+          aria-label={`Night ${n}, ${band ? 'soup round; the release window can fall here' : 'soup round'}`} />;
       })}
     </div>
-    <p className={s.readout} role="status" aria-live="polite">{describe(night, isWindow(night))}</p>
     <figcaption className={s.cadenceKey}>
-      <label className={s.interval}>
-        <span>Days between release windows</span>
-        <input type="range" min={MIN_INTERVAL} max={MAX_INTERVAL} value={interval}
-          onChange={e => setGap(Number(e.target.value))} aria-valuetext={`Every ${interval} days`} />
-        <span className={s.intervalValue} aria-hidden="true">{interval}</span>
-      </label>
-      <span>{NIGHTS} nights, a soup round each · {windows.length === 1 ? 'one release window' : `${windows.length} release windows`}</span>
+      <span>{NIGHTS} nights, a soup round each</span>
+      <span className={s.windowKey}>Next release window falls on one of nights {EARLIEST} to {NIGHTS}</span>
     </figcaption>
+    <p className={s.readout} role="status" aria-live="polite" data-idle={night === null ? '' : undefined}>
+      {night === null ? 'Point at a night to see what happens on it.' : describe(night)}
+    </p>
   </figure>;
 }
