@@ -12,6 +12,6 @@ export function SoupMerge() {
       const seat = seatAt.get(i);
       return <i key={i} className={seat ? s.member : s.left} style={{ '--c': seat, '--a': `${(i / POOL) * 360}deg`, '--i': i } as React.CSSProperties} />;
     })}
-    <div className={s.core}><span>soup</span></div>
+    <div className={s.core} aria-hidden="true"><span>soup</span></div>
   </div>;
 }

@@ -54,7 +54,7 @@ const RULES = [
 ];
 
 export default function SoupPage() {
-  return <SiteFrame current="miners">
+  return <SiteFrame current="soup">
     <SectionRow n="01" label="Greedy soup" note="欲張りスープ · every z3 tier" />
     <header className={s.hero}>
       <div className={s.intro}>

@@ -22,7 +22,9 @@ test('/soup explains the greedy soup: seats, crown, house rules and the measured
   await expect(page.locator('main code', { hasText: 'Qwen/Qwen3.5-4B' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Read the miner guide' })).toHaveAttribute('href', 'https://docs.zils.ai/operations/soup');
   await expect(page.locator('#start')).toContainText('zils commit-body');
-  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Miners' })).toHaveAttribute('aria-current', 'page');
+  const nav = page.getByRole('navigation', { name: 'Main navigation' });
+  await expect(nav.getByRole('link', { name: 'Soup' })).toHaveAttribute('aria-current', 'page');
+  await expect(nav.locator('[aria-current]')).toHaveCount(1);
 
   for (const width of [1280, 390, 320]) {
     await page.setViewportSize({ width, height: 844 });
