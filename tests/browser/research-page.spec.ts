@@ -134,7 +134,7 @@ test('light-theme accent text on /model meets 4.5:1 on panel and raised', async 
 test('the sticky index lists the sections and marks the one in view', async ({ page }) => {
   await page.goto('/model');
   const index = page.getByRole('navigation', { name: 'On this page' });
-  await expect(index.getByRole('link')).toHaveText(['02Findings', '03Approach', '04Support', '05Chess', '06Flights', '07Base tier', '08d3-mini evidence', '09Earlier benchmark', '10Metric guide']);
+  await expect(index.getByRole('link')).toHaveText(['02Findings', '03Approach', '04Support', '05Chess', '06Flights', '07Base tier', '08Model merging', '09d3-mini evidence', '10Earlier benchmark', '11Metric guide']);
   for (const [id, name] of [['chess-study', 'Chess'], ['base-tier', 'Base tier'], ['metrics', 'Metric guide']]) {
     await page.evaluate(i => document.getElementById(i)!.scrollIntoView({ block: 'start' }), id);
     await expect(index.getByRole('link', { name, exact: true })).toHaveAttribute('aria-current', 'true');
@@ -154,4 +154,30 @@ test('every table row from the pre-rebrand page is still on /model, and nothing 
   expect(missing).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(await page.locator('main').evaluate(m => m.scrollWidth <= m.clientWidth)).toBe(true);
+});
+
+// Reading list: Linear ZIL-99. Primary sources carry the findings; internal exam scores stay off the page (ZIL-106).
+test('/model explains greedy soups and model merging from primary sources, with their limits', async ({ page }) => {
+  await page.goto('/model');
+  const section = page.getByRole('region', { name: 'Why averaging fine-tunes works, and where it may not.' });
+  await expect(section).toBeVisible();
+  const table = section.getByRole('table', { name: 'Merging research and its limits for Zils' });
+  for (const [name, href] of [
+    ['Model soups', /arxiv\.org\/abs\/2203\.05482/],
+    ['Command A technical report', /cohere\.com\/research\/papers\/command-a-technical-report\.pdf/],
+    ['Souper-Model', /arxiv\.org\/abs\/2511\.13254/],
+    ['ColD Fusion', /arxiv\.org\/abs\/2212\.01378/],
+    ['WARM', /arxiv\.org\/abs\/2401\.12187/],
+    ['Branch-Train-Merge', /arxiv\.org\/abs\/2208\.03306/],
+    ['M2N2', /arxiv\.org\/abs\/2508\.16204/],
+    ['Gauntlet', /arxiv\.org\/abs\/2505\.21684/],
+  ] as const) await expect(table.getByRole('link', { name })).toHaveAttribute('href', href);
+  await expect(section).toContainText('We have not reproduced these results');
+  await expect(section.getByRole('link', { name: 'How the mini soup works' })).toHaveAttribute('href', '/soup');
+  const text = await section.innerText();
+  for (const banned of ['+4.26', '+6.63', 'mergekit.com', 'reddit']) expect(text.toLowerCase()).not.toContain(banned.toLowerCase());
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
 });
