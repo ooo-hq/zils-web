@@ -34,7 +34,7 @@
 .roundSteps b::before { content: counter(step, decimal-leading-zero) "  "; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12px; color: var(--zs-orange); white-space: pre; }
 @media (max-width: 899px) { .soupRound { padding: 0 4px 32px; } .roundSteps { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 480px) { .roundSteps { grid-template-columns: 1fr; } }
-.install { display: grid; gap: 14px; padding: 0 40px 40px; max-width: 860px; }
+.install { display: grid; gap: 14px; padding: 32px 40px 40px; max-width: 860px; }
 .install .subTitle { margin: 0; }
 .install p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--zs-t2); }
 .install code { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; color: var(--zs-fg); }
@@ -137,7 +137,7 @@
   .asof { padding: 14px 0; flex-direction: column; }
   .unavailable { padding: 32px 0; }
   .base { grid-template-columns: 1fr; padding: 28px 4px; }
-  .install { padding: 0 4px 32px; }
+  .install { padding: 32px 4px; }
   .more { padding: 24px 4px 48px; }
   .timeline li, .facts div { grid-template-columns: 1fr; gap: 4px; }
   .compare dl > div { grid-template-columns: 1fr 56px; }
