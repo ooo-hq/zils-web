@@ -22,6 +22,31 @@ const FIXTURE = {
 };
 let snapshot = structuredClone(FIXTURE);
 
+// GET /v1/network/soup (ZIL-109): public round records, newest first, as zils/soup_publish writes them.
+const sha = (c: string) => c.repeat(64);
+const cats = (v: number) => ({ reasoning: v, language: v, retrieval: v, tools: v, arts: v });
+const soupRound = (id: string, score: number, members: object[], finished: string) => ({
+  round_id: id, pool_id: 'd3-mini', seed: 'ab'.repeat(32), finished_at: finished, members, crown: null,
+  category_scores: { ...cats(score), arts: score - 2 }, soup_sha256: sha('c'), subset_sha256: sha('d'), predictions_sha256: sha('e'),
+});
+const SOUP = () => ({
+  as_of: new Date().toISOString(),
+  tiers: [{
+    pool: 'd3-mini', tier: 'z3-mini', serving: { release: 'z3-mini v1', served_by: 'zils' },
+    bodies: { [sha('a')]: { house: 'pplx-decider-flash-v1.2', repo: 'perplexity-ai/pplx-decider-flash-v1.2' }, [sha('b')]: { house: null, repo: 'miner/body-one' } },
+    rounds: [
+      soupRound('2026-11-05', 71.6, [
+        { hotkey: '5House', body_sha256: sha('a'), rate: 0, seat_weight: 0, contribution: 2.5 },
+        { hotkey: '5MinerHotkey', body_sha256: sha('b'), rate: 1, seat_weight: 0.8, contribution: 1 },
+        { hotkey: '5Unknown', body_sha256: sha('f'), rate: 1, seat_weight: 0, contribution: 0 },
+      ], '2026-11-05T03:40:00Z'),
+      soupRound('2026-11-04', 71, [{ hotkey: '5House', body_sha256: sha('a'), rate: 0, seat_weight: 0, contribution: 3 }], '2026-11-04T03:41:00Z'),
+      soupRound('2026-11-03', 70.2, [{ hotkey: '5House', body_sha256: sha('a'), rate: 0, seat_weight: 0, contribution: 3 }], '2026-11-03T03:39:00Z'),
+    ],
+  }],
+});
+let soupMode: 'ok' | 'none' = 'none';
+
 test.describe.configure({ mode: 'serial' });
 test.beforeAll(async () => {
   server = createServer((req, res) => {
@@ -36,6 +61,11 @@ test.beforeAll(async () => {
       res.setHeader('content-type', 'application/json');
       return res.end(JSON.stringify({network: 'test', netuid: 579, block: 8289200, as_of: new Date().toISOString(), submissions: [{uid: 7, hotkey: '5DFDtesthotkey', commitment_block: 8289168, sha256: 'a'.repeat(64), revision: 'b'.repeat(40), repo: 'owner/lite-candidate', model: 'd3-lite-0.8b-v1'}]}));
     }
+    if (req.url === '/v1/network/soup') {
+      if (soupMode === 'none') { res.statusCode = 404; return res.end(); }
+      res.setHeader('content-type', 'application/json');
+      return res.end(JSON.stringify(SOUP()));
+    }
     if (!req.url?.startsWith('/v1/network/miners')) { res.statusCode = 404; return res.end(); }
     if (mode === 'fail') { res.statusCode = 500; return res.end('{}'); }
     res.setHeader('content-type', 'application/json');
@@ -43,7 +73,7 @@ test.beforeAll(async () => {
   });
   await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(PORT, '127.0.0.1', resolve); });
 });
-test.beforeEach(() => { mode = 'ok'; snapshot = structuredClone(FIXTURE); });
+test.beforeEach(() => { mode = 'ok'; soupMode = 'none'; snapshot = structuredClone(FIXTURE); });
 test.afterAll(() => new Promise<void>(resolve => { server.close(() => resolve()); server.closeAllConnections(); }));
 
 const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
@@ -205,3 +235,37 @@ for (const theme of ['dark', 'light']) {
     for (const r of results) expect(r.ratio, r.text).toBeGreaterThanOrEqual(4.5);
   });
 }
+
+test('Tonight’s soup shows each tier’s score, change, seats, crown, serving and history from the feed', async ({ page }) => {
+  soupMode = 'ok';
+  await page.goto('/miners');
+  const board = page.getByRole('region', { name: 'Tonight’s soup' });
+  const mini = board.getByRole('article', { name: 'z3-mini' });
+  // 71.6 in four categories and 69.6 in arts → 71.4; the previous round was 70.8.
+  await expect(mini.getByText('71.4', { exact: true })).toBeVisible();
+  await expect(mini).toContainText('+0.6 since the last round');
+  const seats = mini.getByRole('list', { name: 'Seats' }).getByRole('listitem');
+  await expect(seats).toHaveCount(3);
+  await expect(seats.nth(0)).toContainText('pplx-decider-flash-v1.2');
+  await expect(seats.nth(0)).toContainText('House');
+  await expect(seats.nth(1)).toContainText('miner/body-one');
+  await expect(seats.nth(1)).toContainText('+1.0');
+  await expect(seats.nth(2)).toContainText('5Unk… · ffffffff');
+  await expect(seats.nth(2)).toContainText('Unpaid');
+  await expect(mini).toContainText('Crown burned');
+  await expect(mini).toContainText('Serving z3-mini v1 · by Zils');
+  await expect(mini.getByRole('img', { name: /Soup score over the last 3 rounds: 70.0, 70.8, 71.4/ })).toBeVisible();
+  expect(await board.locator('[lang=ja]').count()).toBeGreaterThanOrEqual(3);
+  await expect(board).not.toContainText('No soup feed is connected');
+  for (const width of [1280, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+});
+
+test('without a soup feed the board says so instead of inventing seats', async ({ page }) => {
+  await page.goto('/miners');
+  const board = page.getByRole('region', { name: 'Tonight’s soup' });
+  await expect(board).toContainText('Seats appear here after the first round');
+  await expect(board.getByRole('article')).toHaveCount(0);
+});

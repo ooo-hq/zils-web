@@ -9,6 +9,8 @@ import { InstallCommand } from '@/components/site/install-command';
 import { currentBase } from '@/lib/base-model';
 import { boardNumbers } from '@/lib/miner-board';
 import { networkMiners } from '@/lib/network-miners';
+import { soupBoard } from '@/lib/soup-board';
+import { SoupBoardView } from './soup-board';
 import { Rehearsal } from './rehearsal';
 import { Ingredients } from '../soup/ingredients';
 import { SoupMerge } from './soup-merge';
@@ -75,7 +77,7 @@ function Bars({ compare }: { compare: Compare }) {
 }
 
 export default async function MinersPage() {
-  const [base, network] = await Promise.all([currentBase(), networkMiners()]);
+  const [base, network, soup] = await Promise.all([currentBase(), networkMiners(), soupBoard()]);
   const latest = base?.channels.latest;
   const numbers = network && boardNumbers(network);
   return (
@@ -109,14 +111,19 @@ export default async function MinersPage() {
         </ol>
         <Ingredients />
       </section>
-      <section className={s.tonight} aria-labelledby="tonight-soup-heading">
-        <div>
+      {soup?.tiers.length
+        ? <section className={s.tonightLive} aria-labelledby="tonight-soup-heading">
           <h3 id="tonight-soup-heading">Tonight’s soup <span lang="ja" aria-hidden="true" className={s.jpNote}>今夜</span></h3>
-          <p>Seats appear here after the first round. Each round’s public record lists the members, their rates and rounded contributions, so anyone can see who holds a seat and why.</p>
-          <p className={s.live}>No soup feed is connected to this page yet.</p>
-        </div>
-        <SoupMerge />
-      </section>
+          <SoupBoardView board={soup} />
+        </section>
+        : <section className={s.tonight} aria-labelledby="tonight-soup-heading">
+          <div>
+            <h3 id="tonight-soup-heading">Tonight’s soup <span lang="ja" aria-hidden="true" className={s.jpNote}>今夜</span></h3>
+            <p>Seats appear here after the first round. Each round’s public record lists the members, their rates and rounded contributions, so anyone can see who holds a seat and why.</p>
+            <p className={s.live}>No soup feed is connected to this page yet.</p>
+          </div>
+          <SoupMerge />
+        </section>}
       <section className={s.install} aria-labelledby="install-heading">
         <h3 id="install-heading" className={s.subTitle}>Start mining</h3>
         <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
