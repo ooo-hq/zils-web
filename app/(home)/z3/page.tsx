@@ -4,6 +4,9 @@ import { SiteFrame } from '@/components/site/site-frame';
 import { SectionRow } from '@/components/site/section-row';
 import { SiteButton } from '@/components/site/site-button';
 import { Reveal } from '@/components/site/reveal';
+import { Ingredients } from '../soup/ingredients';
+import { Cadence } from './cadence';
+import { FoodIcon, type Food } from '../soup/food-icons';
 import s from './z3.module.css';
 
 export const metadata: Metadata = {
@@ -26,12 +29,16 @@ const LINEUP = [
 // Tower height on a log scale from a 0.4B floor, so 0.85B stays visible next to 26B.
 const height = (p: number) => Math.log(p / 0.4) / Math.log(26.09 / 0.4);
 
+const STEP_ICONS: Food[] = ['chopsticks', 'bowl', 'spoon', 'ticket'];
+
+// The release path, from zils docs/mining.md "Soup pool" and docs/base-election.md (main 16b87a6).
 const STEPS = [
-  ['Submit', 'Miners submit candidates for an enabled lineage.'],
-  ['Compare', 'Validators compare each candidate with the incumbent on protected evaluation data.'],
-  ['Review', 'Required qualification and release review come before anything is published.'],
-  ['Release', 'An approved release gets its own version, checkpoint and evidence.'],
+  ['持込', 'Submit', 'Miners commit a body on chain for the tier they trained it for.'],
+  ['毎晩', 'Every night', 'Validators rebuild each tier’s soup from its house models and miners’ bodies, and pay its seats.'],
+  ['味見', 'Every 14 to 28 days', 'At a release window, the soup must beat the current release on two sealed draws, hold its lead 12 hours later and keep customer adapters at least as good.'],
+  ['新作', 'Release', 'A reviewed promotion makes it the next version, with its checkpoint, evidence and member list: each seat’s hotkey and body hash.'],
 ];
+
 
 export default function Z3Page() {
   return <SiteFrame current="z3">
@@ -41,10 +48,10 @@ export default function Z3Page() {
         <h1 className={s.mark}>z3</h1>
         <div className={s.lede}>
           <p className={s.tagline}>Decision models, improved through competition.</p>
-          <p>Start with a published baseline. Miners train candidates, validators evaluate them independently, and approved winners become new releases in their own model lineage.</p>
+          <p>Start from the current release. Miners train bodies, validators evaluate them independently, and approved soups become new releases in their own model lineage.</p>
           <div className={s.ctas}>
             <SiteButton href="https://docs.zils.ai/getting-started/models" variant="primary">Read the model guide</SiteButton>
-            <SiteButton href="/miners" variant="secondary">Train a candidate</SiteButton>
+            <SiteButton href="/miners" variant="secondary">Start mining</SiteButton>
           </div>
         </div>
       </div>
@@ -70,35 +77,46 @@ export default function Z3Page() {
       <p className={s.fine}>A size for each workload. Each lineage needs its own qualification. Hosted availability is separate from weight publication; use the models listed for your account.</p>
     </header>
 
-    <SectionRow n="02" label="z3-mini v1" note="Founding baseline" />
+    <SectionRow n="02" label="z3-mini" note="Current release: v1" />
     <section className={s.split} aria-labelledby="baseline-heading">
       <div>
-        <h2 id="baseline-heading" className={s.h2}>A documented starting point.</h2>
+        <h2 id="baseline-heading" className={s.h2}>v1 today, a soup next.</h2>
         <div className={s.prose}>
-          <p>z3-mini v1 uses the unchanged upstream d3-mini weights. Zils selected this checkpoint as the founding mini baseline. It was not trained by Zils or elected as a miner winner.</p>
+          <p>z3-mini v1 is the current release. It uses the unchanged upstream d3-mini weights, which Zils selected as the founding mini baseline; it was not trained by Zils or elected as a miner winner.</p>
+          <p>The next version will not be built on v1 alone. It is a soup that starts from five open house models, v1 among them, plus any miner bodies that make it better. Because v1 is one of the five house models in every mini soup, a soup that nothing lifts past v1 is just v1 again and cannot clear the release bar.</p>
           <p>Existing downloads and API profile IDs retain their original names. The model guide explains how public release names map to those artifacts.</p>
         </div>
       </div>
       <dl className={s.card}>
+        <div><dt>Current release</dt><dd>z3-mini v1</dd></div>
         <div><dt>Parameters</dt><dd>4.54B</dd></div>
         <div><dt>Input ceiling</dt><dd>4,096 tokens</dd></div>
         <div><dt>Weights</dt><dd>Upstream d3-mini, unchanged</dd></div>
+        <div><dt>Next version</dt><dd>A soup of up to five bodies</dd></div>
         <div><dt>Checkpoint</dt><dd><a href={WEIGHTS}>Explore the founding weights on Hugging Face</a></dd></div>
       </dl>
     </section>
 
-    <SectionRow n="03" label="Subsequent releases" />
+    <SectionRow n="03" label="Subsequent releases" note="新作 · new releases" />
     <section className={s.releases} aria-labelledby="election-heading">
       <h2 id="election-heading" className={s.h2}>Each new release earns its place.</h2>
       <ol className={s.steps}>
-        {STEPS.map(([title, body], i) => <li key={title}>
-          <span className={s.num}>{String(i + 1).padStart(2, '0')}</span>
+        {STEPS.map(([jp, title, body], i) => <li key={title}>
+          <div className={s.stepTop}><span className={s.num}>{String(i + 1).padStart(2, '0')}</span><span className={s.stepMark}><FoodIcon name={STEP_ICONS[i]} /><span className={s.jp} lang="ja" aria-hidden="true">{jp}</span></span></div>
           <h3>{title}</h3>
           <p>{body}</p>
         </li>)}
       </ol>
+      <Cadence />
       <p className={s.fine}>A submitted candidate is not yet an official release, and a win in one size does not qualify another.</p>
-      <div className={s.links}><Link href="/bases">Explore the base history</Link><Link href="/model">Read the research</Link></div>
+      <div className={s.soup}>
+        <div className={s.prose}>
+          <h3 className={s.h3}>Each release: a soup that passed the release gate.</h3>
+          <p>The next version of each tier is not one miner’s model. It is an average of up to five fine-tunes of that tier’s Qwen base: its house models and any miner bodies that make it better.</p>
+        </div>
+        <Ingredients />
+      </div>
+      <div className={s.links}><Link href="/soup">How the soup is made</Link><Link href="/bases">Explore the base history</Link><Link href="/model">Read the research</Link></div>
     </section>
   </SiteFrame>;
 }

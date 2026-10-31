@@ -1,4 +1,4 @@
-import { MODEL_NAMES, modelDisplayName } from '@/lib/model-name';
+import { modelDisplayName } from '@/lib/model-name';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteFrame } from '@/components/site/site-frame';
@@ -8,8 +8,13 @@ import { MinerBoard, MinerRefresh } from '@/components/site/miner-board';
 import { InstallCommand } from '@/components/site/install-command';
 import { currentBase } from '@/lib/base-model';
 import { boardNumbers } from '@/lib/miner-board';
-import { baseSubmissions, networkMiners } from '@/lib/network-miners';
+import { networkMiners } from '@/lib/network-miners';
+import { soupBoard, tierView } from '@/lib/soup-board';
+import { EmptyBoard, SoupBoardView } from './soup-board';
 import { Rehearsal } from './rehearsal';
+import { Ingredients } from '../soup/ingredients';
+import { SoupMerge } from './soup-merge';
+import { FoodIcon } from '../soup/food-icons';
 import { Competitions } from './competitions';
 import s from './miners.module.css';
 
@@ -52,8 +57,8 @@ const TIMELINE: Entry[] = [
     body: 'We adopted d3-mini anyway, for what it adds: adapters that train better, up to four images and a video per call, and yes/no, choice and score answers. This is recorded as an override of the promotion rule, not a win under it. H2O and the separate image model stopped serving the same day.',
   },
   {
-    date: 'Next', title: 'Round two: beat the base', outcome: 'Open on testnet', tone: 'next',
-    body: 'Challenge the current base in your tier. Anyone registered on testnet 579 can enter: upload to Hugging Face, commit on chain, and every validator pulls and scores it. We also want the exam to cover images and video, since that is what the base is used for.',
+    date: 'Next', title: 'Every tier becomes a soup', outcome: 'At the mainnet launch', tone: 'next',
+    body: 'The base tiers stop crowning one winner. Each night validators average up to five bodies per tier, starting from that tier’s open house models, and pay the soup’s seats. We also want the exam to cover images and video, since that is what the base is used for.',
   },
 ];
 
@@ -72,32 +77,63 @@ function Bars({ compare }: { compare: Compare }) {
 }
 
 export default async function MinersPage() {
-  const [base, network, submissions] = await Promise.all([currentBase(), networkMiners(), baseSubmissions()]);
+  const [base, network, soup] = await Promise.all([currentBase(), networkMiners(), soupBoard()]);
   const latest = base?.channels.latest;
   const numbers = network && boardNumbers(network);
   return (
     <SiteFrame current="miners">
       <MinerRefresh />
-      <SectionRow n="01" label="Testnet · subnet 579" note={network ? `Updated ${utc(network.as_of)} UTC` : undefined} />
+      <SectionRow n="01" label="Miners" note="いらっしゃい · welcome" />
       <header className={s.hero}>
-        <h1>Miner leaderboard</h1>
-        <p>Base-model submissions and customer-training workers, tracked separately. <b>Outside miners can enter the base tier now</b>; customer jobs open once miner terms are live.</p>
+        <h1>Earn by improving z3.</h1>
+        <p><b>Bring a body to the nightly soup</b> for any open tier. Customer-training jobs stay with Zils miners until miner terms are live.</p>
       </header>
 
+      <SectionRow n="02" label="Tonight’s soup" note="今夜のスープ · latest round" />
+      <section className={s.tonightLive} aria-labelledby="tonight-soup-heading">
+        <h2 id="tonight-soup-heading" className="sr-only">Tonight’s soup</h2>
+        {soup?.tiers.length ? <SoupBoardView views={soup.tiers.map(tierView)} /> : <EmptyBoard art={<SoupMerge />} />}
+      </section>
+
+      <SectionRow n="03" label="Competitions" note="お品書き · menu" />
+      <Competitions />
+
+      <SectionRow n="04" label="Base tier" note="スープ · soup" />
+      <div id="base-tier" className={s.base}>
+        <div>
+          <h2>Beat <em>the base.</em></h2>
+          <p>Every tier is a soup. Each night validators average up to five bodies, keep a body only if it lifts the score by 0.3, and pay the soup’s seats.</p>
+          <p className={s.soupLink}><span lang="ja" aria-hidden="true">スープ</span> Lite, mini and the larger tiers each cook from their own Qwen base and house models. <Link href="/soup">Bring a body to the soup</Link></p>
+        </div>
+        <span className={s.pill}>Every tier · greedy soup</span>
+      </div>
+      <section className={s.soupRound} aria-labelledby="soup-round-heading">
+        <h3 id="soup-round-heading" className={s.subTitle}>A round, every night</h3>
+        <ol className={s.roundSteps}>
+          <li><FoodIcon name="bowl" className={s.stepIcon} /><b>In the pot</b><span lang="ja" aria-hidden="true" className={s.stepJp}>鍋</span>The tier’s house models, the current members and the best new bodies, at most 20.</li>
+          <li><FoodIcon name="ladle" className={s.stepIcon} /><b>Greedy</b><span lang="ja" aria-hidden="true" className={s.stepJp}>欲張り</span>Start from the best single body. Add the next only if the soup scores 0.3 higher. Stop at five.</li>
+          <li><FoodIcon name="ticket" className={s.stepIcon} /><b>Pay</b><span lang="ja" aria-hidden="true" className={s.stepJp}>会計</span>80% to seats that lift the soup by 0.3 or more. 20% to a body that beats every house model and the soup alone.</li>
+          <li><FoodIcon name="flame" className={s.stepIcon} /><b>Burn</b><span lang="ja" aria-hidden="true" className={s.stepJp}>焼却</span>Anything unearned burns. House models are never paid.</li>
+        </ol>
+        <Ingredients />
+      </section>
+      <section className={s.install} aria-labelledby="install-heading">
+        <h3 id="install-heading" className={s.subTitle}>Start mining</h3>
+        <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
+        <p><a href="https://docs.zils.ai/operations/soup" className={s.rhInline}>Soup guide</a>: what a body must be, how to commit it and how seats are paid.</p>
+        <p><a href="https://docs.zils.ai/operations/miner-tuning" className={s.rhInline}>Tune your miner</a>: prepare training data, change the recipe, and compare your body with the base before committing.</p>
+        <p>Installs the <code>zils</code> and <code>btcli</code> commands, then <code>zils setup</code> asks for your wallet and Hugging Face repo. After that, <code>zils doctor</code> checks each step and prints the command for the next one: register, train a body, then commit it with <code>zils commit-body</code>. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the command to update.</p>
+      </section>
+      <SectionRow n="05" label="Customer-training workers" note={network ? `Updated ${utc(network.as_of)} UTC` : undefined} />
       {numbers && <dl className={s.nums}>
         <div><dt>Workers online</dt><dd>{numbers.online}<small> / {numbers.total}</small></dd></div>
         <div><dt>Customer jobs</dt><dd>{numbers.jobs}</dd></div>
         <div><dt>Models selected</dt><dd>{numbers.selected}</dd></div>
         <div><dt>Current base</dt><dd className={s.sm}>{modelDisplayName(base?.channels.stable.name) || '—'}</dd></div>
       </dl>}
-
-      <SectionRow n="02" label="Competitions" note="Proposed" />
-      <Competitions />
-
-      <SectionRow n="03" label="Customer-training workers" />
       {network
         ? <section id="miners" aria-label="Customer-training workers">
-          <p className={s.asof}>These workers train customer adapters. Worker IDs, job selections and skill scores are separate from on-chain base submissions below.</p>
+          <p className={s.asof}>These workers train customer adapters. Worker IDs, job selections and skill scores are separate from soup bodies committed on chain.</p>
           <MinerBoard miners={network.miners} asOf={network.as_of} />
           <p className={s.asof}><span>Live from the Zils training API · refreshes every 30 seconds</span><span>Updated {utc(network.as_of)} UTC · sort by any column</span></p>
         </section>
@@ -109,42 +145,10 @@ export default async function MinersPage() {
           <p><b>Skill</b> compares a candidate’s probability error (Brier) with guessing evenly between the answers: 0 is no better than guessing, 1 is perfect, so it compares across different jobs.</p>
           <p><b>Online</b> checked in within the last 45 seconds. <b>Seen recently</b> checked in within the last hour. <b>Offline</b> has not checked in for longer than that. <b>Never seen</b> registered but never checked in. <b>Disabled</b> gets no new jobs. Miners that are not online are dimmed.</p>
           <p><b>Models</b> come from each miner’s latest signed check-in, including while it is busy. Inactive rows show the last reported models. These are internal worker IDs, not on-chain UIDs; a listed model does not imply customer serving is available.</p>
-          <p>Subnet 579 runs on the Bittensor testnet. Outside miners can already compete in the base tier there (below). Customer jobs stay with Zils miners until miner terms and intake are ready.</p>
+          <p>Outside miners can compete in the base tier (below). Customer jobs stay with Zils miners until miner terms and intake are ready.</p>
         </div>
       </DetailsRow>
 
-      <SectionRow n="04" label="Base tier" />
-      <div id="base-tier" className={s.base}>
-        <div>
-          <h2>Beat <em>the base.</em></h2>
-          <p>Every tier has a base to beat. Win a sealed exam, then win again on a fresh one.</p>
-        </div>
-        <span className={s.pill}>Round two · open on testnet</span>
-      </div>
-      <section className={s.submissions} aria-labelledby="base-submissions-heading">
-        <h3 id="base-submissions-heading">Base-model submissions</h3>
-        <p>Latest base commitments from registered hotkeys on testnet 579. Submitted means recorded on chain; it does not mean evaluated, qualified or better than the base.</p>
-        {submissions ? <>
-          <p className={s.live}>Verified {utc(submissions.as_of)} UTC · block {submissions.block.toLocaleString('en-US')} · checked every 5 minutes</p>
-          {submissions.submissions.length ? <div className={s.submissionScroll}><table>
-            <caption className="sr-only">Base-model submissions on testnet 579</caption>
-            <thead><tr><th>On-chain miner</th><th>Base model</th><th>Submission</th><th>Evaluation</th></tr></thead>
-            <tbody>{submissions.submissions.map(row => <tr key={row.hotkey}>
-              <td><b>Chain UID {row.uid}</b><small title={row.hotkey}>{row.hotkey.slice(0, 6)}…{row.hotkey.slice(-6)}</small></td>
-              <td>{row.model ? (MODEL_NAMES[row.model] ?? row.model) : 'Model not verified'}</td>
-              <td><a href={`https://huggingface.co/${row.repo}/tree/${row.revision}`} target="_blank" rel="noopener noreferrer">Submitted ↗</a><small>Block {row.commitment_block.toLocaleString('en-US')}</small></td>
-              <td>Not reported</td>
-            </tr>)}</tbody>
-          </table></div> : <p>No base-model commitments found in this snapshot.</p>}
-          <p className={s.live}>Model labels come from candidate metadata. Validator results and rewards are not included in this feed.</p>
-        </> : <p role="status">Base submissions are temporarily unavailable. Customer-worker activity above does not indicate base-miner status.</p>}
-      </section>
-      <section className={s.install} aria-labelledby="install-heading">
-        <h3 id="install-heading" className={s.subTitle}>Start mining</h3>
-        <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
-        <p><a href="https://docs.zils.ai/operations/miner-tuning" className={s.rhInline}>Tune your miner</a>: prepare training data, change the recipe, and compare your candidate with the base before submitting.</p>
-        <p>Installs the <code>zils</code> and <code>btcli</code> commands, then <code>zils setup</code> asks for your wallet and Hugging Face repo. After that, <code>zils doctor</code> checks each step and prints the command for the next one: register on testnet 579, train a candidate, commit it. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the command to update.</p>
-      </section>
       <DetailsRow summary="What we have tried">
         <div className={s.tried}>
           <section aria-labelledby="current-base">
@@ -164,10 +168,11 @@ export default async function MinersPage() {
           <section aria-labelledby="how-heading">
             <h3 id="how-heading" className={s.subTitle}>How a new base wins</h3>
             <ol className={s.how}>
-              <li><strong>Submit.</strong> A miner uploads replacement weights for the base to Hugging Face, then commits them on chain with <code>zils commit-candidate</code>.</li>
-              <li><strong>Score.</strong> Validators score it on a sealed exam the miner never sees, against the current base.</li>
-              <li><strong>Confirm.</strong> It must win again on a second, fresh exam, and customer-style adapters trained on it must not get worse.</li>
+              <li><strong>Commit.</strong> A miner uploads a fine-tuned body to Hugging Face, then commits it on chain with <code>zils commit-body</code>.</li>
+              <li><strong>Cook.</strong> Each night validators build the tier’s soup on a sealed exam the miner never sees, and pay its seats.</li>
+              <li><strong>Release.</strong> Every 14 to 28 days the soup must beat the current base on two fresh sealed draws, hold its lead 12 hours later, and keep customer-style adapters at least as good.</li>
             </ol>
+            <p>There is no single winner: the soup becomes the next version. See <Link href="/soup">the soup</Link>.</p>
             <p>The full rules are on the <Link href="/model#base-tier">research page</Link> and in the <a href={DOCS}>miner guide</a>.</p>
           </section>
 
@@ -192,6 +197,7 @@ export default async function MinersPage() {
 
       <div className={s.more}>
         <a href={DOCS}>Miner guide</a>
+        <Link href="/soup">The soup</Link>
         <Link href="/model#base-tier">Base tier rules</Link>
         <Link href="/bases">Base lineage</Link>
         <a href="/model/testnet-round-001.json">Public chain view</a>

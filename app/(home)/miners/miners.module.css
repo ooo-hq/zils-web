@@ -1,6 +1,6 @@
-.hero { padding: 80px 40px 64px; border-bottom: 1px solid var(--zs-line); }
-.hero h1 { font-weight: 300; font-size: clamp(44px, 6vw, 84px); letter-spacing: -0.03em; line-height: .98; margin: 0; }
-.hero p { margin: 18px 0 0; font-size: 15px; color: var(--zs-t2); }
+.hero { padding: 40px 40px 36px; border-bottom: 1px solid var(--zs-line); }
+.hero h1 { font-weight: 300; font-size: clamp(36px, 4.4vw, 60px); letter-spacing: -0.03em; line-height: .98; margin: 0; }
+.hero p { margin: 12px 0 0; font-size: 15px; color: var(--zs-t2); }
 .hero b { color: var(--zs-fg); font-weight: 400; }
 
 .nums { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0; border-bottom: 1px solid var(--zs-line); }
@@ -22,7 +22,19 @@
 .base h2 { margin: 0; font-weight: 300; font-size: clamp(26px, 2.8vw, 36px); letter-spacing: -0.02em; }
 .base h2 em { font-style: normal; background: var(--zs-spectrum-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .base p { margin: 8px 0 0; font-size: 14px; color: var(--zs-t2); }
-.install { display: grid; gap: 14px; padding: 0 40px 40px; max-width: 860px; }
+.base .soupLink { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 14px; color: var(--zs-fg); }
+.soupLink span { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .1em; color: var(--zs-orange); }
+.soupLink a { color: var(--zs-fg); text-decoration: underline; text-underline-offset: 4px; }
+.soupRound { display: grid; gap: 20px; padding: 0 40px 40px; }
+.roundSteps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--zs-line); border: 1px solid var(--zs-line); counter-reset: step; }
+.roundSteps li { position: relative; display: grid; gap: 8px; align-content: start; padding: 16px 18px 20px; background: var(--zs-panel); font-size: 13.5px; line-height: 1.55; color: var(--zs-t2); counter-increment: step; }
+.roundSteps b { font-weight: 400; font-size: 16px; color: var(--zs-fg); }
+.stepIcon { position: absolute; top: 16px; right: 18px; }
+.stepJp { font-size: 12px; color: var(--zs-t3); margin-top: -4px; }
+.roundSteps b::before { content: counter(step, decimal-leading-zero) "  "; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12px; color: var(--zs-orange); white-space: pre; }
+@media (max-width: 899px) { .soupRound { padding: 0 4px 32px; } .roundSteps { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .roundSteps { grid-template-columns: 1fr; } }
+.install { display: grid; gap: 14px; padding: 32px 40px 40px; max-width: 860px; }
 .install .subTitle { margin: 0; }
 .install p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--zs-t2); }
 .install code { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; color: var(--zs-fg); }
@@ -115,7 +127,7 @@
 .rhCard > .rhFine { padding: 16px 20px; margin: 0 !important; max-width: none; border-top: 1px solid var(--zs-line); }
 
 @media (max-width: 899px) {
-  .hero { padding: 48px 4px 40px; }
+  .hero { padding: 28px 4px 24px; }
   .nums { grid-template-columns: 1fr 1fr; }
   .nums > div:nth-child(2) { border-right: 0; }
   .nums > div:nth-child(-n+2) { border-bottom: 1px solid var(--zs-line); }
@@ -125,7 +137,7 @@
   .asof { padding: 14px 0; flex-direction: column; }
   .unavailable { padding: 32px 0; }
   .base { grid-template-columns: 1fr; padding: 28px 4px; }
-  .install { padding: 0 4px 32px; }
+  .install { padding: 32px 4px; }
   .more { padding: 24px 4px 48px; }
   .timeline li, .facts div { grid-template-columns: 1fr; gap: 4px; }
   .compare dl > div { grid-template-columns: 1fr 56px; }
@@ -169,6 +181,14 @@
   .laneGrid { grid-template-columns: 1fr; }
 }
 
+.tonight { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 300px); gap: 24px 48px; align-items: center; padding: 32px 40px; border-top: 1px solid var(--zs-line); border-bottom: 1px solid var(--zs-line); }
+.tonight h3 { margin: 0 0 12px; font-size: 24px; font-weight: 400; }
+.jpNote { margin-left: 10px; font-size: 13px; color: var(--zs-t3); vertical-align: middle; }
+.tonight p { margin: 0 0 8px; max-width: 62ch; color: var(--zs-t2); font-size: 14px; line-height: 1.6; }
+@media (max-width: 899px) { .tonight { grid-template-columns: 1fr; padding: 32px 4px; } }
+.tonightLive { display: grid; gap: 20px; padding: 28px 40px 36px; }
+.tonightLive h3 { margin: 0; font-size: 24px; font-weight: 400; }
+@media (max-width: 899px) { .tonightLive { padding: 32px 4px; } }
 .submissions { padding: 32px 40px; border-bottom: 1px solid var(--zs-line); }
 .submissions h3 { margin: 0 0 12px; font-size: 24px; font-weight: 400; }
 .submissions p { max-width: 80ch; color: var(--zs-t2); font-size: 14px; line-height: 1.6; }

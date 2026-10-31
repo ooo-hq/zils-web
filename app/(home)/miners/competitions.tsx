@@ -4,13 +4,13 @@ import s from './miners.module.css';
 // Publish this allocation only with the verified testnet pilot rollout.
 const LANES = [
   {
-    name: 'Base tier', share: '50%', status: 'Open on testnet', tone: 'open',
-    lead: 'Improve the whole model; the winner becomes the base.',
-    facts: [['To beat', 'Your tier’s base'], ['Pays', 'Last five kings'], ['Entry', 'Full model weights']],
+    name: 'Base tier', share: '50%', status: 'Open', tone: 'open',
+    lead: 'Improve the whole model. Every tier is a nightly greedy soup of up to five bodies.',
+    facts: [['Pays', 'Soup seats and a crown'], ['Entry', 'A full model body']],
     href: '#base-tier', cta: 'How to enter',
   },
   {
-    name: 'Feature tracks', share: '20%', status: 'Open on testnet', tone: 'open',
+    name: 'Feature tracks', share: '20%', status: 'Open', tone: 'open',
     lead: 'Teach the base a new skill. Each skill is its own competition.',
     tracks: [{ name: 'Boxes', status: 'Synthetic-only pilot', href: '/miners/tracks/box', note: 'mini / lite · no kings yet' }, { name: 'Video', status: 'Later', href: '/roadmap', note: 'vote on the roadmap' }],
     facts: [['Entry', 'An adapter on the exact parent'], ['Pays', 'Last five distinct kings per track']],
@@ -28,7 +28,7 @@ export function Competitions() {
   return <section aria-labelledby="competitions-heading" className={s.lanes}>
     <div className={s.lanesHead}>
       <h2 id="competitions-heading">Three ways to earn</h2>
-      <p><span className={s.proposed}>Testnet allocation</span> This validator allocates 50% to base improvement, 20% to features and 30% to customer adapters. Mini/lite split 80/20 within base and box budgets: 40/10/16/4/30 across mini base, lite base, mini boxes, lite boxes and customer adapters. Empty shares burn.</p>
+      <p><span className={s.proposed}>Allocation</span> This validator allocates 50% to base improvement, 20% to features and 30% to customer adapters. Mini/lite split 80/20 within base and box budgets: 40/10/16/4/30 across mini base, lite base, mini boxes, lite boxes and customer adapters. Empty shares burn.</p>
     </div>
     <ol className={s.laneGrid}>
       {LANES.map(lane => <li key={lane.name} className={s.lane} data-tone={lane.tone}>

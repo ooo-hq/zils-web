@@ -18,7 +18,7 @@ const ELECT = [
   ['Train', 'A miner fine-tunes a candidate from the current base in its tier, uploads it to Hugging Face and commits the hash on chain.'],
   ['Exam', 'Validators pull it and score it on sealed questions. It must beat the current base, and the win must hold on a fresh draw.'],
   ['Suite', 'Customer adapters are retrained on the candidate and must not get worse. A graduated skill would also need a retained exam in this suite; no box skill has graduated yet.'],
-  ['Crown', 'Once the release is reviewed, the winner’s miner joins the last five kings, who share the tier’s pay. A tier with no king burns its share.'],
+  ['Seats', 'There are no kings: each release is a soup, and its members are paid by seat each night. Unearned pay burns.'],
   ['Release', 'The new base ships as latest. Customer models move over when they stay within 0.005 Brier of their old score; stable follows.'],
 ];
 
@@ -38,17 +38,17 @@ function Steps({ items }: { items: string[][] }) {
 export default function BasesPage() {
   return (
     <SiteFrame current="model">
-      <SectionRow n="01" label="Bases" note="As of 21 Oct 2026" />
+      <SectionRow n="01" label="Bases" />
       <header className={m.hero}>
         <h1>z3 base history</h1>
-        <p>Every customer model is an adapter on a shared base. A base moves forward only when a miner’s candidate <b>beats it without hurting anything customers already run</b>.</p>
+        <p>Every customer model is an adapter on a shared base. A base moves forward only when the nightly soup <b>beats it without hurting anything customers already run</b>.</p>
       </header>
 
       <dl className={m.nums}>
         <div><dt>Base tiers live</dt><dd>2</dd></div>
         <div><dt>Latest mini</dt><dd className={m.sm}>v1</dd></div>
         <div><dt>Candidates stopped</dt><dd>5</dd></div>
-        <div><dt>Feature tracks</dt><dd className={m.sm}>Boxes · testnet</dd></div>
+        <div><dt>Feature tracks</dt><dd className={m.sm}>Boxes · pilot</dd></div>
       </dl>
 
       <SectionRow n="02" label="Lineage" note="Bases left to right, skills below" />

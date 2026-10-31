@@ -1,0 +1,24 @@
+/* After .learn in components/home-decision-story.module.css: a ring of bodies drifting into one spectrum core. */
+.merge { position: relative; height: 220px; overflow: hidden; }
+.member, .left { position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin: -3.5px; transform: rotate(var(--a)) translateX(86px); }
+.member { background: var(--c); }
+.left { background: rgba(var(--zs-fg-rgb), .3); }
+.core { position: absolute; left: 50%; top: 50%; width: 92px; height: 92px; transform: translate(-50%, -50%); display: grid; place-items: center; background: var(--zs-spectrum); }
+.core::after { content: ""; position: absolute; inset: 0; background-image: var(--zs-grain); opacity: .35; mix-blend-mode: overlay; }
+.core span { position: relative; z-index: 1; font-family: var(--font-plex-mono), ui-monospace, monospace; font-weight: 600; font-size: 20px; letter-spacing: .02em; color: #18191e; }
+@media (prefers-reduced-motion: no-preference) {
+  .member { animation: join 4.6s ease-in infinite; animation-delay: calc(var(--i) * -.38s); }
+  .left { animation: refuse 4.6s ease-in-out infinite; animation-delay: calc(var(--i) * -.38s); }
+  @keyframes join {
+    from { transform: rotate(var(--a)) translateX(132px); opacity: 0; }
+    20% { opacity: 1; }
+    to { transform: rotate(var(--a)) translateX(26px); opacity: 0; }
+  }
+  /* Tried, then left out: it comes in, stops short of the core and fades. */
+  @keyframes refuse {
+    from { transform: rotate(var(--a)) translateX(132px); opacity: 0; }
+    25% { opacity: .9; }
+    60% { transform: rotate(var(--a)) translateX(66px); opacity: .9; }
+    to { transform: rotate(var(--a)) translateX(78px); opacity: 0; }
+  }
+}
