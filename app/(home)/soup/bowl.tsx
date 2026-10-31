@@ -3,10 +3,17 @@ import s from './soup.module.css';
 // One spectrum stop per seat, warm to cool, as on the z3 lineup.
 export const SEATS = ['#ef8d5a', '#d9a08c', '#cfa2e4', '#a9b5f2', '#8ea6ff'] as const;
 
-/** A line-drawn ramen bowl. Its five toppings are the five seats a soup can hold, one spectrum colour each. */
-export function Bowl() {
-  return <svg className={s.bowl} viewBox="0 0 480 400" role="img" aria-labelledby="bowl-title">
-    <title id="bowl-title">A bowl of soup with five toppings, one for each seat, and chopsticks lifting noodles</title>
+/**
+ * A line-drawn ramen bowl. Its five toppings are the five seats a soup can hold, one spectrum colour each.
+ * With `seats`, only that many toppings are filled (seat 1 = SEATS[0], as in the seat list); the rest are ghosts.
+ */
+export function Bowl({ seats, className }: { seats?: number; className?: string } = {}) {
+  const on = (seat: number) => (seats === undefined || seat < seats ? 1 : 0.14);
+  const title = seats === undefined
+    ? 'A bowl of soup with five toppings, one for each seat, and chopsticks lifting noodles'
+    : `A bowl of soup with ${seats} of 5 seats filled, one topping per seat`;
+  return <svg className={className ?? s.bowl} viewBox="0 0 480 400" role="img" aria-labelledby="bowl-title">
+    <title id="bowl-title">{title}</title>
     <defs>
       <linearGradient id="bowl-spectrum" x1="0" x2="1">
         <stop offset="0" stopColor="#ef8d5a" /><stop offset=".18" stopColor="#d9a08c" /><stop offset=".42" stopColor="#cfa2e4" />
@@ -33,14 +40,20 @@ export function Bowl() {
     <path className={s.noodle} d="M132 212 C152 202 172 220 192 210 S232 202 252 214 S292 222 312 212" />
 
     {/* five seats */}
-    <path fill={SEATS[4]} d="M134 196 L120 116 L174 110 L184 192 Z" />
-    <ellipse cx="216" cy="190" rx="25" ry="14" fill={SEATS[2]} />
-    <path className={s.swirl} d="M216 190 c0-4 6-4 6 0 c0 7-14 7-14 0 c0-10 22-10 22 0" />
-    <ellipse cx="270" cy="200" rx="27" ry="13" fill={SEATS[1]} />
-    <ellipse cx="270" cy="200" rx="15" ry="6" className={s.ring} />
-    <ellipse cx="322" cy="186" rx="28" ry="18" className={s.egg} />
-    <ellipse cx="324" cy="186" rx="15" ry="10" fill={SEATS[0]} />
-    <g fill={SEATS[3]}>
+    <path fill={SEATS[4]} opacity={on(4)} d="M134 196 L120 116 L174 110 L184 192 Z" />
+    <g opacity={on(2)}>
+      <ellipse cx="216" cy="190" rx="25" ry="14" fill={SEATS[2]} />
+      <path className={s.swirl} d="M216 190 c0-4 6-4 6 0 c0 7-14 7-14 0 c0-10 22-10 22 0" />
+    </g>
+    <g opacity={on(1)}>
+      <ellipse cx="270" cy="200" rx="27" ry="13" fill={SEATS[1]} />
+      <ellipse cx="270" cy="200" rx="15" ry="6" className={s.ring} />
+    </g>
+    <g opacity={on(0)}>
+      <ellipse cx="322" cy="186" rx="28" ry="18" className={s.egg} />
+      <ellipse cx="324" cy="186" rx="15" ry="10" fill={SEATS[0]} />
+    </g>
+    <g fill={SEATS[3]} opacity={on(3)}>
       <circle cx="160" cy="212" r="5" /><circle cx="178" cy="218" r="5" /><circle cx="244" cy="216" r="5" /><circle cx="300" cy="216" r="5" /><circle cx="350" cy="208" r="5" />
     </g>
 

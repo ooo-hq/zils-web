@@ -24,6 +24,10 @@
 .score { margin: 6px 0 0; font-weight: 200; font-size: clamp(56px, 6vw, 84px); line-height: .95; letter-spacing: -0.045em; }
 .score span { background: var(--zs-spectrum-text); -webkit-background-clip: text; background-clip: text; color: transparent; padding-right: .04em; }
 .change { margin: 0; font-size: 14px; color: var(--zs-fg); }
+/* The /soup bowl, one filled topping per seat (seat colours match the Seats list). */
+.scoreRow { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 16px; align-items: end; }
+.scoreRow .change { margin-top: 10px; }
+.bowlArt { justify-self: end; width: 100%; max-width: 190px; height: auto; overflow: visible; }
 .meta { margin: 0; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .06em; color: var(--zs-t3); }
 
 .seats { list-style: none; margin: 0; padding: 0; display: grid; }

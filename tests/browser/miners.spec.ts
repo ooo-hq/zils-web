@@ -246,6 +246,8 @@ test('Tonight’s soup shows each tier’s score, change, seats, crown, serving 
   for (const name of ['Soup score', 'Seats', 'Crown', 'Serving', 'Categories', 'Recent rounds']) await expect(mini.getByRole('group', { name })).toBeVisible();
   // 71.6 in four categories and 69.6 in arts → 71.4; the previous round was 70.8.
   await expect(mini.getByText('71.4', { exact: true })).toBeVisible();
+  // The /soup bowl, one topping per occupied seat: three seats tonight.
+  await expect(mini.getByRole('group', { name: 'Soup score' }).getByRole('img', { name: /bowl of soup with 3 of 5 seats filled/i })).toBeVisible();
   await expect(mini).toContainText('+0.6 since the last round');
   const seats = mini.getByRole('list', { name: 'Seats' }).getByRole('listitem');
   await expect(seats).toHaveCount(3);

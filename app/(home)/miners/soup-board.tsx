@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { SEATS } from '../soup/bowl';
+import { Bowl, SEATS } from '../soup/bowl';
 import { FoodIcon, type Food } from '../soup/food-icons';
 import type { TierView } from '@/lib/soup-board';
 import s from './soup-board.module.css';
@@ -40,8 +40,13 @@ function Box({ view }: { view: TierView }) {
   const { tonight } = view;
   return <article className={s.box} aria-label={view.tier}>
     <Cell area="score" label="Soup score" jp="今夜のスープ">
-      <p className={s.score}><span>{tonight.score.toFixed(1)}</span></p>
-      <p className={s.change}>{view.change === null ? 'First round' : `${signed(view.change)} since the last round`}</p>
+      <div className={s.scoreRow}>
+        <div>
+          <p className={s.score}><span>{tonight.score.toFixed(1)}</span></p>
+          <p className={s.change}>{view.change === null ? 'First round' : `${signed(view.change)} since the last round`}</p>
+        </div>
+        <Bowl seats={view.seats.length} className={s.bowlArt} />
+      </div>
       <p className={s.meta}>Round {tonight.round} · {when(tonight.finished)}</p>
     </Cell>
 
