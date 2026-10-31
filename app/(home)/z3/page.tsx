@@ -20,7 +20,6 @@ const WEIGHTS = 'https://huggingface.co/zils-ai/z3-mini-v1/tree/c9b7515250c04441
 // Each lineage keeps one spectrum stop as its colour.
 const LINEUP = [
   { name: 'z3-lite', params: 0.85, status: 'Planned release', color: '#ef8d5a' },
-  { name: 'z3-nano', params: 2.21, status: 'Planned release', color: '#d9a08c' },
   { name: 'z3-mini', params: 4.54, status: 'v1 · Founding baseline', color: '#cfa2e4', released: true },
   { name: 'z3-flash', params: 8.39, status: 'Planned release', color: '#a9b5f2' },
   { name: 'z3', params: 26.09, status: 'Planned release', color: '#8ea6ff' },

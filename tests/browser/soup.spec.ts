@@ -50,7 +50,7 @@ const HOUSE = [
   ['KnowLine-4B-Gen5', 'PelaAI/KnowLine-4B-Gen5'],
 ];
 
-// Lite house from Linear ZIL-108: vllm-sr/d3-lite (also the chassis) and internlm/Intern-Decision-0.8B, on Qwen3.5-0.8B.
+// zils main 0974870: zils/data/soup-house-{lite,flash,z3}.json and docs/mining.md "Four pools". No nano pool.
 async function expectIngredients(page: import('@playwright/test').Page) {
   const built = page.getByRole('region', { name: 'What each soup is built from' });
   await expect(built.getByRole('button', { name: 'z3-mini' })).toHaveAttribute('aria-pressed', 'true');
@@ -60,22 +60,41 @@ async function expectIngredients(page: import('@playwright/test').Page) {
   }
   await expect(built).toContainText('never paid');
   await built.getByRole('button', { name: 'z3-lite' }).click();
-  await expect(built.getByRole('link', { name: 'Qwen/Qwen3.5-0.8B' })).toHaveAttribute('href', /huggingface\.co\/Qwen\/Qwen3\.5-0\.8B/);
+  await expect(built.getByRole('link', { name: 'Qwen/Qwen3.5-0.8B' })).toHaveAttribute('href', /huggingface\.co\/Qwen\/Qwen3\.5-0\.8B\/tree\/2fc06364715b967f1860aea9cf38778875588b17/);
   await expect(built.getByRole('link', { name: 'd3-lite' })).toHaveAttribute('href', /huggingface\.co\/vllm-sr\/d3-lite\/tree\/03560c26f5199c3c04129a2ccb38960c913635e0/);
   await expect(built.getByRole('link', { name: 'Intern-Decision-0.8B' })).toHaveAttribute('href', /huggingface\.co\/internlm\/Intern-Decision-0\.8B\/tree\/42457fafd13d10d0b0d9be46cb30a23caa409994/);
   await expect(built.getByRole('link', { name: 'KnowLine-4B-Gen5' })).toHaveCount(0);
-  await expect(built).toContainText('Nano, flash and z3 get their own house models when they open');
+  await expect(built.getByRole('button')).toHaveText(['z3-lite', 'z3-mini', 'z3-flash', 'z3']);
+  await expect(built).not.toContainText(/nano/i);
+  await built.getByRole('button', { name: 'z3-flash' }).click();
+  await expect(built.getByRole('link', { name: 'Qwen/Qwen3.5-9B' })).toHaveAttribute('href', /Qwen3\.5-9B\/tree\/c202236235762e1c871ad0ccb60c8ee5ba337b9a/);
+  await expect(built.getByRole('link', { name: 'd3-flash' })).toHaveAttribute('href', /vllm-sr\/d3-flash\/tree\/13dc1cc8ef23caefa765907e1d764751e5629f7d/);
+  await expect(built).toContainText('Opens later');
+  await built.getByRole('button', { name: 'z3', exact: true }).click();
+  await expect(built.getByRole('link', { name: 'Qwen/Qwen3.8-27B' })).toHaveAttribute('href', /Qwen3\.8-27B\/tree\/1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0/);
+  await expect(built.getByRole('link', { name: 'd3-ultra' })).toHaveAttribute('href', /vllm-sr\/d3-ultra\/tree\/52ba9e7a00402f9560c7fba8c039608e7ddee7fb/);
   await built.getByRole('button', { name: 'z3-mini' }).click();
+  await expect(built).not.toContainText('Opens later');
 }
 
 test('/soup states the crown bar, house rates and house models without internal scores or dates', async ({ page }) => {
   await page.goto('/soup');
   const crown = page.getByRole('table', { name: 'Who gets paid' }).getByRole('row', { name: /Solo crown/ });
   await expect(crown).toContainText('beats every house model and the current soup by at least 0.3');
-  await expect(page.getByRole('table', { name: 'Seat rates' }).getByRole('row', { name: /House mix/ })).toContainText('0.25×');
+  const mix = page.getByRole('table', { name: 'Seat rates' }).getByRole('row', { name: /House mix/ });
+  await expect(mix).toContainText('0.25×');
+  await expect(mix).toContainText('the soup and the release');
+  // zils#150: seats and the crown are decided on the last 3 rounds' items together, not one fresh slice.
+  const steps = page.getByRole('list', { name: 'How a soup is made' }).getByRole('listitem');
+  await expect(steps.nth(1)).toContainText('last three rounds');
+  await expect(page.locator('main')).not.toContainText('fresh, seeded slice');
+  // zils#152: fine-tunes of the soup and release are allowed; zils#153: four pools, flash and z3 open later.
+  await expect(page.locator('main')).toContainText('the current soup');
+  for (const parent of ['Qwen/Qwen3.5-0.8B', 'Qwen/Qwen3.5-4B', 'Qwen/Qwen3.5-9B', 'Qwen/Qwen3.8-27B']) await expect(page.locator('main code', { hasText: parent }).first()).toBeVisible();
+  await expect(page.locator('main')).toContainText('Lite and mini cook from the launch; flash and z3 open later.');
   await expectIngredients(page);
   const text = await page.locator('main').innerText();
-  for (const banned of ['+4.26', '+6.63', 'as of', '30 Oct', 'testnet']) expect(text).not.toContain(banned);
+  for (const banned of ['+4.26', '+6.63', 'as of', '30 Oct', 'testnet', 'nano', 'Nano']) expect(text).not.toContain(banned);
 });
 
 test('/miners: every tier is a soup, with its ingredients and Japanese accents', async ({ page }) => {
@@ -86,6 +105,12 @@ test('/miners: every tier is a soup, with its ingredients and Japanese accents',
   await expect(lane).not.toContainText('testnet');
   const base = page.locator('div#base-tier');
   await expect(base).toContainText('Every tier is a soup');
+  await expect(base).toContainText('Lite and mini cook from the launch; flash and z3 open later.');
+  // Base pool shares from zils/data/base-pools-launch.json; the testnet 40/10/16/4/30 split is gone.
+  const lanes = page.getByRole('region', { name: 'Three ways to earn' });
+  await expect(lanes).toContainText('lite 35%, mini 30%, flash 20% and z3 10%');
+  await expect(lanes).not.toContainText('40/10/16/4/30');
+  await expect(lanes).not.toContainText('This validator allocates');
   await expect(page.locator('main')).not.toContainText('king of the hill');
   await expect(page.getByRole('table', { name: /candidates/i })).toHaveCount(0);
   expect(await page.locator('main [lang=ja]').count()).toBeGreaterThanOrEqual(6);
@@ -108,6 +133,7 @@ test('/z3 separates the nightly soup from the release window and records soup me
   await expect(page.getByText(/approved soups become new releases/)).toBeVisible();
   await expect(page.locator('main')).not.toContainText('king of the hill');
   await expect(page.locator('main')).not.toContainText('Other sizes');
+  await expect(page.locator('main')).not.toContainText(/nano/i);
   expect(await page.locator('main [lang=ja]').count()).toBeGreaterThanOrEqual(4);
   await expect(page.getByRole('link', { name: 'Start mining', exact: true })).toHaveAttribute('href', '/miners');
   const current = page.getByRole('region', { name: 'v1 today, a soup next.' });

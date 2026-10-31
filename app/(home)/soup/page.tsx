@@ -18,10 +18,10 @@ export const metadata: Metadata = {
 
 const GUIDE = 'https://docs.zils.ai/operations/soup';
 
-// Rules from zils main 16b87a6: docs/mining.md "Soup pool" and zils/soup_round.py. Change them here, not in the copy.
+// Rules from zils main 0974870: docs/mining.md "Soup pool" and zils/soup_round.py. Change them here, not in the copy.
 const STEPS = [
   ['持込', 'Bring a body', 'Fine-tune your tier’s Qwen base any way you like. Upload the full body to Hugging Face and commit its hash on chain.'],
-  ['味見', 'Taste it alone', 'Each day a validator grades every body in the pool on a fresh, seeded slice of a private exam, through the tier’s fixed answer layer.'],
+  ['味見', 'Taste it alone', 'Each day a validator grades every body in the pool on a seeded slice of a private exam, through the tier’s fixed answer layer. Seats are decided on the last three rounds’ slices together, so one lucky night does not win a seat.'],
   ['欲張り', 'Ladle greedily', 'Start with the best body. Add the next best only if the soup scores at least 0.3 points higher. Stop at five.'],
   ['抜き', 'Taste without you', 'Each member is lifted out once. What the soup loses without it is that member’s contribution.'],
   ['毎日', 'Serve daily', 'Seats are re-earned every round. A body that drops out of the bowl stops earning at once.'],
@@ -38,18 +38,18 @@ const BILL = [
 const RATES = [
   ['Trainer', '1×', 'You trained the body. Fine-tunes of a house model, the soup or a release count.'],
   ['Scout', '0.25×', 'An open model released after launch, re-uploaded by the miner who found it.'],
-  ['House mix', '0.25×', 'A body that is almost entirely a blend of house models, with less than 5% of its change left over.'],
-  ['House model', '0', 'The five open models the soup starts from. They cook; they are not paid.'],
+  ['House mix', '0.25×', 'A body that is almost entirely a blend of house models, or of the soup and the release, with less than 5% of its own change.'],
+  ['House model', '0', 'The open models each tier’s soup starts from. They cook; they are not paid.'],
 ] as const;
 
 const RULES = [
-  <>Any fine-tune of your tier’s Qwen base (<code>Qwen/Qwen3.5-4B</code> for mini, <code>Qwen/Qwen3.5-0.8B</code> for lite) with that tier’s body layout, trained from plain Qwen, a z3 release or another open model.</>,
+  <>Any fine-tune of your tier’s Qwen base (<code>Qwen/Qwen3.5-0.8B</code> for lite, <code>Qwen/Qwen3.5-4B</code> for mini, <code>Qwen/Qwen3.5-9B</code> for flash, <code>Qwen/Qwen3.8-27B</code> for z3) with that tier’s body layout, trained from plain Qwen, a z3 release, the current soup or another open model.</>,
   <>You bring the body only. The tier’s answer layer, prompt and runtime stay fixed.</>,
   <>Move at most about 15% away from Qwen.</>,
   <>Apache-2.0, MIT or BSD licence.</>,
   <>Your repo names your hotkey in <code>zils-owner.json</code>. The first valid commitment of a body wins it.</>,
   <>No reheats: near-exact re-uploads, bodies built largely from other miners’ bodies, and models that answer like a pool body are turned away.</>,
-  <>Up to 20 bodies compete for the five seats each round. At most 6 new bodies are admitted per round, in commitment order.</>,
+  <>Up to 20 bodies compete for the five seats each round. At most 6 new bodies are admitted per round, in commitment order. Flash and z3 take fewer.</>,
   <>Upload to a private repo, commit, then make it public before the day’s commit deadline, so nobody can commit your body first.</>,
 ];
 
@@ -121,7 +121,7 @@ export default function SoupPage() {
     <section className={s.section} aria-labelledby="release-heading">
       <h2 id="release-heading" className={s.h2}>A good soup becomes the next release.</h2>
       <div className={s.prose}>
-        <p>Every 14 to 28 days the soup can become the next release. It must beat the current release by at least one point on two sealed release exams that rounds never use, hold that lead 12 hours later, and keep customer adapters at least as good. A reviewed promotion then makes it that tier’s next version. Its members are paid through their seats; the release itself has no single winner. Every tier is a soup with its own house models, and each is released on its own.</p>
+        <p>Every 14 to 28 days the soup can become the next release. It must beat the current release by at least one point on two sealed release exams that rounds never use, hold that lead 12 hours later, and keep customer adapters at least as good. A reviewed promotion then makes it that tier’s next version. Its members are paid through their seats; the release itself has no single winner. Every tier is a soup with its own house models, and each is released on its own. Lite and mini cook from the launch; flash and z3 open later.</p>
       </div>
       <div className={s.links}><Link href="/z3">The z3 model line</Link><Link href="/miners">Miner leaderboard</Link></div>
     </section>

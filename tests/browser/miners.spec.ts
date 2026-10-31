@@ -28,6 +28,7 @@ const cats = (v: number) => ({ reasoning: v, language: v, retrieval: v, tools: v
 const soupRound = (id: string, score: number, members: object[], finished: string) => ({
   round_id: id, pool_id: 'd3-mini', seed: 'ab'.repeat(32), finished_at: finished, members, crown: null,
   category_scores: { ...cats(score), arts: score - 2 }, soup_sha256: sha('c'), subset_sha256: sha('d'), predictions_sha256: sha('e'),
+  decision: { rounds: 3, items: 9000 },
 });
 const SOUP = () => ({
   as_of: new Date().toISOString(),
@@ -259,6 +260,10 @@ test('Tonight’s soup shows each tier’s score, change, seats, crown, serving 
   await expect(seats.nth(2)).toContainText('Unpaid');
   await expect(mini).toContainText('Crown burned');
   await expect(mini).toContainText('Serving z3-mini v1 · by Zils');
+  // zils#150: the public record says how many rounds' items the seats were decided on.
+  await expect(mini.getByRole('group', { name: 'Soup score' })).toContainText('Seats decided on 3 rounds · 9,000 items');
+  await expect(board).toContainText('last three rounds');
+  await expect(board).not.toContainText('fresh slice');
   await expect(mini.getByRole('img', { name: /Soup score over the last 3 rounds: 70.0, 70.8, 71.4/ })).toBeVisible();
   expect(await board.locator('[lang=ja]').count()).toBeGreaterThanOrEqual(3);
   await expect(board).not.toContainText('No soup feed is connected');

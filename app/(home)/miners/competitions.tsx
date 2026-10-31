@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import s from './miners.module.css';
 
-// Publish this allocation only with the verified testnet pilot rollout.
+// Base pool shares from zils/data/base-pools-launch.json (zils main 0974870). The split between base, features and
+// customer adapters is each validator's configuration and is not stated here until the mainnet numbers are set.
 const LANES = [
   {
     name: 'Base tier', share: '50%', status: 'Open', tone: 'open',
@@ -28,7 +29,7 @@ export function Competitions() {
   return <section aria-labelledby="competitions-heading" className={s.lanes}>
     <div className={s.lanesHead}>
       <h2 id="competitions-heading">Three ways to earn</h2>
-      <p><span className={s.proposed}>Allocation</span> This validator allocates 50% to base improvement, 20% to features and 30% to customer adapters. Mini/lite split 80/20 within base and box budgets: 40/10/16/4/30 across mini base, lite base, mini boxes, lite boxes and customer adapters. Empty shares burn.</p>
+      <p><span className={s.proposed}>Allocation</span> The base tier splits lite 35%, mini 30%, flash 20% and z3 10%; the other 5% burns. Flash and z3 burn their shares until they open, then pay a boosted share for their first weeks. Empty shares burn.</p>
     </div>
     <ol className={s.laneGrid}>
       {LANES.map(lane => <li key={lane.name} className={s.lane} data-tone={lane.tone}>

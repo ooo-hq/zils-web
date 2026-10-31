@@ -23,6 +23,8 @@ const round = z.object({
   crown: z.object({ hotkey: z.string().min(1).max(100), body_sha256: sha, rate, weight: z.number().finite().min(0).max(1) }).strict().nullable(),
   category_scores: categories,
   soup_sha256: sha, subset_sha256: sha, predictions_sha256: sha,
+  // zils#150: seats and the crown are scored on this round's items plus the validator's previous rounds' (decision_rounds).
+  decision: z.object({ rounds: z.number().int().min(1).max(7), items: z.number().int().min(0) }).strict().optional(),
 }).strict();
 const tier = z.object({
   pool: z.string().min(1).max(32),
@@ -61,6 +63,7 @@ export function tierView(t: SoupTier) {
     tier: t.tier,
     serving: t.serving,
     tonight: { round: tonight.round_id, finished: tonight.finished_at, score, categories: tonight.category_scores },
+    decision: tonight.decision ?? null,
     change: previous ? tenth(score - soupScore(previous.category_scores)) : null,
     seats: tonight.members.map(m => ({
       name: bodyLabel(m, t.bodies), hotkey: m.hotkey, body: m.body_sha256, rate: m.rate,

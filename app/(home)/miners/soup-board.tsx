@@ -48,6 +48,7 @@ function Box({ view }: { view: TierView }) {
         <Bowl seats={view.seats.length} className={s.bowlArt} />
       </div>
       <p className={s.meta}>Round {tonight.round} · {when(tonight.finished)}</p>
+      {view.decision && <p className={s.meta}>Seats decided on {view.decision.rounds} rounds · {view.decision.items.toLocaleString('en-US')} items</p>}
     </Cell>
 
     <Cell area="seats" label="Seats" jp="具" icon="chopsticks">
@@ -93,7 +94,7 @@ export function SoupBoardView({ views }: { views: TierView[] }) {
       {views.map(v => <button key={v.tier} type="button" aria-pressed={v.tier === view.tier} onClick={() => setTier(v.tier)}>{v.tier}</button>)}
     </div>
     <Box key={view.tier} view={view} />
-    <p className={s.fine}>Each round grades a fresh slice of a private exam, so small moves between rounds are partly noise; release windows are the comparable checkpoints. Contributions are what the soup loses without a body, rounded to 0.5 point.</p>
+    <p className={s.fine}>Seats and the crown are decided on the items of the last three rounds together, because one night’s slice of the private exam is noisier than the 0.3-point margin. The score shown is tonight’s slice alone, so small moves between rounds are partly noise; release windows are the comparable checkpoints. Contributions are what the soup loses without a body, rounded to 0.5 point.</p>
   </div>;
 }
 

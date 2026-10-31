@@ -102,7 +102,7 @@ export default async function MinersPage() {
       <div id="base-tier" className={s.base}>
         <div>
           <h2>Beat <em>the base.</em></h2>
-          <p>Every tier is a soup. Each night validators average up to five bodies, keep a body only if it lifts the score by 0.3, and pay the soup’s seats.</p>
+          <p>Every tier is a soup. Each night validators average up to five bodies, keep a body only if it lifts the score by 0.3, and pay the soup’s seats. Lite and mini cook from the launch; flash and z3 open later.</p>
           <p className={s.soupLink}><span lang="ja" aria-hidden="true">スープ</span> Lite, mini and the larger tiers each cook from their own Qwen base and house models. <Link href="/soup">Bring a body to the soup</Link></p>
         </div>
         <span className={s.pill}>Every tier · greedy soup</span>

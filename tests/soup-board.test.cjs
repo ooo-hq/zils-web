@@ -25,6 +25,8 @@ const valid = () => ({
 
 test('the feed accepts public round records and rejects anything that could leak or mislead', () => {
   assert.equal(soupBoardSchema.safeParse(valid()).success, true);
+  const pooled = valid(); pooled.tiers[0].rounds[0].decision = { rounds: 3, items: 9000 };
+  assert.equal(soupBoardSchema.safeParse(pooled).success, true);   // zils#150 adds decision: {rounds, items}
   const bad = [
     v => { v.tiers[0].rounds[0].category_scores.secret_family = 50; },        // only the five published categories
     v => { v.tiers[0].rounds[0].members[0].rate = 0.5; },                      // rates are 0, 0.25 or 1
@@ -32,6 +34,8 @@ test('the feed accepts public round records and rejects anything that could leak
     v => { v.tiers[0].rounds[0].items = ['exam item']; },                       // no extra fields
     v => { v.tiers[0].bodies['b'.repeat(64)].repo = 'https://evil.example'; },
     v => { v.tiers[0].rounds[0].members = Array(6).fill(v.tiers[0].rounds[0].members[0]); }, // at most five seats
+    v => { v.tiers[0].rounds[0].decision = { rounds: 8, items: 9000 }; },     // decision_rounds is 1 to 7
+    v => { v.tiers[0].rounds[0].decision = { rounds: 3, items: 9000, ids: ['x'] }; }, // never item ids
   ];
   for (const change of bad) { const v = valid(); change(v); assert.equal(soupBoardSchema.safeParse(v).success, false); }
 });
@@ -48,6 +52,9 @@ test('a tier view gives tonight, the change since last night, seats with names, 
   assert.deepEqual(view.seats.map(s => [s.name, s.kind, s.contribution]), [['pplx-decider-flash-v1.2', 'house', 2.5], ['miner/body-one', 'trainer', 1]]);
   assert.equal(view.crown, null);
   assert.deepEqual(view.history, [70.8, 71.4]);
+  assert.equal(view.decision, null);
+  const pooled = valid(); pooled.tiers[0].rounds[0].decision = { rounds: 3, items: 9000 };
+  assert.deepEqual(tierView(pooled.tiers[0]).decision, { rounds: 3, items: 9000 });
 });
 
 test('a body with no known repo is named by its hotkey and hash, never invented', () => {
