@@ -9,8 +9,8 @@ import { InstallCommand } from '@/components/site/install-command';
 import { currentBase } from '@/lib/base-model';
 import { boardNumbers } from '@/lib/miner-board';
 import { networkMiners } from '@/lib/network-miners';
-import { soupBoard } from '@/lib/soup-board';
-import { SoupBoardView } from './soup-board';
+import { soupBoard, tierView } from '@/lib/soup-board';
+import { EmptyBoard, SoupBoardView } from './soup-board';
 import { Rehearsal } from './rehearsal';
 import { Ingredients } from '../soup/ingredients';
 import { SoupMerge } from './soup-merge';
@@ -89,10 +89,16 @@ export default async function MinersPage() {
         <p><b>Bring a body to the nightly soup</b> for any open tier. Customer-training jobs stay with Zils miners until miner terms are live.</p>
       </header>
 
-      <SectionRow n="02" label="Competitions" note="お品書き · menu" />
+      <SectionRow n="02" label="Tonight’s soup" note="今夜のスープ · latest round" />
+      <section className={s.tonightLive} aria-labelledby="tonight-soup-heading">
+        <h2 id="tonight-soup-heading" className="sr-only">Tonight’s soup</h2>
+        {soup?.tiers.length ? <SoupBoardView views={soup.tiers.map(tierView)} /> : <EmptyBoard art={<SoupMerge />} />}
+      </section>
+
+      <SectionRow n="03" label="Competitions" note="お品書き · menu" />
       <Competitions />
 
-      <SectionRow n="03" label="Base tier" note="スープ · soup" />
+      <SectionRow n="04" label="Base tier" note="スープ · soup" />
       <div id="base-tier" className={s.base}>
         <div>
           <h2>Beat <em>the base.</em></h2>
@@ -111,19 +117,6 @@ export default async function MinersPage() {
         </ol>
         <Ingredients />
       </section>
-      {soup?.tiers.length
-        ? <section className={s.tonightLive} aria-labelledby="tonight-soup-heading">
-          <h3 id="tonight-soup-heading">Tonight’s soup <span lang="ja" aria-hidden="true" className={s.jpNote}>今夜</span></h3>
-          <SoupBoardView board={soup} />
-        </section>
-        : <section className={s.tonight} aria-labelledby="tonight-soup-heading">
-          <div>
-            <h3 id="tonight-soup-heading">Tonight’s soup <span lang="ja" aria-hidden="true" className={s.jpNote}>今夜</span></h3>
-            <p>Seats appear here after the first round. Each round’s public record lists the members, their rates and rounded contributions, so anyone can see who holds a seat and why.</p>
-            <p className={s.live}>No soup feed is connected to this page yet.</p>
-          </div>
-          <SoupMerge />
-        </section>}
       <section className={s.install} aria-labelledby="install-heading">
         <h3 id="install-heading" className={s.subTitle}>Start mining</h3>
         <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
@@ -131,7 +124,7 @@ export default async function MinersPage() {
         <p><a href="https://docs.zils.ai/operations/miner-tuning" className={s.rhInline}>Tune your miner</a>: prepare training data, change the recipe, and compare your body with the base before committing.</p>
         <p>Installs the <code>zils</code> and <code>btcli</code> commands, then <code>zils setup</code> asks for your wallet and Hugging Face repo. After that, <code>zils doctor</code> checks each step and prints the command for the next one: register, train a body, then commit it with <code>zils commit-body</code>. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the command to update.</p>
       </section>
-      <SectionRow n="04" label="Customer-training workers" note={network ? `Updated ${utc(network.as_of)} UTC` : undefined} />
+      <SectionRow n="05" label="Customer-training workers" note={network ? `Updated ${utc(network.as_of)} UTC` : undefined} />
       {numbers && <dl className={s.nums}>
         <div><dt>Workers online</dt><dd>{numbers.online}<small> / {numbers.total}</small></dd></div>
         <div><dt>Customer jobs</dt><dd>{numbers.jobs}</dd></div>

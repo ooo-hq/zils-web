@@ -240,7 +240,10 @@ test('Tonight’s soup shows each tier’s score, change, seats, crown, serving 
   soupMode = 'ok';
   await page.goto('/miners');
   const board = page.getByRole('region', { name: 'Tonight’s soup' });
+  // A bento box per tier, chosen with tier chips; the first tier is open.
+  await expect(board.getByRole('button', { name: 'z3-mini' })).toHaveAttribute('aria-pressed', 'true');
   const mini = board.getByRole('article', { name: 'z3-mini' });
+  for (const name of ['Soup score', 'Seats', 'Crown', 'Serving', 'Categories', 'Recent rounds']) await expect(mini.getByRole('group', { name })).toBeVisible();
   // 71.6 in four categories and 69.6 in arts → 71.4; the previous round was 70.8.
   await expect(mini.getByText('71.4', { exact: true })).toBeVisible();
   await expect(mini).toContainText('+0.6 since the last round');

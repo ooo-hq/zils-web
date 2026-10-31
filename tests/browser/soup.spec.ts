@@ -140,11 +140,11 @@ test('/z3 separates the nightly soup from the release window and records soup me
 test('/miners leads with earning, shows the soup before our own workers, and is honest about the soup feed', async ({ page }) => {
   await page.goto('/miners');
   await expect(page.locator('main')).not.toContainText('Proposed');
-  // Order: how to earn, competitions, base tier and soup, install, then our customer-training workers.
+  // Order: tonight's soup first (miners come for stats), then competitions, base tier, install, then our workers.
   // The workers row renders whether or not the worker API answers; #miners only renders when it does.
   const workers = page.getByText('Customer-training workers', { exact: true }).first();
   const order = [
-    ...await page.evaluate(() => ['competitions-heading', 'base-tier', 'tonight-soup-heading', 'install-heading']
+    ...await page.evaluate(() => ['tonight-soup-heading', 'competitions-heading', 'base-tier', 'install-heading']
       .map(id => document.getElementById(id)?.getBoundingClientRect().top ?? NaN)),
     (await workers.boundingBox())?.y ?? NaN,
   ];
