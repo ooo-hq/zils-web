@@ -18,7 +18,7 @@ const ELECT = [
   ['Train', 'A miner fine-tunes a candidate from the current base in its tier, uploads it to Hugging Face and commits the hash on chain.'],
   ['Exam', 'Validators pull it and score it on sealed questions. It must beat the current base, and the win must hold on a fresh draw.'],
   ['Suite', 'Customer adapters are retrained on the candidate and must not get worse. A graduated skill would also need a retained exam in this suite; no box skill has graduated yet.'],
-  ['Crown', 'Once the release is reviewed, the winner’s miner joins the last five kings, who share the tier’s pay. Mini has no kings: its release is a soup, and its members are paid by seat each night. Unearned pay burns.'],
+  ['Seats', 'There are no kings: each release is a soup, and its members are paid by seat each night. Unearned pay burns.'],
   ['Release', 'The new base ships as latest. Customer models move over when they stay within 0.005 Brier of their old score; stable follows.'],
 ];
 
@@ -41,7 +41,7 @@ export default function BasesPage() {
       <SectionRow n="01" label="Bases" />
       <header className={m.hero}>
         <h1>z3 base history</h1>
-        <p>Every customer model is an adapter on a shared base. A base moves forward only when a miner’s candidate, or for mini the nightly soup, <b>beats it without hurting anything customers already run</b>.</p>
+        <p>Every customer model is an adapter on a shared base. A base moves forward only when the nightly soup <b>beats it without hurting anything customers already run</b>.</p>
       </header>
 
       <dl className={m.nums}>

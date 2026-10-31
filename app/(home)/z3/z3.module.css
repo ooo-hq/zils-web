@@ -94,3 +94,6 @@
 .readout { margin: 4px 0 0; min-height: 3.2em; max-width: 72ch; font-size: 14px; line-height: 1.6; color: var(--zs-fg); }
 .readout[data-idle] { color: var(--zs-t3); }
 @media (max-width: 480px) { .nights { gap: 2px; height: 28px; } }
+.stepTop { display: flex; justify-content: space-between; align-items: baseline; }
+.jp { font-size: 13px; color: var(--zs-t3); }
+.stepMark { display: inline-flex; align-items: center; gap: 8px; }

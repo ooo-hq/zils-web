@@ -205,17 +205,3 @@ for (const theme of ['dark', 'light']) {
     for (const r of results) expect(r.ratio, r.text).toBeGreaterThanOrEqual(4.5);
   });
 }
-
-
-test('base submissions use chain identity without claiming worker presence or evaluation', async ({ page }) => {
-  await page.goto('/miners');
-  const table = page.getByRole('table', { name: 'King-of-the-hill candidates' });
-  await expect(table).toContainText('Chain UID 7');
-  await expect(table).toContainText('z3-lite');
-  await expect(table).toContainText('Not reported');
-  await expect(table).not.toContainText('Online');
-  await expect(table).not.toContainText('1.00');
-  await expect(table.getByRole('link', { name: 'Submitted' })).toHaveAttribute('href', 'https://huggingface.co/owner/lite-candidate/tree/' + 'b'.repeat(40));
-  await expect(page.getByRole('table', { name: 'Customer-training workers' })).toContainText('Worker 1');
-  await page.screenshot({path: '.private/base-board-desktop.png', fullPage: true});
-});

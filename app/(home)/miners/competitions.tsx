@@ -5,8 +5,8 @@ import s from './miners.module.css';
 const LANES = [
   {
     name: 'Base tier', share: '50%', status: 'Open', tone: 'open',
-    lead: 'Improve the whole model. Mini is a nightly greedy soup of up to five bodies; lite, nano, flash and z3 crown one winner.',
-    facts: [['Mini pays', 'Soup seats and a crown'], ['Other tiers pay', 'Last five kings'], ['Entry', 'Full model weights']],
+    lead: 'Improve the whole model. Every tier is a nightly greedy soup of up to five bodies.',
+    facts: [['Pays', 'Soup seats and a crown'], ['Entry', 'A full model body']],
     href: '#base-tier', cta: 'How to enter',
   },
   {

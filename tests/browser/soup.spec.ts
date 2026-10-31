@@ -4,7 +4,7 @@ test('/soup explains the greedy soup: seats, crown, house rules and the measured
   const errors: Error[] = [];
   page.on('pageerror', e => errors.push(e));
   await page.goto('/soup');
-  await expect(page).toHaveTitle('Greedy soup — how z3-mini is made');
+  await expect(page).toHaveTitle('Greedy soup — how z3 is made');
   await expect(page.getByRole('heading', { name: 'Greedy soup.', level: 1 })).toBeVisible();
   await expect(page.getByRole('img', { name: /bowl of soup/i })).toBeVisible();
 
@@ -48,13 +48,22 @@ const HOUSE = [
   ['KnowLine-4B-Gen5', 'PelaAI/KnowLine-4B-Gen5'],
 ];
 
+// Lite house from Linear ZIL-108: vllm-sr/d3-lite (also the chassis) and internlm/Intern-Decision-0.8B, on Qwen3.5-0.8B.
 async function expectIngredients(page: import('@playwright/test').Page) {
-  const built = page.getByRole('region', { name: 'What the mini soup is built from' });
+  const built = page.getByRole('region', { name: 'What each soup is built from' });
+  await expect(built.getByRole('button', { name: 'z3-mini' })).toHaveAttribute('aria-pressed', 'true');
   await expect(built.getByRole('link', { name: 'Qwen/Qwen3.5-4B' })).toHaveAttribute('href', /huggingface\.co\/Qwen\/Qwen3\.5-4B/);
   for (const [name, repo] of HOUSE) {
     await expect(built.getByRole('link', { name })).toHaveAttribute('href', new RegExp(`huggingface\\.co/${repo.replace('.', '\\.')}`));
   }
   await expect(built).toContainText('never paid');
+  await built.getByRole('button', { name: 'z3-lite' }).click();
+  await expect(built.getByRole('link', { name: 'Qwen/Qwen3.5-0.8B' })).toHaveAttribute('href', /huggingface\.co\/Qwen\/Qwen3\.5-0\.8B/);
+  await expect(built.getByRole('link', { name: 'd3-lite' })).toHaveAttribute('href', /huggingface\.co\/vllm-sr\/d3-lite\/tree\/03560c26f5199c3c04129a2ccb38960c913635e0/);
+  await expect(built.getByRole('link', { name: 'Intern-Decision-0.8B' })).toHaveAttribute('href', /huggingface\.co\/internlm\/Intern-Decision-0\.8B\/tree\/42457fafd13d10d0b0d9be46cb30a23caa409994/);
+  await expect(built.getByRole('link', { name: 'KnowLine-4B-Gen5' })).toHaveCount(0);
+  await expect(built).toContainText('Nano, flash and z3 get their own house models when they open');
+  await built.getByRole('button', { name: 'z3-mini' }).click();
 }
 
 test('/soup states the crown bar, house rates and house models without internal scores or dates', async ({ page }) => {
@@ -67,14 +76,17 @@ test('/soup states the crown bar, house rates and house models without internal 
   for (const banned of ['+4.26', '+6.63', 'as of', '30 Oct', 'testnet']) expect(text).not.toContain(banned);
 });
 
-test('/miners shows the mini soup and its ingredients; other pools stay king of the hill', async ({ page }) => {
+test('/miners: every tier is a soup, with its ingredients and Japanese accents', async ({ page }) => {
   await page.goto('/miners');
   const lane = page.getByRole('heading', { name: 'Three ways to earn' }).locator('..').locator('..').getByRole('listitem').filter({ hasText: 'Base tier' }).first();
   await expect(lane).toContainText('Soup seats and a crown');
-  await expect(lane).toContainText('Last five kings');
+  await expect(lane).not.toContainText('kings');
   await expect(lane).not.toContainText('testnet');
   const base = page.locator('div#base-tier');
-  await expect(base).toContainText('Lite, nano, flash and z3 stay king of the hill');
+  await expect(base).toContainText('Every tier is a soup');
+  await expect(page.locator('main')).not.toContainText('king of the hill');
+  await expect(page.getByRole('table', { name: /candidates/i })).toHaveCount(0);
+  expect(await page.locator('main [lang=ja]').count()).toBeGreaterThanOrEqual(6);
   await expect(base).not.toContainText('testnet');
   await expectIngredients(page);
   await expect(page.locator('main')).not.toContainText('status as of');
@@ -91,7 +103,10 @@ test('/z3 explains that a z3-mini release is a soup that passed the release gate
 
 test('/z3 separates the nightly soup from the release window and records soup members', async ({ page }) => {
   await page.goto('/z3');
-  await expect(page.getByText(/approved winners \(for mini, the best soup\)/)).toBeVisible();
+  await expect(page.getByText(/approved soups become new releases/)).toBeVisible();
+  await expect(page.locator('main')).not.toContainText('king of the hill');
+  await expect(page.locator('main')).not.toContainText('Other sizes');
+  expect(await page.locator('main [lang=ja]').count()).toBeGreaterThanOrEqual(4);
   await expect(page.getByRole('link', { name: 'Start mining', exact: true })).toHaveAttribute('href', '/miners');
   const current = page.getByRole('region', { name: 'v1 today, a soup next.' });
   await expect(current).toContainText('current release');
@@ -124,12 +139,16 @@ test('/miners leads with earning, shows the soup before our own workers, and is 
   await page.goto('/miners');
   await expect(page.locator('main')).not.toContainText('Proposed');
   // Order: how to earn, competitions, base tier and soup, install, then our customer-training workers.
-  const order = await page.evaluate(() => ['competitions-heading', 'base-tier', 'tonight-soup-heading', 'install-heading', 'miners']
-    .map(id => document.getElementById(id)?.getBoundingClientRect().top ?? NaN));
+  // The workers row renders whether or not the worker API answers; #miners only renders when it does.
+  const workers = page.getByText('Customer-training workers', { exact: true }).first();
+  const order = [
+    ...await page.evaluate(() => ['competitions-heading', 'base-tier', 'tonight-soup-heading', 'install-heading']
+      .map(id => document.getElementById(id)?.getBoundingClientRect().top ?? NaN)),
+    (await workers.boundingBox())?.y ?? NaN,
+  ];
   expect(order.every((y, i) => !Number.isNaN(y) && (i === 0 || y > order[i - 1]))).toBe(true);
   const soup = page.getByRole('region', { name: 'Tonight’s soup' });
   await expect(soup).toContainText('Seats appear here after the first round');
   await expect(soup.getByRole('img', { name: /bodies become one soup/i })).toBeVisible();
-  await expect(page.locator('main')).toContainText('Soup bodies are not listed here');
   await expect(page.getByRole('link', { name: 'Soup guide', exact: true })).toHaveAttribute('href', 'https://docs.zils.ai/operations/soup');
 });

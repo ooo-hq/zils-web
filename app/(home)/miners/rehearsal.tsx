@@ -20,8 +20,7 @@ const PROCESS = [
   ['Reward', 'Family-macro Brier skill determines proposed weights across eligible candidates.'],
 ] as const;
 const PAYOUT = [
-  ['Mini: greedy soup', 'Each night validators average up to five bodies and pay the soup’s seats, plus a crown for a body that beats the soup alone.'],
-  ['Other tiers: king of the hill', 'Only kings are paid. A winner becomes king when the owner promotes it. The share splits equally over the last five distinct kings still registered.'],
+  ['Greedy soup, every tier', 'Each night validators average up to five bodies per tier and pay the soup’s seats, plus a crown for a body that beats the soup alone.'],
   ['Unearned', 'An empty seat, crown or track’s share is burned.'],
 ] as const;
 

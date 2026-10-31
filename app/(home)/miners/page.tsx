@@ -1,4 +1,4 @@
-import { MODEL_NAMES, modelDisplayName } from '@/lib/model-name';
+import { modelDisplayName } from '@/lib/model-name';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteFrame } from '@/components/site/site-frame';
@@ -8,10 +8,11 @@ import { MinerBoard, MinerRefresh } from '@/components/site/miner-board';
 import { InstallCommand } from '@/components/site/install-command';
 import { currentBase } from '@/lib/base-model';
 import { boardNumbers } from '@/lib/miner-board';
-import { baseSubmissions, networkMiners } from '@/lib/network-miners';
+import { networkMiners } from '@/lib/network-miners';
 import { Rehearsal } from './rehearsal';
 import { Ingredients } from '../soup/ingredients';
 import { SoupMerge } from './soup-merge';
+import { FoodIcon } from '../soup/food-icons';
 import { Competitions } from './competitions';
 import s from './miners.module.css';
 
@@ -54,8 +55,8 @@ const TIMELINE: Entry[] = [
     body: 'We adopted d3-mini anyway, for what it adds: adapters that train better, up to four images and a video per call, and yes/no, choice and score answers. This is recorded as an override of the promotion rule, not a win under it. H2O and the separate image model stopped serving the same day.',
   },
   {
-    date: 'Next', title: 'Mini becomes a soup', outcome: 'At the mainnet launch', tone: 'next',
-    body: 'The mini pool stops crowning one winner. Each night validators average up to five bodies, starting from five open house models, and pay the soup’s seats. Lite, nano, flash and z3 stay king of the hill. We also want the exam to cover images and video, since that is what the base is used for.',
+    date: 'Next', title: 'Every tier becomes a soup', outcome: 'At the mainnet launch', tone: 'next',
+    body: 'The base tiers stop crowning one winner. Each night validators average up to five bodies per tier, starting from that tier’s open house models, and pay the soup’s seats. We also want the exam to cover images and video, since that is what the base is used for.',
   },
 ];
 
@@ -74,72 +75,54 @@ function Bars({ compare }: { compare: Compare }) {
 }
 
 export default async function MinersPage() {
-  const [base, network, submissions] = await Promise.all([currentBase(), networkMiners(), baseSubmissions()]);
+  const [base, network] = await Promise.all([currentBase(), networkMiners()]);
   const latest = base?.channels.latest;
   const numbers = network && boardNumbers(network);
   return (
     <SiteFrame current="miners">
       <MinerRefresh />
-      <SectionRow n="01" label="Miners" />
+      <SectionRow n="01" label="Miners" note="いらっしゃい · welcome" />
       <header className={s.hero}>
         <h1>Earn by improving z3.</h1>
-        <p><b>Bring a body to the nightly mini soup</b>, or a candidate to the other tiers. Customer-training jobs stay with Zils miners until miner terms are live.</p>
+        <p><b>Bring a body to the nightly soup</b> for any open tier. Customer-training jobs stay with Zils miners until miner terms are live.</p>
       </header>
 
-      <SectionRow n="02" label="Competitions" />
+      <SectionRow n="02" label="Competitions" note="お品書き · menu" />
       <Competitions />
 
-      <SectionRow n="03" label="Base tier" />
+      <SectionRow n="03" label="Base tier" note="スープ · soup" />
       <div id="base-tier" className={s.base}>
         <div>
           <h2>Beat <em>the base.</em></h2>
-          <p>Lite, nano, flash and z3 stay king of the hill: win a sealed exam, then win again on a fresh one.</p>
-          <p className={s.soupLink}><span lang="ja" aria-hidden="true">スープ</span> Mini is a soup. Each night validators average up to five bodies, keep a body only if it lifts the score by 0.3, and pay the soup’s seats. <Link href="/soup">Bring a body to the soup</Link></p>
+          <p>Every tier is a soup. Each night validators average up to five bodies, keep a body only if it lifts the score by 0.3, and pay the soup’s seats.</p>
+          <p className={s.soupLink}><span lang="ja" aria-hidden="true">スープ</span> Lite, mini and the larger tiers each cook from their own Qwen base and house models. <Link href="/soup">Bring a body to the soup</Link></p>
         </div>
-        <span className={s.pill}>Mini · greedy soup</span>
+        <span className={s.pill}>Every tier · greedy soup</span>
       </div>
       <section className={s.soupRound} aria-labelledby="soup-round-heading">
-        <h3 id="soup-round-heading" className={s.subTitle}>A mini round, every night</h3>
+        <h3 id="soup-round-heading" className={s.subTitle}>A round, every night</h3>
         <ol className={s.roundSteps}>
-          <li><b>In the pot</b>The five house models, the current members and the best new bodies, at most 20.</li>
-          <li><b>Greedy</b>Start from the best single body. Add the next only if the soup scores 0.3 higher. Stop at five.</li>
-          <li><b>Pay</b>80% to seats that lift the soup by 0.3 or more. 20% to a body that beats every house model and the soup alone.</li>
-          <li><b>Burn</b>Anything unearned burns. House models are never paid.</li>
+          <li><FoodIcon name="bowl" className={s.stepIcon} /><b>In the pot</b><span lang="ja" aria-hidden="true" className={s.stepJp}>鍋</span>The tier’s house models, the current members and the best new bodies, at most 20.</li>
+          <li><FoodIcon name="ladle" className={s.stepIcon} /><b>Greedy</b><span lang="ja" aria-hidden="true" className={s.stepJp}>欲張り</span>Start from the best single body. Add the next only if the soup scores 0.3 higher. Stop at five.</li>
+          <li><FoodIcon name="ticket" className={s.stepIcon} /><b>Pay</b><span lang="ja" aria-hidden="true" className={s.stepJp}>会計</span>80% to seats that lift the soup by 0.3 or more. 20% to a body that beats every house model and the soup alone.</li>
+          <li><FoodIcon name="flame" className={s.stepIcon} /><b>Burn</b><span lang="ja" aria-hidden="true" className={s.stepJp}>焼却</span>Anything unearned burns. House models are never paid.</li>
         </ol>
         <Ingredients />
       </section>
       <section className={s.tonight} aria-labelledby="tonight-soup-heading">
         <div>
-          <h3 id="tonight-soup-heading">Tonight’s soup</h3>
+          <h3 id="tonight-soup-heading">Tonight’s soup <span lang="ja" aria-hidden="true" className={s.jpNote}>今夜</span></h3>
           <p>Seats appear here after the first round. Each round’s public record lists the members, their rates and rounded contributions, so anyone can see who holds a seat and why.</p>
           <p className={s.live}>No soup feed is connected to this page yet.</p>
         </div>
         <SoupMerge />
       </section>
-      <section className={s.submissions} aria-labelledby="base-submissions-heading">
-        <h3 id="base-submissions-heading">King-of-the-hill candidates</h3>
-        <p>Latest candidate commitments from registered hotkeys, for the tiers that crown one winner. Soup bodies are not listed here. Submitted means recorded on chain; it does not mean evaluated, qualified or better than the base.</p>
-        {submissions ? <>
-          <p className={s.live}>Verified {utc(submissions.as_of)} UTC · block {submissions.block.toLocaleString('en-US')} · checked every 5 minutes</p>
-          {submissions.submissions.length ? <div className={s.submissionScroll}><table>
-            <caption className="sr-only">King-of-the-hill candidates</caption>
-            <thead><tr><th>On-chain miner</th><th>Base model</th><th>Submission</th><th>Evaluation</th></tr></thead>
-            <tbody>{submissions.submissions.map(row => <tr key={row.hotkey}>
-              <td><b>Chain UID {row.uid}</b><small title={row.hotkey}>{row.hotkey.slice(0, 6)}…{row.hotkey.slice(-6)}</small></td>
-              <td>{row.model ? (MODEL_NAMES[row.model] ?? row.model) : 'Model not verified'}</td>
-              <td><a href={`https://huggingface.co/${row.repo}/tree/${row.revision}`} target="_blank" rel="noopener noreferrer">Submitted ↗</a><small>Block {row.commitment_block.toLocaleString('en-US')}</small></td>
-              <td>Not reported</td>
-            </tr>)}</tbody>
-          </table></div> : <p>No base-model commitments found in this snapshot.</p>}
-          <p className={s.live}>Model labels come from candidate metadata. Validator results and rewards are not included in this feed.</p>
-        </> : <p role="status">Base submissions are temporarily unavailable. Customer-worker activity above does not indicate base-miner status.</p>}
-      </section>
       <section className={s.install} aria-labelledby="install-heading">
         <h3 id="install-heading" className={s.subTitle}>Start mining</h3>
         <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
         <p><a href="https://docs.zils.ai/operations/soup" className={s.rhInline}>Soup guide</a>: what a body must be, how to commit it and how seats are paid.</p>
-        <p><a href="https://docs.zils.ai/operations/miner-tuning" className={s.rhInline}>Tune your miner</a>: prepare training data, change the recipe, and compare your candidate with the base before submitting.</p>
-        <p>Installs the <code>zils</code> and <code>btcli</code> commands, then <code>zils setup</code> asks for your wallet and Hugging Face repo. After that, <code>zils doctor</code> checks each step and prints the command for the next one: register, train a candidate, commit it. For the mini soup, commit a body with <code>zils commit-body</code> instead. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the command to update.</p>
+        <p><a href="https://docs.zils.ai/operations/miner-tuning" className={s.rhInline}>Tune your miner</a>: prepare training data, change the recipe, and compare your body with the base before committing.</p>
+        <p>Installs the <code>zils</code> and <code>btcli</code> commands, then <code>zils setup</code> asks for your wallet and Hugging Face repo. After that, <code>zils doctor</code> checks each step and prints the command for the next one: register, train a body, then commit it with <code>zils commit-body</code>. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the command to update.</p>
       </section>
       <SectionRow n="04" label="Customer-training workers" note={network ? `Updated ${utc(network.as_of)} UTC` : undefined} />
       {numbers && <dl className={s.nums}>
@@ -150,7 +133,7 @@ export default async function MinersPage() {
       </dl>}
       {network
         ? <section id="miners" aria-label="Customer-training workers">
-          <p className={s.asof}>These workers train customer adapters. Worker IDs, job selections and skill scores are separate from on-chain base submissions below.</p>
+          <p className={s.asof}>These workers train customer adapters. Worker IDs, job selections and skill scores are separate from soup bodies committed on chain.</p>
           <MinerBoard miners={network.miners} asOf={network.as_of} />
           <p className={s.asof}><span>Live from the Zils training API · refreshes every 30 seconds</span><span>Updated {utc(network.as_of)} UTC · sort by any column</span></p>
         </section>
@@ -185,11 +168,11 @@ export default async function MinersPage() {
           <section aria-labelledby="how-heading">
             <h3 id="how-heading" className={s.subTitle}>How a new base wins</h3>
             <ol className={s.how}>
-              <li><strong>Submit.</strong> A miner uploads replacement weights for the base to Hugging Face, then commits them on chain with <code>zils commit-candidate</code>.</li>
-              <li><strong>Score.</strong> Validators score it on a sealed exam the miner never sees, against the current base.</li>
-              <li><strong>Confirm.</strong> It must win again on a second, fresh exam, and customer-style adapters trained on it must not get worse.</li>
+              <li><strong>Commit.</strong> A miner uploads a fine-tuned body to Hugging Face, then commits it on chain with <code>zils commit-body</code>.</li>
+              <li><strong>Cook.</strong> Each night validators build the tier’s soup on a sealed exam the miner never sees, and pay its seats.</li>
+              <li><strong>Release.</strong> Every 14 to 28 days the soup must beat the current base on two fresh sealed draws, hold its lead 12 hours later, and keep customer-style adapters at least as good.</li>
             </ol>
-            <p>Mini has no single winner: its nightly soup becomes the next z3-mini through the same release gate. See <Link href="/soup">the soup</Link>.</p>
+            <p>There is no single winner: the soup becomes the next version. See <Link href="/soup">the soup</Link>.</p>
             <p>The full rules are on the <Link href="/model#base-tier">research page</Link> and in the <a href={DOCS}>miner guide</a>.</p>
           </section>
 
@@ -214,7 +197,7 @@ export default async function MinersPage() {
 
       <div className={s.more}>
         <a href={DOCS}>Miner guide</a>
-        <Link href="/soup">Mini soup</Link>
+        <Link href="/soup">The soup</Link>
         <Link href="/model#base-tier">Base tier rules</Link>
         <Link href="/bases">Base lineage</Link>
         <a href="/model/testnet-round-001.json">Public chain view</a>

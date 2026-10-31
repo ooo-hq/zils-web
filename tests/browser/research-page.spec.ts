@@ -173,7 +173,7 @@ test('/model explains greedy soups and model merging from primary sources, with 
     ['Gauntlet', /arxiv\.org\/abs\/2505\.21684/],
   ] as const) await expect(table.getByRole('link', { name })).toHaveAttribute('href', href);
   await expect(section).toContainText('We have not reproduced these results');
-  await expect(section.getByRole('link', { name: 'How the mini soup works' })).toHaveAttribute('href', '/soup');
+  await expect(section.getByRole('link', { name: 'How the soup works' })).toHaveAttribute('href', '/soup');
   const text = await section.innerText();
   for (const banned of ['+4.26', '+6.63', 'mergekit.com', 'reddit']) expect(text.toLowerCase()).not.toContain(banned.toLowerCase());
   for (const width of [1280, 390]) {

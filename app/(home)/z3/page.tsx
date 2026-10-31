@@ -6,6 +6,7 @@ import { SiteButton } from '@/components/site/site-button';
 import { Reveal } from '@/components/site/reveal';
 import { Ingredients } from '../soup/ingredients';
 import { Cadence } from './cadence';
+import { FoodIcon, type Food } from '../soup/food-icons';
 import s from './z3.module.css';
 
 export const metadata: Metadata = {
@@ -28,12 +29,14 @@ const LINEUP = [
 // Tower height on a log scale from a 0.4B floor, so 0.85B stays visible next to 26B.
 const height = (p: number) => Math.log(p / 0.4) / Math.log(26.09 / 0.4);
 
+const STEP_ICONS: Food[] = ['chopsticks', 'bowl', 'spoon', 'ticket'];
+
 // The release path, from zils docs/mining.md "Soup pool" and docs/base-election.md (main 16b87a6).
 const STEPS = [
-  ['Submit', 'Miners commit a candidate on chain. For z3-mini, they commit a body for the soup.'],
-  ['Every night', 'z3-mini: validators rebuild the soup from the house models and miners’ bodies and pay its seats. Other sizes: candidates sit sealed exams against the current release.'],
-  ['Every 14 to 28 days', 'At a release window, the mini soup or the best candidate must beat the current release on two sealed draws, hold its lead 12 hours later and keep customer adapters at least as good.'],
-  ['Release', 'A reviewed promotion makes it the next version, with its checkpoint, evidence and, for a soup, its member list: each seat’s hotkey and body hash.'],
+  ['持込', 'Submit', 'Miners commit a body on chain for the tier they trained it for.'],
+  ['毎晩', 'Every night', 'Validators rebuild each tier’s soup from its house models and miners’ bodies, and pay its seats.'],
+  ['味見', 'Every 14 to 28 days', 'At a release window, the soup must beat the current release on two sealed draws, hold its lead 12 hours later and keep customer adapters at least as good.'],
+  ['新作', 'Release', 'A reviewed promotion makes it the next version, with its checkpoint, evidence and member list: each seat’s hotkey and body hash.'],
 ];
 
 
@@ -45,7 +48,7 @@ export default function Z3Page() {
         <h1 className={s.mark}>z3</h1>
         <div className={s.lede}>
           <p className={s.tagline}>Decision models, improved through competition.</p>
-          <p>Start with a published baseline. Miners train candidates, validators evaluate them independently, and approved winners (for mini, the best soup) become new releases in their own model lineage.</p>
+          <p>Start from the current release. Miners train bodies, validators evaluate them independently, and approved soups become new releases in their own model lineage.</p>
           <div className={s.ctas}>
             <SiteButton href="https://docs.zils.ai/getting-started/models" variant="primary">Read the model guide</SiteButton>
             <SiteButton href="/miners" variant="secondary">Start mining</SiteButton>
@@ -94,12 +97,12 @@ export default function Z3Page() {
       </dl>
     </section>
 
-    <SectionRow n="03" label="Subsequent releases" />
+    <SectionRow n="03" label="Subsequent releases" note="新作 · new releases" />
     <section className={s.releases} aria-labelledby="election-heading">
       <h2 id="election-heading" className={s.h2}>Each new release earns its place.</h2>
       <ol className={s.steps}>
-        {STEPS.map(([title, body], i) => <li key={title}>
-          <span className={s.num}>{String(i + 1).padStart(2, '0')}</span>
+        {STEPS.map(([jp, title, body], i) => <li key={title}>
+          <div className={s.stepTop}><span className={s.num}>{String(i + 1).padStart(2, '0')}</span><span className={s.stepMark}><FoodIcon name={STEP_ICONS[i]} /><span className={s.jp} lang="ja" aria-hidden="true">{jp}</span></span></div>
           <h3>{title}</h3>
           <p>{body}</p>
         </li>)}
@@ -108,9 +111,8 @@ export default function Z3Page() {
       <p className={s.fine}>A submitted candidate is not yet an official release, and a win in one size does not qualify another.</p>
       <div className={s.soup}>
         <div className={s.prose}>
-          <h3 className={s.h3}>z3-mini: a soup that passed the release gate.</h3>
-          <p>The next z3-mini is not one miner’s model. It is an average of up to five fine-tunes of the same Qwen base: the house models and any miner bodies that make it better. It passes the same release window as every other size.</p>
-          <p>Lite, nano, flash and z3 stay king of the hill: one winning candidate per release.</p>
+          <h3 className={s.h3}>Each release: a soup that passed the release gate.</h3>
+          <p>The next version of each tier is not one miner’s model. It is an average of up to five fine-tunes of that tier’s Qwen base: its house models and any miner bodies that make it better.</p>
         </div>
         <Ingredients />
       </div>

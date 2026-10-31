@@ -34,8 +34,7 @@ const DOCS = 'https://docs.zils.ai';
 const PROMOTION_RULES = [
   ['Sealed score', 'Validators score the submitted weights on a sealed holdout, against the incumbent.'],
   ['Eligibility', 'Skill is positive, accuracy is not below the incumbent’s, and Brier improves by at least 0.01 with a paired-bootstrap 95% lower bound above zero.'],
-  ['Mini: greedy soup', 'Each night validators average up to five bodies and pay the soup’s seats, plus a crown for a body that beats the soup alone.'],
-  ['Other tiers: king of the hill', 'Only kings are paid. A winner becomes king when the owner promotes it. The share splits equally over the last five distinct kings still registered.'],
+  ['Greedy soup, every tier', 'Each night validators average up to five bodies per tier and pay the soup’s seats, plus a crown for a body that beats the soup alone.'],
   ['Unearned', 'An empty seat, crown or track’s share is burned.'],
   ['Confirmation', 'The best eligible candidate is re-scored on a second, disjoint sealed draw at least 12 hours later and must stay eligible.'],
   ['Regression suite', 'Before promotion, a fixed suite of reference adapter jobs is retrained on the incumbent and on the candidate. The candidate must be no worse than 0.005 Brier on every job and better on at least one.'],
@@ -79,13 +78,13 @@ const SECTIONS = [
 const MERGING = [
   { name: 'Model soups', href: 'https://arxiv.org/abs/2203.05482', by: 'Wortsman et al., 2022',
     finding: 'Averaging the weights of models fine-tuned from the same pretrained model often beats the best single one, at no extra inference cost. The greedy soup adds models in order of held-out score and keeps each only if the average improves.',
-    limit: 'The no-worse guarantee holds on the set used for selection, not on new traffic. The mini soup is graded on a fresh private subset each night for that reason.' },
+    limit: 'The no-worse guarantee holds on the set used for selection, not on new traffic. The soup is graded on a fresh private subset each night for that reason.' },
   { name: 'Command A technical report', href: 'https://cohere.com/research/papers/command-a-technical-report.pdf', by: 'Cohere, 2025 (§3.4.3)',
     finding: 'A production model built by training specialists from one shared checkpoint and merging them by plain linear averaging. More complex merge methods did not do significantly better. Leave-one-out merges found interference, and evaluating combinations was the bottleneck, not merging.',
     limit: 'All specialists came from one trusted team. It does not show that open, untrusted contributors keep improving a merge.' },
   { name: 'Souper-Model', href: 'https://arxiv.org/abs/2511.13254', by: 'Meta, 2025',
     finding: 'Picks experts with complementary strengths by category and searches unequal mixing weights. Dense weighted merges improved scores without extra training; some sparse merge methods regressed.',
-    limit: 'Selection used benchmark test scores, as the authors note. The mini soup uses equal weights and a private exam.' },
+    limit: 'Selection used benchmark test scores, as the authors note. The soup uses equal weights and a private exam.' },
   { name: 'ColD Fusion', href: 'https://arxiv.org/abs/2212.01378', by: 'Don-Yehiya et al., 2022',
     finding: 'Many contributors fine-tune a shared model independently; their models are fused and the result becomes the next shared model, round after round.',
     limit: 'The closest published analogue to nightly rounds, but with cooperative contributors and no rewards.' },
@@ -97,7 +96,7 @@ const MERGING = [
     limit: 'Background for independent training; it is not a reward mechanism.' },
   { name: 'M2N2', href: 'https://arxiv.org/abs/2508.16204', by: 'Sakana AI, 2025',
     finding: 'Keeps a diverse population of models, pairs ones with complementary strengths, and evolves where to split and join their parameters.',
-    limit: 'A more elaborate alternative to greedy averaging. The mini soup does not use it.' },
+    limit: 'A more elaborate alternative to greedy averaging. The soup does not use it.' },
   { name: 'Gauntlet', href: 'https://arxiv.org/abs/2505.21684', by: 'Templar, 2025',
     finding: 'Pays contributors to a distributed training run by how much their updates help, on a Bittensor subnet.',
     limit: 'It rewards compressed training updates, not complete fine-tuned models.' },
@@ -213,14 +212,14 @@ export default function ModelPage() {
             <Table label="Base channels" head={['Channel', 'Advances', 'Who gets it']} rows={CHANNELS} />
             <p className="mt-4 max-w-[70ch] text-sm leading-7 text-muted">New customer jobs default to <code className="font-mono text-xs">stable</code>; <code className="font-mono text-xs">latest</code> is opt-in per job. Existing releases keep serving on their base.</p>
             <div className="mt-8 rounded-md bg-surface p-5 text-sm leading-7 text-muted sm:p-6">
-              <p><strong className="font-medium text-ink">Mini is a soup.</strong> In the mini pool, miners commit full bodies and validators build a nightly greedy soup of up to five, starting from five open house models; the soup replaces the base only through the release gate above. See <Link href="/soup" className={LINK}>the soup</Link>. Lite, nano, flash and z3 keep the king election.</p>
+              <p><strong className="font-medium text-ink">Every tier is a soup.</strong> Miners commit full bodies and validators build a nightly greedy soup of up to five per tier, starting from that tier’s open house models; the soup replaces the base only through the release gate above. See <Link href="/soup" className={LINK}>the soup</Link>.</p>
               <p className="mt-3">Round one’s sealed holdout has 1,458 teacher-authored cases in six families. The incumbent, stock H2O Lightning 4B v1.2.3, scores Brier 0.184 and 87.7% accuracy on it. d3-mini’s confirmation draw did not confirm a winner, but d3-mini became the base by decision on 17 October (see below), so both channels now point at it and stock d3-mini is the incumbent for round two.</p>
             </div>
             <p className="mt-6 text-sm leading-7 text-muted">Want to compete? Read the <a href={DOCS} className={LINK}>miner guide</a> in the Zils docs. For every attempt so far, in order, see the <Link href="/miners" className={LINK}>miners page</Link>; for how the bases have changed, see <Link href="/bases" className={LINK}>bases</Link>.</p>
           </Section>
 
           <Section id="model-merging" label="Model merging" eyebrow="Model merging · published research" title="Why averaging fine-tunes works, and where it may not.">
-            <p className="max-w-[70ch] text-[15px] leading-7 text-muted">Models fine-tuned from the same base tend to stay close enough in weight space that their plain average still works, and often works better than any one of them. That is the idea behind the mini soup: each night validators average up to five fine-tunes of Qwen3.5-4B, adding one only if the score rises by at least 0.3. The research below is why we chose this method, and where it stops being evidence for us.</p>
+            <p className="max-w-[70ch] text-[15px] leading-7 text-muted">Models fine-tuned from the same base tend to stay close enough in weight space that their plain average still works, and often works better than any one of them. That is the idea behind the soup: each night validators average up to five fine-tunes of each tier’s Qwen base, adding one only if the score rises by at least 0.3. The research below is why we chose this method, and where it stops being evidence for us.</p>
             <div className={`mt-6 ${CARD}`}>
               <div role="region" aria-label="Merging research and its limits for Zils" tabIndex={0} className="overflow-x-auto overscroll-x-contain">
                 <table className="w-full min-w-[720px] border-collapse text-sm">
@@ -241,7 +240,7 @@ export default function ModelPage() {
             <ul className="mt-3 max-w-[70ch] list-disc space-y-2 pl-5 text-[15px] leading-7 text-muted">{MERGING_QUESTIONS.map(q => <li key={q}>{q}</li>)}</ul>
             <h3 className="mt-10 text-xl font-semibold tracking-[-0.035em]">Further reading</h3>
             <ul className="mt-3 space-y-2 text-sm leading-7">{MERGING_READING.map(r => <li key={r.href}><a href={r.href} className={LINK}>{r.title}</a></li>)}</ul>
-            <p className="mt-8 text-sm leading-7 text-muted"><Link href="/soup" className={LINK}>How the mini soup works</Link></p>
+            <p className="mt-8 text-sm leading-7 text-muted"><Link href="/soup" className={LINK}>How the soup works</Link></p>
           </Section>
 
           <Section id="d3-mini" label="d3-mini evidence" eyebrow="d3-mini · recorded 16–17 October 2026 · one rented B300" title="d3-mini, tested as a base.">
