@@ -119,3 +119,17 @@ test('/z3 separates the nightly soup from the release window and records soup me
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   }
 });
+
+test('/miners leads with earning, shows the soup before our own workers, and is honest about the soup feed', async ({ page }) => {
+  await page.goto('/miners');
+  await expect(page.locator('main')).not.toContainText('Proposed');
+  // Order: how to earn, competitions, base tier and soup, install, then our customer-training workers.
+  const order = await page.evaluate(() => ['competitions-heading', 'base-tier', 'tonight-soup-heading', 'install-heading', 'miners']
+    .map(id => document.getElementById(id)?.getBoundingClientRect().top ?? NaN));
+  expect(order.every((y, i) => !Number.isNaN(y) && (i === 0 || y > order[i - 1]))).toBe(true);
+  const soup = page.getByRole('region', { name: 'Tonight’s soup' });
+  await expect(soup).toContainText('Seats appear here after the first round');
+  await expect(soup.getByRole('img', { name: /bodies become one soup/i })).toBeVisible();
+  await expect(page.locator('main')).toContainText('Soup bodies are not listed here');
+  await expect(page.getByRole('link', { name: 'Soup guide', exact: true })).toHaveAttribute('href', 'https://docs.zils.ai/operations/soup');
+});

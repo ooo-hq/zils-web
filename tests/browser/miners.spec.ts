@@ -62,7 +62,7 @@ test('an outage shows the unavailable panel and the rest of the page renders', a
   page.on('pageerror', e => errors.push(e));
   await page.goto('/miners');
   await expect(page.getByText('The leaderboard is unavailable right now.')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Miner leaderboard', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Earn by improving z3.', level: 1 })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Beat the base.', exact: true })).toBeVisible();
   await expect(page.getByRole('table', { name: 'Customer-training workers' })).toHaveCount(0);
   expect(errors).toEqual([]);
@@ -209,7 +209,7 @@ for (const theme of ['dark', 'light']) {
 
 test('base submissions use chain identity without claiming worker presence or evaluation', async ({ page }) => {
   await page.goto('/miners');
-  const table = page.getByRole('table', { name: 'Base-model submissions' });
+  const table = page.getByRole('table', { name: 'King-of-the-hill candidates' });
   await expect(table).toContainText('Chain UID 7');
   await expect(table).toContainText('z3-lite');
   await expect(table).toContainText('Not reported');

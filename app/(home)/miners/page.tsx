@@ -11,6 +11,7 @@ import { boardNumbers } from '@/lib/miner-board';
 import { baseSubmissions, networkMiners } from '@/lib/network-miners';
 import { Rehearsal } from './rehearsal';
 import { Ingredients } from '../soup/ingredients';
+import { SoupMerge } from './soup-merge';
 import { Competitions } from './competitions';
 import s from './miners.module.css';
 
@@ -79,42 +80,16 @@ export default async function MinersPage() {
   return (
     <SiteFrame current="miners">
       <MinerRefresh />
-      <SectionRow n="01" label="Network" note={network ? `Updated ${utc(network.as_of)} UTC` : undefined} />
+      <SectionRow n="01" label="Miners" />
       <header className={s.hero}>
-        <h1>Miner leaderboard</h1>
-        <p>Base-model submissions and customer-training workers, tracked separately. <b>Outside miners can enter the base tier now</b>; customer jobs open once miner terms are live.</p>
+        <h1>Earn by improving z3.</h1>
+        <p><b>Bring a body to the nightly mini soup</b>, or a candidate to the other tiers. Customer-training jobs stay with Zils miners until miner terms are live.</p>
       </header>
 
-      {numbers && <dl className={s.nums}>
-        <div><dt>Workers online</dt><dd>{numbers.online}<small> / {numbers.total}</small></dd></div>
-        <div><dt>Customer jobs</dt><dd>{numbers.jobs}</dd></div>
-        <div><dt>Models selected</dt><dd>{numbers.selected}</dd></div>
-        <div><dt>Current base</dt><dd className={s.sm}>{modelDisplayName(base?.channels.stable.name) || '—'}</dd></div>
-      </dl>}
-
-      <SectionRow n="02" label="Competitions" note="Proposed" />
+      <SectionRow n="02" label="Competitions" />
       <Competitions />
 
-      <SectionRow n="03" label="Customer-training workers" />
-      {network
-        ? <section id="miners" aria-label="Customer-training workers">
-          <p className={s.asof}>These workers train customer adapters. Worker IDs, job selections and skill scores are separate from on-chain base submissions below.</p>
-          <MinerBoard miners={network.miners} asOf={network.as_of} />
-          <p className={s.asof}><span>Live from the Zils training API · refreshes every 30 seconds</span><span>Updated {utc(network.as_of)} UTC · sort by any column</span></p>
-        </section>
-        : <p className={s.unavailable}>The leaderboard is unavailable right now.</p>}
-
-      <DetailsRow summary="How to read customer-job results">
-        <div className={s.prose}>
-          <p><b>Selected</b> is how many of the miner’s candidates a customer job kept as its model, out of the jobs it was given. <b>Jobs</b> are customer training jobs assigned to the miner; <b>evaluated</b> candidates were scored on the job’s held-out test set.</p>
-          <p><b>Skill</b> compares a candidate’s probability error (Brier) with guessing evenly between the answers: 0 is no better than guessing, 1 is perfect, so it compares across different jobs.</p>
-          <p><b>Online</b> checked in within the last 45 seconds. <b>Seen recently</b> checked in within the last hour. <b>Offline</b> has not checked in for longer than that. <b>Never seen</b> registered but never checked in. <b>Disabled</b> gets no new jobs. Miners that are not online are dimmed.</p>
-          <p><b>Models</b> come from each miner’s latest signed check-in, including while it is busy. Inactive rows show the last reported models. These are internal worker IDs, not on-chain UIDs; a listed model does not imply customer serving is available.</p>
-          <p>Outside miners can compete in the base tier (below). Customer jobs stay with Zils miners until miner terms and intake are ready.</p>
-        </div>
-      </DetailsRow>
-
-      <SectionRow n="04" label="Base tier" />
+      <SectionRow n="03" label="Base tier" />
       <div id="base-tier" className={s.base}>
         <div>
           <h2>Beat <em>the base.</em></h2>
@@ -133,13 +108,21 @@ export default async function MinersPage() {
         </ol>
         <Ingredients />
       </section>
+      <section className={s.tonight} aria-labelledby="tonight-soup-heading">
+        <div>
+          <h3 id="tonight-soup-heading">Tonight’s soup</h3>
+          <p>Seats appear here after the first round. Each round’s public record lists the members, their rates and rounded contributions, so anyone can see who holds a seat and why.</p>
+          <p className={s.live}>No soup feed is connected to this page yet.</p>
+        </div>
+        <SoupMerge />
+      </section>
       <section className={s.submissions} aria-labelledby="base-submissions-heading">
-        <h3 id="base-submissions-heading">Base-model submissions</h3>
-        <p>Latest base commitments from registered hotkeys. Submitted means recorded on chain; it does not mean evaluated, qualified or better than the base.</p>
+        <h3 id="base-submissions-heading">King-of-the-hill candidates</h3>
+        <p>Latest candidate commitments from registered hotkeys, for the tiers that crown one winner. Soup bodies are not listed here. Submitted means recorded on chain; it does not mean evaluated, qualified or better than the base.</p>
         {submissions ? <>
           <p className={s.live}>Verified {utc(submissions.as_of)} UTC · block {submissions.block.toLocaleString('en-US')} · checked every 5 minutes</p>
           {submissions.submissions.length ? <div className={s.submissionScroll}><table>
-            <caption className="sr-only">Base-model submissions</caption>
+            <caption className="sr-only">King-of-the-hill candidates</caption>
             <thead><tr><th>On-chain miner</th><th>Base model</th><th>Submission</th><th>Evaluation</th></tr></thead>
             <tbody>{submissions.submissions.map(row => <tr key={row.hotkey}>
               <td><b>Chain UID {row.uid}</b><small title={row.hotkey}>{row.hotkey.slice(0, 6)}…{row.hotkey.slice(-6)}</small></td>
@@ -154,9 +137,35 @@ export default async function MinersPage() {
       <section className={s.install} aria-labelledby="install-heading">
         <h3 id="install-heading" className={s.subTitle}>Start mining</h3>
         <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
+        <p><a href="https://docs.zils.ai/operations/soup" className={s.rhInline}>Soup guide</a>: what a body must be, how to commit it and how seats are paid.</p>
         <p><a href="https://docs.zils.ai/operations/miner-tuning" className={s.rhInline}>Tune your miner</a>: prepare training data, change the recipe, and compare your candidate with the base before submitting.</p>
         <p>Installs the <code>zils</code> and <code>btcli</code> commands, then <code>zils setup</code> asks for your wallet and Hugging Face repo. After that, <code>zils doctor</code> checks each step and prints the command for the next one: register, train a candidate, commit it. For the mini soup, commit a body with <code>zils commit-body</code> instead. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the command to update.</p>
       </section>
+      <SectionRow n="04" label="Customer-training workers" note={network ? `Updated ${utc(network.as_of)} UTC` : undefined} />
+      {numbers && <dl className={s.nums}>
+        <div><dt>Workers online</dt><dd>{numbers.online}<small> / {numbers.total}</small></dd></div>
+        <div><dt>Customer jobs</dt><dd>{numbers.jobs}</dd></div>
+        <div><dt>Models selected</dt><dd>{numbers.selected}</dd></div>
+        <div><dt>Current base</dt><dd className={s.sm}>{modelDisplayName(base?.channels.stable.name) || '—'}</dd></div>
+      </dl>}
+      {network
+        ? <section id="miners" aria-label="Customer-training workers">
+          <p className={s.asof}>These workers train customer adapters. Worker IDs, job selections and skill scores are separate from on-chain base submissions below.</p>
+          <MinerBoard miners={network.miners} asOf={network.as_of} />
+          <p className={s.asof}><span>Live from the Zils training API · refreshes every 30 seconds</span><span>Updated {utc(network.as_of)} UTC · sort by any column</span></p>
+        </section>
+        : <p className={s.unavailable}>The leaderboard is unavailable right now.</p>}
+
+      <DetailsRow summary="How to read customer-job results">
+        <div className={s.prose}>
+          <p><b>Selected</b> is how many of the miner’s candidates a customer job kept as its model, out of the jobs it was given. <b>Jobs</b> are customer training jobs assigned to the miner; <b>evaluated</b> candidates were scored on the job’s held-out test set.</p>
+          <p><b>Skill</b> compares a candidate’s probability error (Brier) with guessing evenly between the answers: 0 is no better than guessing, 1 is perfect, so it compares across different jobs.</p>
+          <p><b>Online</b> checked in within the last 45 seconds. <b>Seen recently</b> checked in within the last hour. <b>Offline</b> has not checked in for longer than that. <b>Never seen</b> registered but never checked in. <b>Disabled</b> gets no new jobs. Miners that are not online are dimmed.</p>
+          <p><b>Models</b> come from each miner’s latest signed check-in, including while it is busy. Inactive rows show the last reported models. These are internal worker IDs, not on-chain UIDs; a listed model does not imply customer serving is available.</p>
+          <p>Outside miners can compete in the base tier (below). Customer jobs stay with Zils miners until miner terms and intake are ready.</p>
+        </div>
+      </DetailsRow>
+
       <DetailsRow summary="What we have tried">
         <div className={s.tried}>
           <section aria-labelledby="current-base">
