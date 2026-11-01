@@ -200,6 +200,25 @@ test('status wording is the approved copy', async ({ page }) => {
   for (const phrase of ['checked in within the last 45 seconds', 'registered but never checked in', 'gets no new jobs', 'latest signed check-in', 'not on-chain UIDs']) await expect(page.getByText(phrase)).toBeVisible();
 });
 
+test('emissions read as four equal pools with fixed seats and crowns', async ({ page }) => {
+  mode = 'ok';
+  await page.goto('/miners');
+  const section = page.getByRole('region', { name: 'How miners earn' });
+  await expect(section).toContainText('24 paid spots');
+  const pools = section.getByRole('list', { name: 'Pools' }).getByRole('listitem');
+  await expect(pools).toHaveCount(4);
+  for (const [i, name, status] of [[0, 'z3-lite', 'Open'], [1, 'z3-mini', 'Open'], [2, 'z3-flash', 'Opens later'], [3, 'z3', 'Opens later']] as const) {
+    await expect(pools.nth(i).getByRole('heading')).toHaveText(name);
+    await expect(pools.nth(i)).toContainText('25%');
+    await expect(pools.nth(i)).toContainText(status);
+    await expect(pools.nth(i)).toContainText('5 seats × 4%');
+    await expect(pools.nth(i)).toContainText('1 × 5%');
+  }
+  // No nested lane percentages and no boosts.
+  for (const gone of ['50%', '30%', '35%', 'boosted']) await expect(section).not.toContainText(gone);
+  await expect(section).toContainText('Feature tracks and customer adapters do not pay yet');
+});
+
 test.describe('phone', () => {
   test.use({ viewport: { width: 375, height: 800 } });
   test('no overflow at 375px, no header row, two-line rows', async ({ page }) => {

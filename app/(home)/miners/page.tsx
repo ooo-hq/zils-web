@@ -112,7 +112,7 @@ export default async function MinersPage() {
         <ol className={s.roundSteps}>
           <li><FoodIcon name="bowl" className={s.stepIcon} /><b>In the pot</b><span lang="ja" aria-hidden="true" className={s.stepJp}>鍋</span>The tier’s house models, the current members and the best new bodies, at most 20.</li>
           <li><FoodIcon name="ladle" className={s.stepIcon} /><b>Greedy</b><span lang="ja" aria-hidden="true" className={s.stepJp}>欲張り</span>Start from the best single body. Add the next only if the soup scores 0.3 higher. Stop at five.</li>
-          <li><FoodIcon name="ticket" className={s.stepIcon} /><b>Pay</b><span lang="ja" aria-hidden="true" className={s.stepJp}>会計</span>80% to seats that lift the soup by 0.3 or more. 20% to a body that beats every house model and the soup alone.</li>
+          <li><FoodIcon name="ticket" className={s.stepIcon} /><b>Pay</b><span lang="ja" aria-hidden="true" className={s.stepJp}>会計</span>Five fixed seats, each 16% of the pool, for bodies that lift the soup by 0.3 or more. 20% to a body that beats every house model and the soup alone.</li>
           <li><FoodIcon name="flame" className={s.stepIcon} /><b>Burn</b><span lang="ja" aria-hidden="true" className={s.stepJp}>焼却</span>Anything unearned burns. House models are never paid.</li>
         </ol>
         <Ingredients />

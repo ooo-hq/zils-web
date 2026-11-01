@@ -154,6 +154,7 @@
 .lanesHead p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--zs-t2); }
 .proposed { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-peach); border: 1px dashed rgba(242, 161, 132, .5); padding: 3px 8px; margin-right: 8px; white-space: nowrap; }
 .laneGrid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--zs-line); border: 1px solid var(--zs-line); }
+.poolGrid { grid-template-columns: repeat(4, 1fr); }
 .lane { background: var(--zs-panel); padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .laneTop { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .laneTop h3 { margin: 0; font-weight: 400; font-size: 18px; }
@@ -178,7 +179,7 @@
 .graduated span { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-t3); margin-right: 10px; }
 @media (max-width: 899px) {
   .lanes { padding: 28px 4px 32px; }
-  .laneGrid { grid-template-columns: 1fr; }
+  .laneGrid, .poolGrid { grid-template-columns: 1fr; }
 }
 
 .tonight { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 300px); gap: 24px 48px; align-items: center; padding: 32px 40px; border-top: 1px solid var(--zs-line); border-bottom: 1px solid var(--zs-line); }
