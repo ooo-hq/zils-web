@@ -47,7 +47,7 @@ test('email sign-in preserves the CLI request and never creates accounts', async
     return route.fulfill({ headers, json: {} });
   });
   await page.goto(path);
-  await page.getByRole('textbox', { name: 'Email address' }).fill('invited@example.com');
+  await page.getByRole('textbox', { name: 'Email' }).fill('invited@example.com');
   await page.getByRole('button', { name: 'Email me a sign-in link' }).click();
   await expect(page.getByRole('main').getByRole('status')).toContainText('Check your email');
 });
@@ -55,7 +55,7 @@ test('email sign-in preserves the CLI request and never creates accounts', async
 test('Google sign-in preserves the CLI request', async ({ page }) => {
   await page.route('http://127.0.0.1:8998/auth/v1/authorize?**', route => route.fulfill({ contentType: 'text/html', body: '<h1>Provider handoff</h1>' }));
   await page.goto(path);
-  await page.getByRole('button', { name: 'Sign in with Google', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue with Google', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Provider handoff' })).toBeVisible();
   expect(new URL(page.url()).searchParams.get('redirect_to')).toBe('http://127.0.0.1:3107' + path);
 });
@@ -96,7 +96,7 @@ test('CLI sign-in hydrates without replacing the server page', async ({ page }) 
   page.on('pageerror', error => { if (/hydrat/i.test(error.message)) errors.push(error.message); });
   page.on('console', message => { if (message.type() === 'error' && /hydrat/i.test(message.text())) errors.push(message.text()); });
   await page.goto(path);
-  await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Email' })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -115,4 +115,33 @@ test('approval validates the returned redirect before the SDK can navigate', asy
   await page.getByRole('button', { name: 'Approve', exact: true }).click();
   await expect(page.getByRole('main').getByRole('alert')).toContainText('Start again with zils login');
   expect(page.url()).toContain('/cli/authorize');
+});
+
+test('the CLI page uses the sign-in layout and its terminal follows each step', async ({ page }) => {
+  await page.goto(path);
+  await expect(page.getByRole('link', { name: 'Zils home' })).toHaveAttribute('href', '/');
+  await expect(page.getByRole('button', { name: 'Light mode', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Connect your terminal.');
+  const terminal = page.getByRole('figure', { name: 'Your terminal' });
+  await expect(terminal).toContainText('zils login');
+  await expect(terminal).toContainText('Waiting for you to sign in');
+  await expect(page.getByRole('link', { name: 'Terms' })).toHaveAttribute('href', '/terms');
+
+  await signedIn(page);
+  await page.route('http://127.0.0.1:8998/auth/v1/oauth/authorizations/**', route => route.request().method() === 'OPTIONS' ? route.fulfill({ status: 204, headers }) : route.fulfill({ headers, json: details }));
+  await page.goto(path);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Allow the Zils CLI?');
+  await expect(terminal).toContainText('Waiting for your approval');
+
+  await page.goto('/cli/authorize');
+  await expect(terminal).toContainText('Run zils login again');
+});
+
+test.describe('phones', () => {
+  test.use({ viewport: { width: 375, height: 800 } });
+  test('the CLI page stacks without sideways scroll', async ({ page }) => {
+    await page.goto(path);
+    await expect(page.getByRole('textbox', { name: 'Email' })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  });
 });
