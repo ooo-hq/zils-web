@@ -40,7 +40,7 @@ test('bowls the CLI would refuse are refused here too', () => {
 test('every stall is a unique, permissively licensed repo with a specialty, a maker, a size and a role', () => {
   const seen = new Set();
   for (const family of FAMILIES) {
-    assert.ok(family.models.length >= 8, family.id);
+    assert.ok(family.models.length >= 18, family.id);
     assert.equal(family.models.filter(m => m.role === 'base').length, 1, family.id);
     assert.ok(family.models.filter(m => m.role === 'house').length >= 2, family.id);
     for (const model of family.models) {
@@ -59,7 +59,12 @@ test('every stall is a unique, permissively licensed repo with a specialty, a ma
     'vllm-sr/d3-mini', 'perplexity-ai/pplx-decider-flash-v1.2', 'torchcast-ai/torchcast-decision-4b',
     'Maincode/Matilda-Decision-v1-Mini', 'PelaAI/KnowLine-4B-Gen5',
   ]);
-  for (const broken of ['chaoliangUNSW/Jev-Style-0.8B-Decision-v3', 'FluidInference/clef-vision-0.8b', 'inclusionAI/LemonDecider']) assert.ok(!seen.has(broken));
+  // Broken on the d3 chassis, refused by `zils merge`'s header rules, or not a real decision model.
+  for (const left of [
+    'chaoliangUNSW/Jev-Style-0.8B-Decision-v3', 'FluidInference/clef-vision-0.8b', 'inclusionAI/LemonDecider',
+    'rodneyslafuente/openjev-v5-0.8b', 'Valen-Team/Valen-4B', 'blackmallangcow/nari-decision-4b', 'lion-ai/MedDecider-4B-NLI',
+    'vllm-sr/Decision-2.0-Nox-4B', 'lambdasec/serin-0.8b',
+  ]) assert.ok(!seen.has(left), left);
 });
 
 test('every command the page can build uses only shell-safe characters', () => {
