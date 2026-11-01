@@ -8,7 +8,7 @@ import { MergeBuilder } from './merge-builder';
 import s from './merge.module.css';
 
 export const metadata: Metadata = {
-  title: 'Zils — merge models',
+  title: 'Zils — make a soup',
   description: 'Pick up to five decision models that share a base, set their parts, and run one command to merge them on your own machine.',
   alternates: { canonical: 'https://zils.ai/merge' },
 };
@@ -17,22 +17,11 @@ export default function MergePage() {
   return (
     <SiteFrame current="model">
       <SectionRow n="01" label="Merge" note="Runs on your machine" />
-      <header className={s.hero}>
-        <div className={s.heroText}>
-          <h1 className={s.heroTitle}>Merge models<span className={s.period} aria-hidden="true" /></h1>
-          <p>Pick up to five decision models built on the same base from the market below, give each a share, and choose how to blend them. One command downloads them and writes the merged model to a folder.</p>
-        </div>
-        {/* Five colours, one per place in the mix, slide together into one tile once on load. */}
-        <div className={s.heroArt} data-merge-hero="" aria-hidden="true">
-          {[1, 2, 3, 4, 5].map(n => <span key={n} className={s.sheet} data-sheet={n} />)}
-          <span className={s.merged} data-merged="" />
-        </div>
-      </header>
-
-      <section className={box.section} aria-labelledby="build-heading">
-        <h2 id="build-heading" className={box.visuallyHidden}>Build the merge command</h2>
-        <MergeBuilder />
-      </section>
+      <MergeBuilder>
+        <h1 id="merge-title" className={s.sign}>Make a soup</h1>
+        <p className={s.kana} lang="ja" aria-hidden="true">スープをつくろう</p>
+        <p className={s.lede}>Pick up to five decision models that share a base, give each a portion, and choose how to stir. One command cooks the merge on your own machine.</p>
+      </MergeBuilder>
 
       <section className={box.section} aria-labelledby="notes-heading">
         <h2 id="notes-heading" className={box.h2}>Good to know</h2>

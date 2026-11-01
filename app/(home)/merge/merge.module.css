@@ -1,41 +1,28 @@
-/* Each place in the mix has one colour, used for its chip, wire, particles, share of the tile and market card. */
-.builder, .hero { --m1: var(--zs-peri); --m2: var(--zs-orange); --m3: #d79be8; --m4: #7fd6b4; --m5: #e8c46a; }
-:global([data-theme=light]) .builder, :global([data-theme=light]) .hero { --m3: #9a4fb3; --m4: #2f8a66; --m5: #8f6a10; }
-.builder { display: grid; gap: 28px; justify-items: center; }
-
-/* The header: the title ends in the stage's tile, and five colours merge into one beside it. */
-.hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: center; gap: 24px 48px; padding: 72px 40px 56px; border-bottom: 1px solid var(--zs-line); overflow: hidden; }
-.heroText p { margin: 22px 0 0; max-width: 54ch; font-size: 15px; line-height: 1.6; color: var(--zs-t2); }
-.heroTitle { margin: 0; font-weight: 300; font-size: clamp(48px, 7vw, 96px); letter-spacing: -0.04em; line-height: .95; color: var(--zs-fg); }
-.period { display: inline-block; width: .2em; height: .2em; margin-left: .06em; vertical-align: baseline; background: linear-gradient(90deg, var(--m1), var(--m2), var(--m3), var(--m4), var(--m5)); }
-.heroArt { position: relative; justify-self: center; width: 300px; height: 240px; }
-.sheet, .merged { position: absolute; left: 50%; top: 50%; width: 112px; height: 112px; margin: -56px 0 0 -56px; }
-/* At rest the sheets are stacked under the merged tile. The load animation fans them out and gathers them once;
-   hovering the header splits the tile back into its five colours, and leaving gathers them again. */
-.sheet { opacity: 0; transform: translate(0, 0) rotate(0deg); box-shadow: 0 0 0 1px rgba(var(--zs-bg-rgb), .35); transition: transform .6s cubic-bezier(.3, 0, .2, 1), opacity .35s ease .15s; }
-.sheet[data-sheet='1'] { background: var(--m1); --x: -96px; --y: -34px; --r: -14deg; }
-.sheet[data-sheet='2'] { background: var(--m2); --x: -48px; --y: 30px; --r: -6deg; }
-.sheet[data-sheet='3'] { background: var(--m3); --x: 0px; --y: -40px; --r: 3deg; }
-.sheet[data-sheet='4'] { background: var(--m4); --x: 48px; --y: 30px; --r: 8deg; }
-.sheet[data-sheet='5'] { background: var(--m5); --x: 96px; --y: -34px; --r: 15deg; }
-.merged { opacity: 1; background: linear-gradient(90deg, var(--m1), var(--m2), var(--m3), var(--m4), var(--m5)); transition: opacity .3s ease .25s, transform .3s ease .25s; }
-.merged::after { content: ""; position: absolute; inset: 0; background-image: var(--zs-grain); opacity: .35; mix-blend-mode: overlay; }
-.hero:hover .sheet { opacity: .82; transform: translate(var(--x), var(--y)) rotate(var(--r)); transition: transform .6s cubic-bezier(.3, 0, .2, 1), opacity .15s ease; }
-.hero:hover .merged { opacity: 0; transform: scale(.92); transition: opacity .2s ease, transform .2s ease; }
-@media (prefers-reduced-motion: no-preference) {
-  .sheet { animation: gather 1.5s cubic-bezier(.6, 0, .25, 1) .35s backwards; }
-  .merged { animation: settle 1.5s ease .35s backwards; }
-  @keyframes gather {
-    from { transform: translate(var(--x), var(--y)) rotate(var(--r)); opacity: .82; }
-    75% { opacity: .82; }
-    to { transform: translate(0, 0) rotate(0deg); opacity: 0; }
-  }
-  @keyframes settle { 0%, 70% { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } }
-}
-@media (prefers-reduced-motion: reduce) {
-  .sheet, .merged, .hero:hover .sheet, .hero:hover .merged { transition: none; }
-}
+/* Each place in the bowl has one colour, used for its chip, topping ring, order line and market card. */
+.builder { --m1: var(--zs-peri); --m2: var(--zs-orange); --m3: #d79be8; --m4: #7fd6b4; --m5: #e8c46a;
+  --neon: var(--zs-logo); --noodle: #efd9a7; --bowl: #101116; }
+:global([data-theme=light]) .builder { --m3: #9a4fb3; --m4: #2f8a66; --m5: #8f6a10; --noodle: #c9a258; --bowl: #24232e; }
+.builder { display: grid; }
 .visuallyHidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* The stall: a night-market counter on a faint grid, the sign and bowl list on the left, the bowl on the right. */
+.stall { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 32px 56px;
+  padding: 72px 40px 56px; border-bottom: 1px solid var(--zs-line); overflow: hidden; isolation: isolate; }
+.stall::before { content: ""; position: absolute; inset: 0; z-index: -1;
+  background-image: linear-gradient(rgba(var(--zs-fg-rgb), .045) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--zs-fg-rgb), .045) 1px, transparent 1px);
+  background-size: 32px 32px; mask-image: radial-gradient(ellipse 80% 90% at 70% 50%, #000 30%, transparent 80%); }
+.counter { display: grid; justify-items: start; gap: 20px; min-width: 0; }
+
+/* The sign: crisp light type with a wide violet halo behind it, like a lit tube; daylight switches it off.
+   Keep blurs wide and faint: a tight blur sits on the strokes and makes the letters look out of focus. */
+.sign { margin: 0; font-family: var(--font-inter-tight), var(--font-plex-sans), sans-serif; font-weight: 300;
+  font-size: clamp(52px, 7.4vw, 104px); line-height: .92; letter-spacing: -0.035em; color: #f4f2ff;
+  text-shadow: 0 0 24px color-mix(in srgb, var(--neon) 55%, transparent), 0 0 60px color-mix(in srgb, var(--neon) 30%, transparent); }
+.kana { margin: -6px 0 0; font-size: clamp(16px, 1.6vw, 20px); letter-spacing: .12em; color: #ffd9c2;
+  text-shadow: 0 0 18px color-mix(in srgb, var(--zs-orange) 45%, transparent); }
+:global([data-theme=light]) .sign { color: var(--neon); text-shadow: none; }
+:global([data-theme=light]) .kana { color: var(--zs-orange); text-shadow: none; }
+.lede { margin: 0; max-width: 46ch; font-size: 15.5px; line-height: 1.6; color: var(--zs-t2); }
 
 .toggle, .filters { display: inline-flex; flex-wrap: wrap; margin: 0; padding: 3px; border: 1px solid var(--zs-line); border-radius: 999px; background: var(--zs-raised); }
 .option { position: relative; }
@@ -47,58 +34,79 @@
 .option[data-off] { opacity: .45; }
 .option[data-off] input { cursor: not-allowed; }
 
-/* The stage: the models in the mix, wired into the tile. */
-.stage { position: relative; width: 100%; max-width: 980px; display: grid; justify-items: center; gap: 22px; padding: 4px 0; }
-.wires { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-.wires path { fill: none; stroke-width: 1.5; stroke-linecap: round; opacity: .75; transition: d .45s ease; }
-
-.mix { position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 0 0 64px; padding: 0; list-style: none; }
-.chip { display: grid; gap: 4px; padding: 12px 14px; min-width: 168px; border: 1px solid var(--c); border-radius: 14px; background: var(--zs-panel); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 16%, transparent); }
-.chipName { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; color: var(--zs-fg); }
-.chipName i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+/* What's in the bowl: one row per model, its colour on a swatch, its portion beside it. */
+.mix { display: grid; gap: 6px; width: 100%; max-width: 520px; margin: 4px 0 0; padding: 0; list-style: none; }
+.chip { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 10px 10px 12px;
+  border: 1px solid var(--zs-line); border-left: 3px solid var(--c); background: color-mix(in srgb, var(--zs-panel) 88%, transparent); }
+.swatch { width: 14px; height: 14px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px color-mix(in srgb, var(--c) 60%, transparent); }
+:global([data-theme=light]) .swatch { box-shadow: none; }
+.chipText { display: grid; gap: 2px; min-width: 0; }
+.chipName { font-size: 15px; color: var(--zs-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chipRole { font-size: 12px; color: var(--zs-t3); }
-.chipControls { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; }
+.chipControls { display: inline-flex; align-items: center; gap: 4px; }
 .chipControls button { width: 26px; height: 26px; padding: 0; border: 1px solid var(--zs-line); border-radius: 50%; background: none; color: var(--zs-fg); font: inherit; font-size: 13px; line-height: 1; cursor: pointer; }
-.chipControls button:disabled { color: var(--zs-t3); opacity: .45; cursor: not-allowed; }
+.chipControls button:disabled { color: var(--zs-t3); opacity: .4; cursor: not-allowed; }
 .chipControls button:focus-visible, .add:focus-visible, .added:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 2px; }
 .share { min-width: 3.2em; text-align: center; font-size: 14px; color: var(--c); font-variant-numeric: tabular-nums; }
 
-/* The tile: every model's colour, in its share; particles drift in (straight for Linear, swirling for SLERP). */
-.orb { position: relative; width: 260px; height: 260px; }
-.tile { position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; transform: translate(-50%, -50%); display: grid; place-items: center; }
-.tile::after { content: ""; position: absolute; inset: 0; background-image: var(--zs-grain); opacity: .35; mix-blend-mode: overlay; }
-.tile span { position: relative; z-index: 1; font-family: var(--font-plex-mono), ui-monospace, monospace; font-weight: 600; font-size: 20px; letter-spacing: .02em; color: var(--zs-panel); font-variant-numeric: tabular-nums; }
-.dot { position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin: -3.5px; transform: rotate(var(--angle)) translateX(108px) rotate(45deg); }
+/* The bowl, from above: one broth, a bundle of noodles, and one topping per model ringed in its colour. */
+.stage { display: grid; justify-items: center; gap: 14px; min-width: 0; }
+.bowl { width: min(100%, 460px); height: auto; overflow: visible; }
+.rim { fill: var(--bowl); stroke: var(--neon); stroke-width: 3; filter: drop-shadow(0 0 6px var(--neon)) drop-shadow(0 0 22px color-mix(in srgb, var(--neon) 50%, transparent)); }
+:global([data-theme=light]) .rim { filter: drop-shadow(0 10px 18px rgba(28, 26, 38, .25)); }
+.band { fill: none; stroke: color-mix(in srgb, var(--neon) 55%, transparent); stroke-width: 2; stroke-dasharray: 2 7; stroke-linecap: round; }
+.lip { fill: none; stroke: rgba(255, 255, 255, .1); stroke-width: 1.5; }
+.oil ellipse { fill: rgba(255, 236, 170, .42); stroke: rgba(255, 255, 255, .45); stroke-width: 1; }
+.noodle, .noodleShade { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.noodleShade { stroke: #a77c34; stroke-width: 7; }
+.noodle { stroke: #f6e1a2; stroke-width: 4.5; }
+.noodles, .oil { transform-origin: 200px 200px; transform-box: view-box; }
+.scallions circle { fill: #cfe9a4; stroke: #5fa83a; stroke-width: 2.4; }
+
+.toppingRing { fill: none; stroke: var(--c); stroke-width: 2.5; stroke-dasharray: 5 4; filter: drop-shadow(0 0 4px var(--c)); }
+:global([data-theme=light]) .toppingRing { filter: none; }
+.ratio { margin: -6px 0 0; font-size: 13px; color: var(--zs-t3); }
+.ratio b { font-family: var(--font-plex-mono), ui-monospace, monospace; font-weight: 600; color: var(--zs-fg); font-variant-numeric: tabular-nums; }
+.steam { fill: none; stroke: rgba(var(--zs-fg-rgb), .28); stroke-width: 5; stroke-linecap: round; filter: blur(1.5px); }
 @media (prefers-reduced-motion: no-preference) {
-  /* Each model's particles are spread over the whole cycle, so every colour is visible at once. */
-  .dot { animation: drift 4.2s ease-in infinite; animation-delay: calc(var(--phase) * -4.2s); }
-  .stage[data-method=slerp] .dot { animation-name: swirl; }
-  @keyframes drift {
-    from { transform: rotate(var(--angle)) translateX(128px) rotate(45deg); opacity: 0; }
-    15% { opacity: 1; }
-    80% { opacity: 1; }
-    to { transform: rotate(var(--angle)) translateX(0) rotate(45deg); opacity: 0; }
+  /* The steam is the stall's one ambient motion; SLERP slowly stirs the noodles and oil the other way. */
+  .steam { animation: rise 3.6s ease-in-out infinite; animation-delay: calc(var(--n) * -1.2s); }
+  .noodles[data-method=slerp] { animation: stir 3s ease-in-out infinite alternate; }
+  .oil[data-method=slerp] { animation: fold 30s linear infinite; }
+  @keyframes rise {
+    0% { opacity: 0; transform: translateY(14px); }
+    40% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-16px); }
   }
-  @keyframes swirl {
-    from { transform: rotate(calc(var(--angle) - 70deg)) translateX(128px) rotate(45deg); opacity: 0; }
-    15% { opacity: 1; }
-    80% { opacity: 1; }
-    to { transform: rotate(var(--angle)) translateX(0) rotate(45deg); opacity: 0; }
-  }
+  @keyframes stir { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+  @keyframes fold { to { transform: rotate(360deg); } }
 }
-.about { margin: -10px 0 0; font-size: 13px; color: var(--zs-t3); }
+.about { margin: 0; font-size: 13px; color: var(--zs-t3); text-align: center; }
 
-.run { display: grid; gap: 10px; width: 100%; max-width: 760px; }
-.fine { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--zs-t3); text-align: center; }
+/* The order ticket: a slip with punched edges that lists the recipe, then the command that cooks it. */
+.ticket { justify-self: center; display: grid; gap: 14px; width: calc(100% - 32px); max-width: 760px; margin: -28px 0 0; padding: 26px 28px 22px;
+  background: var(--zs-raised); border: 1px solid var(--zs-line); position: relative; z-index: 1;
+  -webkit-mask: radial-gradient(circle 7px at 0 50%, transparent 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle 7px at 100% 50%, transparent 98%, #000) right / 51% 100% no-repeat;
+  mask: radial-gradient(circle 7px at 0 50%, transparent 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle 7px at 100% 50%, transparent 98%, #000) right / 51% 100% no-repeat; }
+.ticket h2 { margin: 0; font-weight: 300; font-size: 22px; letter-spacing: -0.02em; color: var(--zs-fg); }
+.lines { display: grid; gap: 6px; margin: 0; padding: 0 0 12px; list-style: none; border-bottom: 1px dashed rgba(var(--zs-fg-rgb), .2); }
+.lines li { display: flex; align-items: baseline; gap: 10px; font-size: 14px; color: var(--zs-fg); }
+.lines li::after { content: ""; order: 1; flex: 1; border-bottom: 1px dotted rgba(var(--zs-fg-rgb), .22); }
+.lines span { display: inline-flex; align-items: center; gap: 8px; }
+.lines i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.lines b { order: 2; font-weight: 400; color: var(--c); font-variant-numeric: tabular-nums; }
+.total { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; margin: 0; font-size: 13px; color: var(--zs-t2); }
+.fine { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--zs-t3); }
 
-/* The market: one card per model; a card in the mix wears its colour along the top. */
-.market { width: 100%; margin-top: 24px; padding-top: 40px; border-top: 1px solid var(--zs-line); }
+/* The market: each model as a packet, with a coloured band once it is in the bowl and a tear line above its facts. */
+.market { padding: 56px 40px 48px; border-bottom: 1px solid var(--zs-line); }
 .marketTop { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px 24px; margin-bottom: 20px; }
 .marketTop h2 { margin: 0; font-weight: 300; font-size: clamp(26px, 3vw, 38px); letter-spacing: -0.02em; color: var(--zs-fg); }
 .filters { border-radius: 18px; }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
-.card { display: flex; flex-direction: column; gap: 6px; padding: 18px 18px 16px; border: 1px solid var(--zs-line); background: var(--zs-panel); box-shadow: inset 0 2px 0 var(--c, transparent); transition: background .25s; }
-.card[data-in] { background: color-mix(in srgb, var(--c) 7%, var(--zs-panel)); }
+.card { display: flex; flex-direction: column; gap: 6px; padding: 18px 18px 14px; border: 1px solid var(--zs-line); border-top: 6px solid var(--c, var(--zs-raised));
+  border-radius: 4px 4px 2px 2px; background: var(--zs-panel); transition: background .25s, border-color .25s; }
+.card[data-in] { background: color-mix(in srgb, var(--c) 8%, var(--zs-panel)); }
 .cardTop { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .tag { padding: 3px 10px; border-radius: 999px; background: var(--zs-raised); border: 1px solid var(--zs-line); font-size: 12px; color: var(--zs-fg); }
 .role { font-size: 12px; color: var(--zs-t3); }
@@ -107,7 +115,7 @@
 .card h3 { margin: 10px 0 0; font-weight: 300; font-size: 21px; letter-spacing: -0.02em; color: var(--zs-fg); }
 .maker { margin: 0; font-size: 12.5px; color: var(--zs-t3); }
 .note { flex: 1; margin: 4px 0 8px; font-size: 13.5px; line-height: 1.5; color: var(--zs-t2); }
-.cardFoot { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px solid var(--zs-line); }
+.cardFoot { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px dashed rgba(var(--zs-fg-rgb), .18); }
 .facts { font-size: 12px; color: var(--zs-t3); font-variant-numeric: tabular-nums; }
 .add, .added { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border: 1px solid var(--zs-line); border-radius: 999px; background: none; color: var(--zs-fg); font: inherit; font-size: 13px; cursor: pointer; transition: border-color .2s, background .2s; }
 .add:hover:not(:disabled) { border-color: rgba(var(--zs-fg-rgb), .4); background: var(--zs-raised); }
@@ -121,17 +129,19 @@
 .notes a { color: var(--zs-fg); text-underline-offset: 3px; }
 .notes code { font-family: var(--font-plex-mono), ui-monospace, monospace; }
 
-@media (max-width: 699px) {
-  .hero { grid-template-columns: 1fr; padding: 48px 4px 24px; }
-  .heroArt { width: 260px; height: 200px; transform: scale(.85); }
-  .mix { margin-bottom: 40px; }
-  .mix { width: 100%; }
-  .chip { min-width: 0; flex: 1 1 100%; grid-template-columns: 1fr auto; align-items: center; }
-  .chipName { grid-column: 1; }
-  .chipRole { grid-column: 1; }
-  .chipControls { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; }
-  .orb { width: 220px; height: 220px; }
+@media (max-width: 899px) {
+  /* One column: the sign, then the bowl, then what's in it. */
+  .stall { grid-template-columns: 1fr; justify-items: start; gap: 18px; padding: 48px 16px 56px; }
+  .counter { display: contents; }
+  .stage { order: 1; justify-self: stretch; }
+  .counter > .toggle, .mix { order: 2; }
+  .market { padding: 40px 16px; }
+}
+@media (max-width: 499px) {
+  .chip { grid-template-columns: auto minmax(0, 1fr); }
+  .chipControls { grid-column: 1 / -1; justify-self: end; }
+  .ticket { padding: 22px 18px 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .wires path, .option span, .card, .add, .added { transition: none; }
+  .option span, .card, .add, .added { transition: none; }
 }
