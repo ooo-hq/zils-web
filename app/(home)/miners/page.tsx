@@ -143,7 +143,7 @@ export default async function MinersPage() {
         <h3 id="install-heading" className={s.subTitle}>Start mining</h3>
         <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
         <p><a href="https://docs.zils.ai/operations/miner-tuning" className={s.rhInline}>Tune your miner</a>: prepare training data, change the recipe, and compare your candidate with the base before submitting.</p>
-        <p>Installs the <code>zils</code> and <code>btcli</code> commands, then <code>zils setup</code> asks for your wallet and Hugging Face repo. After that, <code>zils doctor</code> checks each step and prints the command for the next one: register on testnet 579, train a candidate, commit it. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the command to update.</p>
+        <p>Installs the <code>zils-miner</code> and <code>btcli</code> commands, then <code>zils-miner setup</code> asks for your wallet and Hugging Face repo. After that, <code>zils-miner doctor</code> checks each step and prints the command for the next one: register on testnet 579, train a candidate, commit it. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the command to update.</p>
       </section>
       <DetailsRow summary="What we have tried">
         <div className={s.tried}>
@@ -164,7 +164,7 @@ export default async function MinersPage() {
           <section aria-labelledby="how-heading">
             <h3 id="how-heading" className={s.subTitle}>How a new base wins</h3>
             <ol className={s.how}>
-              <li><strong>Submit.</strong> A miner uploads replacement weights for the base to Hugging Face, then commits them on chain with <code>zils commit-candidate</code>.</li>
+              <li><strong>Submit.</strong> A miner uploads replacement weights for the base to Hugging Face, then commits them on chain with <code>zils-miner commit-candidate</code>.</li>
               <li><strong>Score.</strong> Validators score it on a sealed exam the miner never sees, against the current base.</li>
               <li><strong>Confirm.</strong> It must win again on a second, fresh exam, and customer-style adapters trained on it must not get worse.</li>
             </ol>
