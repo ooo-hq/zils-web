@@ -18,10 +18,10 @@ export const metadata: Metadata = {
 
 const GUIDE = 'https://docs.zils.ai/operations/soup';
 
-// Rules from zils main 0974870: docs/mining.md "Soup pool" and zils/soup_round.py. Change them here, not in the copy.
+// Rules from zils main bb78056: docs/mining.md "Soup pool" and zils/soup_round.py. Change them here, not in the copy.
 const STEPS = [
   ['持込', 'Bring a body', 'Fine-tune your tier’s Qwen base any way you like. Upload the full body to Hugging Face and commit its hash on chain.'],
-  ['味見', 'Taste it alone', 'Each day a validator grades every body in the pool on a seeded slice of a private exam, through the tier’s fixed answer layer. Seats are decided on the last three rounds’ slices together, so one lucky night does not win a seat.'],
+  ['味見', 'Taste it alone', 'Each day a validator grades every body in the pool on a seeded slice of a private exam, through the tier’s fixed answer layer. Seats are decided on the last three rounds’ slices together, so one lucky night does not win a seat. Confidence counts: answers are scored on their probabilities after the validator calibrates each body, so making a body sound surer without changing its answers earns nothing.'],
   ['欲張り', 'Ladle greedily', 'Start with the best body. Add the next best only if the soup scores at least 0.3 points higher. Stop at five.'],
   ['抜き', 'Taste without you', 'Each member is lifted out once. What the soup loses without it is that member’s contribution.'],
   ['毎日', 'Serve daily', 'Seats are re-earned every round. A body that drops out of the bowl stops earning at once.'],
@@ -36,9 +36,9 @@ const BILL = [
 ] as const;
 
 const RATES = [
-  ['Trainer', '1×', 'You trained the body. Fine-tunes of a house model, the soup or a release count.'],
-  ['Scout', '0.25×', 'An open model released after launch, re-uploaded by the miner who found it.'],
-  ['House mix', '0.25×', 'A body that is almost entirely a blend of house models, or of the soup and the release, with less than 5% of its own change.'],
+  ['Trainer', '1×', 'You trained the body, well away from every listed public model. Fine-tunes of a house model, the soup or a release count; at launch their seats pay only if they beat what they started from by at least 0.3 points.'],
+  ['Scout', '0.25×', 'A public decision model on the tier’s known-public list, re-uploaded as is or lightly changed by the first miner to commit it. Fine-tunes of a listed model also pay 0.25× at launch.'],
+  ['House mix', '0.25×', 'A body that is almost entirely a blend of house models and listed public models, or of these with the soup and the release, with less than 5% of its own change.'],
   ['House model', '0', 'The open models each tier’s soup starts from. They cook; they are not paid.'],
 ] as const;
 

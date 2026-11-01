@@ -25,6 +25,9 @@ const round = z.object({
   soup_sha256: sha, subset_sha256: sha, predictions_sha256: sha,
   // zils#150: seats and the crown are scored on this round's items plus the validator's previous rounds' (decision_rounds).
   decision: z.object({ rounds: z.number().int().min(1).max(7), items: z.number().int().min(0) }).strict().optional(),
+  // zils#162: the pool's scoring and the soup's fitted temperature (grid 0.1 to 10), published together.
+  scoring: z.enum(['calibrated_brier', 'calibrated_argmax', 'argmax']).optional(),
+  temperature: z.number().finite().min(0.1).max(10).optional(),
 }).strict();
 const tier = z.object({
   pool: z.string().min(1).max(32),

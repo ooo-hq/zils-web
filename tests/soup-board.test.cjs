@@ -27,6 +27,8 @@ test('the feed accepts public round records and rejects anything that could leak
   assert.equal(soupBoardSchema.safeParse(valid()).success, true);
   const pooled = valid(); pooled.tiers[0].rounds[0].decision = { rounds: 3, items: 9000 };
   assert.equal(soupBoardSchema.safeParse(pooled).success, true);   // zils#150 adds decision: {rounds, items}
+  const calibrated = valid(); Object.assign(calibrated.tiers[0].rounds[0], { scoring: 'calibrated_brier', temperature: 1.25 });
+  assert.equal(soupBoardSchema.safeParse(calibrated).success, true); // zils#162 publishes the scoring and the soup's fitted temperature
   const bad = [
     v => { v.tiers[0].rounds[0].category_scores.secret_family = 50; },        // only the five published categories
     v => { v.tiers[0].rounds[0].members[0].rate = 0.5; },                      // rates are 0, 0.25 or 1
@@ -36,6 +38,9 @@ test('the feed accepts public round records and rejects anything that could leak
     v => { v.tiers[0].rounds[0].members = Array(6).fill(v.tiers[0].rounds[0].members[0]); }, // at most five seats
     v => { v.tiers[0].rounds[0].decision = { rounds: 8, items: 9000 }; },     // decision_rounds is 1 to 7
     v => { v.tiers[0].rounds[0].decision = { rounds: 3, items: 9000, ids: ['x'] }; }, // never item ids
+    v => { Object.assign(v.tiers[0].rounds[0], { scoring: 'secret', temperature: 1 }); },       // a known scoring only
+    v => { Object.assign(v.tiers[0].rounds[0], { scoring: 'calibrated_brier', temperature: 0 }); }, // grid is 0.1 to 10
+    v => { Object.assign(v.tiers[0].rounds[0], { scoring: 'calibrated_brier', temperature: 11 }); },
   ];
   for (const change of bad) { const v = valid(); change(v); assert.equal(soupBoardSchema.safeParse(v).success, false); }
 });

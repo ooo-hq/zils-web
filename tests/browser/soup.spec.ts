@@ -84,9 +84,17 @@ test('/soup states the crown bar, house rates and house models without internal 
   const mix = page.getByRole('table', { name: 'Seat rates' }).getByRole('row', { name: /House mix/ });
   await expect(mix).toContainText('0.25×');
   await expect(mix).toContainText('the soup and the release');
+  // zils#159/#163/#164: scouts re-upload models on the known-public list; mixes of listed models pay as scouts;
+  // at launch a fine-tune's seat pays only if it beats what it started from.
+  const rates = page.getByRole('table', { name: 'Seat rates' });
+  await expect(rates.getByRole('row', { name: /Scout/ })).toContainText('known-public list');
+  await expect(mix).toContainText('listed public models');
+  await expect(rates.getByRole('row', { name: /Trainer/ })).toContainText('beat what they started from by at least 0.3');
+  await expect(page.locator('main')).not.toContainText('released after launch');
   // zils#150: seats and the crown are decided on the last 3 rounds' items together, not one fresh slice.
   const steps = page.getByRole('list', { name: 'How a soup is made' }).getByRole('listitem');
   await expect(steps.nth(1)).toContainText('last three rounds');
+  await expect(steps.nth(1)).toContainText('Confidence counts'); // zils#162 calibrated_brier
   await expect(page.locator('main')).not.toContainText('fresh, seeded slice');
   // zils#152: fine-tunes of the soup and release are allowed; zils#153: four pools, flash and z3 open later.
   await expect(page.locator('main')).toContainText('the current soup');
