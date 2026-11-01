@@ -25,8 +25,8 @@ const valid = () => ({
 
 test('the feed accepts public round records and rejects anything that could leak or mislead', () => {
   assert.equal(soupBoardSchema.safeParse(valid()).success, true);
-  const pooled = valid(); pooled.tiers[0].rounds[0].decision = { rounds: 3, items: 9000 };
-  assert.equal(soupBoardSchema.safeParse(pooled).success, true);   // zils#150 adds decision: {rounds, items}
+  const pooled = valid(); pooled.tiers[0].rounds[0].decision = { rounds: ['mini-2026-11-02', 'mini-2026-11-03', 'mini-2026-11-04'], items: 9000 };
+  assert.equal(soupBoardSchema.safeParse(pooled).success, true);   // zils#150: decision is the pooled rounds' ids and the item count
   const calibrated = valid(); Object.assign(calibrated.tiers[0].rounds[0], { scoring: 'calibrated_brier', temperature: 1.25 });
   assert.equal(soupBoardSchema.safeParse(calibrated).success, true); // zils#162 publishes the scoring and the soup's fitted temperature
   const bad = [
@@ -36,8 +36,9 @@ test('the feed accepts public round records and rejects anything that could leak
     v => { v.tiers[0].rounds[0].items = ['exam item']; },                       // no extra fields
     v => { v.tiers[0].bodies['b'.repeat(64)].repo = 'https://evil.example'; },
     v => { v.tiers[0].rounds[0].members = Array(6).fill(v.tiers[0].rounds[0].members[0]); }, // at most five seats
-    v => { v.tiers[0].rounds[0].decision = { rounds: 8, items: 9000 }; },     // decision_rounds is 1 to 7
-    v => { v.tiers[0].rounds[0].decision = { rounds: 3, items: 9000, ids: ['x'] }; }, // never item ids
+    v => { v.tiers[0].rounds[0].decision = { rounds: Array.from({ length: 8 }, (_, i) => `r${i}`), items: 9000 }; }, // decision_rounds is 1 to 7
+    v => { v.tiers[0].rounds[0].decision = { rounds: 3, items: 9000 }; },     // ids, not a bare count
+    v => { v.tiers[0].rounds[0].decision = { rounds: ['r1'], items: 9000, ids: ['x'] }; }, // never item ids
     v => { Object.assign(v.tiers[0].rounds[0], { scoring: 'secret', temperature: 1 }); },       // a known scoring only
     v => { Object.assign(v.tiers[0].rounds[0], { scoring: 'calibrated_brier', temperature: 0 }); }, // grid is 0.1 to 10
     v => { Object.assign(v.tiers[0].rounds[0], { scoring: 'calibrated_brier', temperature: 11 }); },
@@ -58,7 +59,7 @@ test('a tier view gives tonight, the change since last night, seats with names, 
   assert.equal(view.crown, null);
   assert.deepEqual(view.history, [70.8, 71.4]);
   assert.equal(view.decision, null);
-  const pooled = valid(); pooled.tiers[0].rounds[0].decision = { rounds: 3, items: 9000 };
+  const pooled = valid(); pooled.tiers[0].rounds[0].decision = { rounds: ['a', 'b', 'c'], items: 9000 };
   assert.deepEqual(tierView(pooled.tiers[0]).decision, { rounds: 3, items: 9000 });
 });
 
@@ -76,7 +77,7 @@ test('outages, stale feeds and empty tiers never render as a live soup', async (
     value = { ...valid(), as_of: '2020-01-01T00:00:00Z' };
     assert.equal(await soupBoard(), null);
     value = { ...valid(), tiers: [{ ...valid().tiers[0], rounds: [] }] };
-    assert.equal((await soupBoard()).tiers.length, 0);
+    assert.equal((await soupBoard()).tiers.length, 1); // a tier before its first round still shows, as waiting
     global.fetch = async () => ({ ok: false, json: async () => ({}) });
     assert.equal(await soupBoard(), null);
     global.fetch = async () => { throw new Error('offline'); };
@@ -85,4 +86,21 @@ test('outages, stale feeds and empty tiers never render as a live soup', async (
     global.fetch = fetch;
     if (env === undefined) delete process.env.NEXT_PUBLIC_ZILS_TRAINING_API_URL; else process.env.NEXT_PUBLIC_ZILS_TRAINING_API_URL = env;
   }
+});
+
+test('a tier that Zils does not serve yet, or that has not cooked, is still a valid tier', () => {
+  const v = valid(); v.tiers[0].serving = null; v.tiers[0].rounds = [];
+  assert.equal(soupBoardSchema.safeParse(v).success, true);
+  const view = tierView(v.tiers[0]);
+  assert.equal(view.tonight, null);
+  assert.deepEqual(view.seats, []);
+  assert.deepEqual(view.history, []);
+  assert.equal(view.serving, null);
+});
+
+test('seats say who made each body and which one holds the crown', () => {
+  const v = valid();
+  v.tiers[0].rounds[0].crown = { hotkey: '5Miner', body_sha256: 'b'.repeat(64), rate: 1, weight: 0.2 };
+  const view = tierView(v.tiers[0]);
+  assert.deepEqual(view.seats.map(s => [s.maker, s.crowned]), [['perplexity-ai', false], ['5Miner', true]]);
 });
