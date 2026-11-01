@@ -1,0 +1,29 @@
+/* The terminal echo on the CLI sign-in page; layout and form styles come from the sign-in panel. */
+.stage { position: relative; flex: 1; display: flex; align-items: center; padding: 48px 36px; }
+.term { margin: 0; width: 100%; max-width: 560px; background: var(--zs-panel); border: 1px solid rgba(var(--zs-fg-rgb), .14); }
+.term figcaption { display: block; padding: 12px 18px; border-bottom: 1px solid rgba(var(--zs-fg-rgb), .1); }
+.term pre { margin: 0; padding: 22px 18px 26px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 13.5px; line-height: 1.8; color: var(--zs-fg); white-space: pre-wrap; overflow-wrap: anywhere; }
+.prompt { color: var(--zs-peach); }
+.dim { color: var(--zs-t2); }
+.state[data-tone=wait] { color: var(--zs-fg); }
+.state[data-tone=ok] { background: var(--zs-spectrum-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.state[data-tone=bad] { color: var(--zs-bad); }
+.cursor { display: inline-block; width: .6em; height: 1.15em; margin-left: 6px; vertical-align: text-bottom; background: var(--zs-spectrum); }
+@media (prefers-reduced-motion: no-preference) {
+  .cursor { animation: blink 1.1s steps(1) infinite; }
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.who { color: var(--zs-fg); font-weight: 400; overflow-wrap: anywhere; }
+.what { margin: 28px 0 0; font-size: 15px; line-height: 1.6; color: var(--zs-t2); }
+.actions { display: flex; gap: 12px; margin-top: 28px; }
+.actions > button { flex: 1; justify-content: center; }
+.deny { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; padding: 12px 16px; border: 1px solid rgba(var(--zs-fg-rgb), .2); background: none; color: var(--zs-fg); cursor: pointer; display: inline-flex; }
+.deny:hover:not(:disabled) { border-color: rgba(var(--zs-fg-rgb), .4); }
+.deny:disabled { opacity: .5; cursor: default; }
+.deny:focus-visible { outline: 2px solid var(--zs-peach); outline-offset: 3px; }
+
+@media (max-width: 899px) {
+  .stage { padding: 8px 16px 24px; }
+  .term pre { font-size: 12.5px; }
+}
