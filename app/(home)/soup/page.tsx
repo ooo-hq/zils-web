@@ -30,7 +30,7 @@ const STEPS = [
 const STEP_ICONS: Food[] = ['chopsticks', 'spoon', 'ladle', 'spoon', 'bowl'];
 
 const BILL = [
-  ['Soup seats', '80%', 'Split equally among members whose contribution is at least 0.3 points, each times its rate.'],
+  ['Soup seats', '5 × 16%', 'Five fixed seats. Each member whose contribution is at least 0.3 points earns one seat, times its rate. A seat is worth the same however many others are seated.'],
   ['Solo crown', '20%', 'The round’s best single body that is not a house model, times its rate, only if it beats every house model and the current soup by at least 0.3 points. A soup usually beats its members, so expect the crown to burn in most rounds.'],
   ['Anything unearned', 'Burned', 'Empty seats and an unclaimed crown pay no one.'],
 ] as const;

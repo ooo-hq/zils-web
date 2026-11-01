@@ -65,6 +65,6 @@ export function Ingredients({ heading = 'What each soup is built from' }: { head
         <span className={s.by}>by {m.repo.split('/')[0]}{'note' in m ? ` · ${m.note}` : ''}</span>
       </li>)}
     </ul>
-    {later && <p className={s.later}>Opens later: this pool runs no rounds and pays nothing until its opening block, then pays a boosted share for its first weeks.</p>}
+    {later && <p className={s.later}>Opens later: this pool runs no rounds and pays nothing until its opening block; its share burns until then.</p>}
   </section>;
 }

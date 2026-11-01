@@ -13,7 +13,8 @@ test('/soup explains the greedy soup: seats, crown, house rules and the measured
   await expect(steps.nth(2)).toContainText('only if the soup scores at least 0.3 points higher');
 
   const bill = page.getByRole('table', { name: 'Who gets paid' });
-  await expect(bill.getByRole('row', { name: /Soup seats/ })).toContainText('80%');
+  await expect(bill.getByRole('row', { name: /Soup seats/ })).toContainText('5 × 16%');
+  await expect(bill.getByRole('row', { name: /Soup seats/ })).not.toContainText('Split equally');
   await expect(bill.getByRole('row', { name: /Solo crown/ })).toContainText('20%');
   for (const [who, rate] of [['Trainer', '1×'], ['Scout', '0.25×'], ['House model', '0']]) {
     await expect(page.getByRole('table', { name: 'Seat rates' }).getByRole('row', { name: new RegExp(who) })).toContainText(rate);
@@ -116,17 +117,15 @@ test('soup pages name the miner command zils-miner (zils#171), never the custome
 
 test('/miners: every tier is a soup, with its ingredients and Japanese accents', async ({ page }) => {
   await page.goto('/miners');
-  const lane = page.getByRole('heading', { name: 'Three ways to earn' }).locator('..').locator('..').getByRole('listitem').filter({ hasText: 'Base tier' }).first();
-  await expect(lane).toContainText('Soup seats and a crown');
-  await expect(lane).not.toContainText('kings');
-  await expect(lane).not.toContainText('testnet');
   const base = page.locator('div#base-tier');
   await expect(base).toContainText('Every tier is a soup');
   await expect(base).toContainText('Lite and mini cook from the launch; flash and z3 open later.');
-  // Base pool shares from zils/data/base-pools-launch.json; the testnet 40/10/16/4/30 split is gone.
-  const lanes = page.getByRole('region', { name: 'Three ways to earn' });
-  await expect(lanes).toContainText('lite 35%, mini 30%, flash 20% and z3 10%');
+  // Base pool shares from zils/data/base-pools-launch.json: four pools at 25%; the testnet 40/10/16/4/30 split is gone.
+  const lanes = page.getByRole('region', { name: 'How miners earn' });
+  await expect(lanes).toContainText('Four pools, 24 paid spots');
   await expect(lanes).not.toContainText('40/10/16/4/30');
+  await expect(lanes).not.toContainText('kings');
+  await expect(lanes).not.toContainText('testnet');
   await expect(lanes).not.toContainText('This validator allocates');
   await expect(page.locator('main')).not.toContainText('king of the hill');
   await expect(page.getByRole('table', { name: /candidates/i })).toHaveCount(0);
