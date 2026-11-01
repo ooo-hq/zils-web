@@ -21,7 +21,7 @@ test('/soup explains the greedy soup: seats, crown, house rules and the measured
 
   await expect(page.locator('main code', { hasText: 'Qwen/Qwen3.5-4B' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Read the miner guide' })).toHaveAttribute('href', 'https://docs.zils.ai/operations/soup');
-  await expect(page.locator('#start')).toContainText('zils commit-body');
+  await expect(page.locator('#start')).toContainText('zils-miner commit-body');
   const nav = page.getByRole('navigation', { name: 'Main navigation' });
   await expect(nav.getByRole('link', { name: 'Soup' })).toHaveAttribute('aria-current', 'page');
   await expect(nav.locator('[aria-current]')).toHaveCount(1);
@@ -105,6 +105,14 @@ test('/soup states the crown bar, house rates and house models without internal 
   for (const banned of ['+4.26', '+6.63', 'as of', '30 Oct', 'testnet', 'nano', 'Nano']) expect(text).not.toContain(banned);
 });
 
+test('soup pages name the miner command zils-miner (zils#171), never the customer CLI', async ({ page }) => {
+  for (const path of ['/soup', '/miners']) {
+    await page.goto(path);
+    const codes = await page.locator('main code').allInnerTexts();
+    for (const old of ['zils', 'zils setup', 'zils doctor', 'zils commit-body', 'zils commit-candidate']) expect(codes, `${path}: ${old}`).not.toContain(old);
+  }
+});
+
 test('/miners: every tier is a soup, with its ingredients and Japanese accents', async ({ page }) => {
   await page.goto('/miners');
   const lane = page.getByRole('heading', { name: 'Three ways to earn' }).locator('..').locator('..').getByRole('listitem').filter({ hasText: 'Base tier' }).first();
@@ -125,7 +133,7 @@ test('/miners: every tier is a soup, with its ingredients and Japanese accents',
   await expect(base).not.toContainText('testnet');
   await expectIngredients(page);
   await expect(page.locator('main')).not.toContainText('status as of');
-  await expect(page.getByRole('heading', { name: 'Start mining' }).locator('..')).toContainText('zils commit-body');
+  await expect(page.getByRole('heading', { name: 'Start mining' }).locator('..')).toContainText('zils-miner commit-body');
 });
 
 test('/z3 explains that a z3-mini release is a soup that passed the release gate', async ({ page }) => {

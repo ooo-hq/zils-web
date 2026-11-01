@@ -1,0 +1,137 @@
+/* Each place in the mix has one colour, used for its chip, wire, particles, share of the tile and market card. */
+.builder, .hero { --m1: var(--zs-peri); --m2: var(--zs-orange); --m3: #d79be8; --m4: #7fd6b4; --m5: #e8c46a; }
+:global([data-theme=light]) .builder, :global([data-theme=light]) .hero { --m3: #9a4fb3; --m4: #2f8a66; --m5: #8f6a10; }
+.builder { display: grid; gap: 28px; justify-items: center; }
+
+/* The header: the title ends in the stage's tile, and five colours merge into one beside it. */
+.hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: center; gap: 24px 48px; padding: 72px 40px 56px; border-bottom: 1px solid var(--zs-line); overflow: hidden; }
+.heroText p { margin: 22px 0 0; max-width: 54ch; font-size: 15px; line-height: 1.6; color: var(--zs-t2); }
+.heroTitle { margin: 0; font-weight: 300; font-size: clamp(48px, 7vw, 96px); letter-spacing: -0.04em; line-height: .95; color: var(--zs-fg); }
+.period { display: inline-block; width: .2em; height: .2em; margin-left: .06em; vertical-align: baseline; background: linear-gradient(90deg, var(--m1), var(--m2), var(--m3), var(--m4), var(--m5)); }
+.heroArt { position: relative; justify-self: center; width: 300px; height: 240px; }
+.sheet, .merged { position: absolute; left: 50%; top: 50%; width: 112px; height: 112px; margin: -56px 0 0 -56px; }
+/* At rest the sheets are stacked under the merged tile. The load animation fans them out and gathers them once;
+   hovering the header splits the tile back into its five colours, and leaving gathers them again. */
+.sheet { opacity: 0; transform: translate(0, 0) rotate(0deg); box-shadow: 0 0 0 1px rgba(var(--zs-bg-rgb), .35); transition: transform .6s cubic-bezier(.3, 0, .2, 1), opacity .35s ease .15s; }
+.sheet[data-sheet='1'] { background: var(--m1); --x: -96px; --y: -34px; --r: -14deg; }
+.sheet[data-sheet='2'] { background: var(--m2); --x: -48px; --y: 30px; --r: -6deg; }
+.sheet[data-sheet='3'] { background: var(--m3); --x: 0px; --y: -40px; --r: 3deg; }
+.sheet[data-sheet='4'] { background: var(--m4); --x: 48px; --y: 30px; --r: 8deg; }
+.sheet[data-sheet='5'] { background: var(--m5); --x: 96px; --y: -34px; --r: 15deg; }
+.merged { opacity: 1; background: linear-gradient(90deg, var(--m1), var(--m2), var(--m3), var(--m4), var(--m5)); transition: opacity .3s ease .25s, transform .3s ease .25s; }
+.merged::after { content: ""; position: absolute; inset: 0; background-image: var(--zs-grain); opacity: .35; mix-blend-mode: overlay; }
+.hero:hover .sheet { opacity: .82; transform: translate(var(--x), var(--y)) rotate(var(--r)); transition: transform .6s cubic-bezier(.3, 0, .2, 1), opacity .15s ease; }
+.hero:hover .merged { opacity: 0; transform: scale(.92); transition: opacity .2s ease, transform .2s ease; }
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { animation: gather 1.5s cubic-bezier(.6, 0, .25, 1) .35s backwards; }
+  .merged { animation: settle 1.5s ease .35s backwards; }
+  @keyframes gather {
+    from { transform: translate(var(--x), var(--y)) rotate(var(--r)); opacity: .82; }
+    75% { opacity: .82; }
+    to { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  }
+  @keyframes settle { 0%, 70% { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet, .merged, .hero:hover .sheet, .hero:hover .merged { transition: none; }
+}
+.visuallyHidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.toggle, .filters { display: inline-flex; flex-wrap: wrap; margin: 0; padding: 3px; border: 1px solid var(--zs-line); border-radius: 999px; background: var(--zs-raised); }
+.option { position: relative; }
+.option input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.option span { display: block; padding: 8px 18px; border-radius: 999px; font-size: 14px; color: var(--zs-t2); transition: background .2s, color .2s; }
+.filters .option span { padding: 6px 14px; font-size: 13px; }
+.option input:checked + span { background: var(--zs-panel); color: var(--zs-fg); box-shadow: 0 0 0 1px var(--zs-line); }
+.option input:focus-visible + span { outline: 2px solid var(--zs-orange); outline-offset: 2px; }
+.option[data-off] { opacity: .45; }
+.option[data-off] input { cursor: not-allowed; }
+
+/* The stage: the models in the mix, wired into the tile. */
+.stage { position: relative; width: 100%; max-width: 980px; display: grid; justify-items: center; gap: 22px; padding: 4px 0; }
+.wires { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.wires path { fill: none; stroke-width: 1.5; stroke-linecap: round; opacity: .75; transition: d .45s ease; }
+
+.mix { position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 0 0 64px; padding: 0; list-style: none; }
+.chip { display: grid; gap: 4px; padding: 12px 14px; min-width: 168px; border: 1px solid var(--c); border-radius: 14px; background: var(--zs-panel); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 16%, transparent); }
+.chipName { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; color: var(--zs-fg); }
+.chipName i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+.chipRole { font-size: 12px; color: var(--zs-t3); }
+.chipControls { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; }
+.chipControls button { width: 26px; height: 26px; padding: 0; border: 1px solid var(--zs-line); border-radius: 50%; background: none; color: var(--zs-fg); font: inherit; font-size: 13px; line-height: 1; cursor: pointer; }
+.chipControls button:disabled { color: var(--zs-t3); opacity: .45; cursor: not-allowed; }
+.chipControls button:focus-visible, .add:focus-visible, .added:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 2px; }
+.share { min-width: 3.2em; text-align: center; font-size: 14px; color: var(--c); font-variant-numeric: tabular-nums; }
+
+/* The tile: every model's colour, in its share; particles drift in (straight for Linear, swirling for SLERP). */
+.orb { position: relative; width: 260px; height: 260px; }
+.tile { position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; transform: translate(-50%, -50%); display: grid; place-items: center; }
+.tile::after { content: ""; position: absolute; inset: 0; background-image: var(--zs-grain); opacity: .35; mix-blend-mode: overlay; }
+.tile span { position: relative; z-index: 1; font-family: var(--font-plex-mono), ui-monospace, monospace; font-weight: 600; font-size: 20px; letter-spacing: .02em; color: var(--zs-panel); font-variant-numeric: tabular-nums; }
+.dot { position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin: -3.5px; transform: rotate(var(--angle)) translateX(108px) rotate(45deg); }
+@media (prefers-reduced-motion: no-preference) {
+  /* Each model's particles are spread over the whole cycle, so every colour is visible at once. */
+  .dot { animation: drift 4.2s ease-in infinite; animation-delay: calc(var(--phase) * -4.2s); }
+  .stage[data-method=slerp] .dot { animation-name: swirl; }
+  @keyframes drift {
+    from { transform: rotate(var(--angle)) translateX(128px) rotate(45deg); opacity: 0; }
+    15% { opacity: 1; }
+    80% { opacity: 1; }
+    to { transform: rotate(var(--angle)) translateX(0) rotate(45deg); opacity: 0; }
+  }
+  @keyframes swirl {
+    from { transform: rotate(calc(var(--angle) - 70deg)) translateX(128px) rotate(45deg); opacity: 0; }
+    15% { opacity: 1; }
+    80% { opacity: 1; }
+    to { transform: rotate(var(--angle)) translateX(0) rotate(45deg); opacity: 0; }
+  }
+}
+.about { margin: -10px 0 0; font-size: 13px; color: var(--zs-t3); }
+
+.run { display: grid; gap: 10px; width: 100%; max-width: 760px; }
+.fine { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--zs-t3); text-align: center; }
+
+/* The market: one card per model; a card in the mix wears its colour along the top. */
+.market { width: 100%; margin-top: 24px; padding-top: 40px; border-top: 1px solid var(--zs-line); }
+.marketTop { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px 24px; margin-bottom: 20px; }
+.marketTop h2 { margin: 0; font-weight: 300; font-size: clamp(26px, 3vw, 38px); letter-spacing: -0.02em; color: var(--zs-fg); }
+.filters { border-radius: 18px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.card { display: flex; flex-direction: column; gap: 6px; padding: 18px 18px 16px; border: 1px solid var(--zs-line); background: var(--zs-panel); box-shadow: inset 0 2px 0 var(--c, transparent); transition: background .25s; }
+.card[data-in] { background: color-mix(in srgb, var(--c) 7%, var(--zs-panel)); }
+.cardTop { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tag { padding: 3px 10px; border-radius: 999px; background: var(--zs-raised); border: 1px solid var(--zs-line); font-size: 12px; color: var(--zs-fg); }
+.role { font-size: 12px; color: var(--zs-t3); }
+.role[data-role=house] { color: var(--zs-peri); }
+.role[data-role=base] { color: var(--zs-orange); }
+.card h3 { margin: 10px 0 0; font-weight: 300; font-size: 21px; letter-spacing: -0.02em; color: var(--zs-fg); }
+.maker { margin: 0; font-size: 12.5px; color: var(--zs-t3); }
+.note { flex: 1; margin: 4px 0 8px; font-size: 13.5px; line-height: 1.5; color: var(--zs-t2); }
+.cardFoot { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px solid var(--zs-line); }
+.facts { font-size: 12px; color: var(--zs-t3); font-variant-numeric: tabular-nums; }
+.add, .added { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border: 1px solid var(--zs-line); border-radius: 999px; background: none; color: var(--zs-fg); font: inherit; font-size: 13px; cursor: pointer; transition: border-color .2s, background .2s; }
+.add:hover:not(:disabled) { border-color: rgba(var(--zs-fg-rgb), .4); background: var(--zs-raised); }
+.add:disabled { color: var(--zs-t3); cursor: not-allowed; }
+.added { border-color: var(--c); }
+.added:disabled { cursor: default; }
+.added i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+
+.notes { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; max-width: 860px; font-size: 14px; line-height: 1.6; color: var(--zs-t2); }
+.notes b { color: var(--zs-fg); font-weight: 400; }
+.notes a { color: var(--zs-fg); text-underline-offset: 3px; }
+.notes code { font-family: var(--font-plex-mono), ui-monospace, monospace; }
+
+@media (max-width: 699px) {
+  .hero { grid-template-columns: 1fr; padding: 48px 4px 24px; }
+  .heroArt { width: 260px; height: 200px; transform: scale(.85); }
+  .mix { margin-bottom: 40px; }
+  .mix { width: 100%; }
+  .chip { min-width: 0; flex: 1 1 100%; grid-template-columns: 1fr auto; align-items: center; }
+  .chipName { grid-column: 1; }
+  .chipRole { grid-column: 1; }
+  .chipControls { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; }
+  .orb { width: 220px; height: 220px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wires path, .option span, .card, .add, .added { transition: none; }
+}

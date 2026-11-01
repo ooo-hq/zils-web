@@ -122,7 +122,7 @@ export default async function MinersPage() {
         <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
         <p><a href="https://docs.zils.ai/operations/soup" className={s.rhInline}>Soup guide</a>: what a body must be, how to commit it and how seats are paid.</p>
         <p><a href="https://docs.zils.ai/operations/miner-tuning" className={s.rhInline}>Tune your miner</a>: prepare training data, change the recipe, and compare your body with the base before committing.</p>
-        <p>Installs the <code>zils</code> and <code>btcli</code> commands, then <code>zils setup</code> asks for your wallet and Hugging Face repo. After that, <code>zils doctor</code> checks each step and prints the command for the next one: register, train a body, then commit it with <code>zils commit-body</code>. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the command to update.</p>
+        <p>Installs the <code>zils-miner</code> and <code>btcli</code> commands, then <code>zils-miner setup</code> asks for your wallet and Hugging Face repo. After that, <code>zils-miner doctor</code> checks each step and prints the command for the next one: register, train a body, then commit it with <code>zils-miner commit-body</code>. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the command to update.</p>
       </section>
       <SectionRow n="05" label="Customer-training workers" note={network ? `Updated ${utc(network.as_of)} UTC` : undefined} />
       {numbers && <dl className={s.nums}>
@@ -168,7 +168,7 @@ export default async function MinersPage() {
           <section aria-labelledby="how-heading">
             <h3 id="how-heading" className={s.subTitle}>How a new base wins</h3>
             <ol className={s.how}>
-              <li><strong>Commit.</strong> A miner uploads a fine-tuned body to Hugging Face, then commits it on chain with <code>zils commit-body</code>.</li>
+              <li><strong>Commit.</strong> A miner uploads a fine-tuned body to Hugging Face, then commits it on chain with <code>zils-miner commit-body</code>.</li>
               <li><strong>Cook.</strong> Each night validators build the tier’s soup on a sealed exam the miner never sees, and pay its seats.</li>
               <li><strong>Release.</strong> Every 14 to 28 days the soup must beat the current base on two fresh sealed draws, hold its lead 12 hours later, and keep customer-style adapters at least as good.</li>
             </ol>
