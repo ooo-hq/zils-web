@@ -5,7 +5,7 @@ import { Check, Copy } from 'lucide-react';
 import s from './install-command.module.css';
 
 /** A one-line shell command with a copy button; when the clipboard is blocked the text is selected instead. */
-export function InstallCommand({ command, label }: { command: string; label: string }) {
+export function InstallCommand({ command, label, copiedText = 'Install command copied.' }: { command: string; label: string; copiedText?: string }) {
   const field = useRef<HTMLElement>(null);
   const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -25,6 +25,6 @@ export function InstallCommand({ command, label }: { command: string; label: str
       {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
       {copied ? 'Copied' : 'Copy'}
     </button>
-    <span className={s.status} role="status">{failed ? 'Copy was blocked. The command is selected: press ⌘C on Mac or Ctrl+C on Windows.' : copied ? 'Install command copied.' : ''}</span>
+    <span className={s.status} role="status">{failed ? 'Copy was blocked. The command is selected: press ⌘C on Mac or Ctrl+C on Windows.' : copied ? copiedText : ''}</span>
   </div>;
 }
