@@ -23,8 +23,9 @@ const round = z.object({
   crown: z.object({ hotkey: z.string().min(1).max(100), body_sha256: sha, rate, weight: z.number().finite().min(0).max(1) }).strict().nullable(),
   category_scores: categories,
   soup_sha256: sha, subset_sha256: sha, predictions_sha256: sha,
-  // zils#150: seats and the crown are scored on this round's items plus the validator's previous rounds' (decision_rounds).
-  decision: z.object({ rounds: z.number().int().min(1).max(7), items: z.number().int().min(0) }).strict().optional(),
+  // zils#150: seats and the crown are scored on this round's items plus the validator's previous rounds' (decision_rounds);
+  // the record names those rounds by id.
+  decision: z.object({ rounds: z.array(z.string().min(1).max(64)).min(1).max(7), items: z.number().int().min(0) }).strict().optional(),
   // zils#162: the pool's scoring and the soup's fitted temperature (grid 0.1 to 10), published together.
   scoring: z.enum(['calibrated_brier', 'calibrated_argmax', 'argmax']).optional(),
   temperature: z.number().finite().min(0.1).max(10).optional(),
@@ -32,7 +33,8 @@ const round = z.object({
 const tier = z.object({
   pool: z.string().min(1).max(32),
   tier: z.string().regex(/^z3(-[a-z]+)?$/),
-  serving: z.object({ release: z.string().min(1).max(60), served_by: z.enum(['zils', 'miners']) }).strict(),
+  // null while Zils serves nothing for the tier (flash and z3 before they open).
+  serving: z.object({ release: z.string().min(1).max(60), served_by: z.enum(['zils', 'miners']) }).strict().nullable(),
   bodies: z.record(sha, z.object({ house: z.string().max(80).nullable(), repo: repo.nullable() }).strict()),
   rounds: z.array(round).max(60), // newest first
 }).strict();
@@ -58,19 +60,29 @@ export function bodyLabel(entry: { hotkey: string; body_sha256: string }, bodies
 type SeatKind = 'house' | 'trainer' | 'scout';
 const kind = (rateValue: number, house: boolean): SeatKind => house ? 'house' : rateValue === 1 ? 'trainer' : rateValue === 0.25 ? 'scout' : 'house';
 
-/** What the board shows for one tier: tonight's soup, the change since the previous round, seats, crown, history. */
+/** Who made a body: the house model's Hugging Face owner, else the miner's hotkey. */
+const maker = (hotkey: string, sha: string, bodies: Bodies) => {
+  const known = bodies[sha];
+  return known?.house && known.repo ? known.repo.split('/')[0] : hotkey;
+};
+
+/** What the page shows for one tier: tonight's soup, the change since the previous round, seats, crown, history.
+ *  A tier before its first round has no tonight, no seats and no history. */
 export function tierView(t: SoupTier) {
   const [tonight, previous] = t.rounds;
+  const base = { tier: t.tier, pool: t.pool, serving: t.serving };
+  if (!tonight) return { ...base, tonight: null, decision: null, change: null, seats: [], crown: null, history: [] as number[] };
   const score = soupScore(tonight.category_scores);
   return {
-    tier: t.tier,
-    serving: t.serving,
+    ...base,
     tonight: { round: tonight.round_id, finished: tonight.finished_at, score, categories: tonight.category_scores },
-    decision: tonight.decision ?? null,
+    decision: tonight.decision ? { rounds: tonight.decision.rounds.length, items: tonight.decision.items } : null,
     change: previous ? tenth(score - soupScore(previous.category_scores)) : null,
     seats: tonight.members.map(m => ({
       name: bodyLabel(m, t.bodies), hotkey: m.hotkey, body: m.body_sha256, rate: m.rate,
       kind: kind(m.rate, Boolean(t.bodies[m.body_sha256]?.house)), contribution: m.contribution, paid: m.seat_weight > 0,
+      maker: maker(m.hotkey, m.body_sha256, t.bodies), crowned: tonight.crown?.body_sha256 === m.body_sha256,
+      repo: t.bodies[m.body_sha256]?.repo ?? null,
     })),
     crown: tonight.crown ? { name: bodyLabel(tonight.crown, t.bodies), rate: tonight.crown.rate } : null,
     history: t.rounds.slice().reverse().map(r => soupScore(r.category_scores)),
@@ -78,7 +90,8 @@ export function tierView(t: SoupTier) {
 }
 export type TierView = ReturnType<typeof tierView>;
 
-/** The latest soup rounds per tier, or null when the feed is unconfigured, down, malformed or older than two days. */
+/** The latest soup rounds per tier (tiers that have not cooked yet included), or null when the feed is
+ *  unconfigured, down, malformed or older than two days. */
 export async function soupBoard(): Promise<SoupBoard | null> {
   const raw = process.env.NEXT_PUBLIC_ZILS_TRAINING_API_URL ?? process.env.NEXT_PUBLIC_FEZ_TRAINING_API_URL;
   if (!raw) return null;
@@ -89,6 +102,6 @@ export async function soupBoard(): Promise<SoupBoard | null> {
     if (!parsed.success) return null;
     const age = Date.now() - Date.parse(parsed.data.as_of);
     if (!(age >= 0 && age <= 2 * 86_400_000)) return null;
-    return { ...parsed.data, tiers: parsed.data.tiers.filter(t => t.rounds.length > 0) };
+    return parsed.data;
   } catch { return null; }
 }

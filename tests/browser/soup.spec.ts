@@ -115,25 +115,24 @@ test('soup pages name the miner command zils-miner (zils#171), never the custome
   }
 });
 
-test('/miners: every tier is a soup, with its ingredients and Japanese accents', async ({ page }) => {
+test('/miners: every tier is a soup, with its base and the house models in its pot', async ({ page }) => {
   await page.goto('/miners');
-  const base = page.locator('div#base-tier');
-  await expect(base).toContainText('Every tier is a soup');
-  await expect(base).toContainText('Lite and mini cook from the launch; flash and z3 open later.');
-  // Base pool shares from zils/data/base-pools-launch.json: four pools at 25%; the testnet 40/10/16/4/30 split is gone.
-  const lanes = page.getByRole('region', { name: 'How miners earn' });
-  await expect(lanes).toContainText('Four pools, 24 paid spots');
-  await expect(lanes).not.toContainText('40/10/16/4/30');
-  await expect(lanes).not.toContainText('kings');
-  await expect(lanes).not.toContainText('testnet');
-  await expect(lanes).not.toContainText('This validator allocates');
+  const bases = { 'z3-lite': 'Qwen/Qwen3.5-0.8B', 'z3-mini': 'Qwen/Qwen3.5-4B', 'z3-flash': 'Qwen/Qwen3.5-9B', 'z3': 'Qwen/Qwen3.8-27B' };
+  for (const [tier, repo] of Object.entries(bases)) {
+    await expect(page.getByRole('article', { name: tier, exact: true }).getByRole('link', { name: repo })).toHaveAttribute('href', new RegExp(`huggingface\\.co/${repo.replace(/\./g, '\\.')}/tree/`));
+  }
+  // Tiers that have not cooked show their pot of house models (the miners spec's fake feed may be up, and cooks only mini).
+  const lite = page.getByRole('article', { name: 'z3-lite' }).getByRole('list', { name: 'In the pot' });
+  await expect(lite.getByRole('link', { name: 'Intern-Decision-0.8B' })).toHaveAttribute('href', /huggingface\.co\/internlm\/Intern-Decision-0\.8B\/tree\/42457fafd13d10d0b0d9be46cb30a23caa409994/);
+  await expect(page.getByRole('article', { name: 'z3-flash' }).getByRole('link', { name: 'd3-flash' })).toHaveAttribute('href', /vllm-sr\/d3-flash\/tree\//);
+  await expect(page.getByRole('article', { name: 'z3-flash' })).toContainText('Opens later');
+  await expect(page.locator('main')).not.toContainText(/nano/i);
+  const earn = page.getByRole('region', { name: 'How miners earn' });
+  await expect(earn).toContainText('24 paid spots');
+  await expect(earn).toContainText('zils-miner commit-body');
+  for (const gone of ['40/10/16/4/30', 'kings', 'testnet', 'This validator allocates']) await expect(earn).not.toContainText(gone);
   await expect(page.locator('main')).not.toContainText('king of the hill');
-  await expect(page.getByRole('table', { name: /candidates/i })).toHaveCount(0);
-  expect(await page.locator('main [lang=ja]').count()).toBeGreaterThanOrEqual(6);
-  await expect(base).not.toContainText('testnet');
-  await expectIngredients(page);
   await expect(page.locator('main')).not.toContainText('status as of');
-  await expect(page.getByRole('heading', { name: 'Start mining' }).locator('..')).toContainText('zils-miner commit-body');
 });
 
 test('/z3 explains that a z3-mini release is a soup that passed the release gate', async ({ page }) => {
@@ -179,20 +178,12 @@ test('/z3 separates the nightly soup from the release window and records soup me
   }
 });
 
-test('/miners leads with earning, shows the soup before our own workers, and is honest about the soup feed', async ({ page }) => {
+test('/miners leads with tonight’s soups, then the chain, then how to earn, and is honest about missing feeds', async ({ page }) => {
   await page.goto('/miners');
   await expect(page.locator('main')).not.toContainText('Proposed');
-  // Order: tonight's soup first (miners come for stats), then competitions, base tier, install, then our workers.
-  // The workers row renders whether or not the worker API answers; #miners only renders when it does.
-  const workers = page.getByText('Customer-training workers', { exact: true }).first();
-  const order = [
-    ...await page.evaluate(() => ['tonight-soup-heading', 'competitions-heading', 'base-tier', 'install-heading']
-      .map(id => document.getElementById(id)?.getBoundingClientRect().top ?? NaN)),
-    (await workers.boundingBox())?.y ?? NaN,
-  ];
-  expect(order.every((y, i) => !Number.isNaN(y) && (i === 0 || y > order[i - 1]))).toBe(true);
-  const soup = page.getByRole('region', { name: 'Tonight’s soup' });
-  await expect(soup).toContainText('Seats appear here after the first round');
-  await expect(soup.getByRole('img', { name: /bodies become one soup/i })).toBeVisible();
+  const top = (name: string) => page.getByRole('region', { name, exact: true }).evaluate(e => e.getBoundingClientRect().top);
+  const order = [await top('Tonight’s soup'), await top('Miners on chain'), await top('How miners earn')];
+  expect(order[0]).toBeLessThan(order[1]);
+  expect(order[1]).toBeLessThan(order[2]);
   await expect(page.getByRole('link', { name: 'Soup guide', exact: true })).toHaveAttribute('href', 'https://docs.zils.ai/operations/soup');
 });

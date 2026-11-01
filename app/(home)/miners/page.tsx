@@ -1,31 +1,27 @@
-import { modelDisplayName } from '@/lib/model-name';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteFrame } from '@/components/site/site-frame';
 import { SectionRow } from '@/components/site/section-row';
 import { DetailsRow } from '@/components/site/details-row';
-import { MinerBoard, MinerRefresh } from '@/components/site/miner-board';
 import { InstallCommand } from '@/components/site/install-command';
-import { currentBase } from '@/lib/base-model';
-import { boardNumbers } from '@/lib/miner-board';
-import { networkMiners } from '@/lib/network-miners';
+import { networkBodies, minerRows } from '@/lib/network-bodies';
 import { soupBoard, tierView } from '@/lib/soup-board';
-import { EmptyBoard, SoupBoardView } from './soup-board';
+import { TIER_NAMES } from '@/lib/soup-tiers';
 import { Rehearsal } from './rehearsal';
-import { Ingredients } from '../soup/ingredients';
-import { SoupMerge } from './soup-merge';
+import { Refresh } from './refresh';
+import { TierSoup } from './tier';
+import { ChainTable } from './chain';
 import { FoodIcon } from '../soup/food-icons';
-import { Competitions } from './competitions';
 import s from './miners.module.css';
+import b from './board.module.css';
 
 export const metadata: Metadata = {
   title: 'Zils — miners',
-  description: 'Zils training miners: whether they are online, which models they report, and how their candidates did. Plus each attempt to improve the shared base model.',
+  description: 'What each z3 soup is made of tonight, who made each part, who serves it, and where every miner on chain stands.',
   alternates: { canonical: 'https://zils.ai/miners' },
 };
 
 const DOCS = 'https://docs.zils.ai';
-const utc = (iso: string) => new Date(iso).toUTCString().slice(17, 22);
 
 type Compare = { label: string; left: { name: string; value: number; text: string }; right: { name: string; value: number; text: string }; lowerIsBetter?: boolean };
 type Entry = { date: string; title: string; outcome: string; tone: 'win' | 'tie' | 'loss' | 'decision' | 'next'; body: string; compare?: Compare };
@@ -77,94 +73,56 @@ function Bars({ compare }: { compare: Compare }) {
 }
 
 export default async function MinersPage() {
-  const [base, network, soup] = await Promise.all([currentBase(), networkMiners(), soupBoard()]);
-  const latest = base?.channels.latest;
-  const numbers = network && boardNumbers(network);
+  const [soup, chain] = await Promise.all([soupBoard(), networkBodies()]);
+  const views = new Map((soup?.tiers ?? []).map(t => [t.tier, tierView(t)]));
   return (
     <SiteFrame current="miners">
-      <MinerRefresh />
-      <SectionRow n="01" label="Miners" note="いらっしゃい · welcome" />
-      <header className={s.hero}>
-        <h1>Earn by improving z3.</h1>
-        <p><b>Bring a body to the nightly soup</b> for any open tier. Customer-training jobs stay with Zils miners until miner terms are live.</p>
+      <Refresh />
+      <header className={b.hero}>
+        <div>
+          <h1>Miners make z3.</h1>
+          <p>Each night, validators average up to five model bodies into a soup for each z3 tier. The soup is the model that gets served. Here is what each soup holds tonight, who made each part, and where every miner stands.</p>
+        </div>
+        <section className={b.start} aria-label="Start mining">
+          <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
+          <p>Then run <code>zils-miner setup</code>. <Link href="/soup">Bring a body to the soup</Link></p>
+        </section>
       </header>
 
-      <SectionRow n="02" label="Tonight’s soup" note="今夜のスープ · latest round" />
-      <section className={s.tonightLive} aria-labelledby="tonight-soup-heading">
-        <h2 id="tonight-soup-heading" className="sr-only">Tonight’s soup</h2>
-        {soup?.tiers.length ? <SoupBoardView views={soup.tiers.map(tierView)} /> : <EmptyBoard art={<SoupMerge />} />}
+      <SectionRow n="01" label="Tonight’s soup" note="今夜のスープ" />
+      <section aria-labelledby="tonight-heading" className={b.tiers}>
+        <h2 id="tonight-heading" className="sr-only">Tonight’s soup</h2>
+        {!soup && <p className={b.down}>Tonight’s rounds are unavailable right now. Each tier shows its pot of house models until the feed returns.</p>}
+        {TIER_NAMES.map(tier => <TierSoup key={tier} tier={tier} view={views.get(tier) ?? null} feed={Boolean(soup)} />)}
+        <p className={b.fine}>Seats and the crown are decided on the items of the last three rounds together, because one night’s slice of the private exam is noisier than the 0.3-point margin. The score is tonight’s slice alone, so small moves between rounds are partly noise. Each part’s number is what the soup loses without it, rounded to 0.5 point.</p>
       </section>
 
-      <SectionRow n="03" label="Competitions" note="お品書き · menu" />
-      <Competitions />
+      <SectionRow n="02" label="Miners on chain" note={chain ? `Subnet ${chain.netuid}` : undefined} />
+      <section aria-label="Miners on chain">
+        {chain ? <ChainTable chain={chain} rows={minerRows(chain, soup)} /> : <p className={b.down}>The chain view is unavailable right now.</p>}
+      </section>
 
-      <SectionRow n="04" label="Base tier" note="スープ · soup" />
-      <div id="base-tier" className={s.base}>
-        <div>
-          <h2>Beat <em>the base.</em></h2>
-          <p>Every tier is a soup. Each night validators average up to five bodies, keep a body only if it lifts the score by 0.3, and pay the soup’s seats. Lite and mini cook from the launch; flash and z3 open later.</p>
-          <p className={s.soupLink}><span lang="ja" aria-hidden="true">スープ</span> Lite, mini and the larger tiers each cook from their own Qwen base and house models. <Link href="/soup">Bring a body to the soup</Link></p>
+      <SectionRow n="03" label="How miners earn" note="お品書き" />
+      <section aria-labelledby="earn-heading" className={b.earn}>
+        <div className={b.earnHead}>
+          <h2 id="earn-heading">How miners earn</h2>
+          <p>The four tiers share emissions equally, 25% each. Every tier pays five seats of 4% and a crown of 5%: 24 paid spots in all. Whatever nobody earns burns, including the whole share of a tier that has not opened.</p>
         </div>
-        <span className={s.pill}>Every tier · greedy soup</span>
-      </div>
-      <section className={s.soupRound} aria-labelledby="soup-round-heading">
-        <h3 id="soup-round-heading" className={s.subTitle}>A round, every night</h3>
-        <ol className={s.roundSteps}>
-          <li><FoodIcon name="bowl" className={s.stepIcon} /><b>In the pot</b><span lang="ja" aria-hidden="true" className={s.stepJp}>鍋</span>The tier’s house models, the current members and the best new bodies, at most 20.</li>
-          <li><FoodIcon name="ladle" className={s.stepIcon} /><b>Greedy</b><span lang="ja" aria-hidden="true" className={s.stepJp}>欲張り</span>Start from the best single body. Add the next only if the soup scores 0.3 higher. Stop at five.</li>
-          <li><FoodIcon name="ticket" className={s.stepIcon} /><b>Pay</b><span lang="ja" aria-hidden="true" className={s.stepJp}>会計</span>Five fixed seats, each 16% of the pool, for bodies that lift the soup by 0.3 or more. 20% to a body that beats every house model and the soup alone.</li>
-          <li><FoodIcon name="flame" className={s.stepIcon} /><b>Burn</b><span lang="ja" aria-hidden="true" className={s.stepJp}>焼却</span>Anything unearned burns. House models are never paid.</li>
+        <ol className={s.roundSteps} aria-label="A round">
+          <li><FoodIcon name="bowl" className={s.stepIcon} /><b>In the pot</b>The tier’s house models, the current members and the best new bodies, at most 20.</li>
+          <li><FoodIcon name="ladle" className={s.stepIcon} /><b>Greedy</b>Start from the best single body. Add the next only if the soup scores 0.3 higher. Stop at five.</li>
+          <li><FoodIcon name="ticket" className={s.stepIcon} /><b>Pay</b>A seat (4%) for each miner body that lifts the soup by 0.3 or more; scouts re-uploading public models earn a quarter. The crown (5%) goes to a body that beats every house model and the soup alone by 0.3.</li>
+          <li><FoodIcon name="flame" className={s.stepIcon} /><b>Burn</b>Anything unearned burns. House models are never paid.</li>
         </ol>
-        <Ingredients />
-      </section>
-      <section className={s.install} aria-labelledby="install-heading">
-        <h3 id="install-heading" className={s.subTitle}>Start mining</h3>
-        <InstallCommand command="curl -fsSL https://zils.ai/install.sh | sh" label="Miner install command" />
-        <p><a href="https://docs.zils.ai/operations/soup" className={s.rhInline}>Soup guide</a>: what a body must be, how to commit it and how seats are paid.</p>
-        <p><a href="https://docs.zils.ai/operations/miner-tuning" className={s.rhInline}>Tune your miner</a>: prepare training data, change the recipe, and compare your body with the base before committing.</p>
-        <p>Installs the <code>zils-miner</code> and <code>btcli</code> commands, then <code>zils-miner setup</code> asks for your wallet and Hugging Face repo. After that, <code>zils-miner doctor</code> checks each step and prints the command for the next one: register, train a body, then commit it with <code>zils-miner commit-body</code>. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the command to update.</p>
-      </section>
-      <SectionRow n="05" label="Customer-training workers" note={network ? `Updated ${utc(network.as_of)} UTC` : undefined} />
-      {numbers && <dl className={s.nums}>
-        <div><dt>Workers online</dt><dd>{numbers.online}<small> / {numbers.total}</small></dd></div>
-        <div><dt>Customer jobs</dt><dd>{numbers.jobs}</dd></div>
-        <div><dt>Models selected</dt><dd>{numbers.selected}</dd></div>
-        <div><dt>Current base</dt><dd className={s.sm}>{modelDisplayName(base?.channels.stable.name) || '—'}</dd></div>
-      </dl>}
-      {network
-        ? <section id="miners" aria-label="Customer-training workers">
-          <p className={s.asof}>These workers train customer adapters. Worker IDs, job selections and skill scores are separate from soup bodies committed on chain.</p>
-          <MinerBoard miners={network.miners} asOf={network.as_of} />
-          <p className={s.asof}><span>Live from the Zils training API · refreshes every 30 seconds</span><span>Updated {utc(network.as_of)} UTC · sort by any column</span></p>
-        </section>
-        : <p className={s.unavailable}>The leaderboard is unavailable right now.</p>}
-
-      <DetailsRow summary="How to read customer-job results">
-        <div className={s.prose}>
-          <p><b>Selected</b> is how many of the miner’s candidates a customer job kept as its model, out of the jobs it was given. <b>Jobs</b> are customer training jobs assigned to the miner; <b>evaluated</b> candidates were scored on the job’s held-out test set.</p>
-          <p><b>Skill</b> compares a candidate’s probability error (Brier) with guessing evenly between the answers: 0 is no better than guessing, 1 is perfect, so it compares across different jobs.</p>
-          <p><b>Online</b> checked in within the last 45 seconds. <b>Seen recently</b> checked in within the last hour. <b>Offline</b> has not checked in for longer than that. <b>Never seen</b> registered but never checked in. <b>Disabled</b> gets no new jobs. Miners that are not online are dimmed.</p>
-          <p><b>Models</b> come from each miner’s latest signed check-in, including while it is busy. Inactive rows show the last reported models. These are internal worker IDs, not on-chain UIDs; a listed model does not imply customer serving is available.</p>
-          <p>Outside miners can compete in the base tier (below). Customer jobs stay with Zils miners until miner terms and intake are ready.</p>
+        <p className={b.later}>Feature tracks and customer adapters do not pay yet. The <Link href="/miners/tracks/box">box track</Link> runs as a synthetic-only pilot.</p>
+        <div className={b.guide}>
+          <p>The installer adds the <code>zils-miner</code> and <code>btcli</code> commands. <code>zils-miner setup</code> asks for your wallet and Hugging Face repo, then <code>zils-miner doctor</code> checks each step and prints the next command: register, train a body, then commit it with <code>zils-miner commit-body</code>. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the installer to update.</p>
+          <p><a href="https://docs.zils.ai/operations/soup">Soup guide</a>: what a body must be, how to commit it and how seats are paid. <a href="https://docs.zils.ai/operations/miner-tuning">Tune your miner</a>: prepare training data, change the recipe, and compare your body with the base before committing.</p>
         </div>
-      </DetailsRow>
+      </section>
 
       <DetailsRow summary="What we have tried">
         <div className={s.tried}>
-          <section aria-labelledby="current-base">
-            <h3 id="current-base" className={s.subTitle}>Current base</h3>
-            {base ? <>
-              <p className={s.baseName}>{modelDisplayName(base.channels.stable.name)}</p>
-              <dl className={s.facts}>
-                <div><dt>Profile</dt><dd><code>{base.channels.stable.id}</code></dd></div>
-                <div><dt>Input limit</dt><dd>{base.model.max_input_tokens.toLocaleString('en-US')} tokens</dd></div>
-                <div><dt>Inputs</dt><dd>Text{base.model.inputs?.images ? `, up to ${base.model.inputs.images} images` : ''}{base.model.inputs?.video ? ', video' : ''}</dd></div>
-                <div><dt>Channels</dt><dd>stable {latest && latest.id !== base.channels.stable.id ? `${modelDisplayName(base.channels.stable.name)}, latest ${modelDisplayName(latest.name)}` : 'and latest on the same base'}</dd></div>
-              </dl>
-              <p className={s.live}>Live from the Zils training API.</p>
-            </> : <p className={s.live}>Live status is unavailable right now. Last recorded: z3-mini 4.5B on both channels (17 October 2026).</p>}
-          </section>
-
           <section aria-labelledby="how-heading">
             <h3 id="how-heading" className={s.subTitle}>How a new base wins</h3>
             <ol className={s.how}>

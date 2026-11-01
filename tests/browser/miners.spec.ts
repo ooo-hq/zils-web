@@ -7,32 +7,28 @@ import { readFileSync } from 'node:fs';
 const PORT = Number(process.env.ZILS_MINERS_TEST_PORT ?? 8999);
 let mode: 'ok' | 'fail' = 'ok';
 let server: Server;
-const stats = (assigned: number, selected: number, median_skill: number | null) => ({ assigned, submitted: assigned, evaluated: assigned, selected, median_skill });
-const miner = (uid: number, hotkey: string, status: string, assigned: number, selected: number, skill: number | null, last_seen: string | null) =>
-  ({ uid, hotkey, status, last_seen, models: status === 'online' ? ['d3-mini-4.5b-v1'] : [], training: stats(assigned, selected, skill) });
-const FIXTURE = {
-  as_of: '2026-10-18T19:58:00Z',
-  summary: { miners: 4, online: 2, stale: 0, offline: 0, unseen: 1, disabled: 1 },
+// GET /v1/network/bodies (ZIL-109): every uid with a soup body or a serving endpoint on chain.
+const chainBody = (pool: string, c: string, repo: string) => ({ pool, sha256: c.repeat(64), revision: 'f'.repeat(40), repo, block: 8300000 });
+const CHAIN = () => ({
+  network: 'finney', netuid: 127, block: 8351998, as_of: new Date().toISOString(),
   miners: [
-    miner(1, '5HYcpLxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxZuwaoF', 'online', 28, 4, 0.98, '2026-10-18T19:58:00Z'),
-    miner(101, '5CqL39xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxvkACT5', 'online', 14, 3, 0.94, '2026-10-18T19:58:00Z'),
-    miner(102, '5ERwXQxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxWmF3bn', 'disabled', 2, 2, 0.71, null),
-    miner(100, '5CRwgbxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxBrTxDn', 'unseen', 0, 0, null, null),
+    { uid: 1, hotkey: '5MinerHotkeyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', body: chainBody('d3-mini', 'b', 'miner/body-one'), serving: true },
+    { uid: 5, hotkey: '5OutsideHotkeyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', body: chainBody('d3-mini', '9', 'miner/body-two'), serving: false },
+    { uid: 7, hotkey: '5LiteHotkeyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', body: chainBody('d3-lite', '8', 'miner/lite-body'), serving: false },
   ],
-};
-let snapshot = structuredClone(FIXTURE);
-
+});
+let snapshot = CHAIN();
 // GET /v1/network/soup (ZIL-109): public round records, newest first, as zils/soup_publish writes them.
 const sha = (c: string) => c.repeat(64);
 const cats = (v: number) => ({ reasoning: v, language: v, retrieval: v, tools: v, arts: v });
 const soupRound = (id: string, score: number, members: object[], finished: string) => ({
   round_id: id, pool_id: 'd3-mini', seed: 'ab'.repeat(32), finished_at: finished, members, crown: null,
   category_scores: { ...cats(score), arts: score - 2 }, soup_sha256: sha('c'), subset_sha256: sha('d'), predictions_sha256: sha('e'),
-  decision: { rounds: 3, items: 9000 },
+  decision: { rounds: ['d3-mini-2026-11-03', 'd3-mini-2026-11-04', id], items: 9000 },
 });
 const SOUP = () => ({
   as_of: new Date().toISOString(),
-  tiers: [{
+  tiers: [{ pool: 'd3-lite', tier: 'z3-lite', serving: null, bodies: {}, rounds: [] }, {
     pool: 'd3-mini', tier: 'z3-mini', serving: { release: 'z3-mini v1', served_by: 'zils' },
     bodies: { [sha('a')]: { house: 'pplx-decider-flash-v1.2', repo: 'perplexity-ai/pplx-decider-flash-v1.2' }, [sha('b')]: { house: null, repo: 'miner/body-one' } },
     rounds: [
@@ -67,19 +63,18 @@ test.beforeAll(async () => {
       res.setHeader('content-type', 'application/json');
       return res.end(JSON.stringify(SOUP()));
     }
-    if (!req.url?.startsWith('/v1/network/miners')) { res.statusCode = 404; return res.end(); }
+    if (!req.url?.startsWith('/v1/network/bodies')) { res.statusCode = 404; return res.end(); }
     if (mode === 'fail') { res.statusCode = 500; return res.end('{}'); }
     res.setHeader('content-type', 'application/json');
     res.end(JSON.stringify(snapshot));
   });
   await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(PORT, '127.0.0.1', resolve); });
 });
-test.beforeEach(() => { mode = 'ok'; soupMode = 'none'; snapshot = structuredClone(FIXTURE); });
+test.beforeEach(() => { mode = 'ok'; soupMode = 'ok'; snapshot = CHAIN(); });
 test.afterAll(() => new Promise<void>(resolve => { server.close(() => resolve()); server.closeAllConnections(); }));
 
 const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
 const baseline: { bittensor: { text: string } } = JSON.parse(readFileSync('tests/browser/fixtures/content-baseline.json', 'utf8'));
-const uids = (page: import('@playwright/test').Page) => page.getByText(/^Worker \d+$/).evaluateAll(els => els.map(e => e.textContent));
 
 test('/bittensor redirects permanently to /miners', async ({ request }) => {
   const res = await request.get('/bittensor', { maxRedirects: 0 });
@@ -87,89 +82,96 @@ test('/bittensor redirects permanently to /miners', async ({ request }) => {
   expect(new URL(res.headers().location, 'http://x').pathname).toBe('/miners');
 });
 
-test('an outage shows the unavailable panel and the rest of the page renders', async ({ page }) => {
+test('each tier shows what its soup is made of tonight, who made each part and who serves it', async ({ page }) => {
+  await page.goto('/miners');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Miners make z3.');
+  const tiers = page.getByRole('region', { name: 'Tonight’s soup' }).getByRole('article');
+  await expect(tiers).toHaveCount(4);
+  expect(await tiers.evaluateAll(els => els.map(e => e.getAttribute('aria-label')))).toEqual(['z3-lite', 'z3-mini', 'z3-flash', 'z3']);
+
+  const mini = page.getByRole('article', { name: 'z3-mini' });
+  // 71.6 in four categories and 69.6 in arts → 71.4; the previous round was 70.8.
+  await expect(mini.getByText('71.4', { exact: true })).toBeVisible();
+  await expect(mini).toContainText('+0.6 since the last round');
+  await expect(mini).toContainText('Served by Zils as z3-mini v1');
+  // The recipe: a uniform average, so every body is an equal part.
+  await expect(mini.getByRole('img', { name: 'z3-mini soup tonight, 3 equal parts: pplx-decider-flash-v1.2 (house), miner/body-one (miner, paid seat), 5Unk… · ffffffff (miner, unpaid)' })).toBeVisible();
+  const parts = mini.getByRole('list', { name: 'Parts' }).getByRole('listitem');
+  await expect(parts).toHaveCount(3);
+  await expect(parts.nth(0)).toContainText('pplx-decider-flash-v1.2');
+  await expect(parts.nth(0)).toContainText('perplexity-ai');
+  await expect(parts.nth(0)).toContainText('House · never paid');
+  await expect(parts.nth(1)).toContainText('miner/body-one');
+  await expect(parts.nth(1)).toContainText('Seat');
+  await expect(parts.nth(1)).toContainText('+1.0');
+  await expect(parts.nth(2)).toContainText('Unpaid');
+  await expect(mini).toContainText('No crown tonight');
+  await expect(mini).toContainText('Seats decided on 3 rounds, 9,000 items');
+  const widths = await mini.locator('[role=img] [data-part]').evaluateAll(els => els.map(e => Math.round(e.getBoundingClientRect().width)));
+  expect(Math.max(...widths) - Math.min(...widths)).toBeLessThanOrEqual(1);
+  // Only miner bodies carry colour; house bodies are hatched.
+  expect(await mini.locator('[role=img] [data-part="house"]').count()).toBe(1);
+  expect(await mini.locator('[role=img] [data-part="miner"]').count()).toBe(2);
+
+  const lite = page.getByRole('article', { name: 'z3-lite' });
+  await expect(lite).toContainText('Waiting for its first round');
+  await expect(lite).toContainText('Not served yet');
+  await expect(lite.getByRole('list', { name: 'In the pot' })).toContainText('Intern-Decision-0.8B');
+  await expect(page.getByRole('article', { name: 'z3-flash' })).toContainText('Opens later');
+  for (const gone of ['Customer jobs', 'Current base', 'Worker 1', 'Customer-training workers']) await expect(page.locator('main')).not.toContainText(gone);
+});
+
+test('without a soup feed every tier shows its pot and says the rounds are unavailable, never invented seats', async ({ page }) => {
+  soupMode = 'none';
+  await page.goto('/miners');
+  const board = page.getByRole('region', { name: 'Tonight’s soup' });
+  await expect(board).toContainText('Tonight’s rounds are unavailable right now.');
+  await expect(board.getByRole('list', { name: 'Parts' })).toHaveCount(0);
+  await expect(page.getByRole('article', { name: 'z3-mini' }).getByRole('list', { name: 'In the pot' })).toContainText('pplx-decider-flash-v1.2');
+});
+
+test('the miners table is the chain: one row per uid, its tier, its body and where it stands tonight', async ({ page }) => {
+  await page.goto('/miners');
+  const table = page.getByRole('table', { name: 'Miners on chain' });
+  const rows = table.getByRole('row');
+  await expect(rows).toHaveCount(4); // header + three uids
+  await expect(rows.nth(1)).toContainText('1');
+  await expect(rows.nth(1)).toContainText('z3-mini');
+  await expect(rows.nth(1)).toContainText('miner/body-one');
+  await expect(rows.nth(1)).toContainText('Paid seat');
+  await expect(rows.nth(1)).toContainText('Endpoint announced');
+  await expect(rows.nth(2)).toContainText('Not in tonight’s soup');
+  await expect(rows.nth(3)).toContainText('z3-lite');
+  await expect(rows.nth(3)).toContainText('Waiting for the first round');
+  await expect(table.getByRole('link', { name: 'miner/body-one' })).toHaveAttribute('href', `https://huggingface.co/miner/body-one/tree/${'f'.repeat(40)}`);
+  await expect(page.getByText('Block 8,351,998')).toBeVisible();
+});
+
+test('a chain outage says so and the rest of the page renders; the next refresh recovers', async ({ page }) => {
+  await page.clock.install();
   mode = 'fail';
   const errors: Error[] = [];
   page.on('pageerror', e => errors.push(e));
   await page.goto('/miners');
-  await expect(page.getByText('The leaderboard is unavailable right now.')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Earn by improving z3.', level: 1 })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Beat the base.', exact: true })).toBeVisible();
-  await expect(page.getByRole('table', { name: 'Customer-training workers' })).toHaveCount(0);
+  await expect(page.getByText('The chain view is unavailable right now.')).toBeVisible();
+  await expect(page.getByRole('table', { name: 'Miners on chain' })).toHaveCount(0);
+  await expect(page.getByRole('article', { name: 'z3-mini' })).toBeVisible();
+  mode = 'ok';
+  await page.clock.fastForward(30_000);
+  await expect(page.getByRole('table', { name: 'Miners on chain' })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
-test('the leaderboard sorts by Selected, re-sorts from the keyboard and dims offline miners', async ({ page }) => {
-  mode = 'ok';
+test('emissions read as four equal tiers with fixed seats and crowns', async ({ page }) => {
   await page.goto('/miners');
-  await expect(page.getByText('Updated 19:58 UTC').first()).toBeAttached();
-  await expect(page.getByText('Workers online')).toBeVisible();
-  expect(await uids(page)).toEqual(['Worker 1', 'Worker 101', 'Worker 102', 'Worker 100']);
-  await expect(page.getByRole('columnheader', { name: 'Selected' })).toHaveAttribute('aria-sort', 'descending');
-  const dim = page.locator('[role=row][data-dim]');
-  await expect(dim).toHaveCount(2);
-  expect(await dim.first().locator('[data-status]').evaluate(e => getComputedStyle(e, '::before').opacity)).toBe('0.45');
-  await expect(page.getByText('No candidates yet')).toBeVisible();
-  await expect(page.getByRole('cell', { name: 'Never seen' })).toBeVisible();
-  const skill = page.getByRole('button', { name: 'Median skill' });
-  await skill.focus();
-  await page.keyboard.press('Enter');
-  await expect(page.getByRole('columnheader', { name: 'Median skill' })).toHaveAttribute('aria-sort', 'descending');
-  await expect(page.getByRole('columnheader', { name: 'Selected' })).toHaveAttribute('aria-sort', 'none');
-  await page.getByRole('button', { name: 'Worker', exact: true }).click(); // UID, descending
-  expect(await uids(page)).toEqual(['Worker 102', 'Worker 101', 'Worker 100', 'Worker 1']);
-});
-
-test('an open page follows miners and models outside the default channels without losing its sort', async ({ page }) => {
-  await page.clock.install();
-  await page.goto('/miners');
-  const first = page.getByRole('row').filter({ has: page.getByText('Worker 1', { exact: true }) });
-  await expect(first).toContainText('z3-mini 4.5B');
-  await page.getByRole('button', { name: 'Worker', exact: true }).click();
-  snapshot.miners[0].models = ['d3-lite-0.8b-v1', 'future-model-v2'];
-  snapshot.miners[1].status = 'offline';
-  snapshot.miners[1].last_seen = '2026-10-18T17:00:00Z';
-  snapshot.miners.push({ ...miner(103, '5NewMiner', 'online', 0, 0, null, '2026-10-18T19:59:00Z'), models: ['d3-mini-4.5b-v1'] });
-  snapshot.summary = { ...snapshot.summary, miners: 5, offline: 1 };
-  snapshot.as_of = '2026-10-18T19:59:00Z';
-  await page.clock.fastForward(30_000);
-  await expect(first).toContainText('z3-lite 0.8B, future-model-v2');
-  await expect(first).not.toContainText('z3-mini');
-  await expect(page.getByText('Updated 19:59 UTC').first()).toBeVisible();
-  await expect(page.getByRole('cell', { name: 'Offline', exact: true })).toBeVisible();
-  await expect(page.getByText('Worker 103', { exact: true })).toBeVisible();
-  await expect(page.getByRole('columnheader', { name: 'Worker' })).toHaveAttribute('aria-sort', 'descending');
-  expect(await uids(page)).toEqual(['Worker 103', 'Worker 102', 'Worker 101', 'Worker 100', 'Worker 1']);
-});
-
-test('an open page removes unavailable data and recovers on the next refresh', async ({ page }) => {
-  await page.clock.install();
-  await page.goto('/miners');
-  await page.getByRole('button', { name: 'Worker', exact: true }).click();
-  mode = 'fail';
-  await page.clock.fastForward(30_000);
-  await expect(page.getByText('The leaderboard is unavailable right now.')).toBeVisible();
-  await expect(page.getByRole('table', { name: 'Customer-training workers' })).toHaveCount(0);
-  mode = 'ok';
-  snapshot.miners[0].models = ['d3-lite-0.8b-v1'];
-  await page.clock.fastForward(30_000);
-  await expect(page.getByRole('table', { name: 'Customer-training workers' })).toContainText('z3-lite 0.8B');
-  await expect(page.getByText('The leaderboard is unavailable right now.')).toHaveCount(0);
-});
-
-test('refresh pauses in a hidden tab and resumes immediately when visible', async ({ page }) => {
-  await page.clock.install();
-  await page.goto('/miners');
-  await page.getByRole('button', { name: 'Worker', exact: true }).click();
-  await page.evaluate(() => Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' }));
-  snapshot.miners[0].models = ['d3-lite-0.8b-v1'];
-  await page.clock.fastForward(30_000);
-  await expect(page.getByRole('table', { name: 'Customer-training workers' })).not.toContainText('z3-lite');
-  await page.evaluate(() => {
-    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
-  await expect(page.getByRole('table', { name: 'Customer-training workers' })).toContainText('z3-lite 0.8B');
+  const section = page.getByRole('region', { name: 'How miners earn' });
+  await expect(section).toContainText('24 paid spots');
+  await expect(section).toContainText('25%');
+  await expect(section).toContainText('4%');
+  await expect(section).toContainText('5%');
+  await expect(section.getByRole('list', { name: 'A round' }).getByRole('listitem')).toHaveCount(4);
+  for (const gone of ['50%', '30%', '35%', 'boosted']) await expect(section).not.toContainText(gone);
+  await expect(section).toContainText('Feature tracks and customer adapters do not pay yet');
 });
 
 test('the rehearsal row holds every sentence of the old /bittensor page', async ({ page }) => {
@@ -193,108 +195,31 @@ test('the timeline entries survive in the collapsed row', async ({ page }) => {
   await expect(page.getByText(/recorded as an override of the promotion rule, not a win under it/)).toBeVisible();
 });
 
-test('status wording is the approved copy', async ({ page }) => {
-  mode = 'ok';
-  await page.goto('/miners');
-  await page.getByText('How to read customer-job results').click();
-  for (const phrase of ['checked in within the last 45 seconds', 'registered but never checked in', 'gets no new jobs', 'latest signed check-in', 'not on-chain UIDs']) await expect(page.getByText(phrase)).toBeVisible();
-});
-
-test('emissions read as four equal pools with fixed seats and crowns', async ({ page }) => {
-  mode = 'ok';
-  await page.goto('/miners');
-  const section = page.getByRole('region', { name: 'How miners earn' });
-  await expect(section).toContainText('24 paid spots');
-  const pools = section.getByRole('list', { name: 'Pools' }).getByRole('listitem');
-  await expect(pools).toHaveCount(4);
-  for (const [i, name, status] of [[0, 'z3-lite', 'Open'], [1, 'z3-mini', 'Open'], [2, 'z3-flash', 'Opens later'], [3, 'z3', 'Opens later']] as const) {
-    await expect(pools.nth(i).getByRole('heading')).toHaveText(name);
-    await expect(pools.nth(i)).toContainText('25%');
-    await expect(pools.nth(i)).toContainText(status);
-    await expect(pools.nth(i)).toContainText('5 seats × 4%');
-    await expect(pools.nth(i)).toContainText('1 × 5%');
-  }
-  // No nested lane percentages and no boosts.
-  for (const gone of ['50%', '30%', '35%', 'boosted']) await expect(section).not.toContainText(gone);
-  await expect(section).toContainText('Feature tracks and customer adapters do not pay yet');
-});
-
-test.describe('phone', () => {
-  test.use({ viewport: { width: 375, height: 800 } });
-  test('no overflow at 375px, no header row, two-line rows', async ({ page }) => {
-    mode = 'ok';
+for (const width of [1280, 390, 320]) {
+  test(`no horizontal scroll at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
     await page.goto('/miners');
     await page.getByText('Testnet rehearsal · 25 Sept 2026').click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
-    await expect(page.getByRole('button', { name: 'Median skill' })).toBeHidden();
-    const first = page.locator('[role=row][data-dim]').first().locator('xpath=preceding::*[@role="row"][1]');
-    const top = (sel: string) => first.locator(sel).evaluate(e => e.getBoundingClientRect().top);
-    const uid = await top('text=/^Worker \\d+$/');
-    expect(await top('[data-status]')).toBeGreaterThan(uid); // status sits under the UID
-    expect(await top('text=/^of \\d+ jobs$/')).toBeLessThan(await top('[data-status]')); // selected shares the first line
-  });
-});
-
-for (const theme of ['dark', 'light']) {
-  test(`dimmed rows keep AA text contrast (${theme})`, async ({ page }) => {
-    mode = 'ok';
-    await page.addInitScript(t => localStorage.setItem('zils-theme', t), theme);
-    await page.goto('/miners');
-    const results = await page.locator('[role=row][data-dim]').first().evaluate(row => {
-      const parse = (c: string) => (c.match(/[\d.]+/g) ?? []).map(Number);
-      const lum = ([r, g, b]: number[]) => { const f = (v: number) => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }; return .2126 * f(r) + .7152 * f(g) + .0722 * f(b); };
-      const bg = parse(getComputedStyle(document.querySelector('.zs')!).backgroundColor).slice(0, 3);
-      return [...row.querySelectorAll('b, span, [role=cell]')].filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent!.trim())).map(e => {
-        const [r, g, b, a = 1] = parse(getComputedStyle(e).color);
-        const fg = [r, g, b].map((v, i) => v * a + bg[i] * (1 - a));
-        const [hi, lo] = [lum(fg), lum(bg)].sort((x, y) => y - x);
-        return { text: e.textContent!.trim(), ratio: (hi + .05) / (lo + .05) };
-      });
-    });
-    expect(results.length).toBeGreaterThan(3);
-    for (const r of results) expect(r.ratio, r.text).toBeGreaterThanOrEqual(4.5);
   });
 }
 
-test('Tonight’s soup shows each tier’s score, change, seats, crown, serving and history from the feed', async ({ page }) => {
-  soupMode = 'ok';
-  await page.goto('/miners');
-  const board = page.getByRole('region', { name: 'Tonight’s soup' });
-  // A bento box per tier, chosen with tier chips; the first tier is open.
-  await expect(board.getByRole('button', { name: 'z3-mini' })).toHaveAttribute('aria-pressed', 'true');
-  const mini = board.getByRole('article', { name: 'z3-mini' });
-  for (const name of ['Soup score', 'Seats', 'Crown', 'Serving', 'Categories', 'Recent rounds']) await expect(mini.getByRole('group', { name })).toBeVisible();
-  // 71.6 in four categories and 69.6 in arts → 71.4; the previous round was 70.8.
-  await expect(mini.getByText('71.4', { exact: true })).toBeVisible();
-  // The /soup bowl, one topping per occupied seat: three seats tonight.
-  await expect(mini.getByRole('group', { name: 'Soup score' }).getByRole('img', { name: /bowl of soup with 3 of 5 seats filled/i })).toBeVisible();
-  await expect(mini).toContainText('+0.6 since the last round');
-  const seats = mini.getByRole('list', { name: 'Seats' }).getByRole('listitem');
-  await expect(seats).toHaveCount(3);
-  await expect(seats.nth(0)).toContainText('pplx-decider-flash-v1.2');
-  await expect(seats.nth(0)).toContainText('House');
-  await expect(seats.nth(1)).toContainText('miner/body-one');
-  await expect(seats.nth(1)).toContainText('+1.0');
-  await expect(seats.nth(2)).toContainText('5Unk… · ffffffff');
-  await expect(seats.nth(2)).toContainText('Unpaid');
-  await expect(mini).toContainText('Crown burned');
-  await expect(mini).toContainText('Serving z3-mini v1 · by Zils');
-  // zils#150: the public record says how many rounds' items the seats were decided on.
-  await expect(mini.getByRole('group', { name: 'Soup score' })).toContainText('Seats decided on 3 rounds · 9,000 items');
-  await expect(board).toContainText('last three rounds');
-  await expect(board).not.toContainText('fresh slice');
-  await expect(mini.getByRole('img', { name: /Soup score over the last 3 rounds: 70.0, 70.8, 71.4/ })).toBeVisible();
-  expect(await board.locator('[lang=ja]').count()).toBeGreaterThanOrEqual(3);
-  await expect(board).not.toContainText('No soup feed is connected');
-  for (const width of [1280, 390, 320]) {
-    await page.setViewportSize({ width, height: 900 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  }
-});
-
-test('without a soup feed the board says so instead of inventing seats', async ({ page }) => {
-  await page.goto('/miners');
-  const board = page.getByRole('region', { name: 'Tonight’s soup' });
-  await expect(board).toContainText('Seats appear here after the first round');
-  await expect(board.getByRole('article')).toHaveCount(0);
-});
+for (const theme of ['dark', 'light']) {
+  test(`part labels and table text keep AA contrast (${theme})`, async ({ page }) => {
+    await page.addInitScript(t => localStorage.setItem('zils-theme', t), theme);
+    await page.goto('/miners');
+    const results = await page.locator('[data-contrast]').evaluateAll(els => {
+      const parse = (c: string) => (c.match(/[\d.]+/g) ?? []).map(Number);
+      const lum = ([r, g, b]: number[]) => { const f = (v: number) => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }; return .2126 * f(r) + .7152 * f(g) + .0722 * f(b); };
+      const bg = parse(getComputedStyle(document.querySelector('.zs')!).backgroundColor).slice(0, 3);
+      return els.flatMap(root => [root, ...root.querySelectorAll('*')]).filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent!.trim())).map(e => {
+        const [r, g, b, a = 1] = parse(getComputedStyle(e).color);
+        const fg = [r, g, b].map((v, i) => v * a + bg[i] * (1 - a));
+        const [hi, lo] = [lum(fg), lum(bg)].sort((x, y) => y - x);
+        return { text: e.textContent!.trim().slice(0, 40), ratio: (hi + .05) / (lo + .05) };
+      });
+    });
+    expect(results.length).toBeGreaterThan(10);
+    for (const r of results) expect(r.ratio, r.text).toBeGreaterThanOrEqual(4.5);
+  });
+}

@@ -1,0 +1,112 @@
+/* /miners: the four soups as recipe bars, the chain table, and how a round pays. The bar is the page's one loud
+   element: miner bodies show their own slice of the spectrum, house bodies are hatched. Everything else is site
+   tokens, hairlines and plain type. */
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: 32px 48px; align-items: end; padding: 44px 40px 40px; border-bottom: 1px solid var(--zs-line); }
+.hero h1 { margin: 0; font-weight: 300; font-size: clamp(40px, 5vw, 68px); letter-spacing: -0.035em; line-height: .95; }
+.hero p { margin: 16px 0 0; max-width: 62ch; font-size: 15px; line-height: 1.6; color: var(--zs-t2); }
+.start { display: grid; gap: 10px; }
+.start p { margin: 0; font-size: 13px; color: var(--zs-t2); }
+.start a, .guide a, .later a, .pot a, .partName[href] { color: var(--zs-fg); text-decoration: underline; text-decoration-color: rgba(var(--zs-fg-rgb), .3); text-underline-offset: 3px; }
+.start a:hover, .guide a:hover, .later a:hover, .pot a:hover, .partName[href]:hover { text-decoration-color: currentColor; }
+.start code, .guide code { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; color: var(--zs-fg); }
+:is(.start, .guide, .later, .pot, .parts, .table) a:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 3px; }
+
+.down { margin: 0; padding: 20px 40px; border-bottom: 1px solid var(--zs-line); font-size: 14px; color: var(--zs-fg); }
+
+/* One tier */
+.tiers { display: grid; }
+.tier { display: grid; gap: 18px; padding: 32px 40px 30px; border-bottom: 1px solid var(--zs-line); }
+.head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: end; gap: 8px 28px; }
+.name { margin: 0; font-weight: 300; font-size: clamp(28px, 3vw, 38px); letter-spacing: -0.03em; line-height: 1; }
+.base { margin: 8px 0 0; font-size: 12.5px; color: var(--zs-t2); }
+.base a { font-family: var(--font-plex-mono), ui-monospace, monospace; color: var(--zs-t2); text-underline-offset: 3px; }
+.base a:hover { color: var(--zs-fg); }
+.base a:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 3px; }
+.size { margin-left: 6px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 13px; letter-spacing: 0; color: var(--zs-t2); }
+.served { margin: 0; font-size: 14px; color: var(--zs-t2); }
+.tier[data-state="later"] { gap: 12px; padding-top: 24px; padding-bottom: 22px; }
+.tier[data-state="later"] .name { color: var(--zs-t2); font-size: clamp(22px, 2.2vw, 28px); }
+.tier[data-state="later"] .bar { height: 12px; }
+.score { margin: 0; display: flex; align-items: baseline; gap: 12px; }
+.scoreValue { font-weight: 300; font-size: 38px; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.change { font-size: 13px; color: var(--zs-t2); }
+
+/* The recipe bar: equal parts, because the soup is a uniform average. */
+.bar { display: flex; gap: 3px; height: 64px; }
+.part { flex: 1 1 0; min-width: 0; position: relative; }
+.part[data-part="miner"] { background: var(--zs-spectrum); background-size: calc(var(--n) * 100%) 100%; background-position: var(--pos) 0; }
+.part[data-part="house"], .part[data-part="pot"] {
+  box-shadow: inset 0 0 0 1px rgba(var(--zs-fg-rgb), .22);
+  background: repeating-linear-gradient(135deg, rgba(var(--zs-fg-rgb), .2) 0 1px, transparent 1px 8px);
+}
+.part[data-part="pot"] { height: 28px; align-self: end; background: repeating-linear-gradient(135deg, rgba(var(--zs-fg-rgb), .12) 0 1px, transparent 1px 8px); }
+.tier[data-state="waiting"] .bar { height: 28px; }
+.part[data-crown]::before { content: ""; position: absolute; left: 0; right: 0; top: -9px; height: 3px; background: var(--zs-fg); }
+
+/* Parts sit under their slice of the bar. */
+.parts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 3px; }
+.parts li { display: grid; gap: 3px; align-content: start; padding: 2px 12px 0 0; min-width: 0; }
+.partName { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 13px; color: var(--zs-fg); overflow-wrap: anywhere; }
+.partBy, .partRole { font-size: 12.5px; color: var(--zs-t2); overflow-wrap: anywhere; }
+.parts li[data-part="miner"] .partRole { color: var(--zs-fg); }
+.lift { margin-top: 6px; font-weight: 300; font-size: 22px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+
+.note { margin: 0; max-width: 78ch; font-size: 13.5px; line-height: 1.6; color: var(--zs-t2); }
+.note b { font-weight: 400; color: var(--zs-fg); }
+.pot { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 13px; }
+.pot a { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; }
+.pot span { color: var(--zs-t2); }
+.fine { margin: 0; padding: 18px 40px 26px; max-width: 110ch; font-size: 12.5px; line-height: 1.6; color: var(--zs-t2); }
+
+/* Miners on chain */
+.chain { border-bottom: 1px solid var(--zs-line); }
+.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.table th { padding: 14px 16px 10px; text-align: left; font-family: var(--font-plex-mono), ui-monospace, monospace; font-weight: 400; font-size: 11.5px; color: var(--zs-t2); border-bottom: 1px solid var(--zs-line); }
+.table td { padding: 14px 16px; border-bottom: 1px solid var(--zs-line); vertical-align: baseline; color: var(--zs-fg); }
+.table :is(th, td):first-child { padding-left: 40px; }
+.table :is(th, td):last-child { padding-right: 40px; }
+.table code { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; }
+.table a { overflow-wrap: anywhere; }
+.uid { font-variant-numeric: tabular-nums; }
+.rev { margin-left: 6px; color: var(--zs-t2); }
+.table tr:is([data-standing="out"], [data-standing="waiting"], [data-standing="none"], [data-standing="unknown"]) .standing { color: var(--zs-t2); }
+.chip { display: inline-block; width: 10px; height: 10px; margin-right: 8px; background: var(--zs-spectrum); vertical-align: -1px; }
+.chain .fine span { color: var(--zs-fg); }
+
+/* How miners earn */
+.earn { display: grid; gap: 22px; padding: 36px 40px 40px; }
+.earnHead h2 { margin: 0; font-weight: 300; font-size: clamp(26px, 2.8vw, 36px); letter-spacing: -0.02em; }
+.earnHead p { margin: 10px 0 0; max-width: 72ch; font-size: 14.5px; line-height: 1.6; color: var(--zs-t2); }
+.later, .guide p { margin: 0; max-width: 78ch; font-size: 14px; line-height: 1.6; color: var(--zs-t2); }
+.guide { display: grid; gap: 10px; }
+
+@media (max-width: 899px) {
+  .hero { grid-template-columns: 1fr; padding: 32px 4px 28px; }
+  .tier { padding: 26px 4px; }
+  .down, .fine, .earn { padding-left: 4px; padding-right: 4px; }
+  .table :is(th, td):first-child { padding-left: 4px; }
+  .table :is(th, td):last-child { padding-right: 4px; }
+}
+@media (max-width: 699px) {
+  .head { grid-template-columns: 1fr; gap: 6px; }
+  .score { margin-top: 6px; }
+  .bar { height: 40px; }
+  /* Parts stack; each carries a swatch of its slice so it still matches the bar. */
+  .parts { grid-template-columns: 1fr; gap: 0; }
+  .parts li { grid-template-columns: 14px minmax(0, 1fr) auto; column-gap: 12px; padding: 12px 0; border-top: 1px solid var(--zs-line); }
+  .parts li::before { content: ""; grid-row: 1 / span 3; align-self: stretch; }
+  .parts li[data-part="miner"]::before { background: var(--zs-spectrum); background-size: calc(var(--n) * 100%) 100%; background-position: var(--pos) 0; }
+  .parts li[data-part="house"]::before { border: 1px solid rgba(var(--zs-fg-rgb), .22); background: repeating-linear-gradient(135deg, rgba(var(--zs-fg-rgb), .2) 0 1px, transparent 1px 6px); }
+  .parts li > * { grid-column: 2; }
+  .lift { grid-column: 3 !important; grid-row: 1 / span 3; align-self: center; margin: 0; }
+  .table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .table, .table tbody, .table tr, .table td { display: block; }
+  .table tr { padding: 12px 4px; border-bottom: 1px solid var(--zs-line); }
+  .table td { display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: baseline; padding: 3px 0; border: 0; }
+  .table td::before { content: attr(data-label); font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11.5px; color: var(--zs-t2); }
+  .table td > * { grid-column: 2; }
+  .rev { margin-left: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .part { transition: opacity .2s; }
+}
