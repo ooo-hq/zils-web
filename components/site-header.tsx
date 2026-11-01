@@ -5,10 +5,11 @@ import { MobileMenu } from '@/components/mobile-menu';
 import { AccountMenu } from '@/components/account-menu';
 import css from '@/components/site-header.module.css';
 
-export type NavId = 'examples' | 'z3' | 'model' | 'miners' | 'pricing';
+export type NavId = 'examples' | 'z3' | 'soup' | 'model' | 'miners' | 'pricing';
 
 const LINKS = [
   { href: '/z3', label: 'Z3', id: 'z3' },
+  { href: '/soup', label: 'Soup', id: 'soup' },
   { href: '/examples', label: 'Examples', id: 'examples' },
   { href: '/model', label: 'Research', id: 'model' },
   { href: '/miners', label: 'Miners', id: 'miners' },

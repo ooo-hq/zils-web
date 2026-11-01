@@ -73,3 +73,27 @@
   .steps { grid-template-columns: 1fr; }
   .card div { grid-template-columns: 1fr; gap: 2px; }
 }
+
+.soup { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 32px 48px; align-items: start; margin-top: 40px; }
+.h3 { margin: 0 0 8px; font-weight: 300; font-size: clamp(22px, 2.2vw, 28px); letter-spacing: -0.02em; line-height: 1.15; color: var(--zs-fg); }
+@media (max-width: 899px) { .soup { grid-template-columns: 1fr; } }
+
+/* Release cadence: the look of the static rail (grey nights, a spectrum band for nights 14 to 28) with hover and focus.
+   A hovered night rises and brightens; the readout below says what happens on it. */
+.cadence { margin: 0 0 24px; display: grid; gap: 10px; }
+.nights { display: grid; grid-template-columns: repeat(28, minmax(0, 1fr)); gap: 3px; align-items: end; height: 34px; }
+.night { all: unset; box-sizing: border-box; height: 50%; background: rgba(var(--zs-fg-rgb), .22); cursor: default; }
+.night[data-window] { height: 82%; background: var(--zs-spectrum); background-size: calc(var(--span) * 100%) 100%; background-position: calc(var(--k) / (var(--span) - 1) * 100%) 0; }
+.night:hover, .night:focus-visible { height: 100%; background-color: rgba(var(--zs-fg-rgb), .55); }
+.night[data-window]:hover, .night[data-window]:focus-visible { height: 100%; filter: brightness(1.18) saturate(1.15); }
+.night:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 2px; }
+.nights:hover .night:not(:hover) { opacity: .6; }
+@media (prefers-reduced-motion: no-preference) { .night { transition: height .18s ease, opacity .18s ease, filter .18s ease, background-color .18s ease; } }
+.cadenceKey { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-t3); }
+.windowKey { color: var(--zs-fg); }
+.readout { margin: 4px 0 0; min-height: 3.2em; max-width: 72ch; font-size: 14px; line-height: 1.6; color: var(--zs-fg); }
+.readout[data-idle] { color: var(--zs-t3); }
+@media (max-width: 480px) { .nights { gap: 2px; height: 28px; } }
+.stepTop { display: flex; justify-content: space-between; align-items: baseline; }
+.jp { font-size: 13px; color: var(--zs-t3); }
+.stepMark { display: inline-flex; align-items: center; gap: 8px; }
