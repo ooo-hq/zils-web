@@ -9,11 +9,11 @@ export type NavId = 'examples' | 'z3' | 'soup' | 'merge' | 'model' | 'miners' | 
 
 const LINKS = [
   { href: '/z3', label: 'Z3', id: 'z3' },
+  { href: '/examples', label: 'Examples', id: 'examples' },
   { href: '/soup', label: 'Soup', id: 'soup' },
   { href: '/merge', label: 'Merge', id: 'merge' },
-  { href: '/examples', label: 'Examples', id: 'examples' },
-  { href: '/model', label: 'Research', id: 'model' },
   { href: '/miners', label: 'Miners', id: 'miners' },
+  { href: '/model', label: 'Research', id: 'model' },
   { href: '/pricing', label: 'Pricing', id: 'pricing' },
 ] as const;
 
