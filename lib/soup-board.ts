@@ -72,7 +72,11 @@ const maker = (hotkey: string | null, sha: string, bodies: Bodies) => {
 /** What the page shows for one tier: tonight's soup, the change since the previous round, seats, crown, history.
  *  A tier before its first round has no tonight, no seats and no history. */
 export function tierView(t: SoupTier) {
-  const [tonight, previous] = t.rounds;
+  // Scores from different scoring methods are not comparable (zils#162 moved pools from argmax to
+  // calibrated_brier on 2 Nov 2026); records from before #162 carry no scoring field and were argmax.
+  const method = (r: SoupTier['rounds'][number]) => r.scoring ?? 'argmax';
+  const [tonight, last] = t.rounds;
+  const previous = last && method(last) === method(tonight) ? last : undefined;
   const base = { tier: t.tier, pool: t.pool, serving: t.serving };
   if (!tonight) return { ...base, tonight: null, decision: null, change: null, seats: [], crown: null, history: [] as number[] };
   const score = soupScore(tonight.category_scores);
@@ -88,7 +92,7 @@ export function tierView(t: SoupTier) {
       repo: t.bodies[m.body_sha256]?.repo ?? null,
     })),
     crown: tonight.crown ? { name: bodyLabel(tonight.crown, t.bodies), rate: tonight.crown.rate } : null,
-    history: t.rounds.slice().reverse().map(r => soupScore(r.category_scores)),
+    history: t.rounds.filter(r => method(r) === method(tonight)).reverse().map(r => soupScore(r.category_scores)),
   };
 }
 export type TierView = ReturnType<typeof tierView>;
