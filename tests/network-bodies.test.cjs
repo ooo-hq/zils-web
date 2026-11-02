@@ -5,7 +5,7 @@ const { networkBodiesSchema, networkBodies, minerRows } = require('../.private/t
 // GET /v1/network/bodies (zils-platform, ZIL-109): every uid with a soup body commitment or a serving endpoint.
 const body = (pool, sha, repo = 'owner/body') => ({ pool, sha256: sha.repeat(64), revision: 'f'.repeat(40), repo, block: 8300000 });
 const valid = () => ({
-  network: 'finney', netuid: 127, block: 8351998, as_of: new Date().toISOString(),
+  network: 'test', netuid: 579, block: 8351998, as_of: new Date().toISOString(),
   miners: [
     { uid: 1, hotkey: '5Seated', body: body('d3-mini', 'b'), serving: true },
     { uid: 5, hotkey: '5Outside', body: body('d3-mini', 'c'), serving: false },
