@@ -121,3 +121,25 @@ test('seats say who made each body and which one holds the crown', () => {
   const view = tierView(v.tiers[0]);
   assert.deepEqual(view.seats.map(s => [s.maker, s.crowned]), [['perplexity-ai', false], ['5Miner', true]]);
 });
+
+test('a change of scoring is not a change in the soup: compare and plot only rounds scored the same way', () => {
+  // Live feed, 2 Nov 2026: the first calibrated_brier round (61.7) followed argmax-era rounds (74.6, 74.0).
+  const v = valid();
+  v.tiers[0].rounds = [
+    round('2026-11-05', scores(61.7), []), round('2026-11-04', scores(74.6), []), round('2026-11-03', scores(74.0), []),
+  ];
+  Object.assign(v.tiers[0].rounds[0], { scoring: 'calibrated_brier', temperature: 1.36 });
+  let view = tierView(v.tiers[0]);
+  assert.equal(view.change, null);                 // no "−12.9 since the last round"
+  assert.equal(view.rescored, true);               // ...and not "First round" either: there were rounds before
+  assert.deepEqual(view.history, [61.7]);          // the old method's rounds stay off the line
+  Object.assign(v.tiers[0].rounds[1], { scoring: 'calibrated_brier', temperature: 1.2 });
+  view = tierView(v.tiers[0]);
+  assert.equal(view.change, -12.9);                // same method: a real change
+  assert.equal(view.rescored, false);
+  assert.deepEqual(view.history, [74.6, 61.7]);
+  v.tiers[0].rounds[1].scoring = 'argmax';         // an explicit argmax matches a record with no scoring field
+  assert.deepEqual(tierView(v.tiers[0]).history, [61.7]);
+  v.tiers[0].rounds[0].scoring = 'argmax';
+  assert.deepEqual(tierView(v.tiers[0]).history, [74.0, 74.6, 61.7]);
+});
