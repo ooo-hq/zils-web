@@ -131,10 +131,12 @@ test('a change of scoring is not a change in the soup: compare and plot only rou
   Object.assign(v.tiers[0].rounds[0], { scoring: 'calibrated_brier', temperature: 1.36 });
   let view = tierView(v.tiers[0]);
   assert.equal(view.change, null);                 // no "−12.9 since the last round"
+  assert.equal(view.rescored, true);               // ...and not "First round" either: there were rounds before
   assert.deepEqual(view.history, [61.7]);          // the old method's rounds stay off the line
   Object.assign(v.tiers[0].rounds[1], { scoring: 'calibrated_brier', temperature: 1.2 });
   view = tierView(v.tiers[0]);
   assert.equal(view.change, -12.9);                // same method: a real change
+  assert.equal(view.rescored, false);
   assert.deepEqual(view.history, [74.6, 61.7]);
   v.tiers[0].rounds[1].scoring = 'argmax';         // an explicit argmax matches a record with no scoring field
   assert.deepEqual(tierView(v.tiers[0]).history, [61.7]);

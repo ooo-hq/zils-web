@@ -78,13 +78,14 @@ export function tierView(t: SoupTier) {
   const [tonight, last] = t.rounds;
   const previous = last && method(last) === method(tonight) ? last : undefined;
   const base = { tier: t.tier, pool: t.pool, serving: t.serving };
-  if (!tonight) return { ...base, tonight: null, decision: null, change: null, seats: [], crown: null, history: [] as number[] };
+  if (!tonight) return { ...base, tonight: null, decision: null, change: null, rescored: false, seats: [], crown: null, history: [] as number[] };
   const score = soupScore(tonight.category_scores);
   return {
     ...base,
     tonight: { round: tonight.round_id, finished: tonight.finished_at, score, categories: tonight.category_scores },
     decision: tonight.decision ? { rounds: tonight.decision.rounds.length, items: tonight.decision.items } : null,
     change: previous ? tenth(score - soupScore(previous.category_scores)) : null,
+    rescored: Boolean(last) && !previous, // earlier rounds exist, scored another way
     seats: tonight.members.map(m => ({
       name: bodyLabel(m, t.bodies), hotkey: m.hotkey, body: m.body_sha256, rate: m.rate,
       kind: kind(m.rate, Boolean(t.bodies[m.body_sha256]?.house)), contribution: m.contribution, paid: m.seat_weight > 0,

@@ -71,7 +71,7 @@ export function TierSoup({ tier, view, feed }: { tier: Tier; view: TierView | nu
       {served && <p className={s.served}>{served}</p>}
       {tonight && view && <p className={s.score}>
         <span className={s.scoreValue}>{tonight.score.toFixed(1)}</span>
-        <span className={s.change}>{view.change === null ? 'First round' : `${signed(view.change)} since the last round`}</span>
+        <span className={s.change}>{view.change === null ? (view.rescored ? 'First round on the new scoring' : 'First round') : `${signed(view.change)} since the last round`}</span>
       </p>}
     </header>
     {tonight && view ? <>
