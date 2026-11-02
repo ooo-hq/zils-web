@@ -7,8 +7,9 @@ test('z3 launch distinguishes the founding baseline from planned and elected rel
   const lineup = page.getByRole('table', { name: 'z3 model line and release status' });
   // Four soup pools at launch (zils#153): lite, mini, flash, z3. Nano was dropped on 31 Oct 2026.
   await expect(lineup.getByRole('row')).toHaveCount(5);
-  await expect(lineup.getByRole('row', { name: /z3-mini/ })).toContainText('v1 · Founding baseline');
-  await expect(lineup.getByText('Planned release', { exact: true })).toHaveCount(3);
+  // Lite and mini cook from the launch; flash and z3 open later.
+  for (const tier of ['z3-lite', 'z3-mini']) await expect(lineup.getByRole('row', { name: new RegExp(tier) })).toContainText('v1 · Founding baseline');
+  await expect(lineup.getByText('Planned release', { exact: true })).toHaveCount(2);
   await expect(page.getByText('It was not trained by Zils or elected as a miner winner.', { exact: false })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Explore the founding weights on Hugging Face' })).toHaveAttribute('href', /z3-mini-v1\/tree\/c9b7515250c0444192767fc00975402f12421413$/);
   await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Z3' })).toHaveAttribute('aria-current', 'page');

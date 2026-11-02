@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function MergePage() {
   return (
-    <SiteFrame current="model">
+    <SiteFrame current="merge">
       <SectionRow n="01" label="Merge" note="Runs on your machine" />
       <MergeBuilder>
         <h1 id="merge-title" className={s.sign}>Make a soup</h1>

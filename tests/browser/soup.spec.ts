@@ -24,9 +24,8 @@ test('/soup explains the greedy soup: seats, crown, house rules and the measured
   await expect(page.getByRole('link', { name: 'Read the miner guide' })).toHaveAttribute('href', 'https://docs.zils.ai/operations/soup');
   await expect(page.locator('#start')).toContainText('zils-miner commit-body');
   const nav = page.getByRole('navigation', { name: 'Main navigation' });
-  // The page stays live, but is off the header for now (owner, 1 Nov).
-  await expect(nav.getByRole('link', { name: 'Soup' })).toHaveCount(0);
-  await expect(nav.locator('[aria-current]')).toHaveCount(0);
+  await expect(nav.getByRole('link', { name: 'Soup' })).toHaveAttribute('aria-current', 'page');
+  await expect(nav.locator('[aria-current]')).toHaveCount(1);
 
   for (const width of [1280, 390, 320]) {
     await page.setViewportSize({ width, height: 844 });
