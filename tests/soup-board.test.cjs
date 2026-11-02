@@ -98,6 +98,23 @@ test('a tier that Zils does not serve yet, or that has not cooked, is still a va
   assert.equal(view.serving, null);
 });
 
+test('house seats have no hotkey, and the feed still renders (live feed, 2 Nov 2026)', () => {
+  const v = valid();
+  v.tiers[0].rounds[0].members[0].hotkey = null;              // house bodies are seated with hotkey null
+  v.tiers[0].rounds[1].members[0].hotkey = null;
+  v.tiers[0].rounds[0].members.push(member(null, 'f', 0, 0.5, 0)); // a house body missing from the bodies map
+  assert.equal(soupBoardSchema.safeParse(v).success, true);
+  const view = tierView(v.tiers[0]);
+  assert.deepEqual(view.seats.map(s => [s.name, s.maker, s.kind]), [
+    ['pplx-decider-flash-v1.2', 'perplexity-ai', 'house'],
+    ['miner/body-one', '5Miner', 'trainer'],
+    ['house · ffffffff', 'house', 'house'],
+  ]);
+  const crowned = valid(); crowned.tiers[0].rounds[0].crown = { hotkey: null, body_sha256: 'a'.repeat(64), rate: 0, weight: 0 };
+  assert.equal(soupBoardSchema.safeParse(crowned).success, true);
+  assert.equal(tierView(crowned.tiers[0]).crown.name, 'pplx-decider-flash-v1.2');
+});
+
 test('seats say who made each body and which one holds the crown', () => {
   const v = valid();
   v.tiers[0].rounds[0].crown = { hotkey: '5Miner', body_sha256: 'b'.repeat(64), rate: 1, weight: 0.2 };

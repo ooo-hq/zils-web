@@ -15,12 +15,14 @@ export const CATEGORY_WEIGHTS = { reasoning: 0.2585, language: 0.2585, retrieval
 type Category = keyof typeof CATEGORY_WEIGHTS;
 const categories = z.object({ reasoning: point, language: point, retrieval: point, tools: point, arts: point }).strict();
 
-const member = z.object({ hotkey: z.string().min(1).max(100), body_sha256: sha, rate, seat_weight: z.number().finite().min(0).max(1), contribution: z.number().finite() }).strict();
+// House bodies hold seats with no miner behind them: the validator publishes their hotkey as null.
+const hotkey = z.string().min(1).max(100).nullable();
+const member = z.object({ hotkey, body_sha256: sha, rate, seat_weight: z.number().finite().min(0).max(1), contribution: z.number().finite() }).strict();
 const round = z.object({
   round_id: z.string().min(1).max(64), pool_id: z.string().min(1).max(32), seed: z.string().max(128),
   finished_at: z.iso.datetime({ offset: true }),
   members: z.array(member).max(5),
-  crown: z.object({ hotkey: z.string().min(1).max(100), body_sha256: sha, rate, weight: z.number().finite().min(0).max(1) }).strict().nullable(),
+  crown: z.object({ hotkey, body_sha256: sha, rate, weight: z.number().finite().min(0).max(1) }).strict().nullable(),
   category_scores: categories,
   soup_sha256: sha, subset_sha256: sha, predictions_sha256: sha,
   // zils#150: seats and the crown are scored on this round's items plus the validator's previous rounds' (decision_rounds);
@@ -51,19 +53,20 @@ export function soupScore(scores: Record<Category, number>) {
   return tenth((Object.keys(CATEGORY_WEIGHTS) as Category[]).reduce((sum, c) => sum + scores[c] * CATEGORY_WEIGHTS[c], 0));
 }
 
-/** A body's public name: the house model's name, else its repo, else hotkey and hash prefixes. Never invented. */
-export function bodyLabel(entry: { hotkey: string; body_sha256: string }, bodies: Bodies) {
+/** A body's public name: the house model's name, else its repo, else hotkey (or "house") and hash prefixes. Never invented. */
+export function bodyLabel(entry: { hotkey: string | null; body_sha256: string }, bodies: Bodies) {
   const known = bodies[entry.body_sha256];
-  return known?.house ?? known?.repo ?? `${entry.hotkey.slice(0, 4)}… · ${entry.body_sha256.slice(0, 8)}`;
+  const who = entry.hotkey === null ? 'house' : `${entry.hotkey.slice(0, 4)}…`;
+  return known?.house ?? known?.repo ?? `${who} · ${entry.body_sha256.slice(0, 8)}`;
 }
 
 type SeatKind = 'house' | 'trainer' | 'scout';
 const kind = (rateValue: number, house: boolean): SeatKind => house ? 'house' : rateValue === 1 ? 'trainer' : rateValue === 0.25 ? 'scout' : 'house';
 
-/** Who made a body: the house model's Hugging Face owner, else the miner's hotkey. */
-const maker = (hotkey: string, sha: string, bodies: Bodies) => {
+/** Who made a body: the house model's Hugging Face owner, else the miner's hotkey, else "house". */
+const maker = (hotkey: string | null, sha: string, bodies: Bodies) => {
   const known = bodies[sha];
-  return known?.house && known.repo ? known.repo.split('/')[0] : hotkey;
+  return known?.house && known.repo ? known.repo.split('/')[0] : hotkey ?? 'house';
 };
 
 /** What the page shows for one tier: tonight's soup, the change since the previous round, seats, crown, history.
