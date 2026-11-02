@@ -10,7 +10,7 @@
 .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
 
 /* The lineup skyline: one tower per lineage, released ones solid, planned ones hatched. */
-.sky { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; margin: 64px 0 96px; border-bottom: 1px solid rgba(var(--zs-fg-rgb), .22); }
+.sky { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 1px; margin: 64px 0 96px; border-bottom: 1px solid rgba(var(--zs-fg-rgb), .22); }
 .col { position: relative; display: flex; flex-direction: column; justify-content: flex-end; height: 300px; }
 .tower {
   position: relative; height: calc(var(--h) * 100%);
