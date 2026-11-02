@@ -10,7 +10,7 @@ let server: Server;
 // GET /v1/network/bodies (ZIL-109): every uid with a soup body or a serving endpoint on chain.
 const chainBody = (pool: string, c: string, repo: string) => ({ pool, sha256: c.repeat(64), revision: 'f'.repeat(40), repo, block: 8300000 });
 const CHAIN = () => ({
-  network: 'finney', netuid: 127, block: 8351998, as_of: new Date().toISOString(),
+  network: 'test', netuid: 579, block: 8351998, as_of: new Date().toISOString(),
   miners: [
     { uid: 1, hotkey: '5MinerHotkeyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', body: chainBody('d3-mini', 'b', 'miner/body-one'), serving: true },
     { uid: 5, hotkey: '5OutsideHotkeyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', body: chainBody('d3-mini', '9', 'miner/body-two'), serving: false },
