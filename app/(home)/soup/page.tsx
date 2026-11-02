@@ -22,7 +22,7 @@ const GUIDE = 'https://docs.zils.ai/operations/soup';
 const STEPS = [
   ['持込', 'Bring a body', 'Fine-tune your tier’s Qwen base any way you like. Upload the full body to Hugging Face and commit its hash on chain.'],
   ['味見', 'Taste it alone', 'Each day a validator grades every body in the pool on a seeded slice of a private exam, through the tier’s fixed answer layer. Seats are decided on the last three rounds’ slices together, so one lucky night does not win a seat. Confidence counts: answers are scored on their probabilities after the validator calibrates each body, so making a body sound surer without changing its answers earns nothing.'],
-  ['欲張り', 'Ladle greedily', 'Start with the best body. Add the next best only if the soup scores at least 0.3 points higher. Stop at five.'],
+  ['欲張り', 'Ladle greedily', 'Start with the best body. Add the next best only if the soup scores at least 0.5 points higher. Stop at five.'],
   ['抜き', 'Taste without you', 'Each member is lifted out once. What the soup loses without it is that member’s contribution.'],
   ['毎日', 'Serve daily', 'Seats are re-earned every round. A body that drops out of the bowl stops earning at once.'],
 ] as const;
@@ -30,13 +30,13 @@ const STEPS = [
 const STEP_ICONS: Food[] = ['chopsticks', 'spoon', 'ladle', 'spoon', 'bowl'];
 
 const BILL = [
-  ['Soup seats', '5 × 16%', 'Five fixed seats. Each member whose contribution is at least 0.3 points earns one seat, times its rate. A seat is worth the same however many others are seated.'],
-  ['Solo crown', '20%', 'The round’s best single body that is not a house model, times its rate, only if it beats every house model and the current soup by at least 0.3 points. A soup usually beats its members, so expect the crown to burn in most rounds.'],
+  ['Soup seats', '5 × 16%', 'Five fixed seats. Each member whose contribution is at least 0.8 points earns one seat, times its rate. A seat is worth the same however many others are seated.'],
+  ['Solo crown', '20%', 'The round’s best single body that is not a house model, times its rate, only if it beats every house model and the current soup by at least 1.2 points. A soup usually beats its members, so expect the crown to burn in most rounds.'],
   ['Anything unearned', 'Burned', 'Empty seats and an unclaimed crown pay no one.'],
 ] as const;
 
 const RATES = [
-  ['Trainer', '1×', 'You trained the body, well away from every listed public model. Fine-tunes of a house model, the soup or a release count; at launch their seats pay only if they beat what they started from by at least 0.3 points.'],
+  ['Trainer', '1×', 'You trained the body, well away from every listed public model. Fine-tunes of a house model, the soup or a release count; at launch their seats pay only if they beat what they started from by at least 1.2 points.'],
   ['Scout', '0.25×', 'A public decision model on the tier’s known-public list, re-uploaded as is or lightly changed by the first miner to commit it. Fine-tunes of a listed model also pay 0.25× at launch.'],
   ['House mix', '0.25×', 'A body that is almost entirely a blend of house models and listed public models, or of these with the soup and the release, with less than 5% of its own change.'],
   ['House model', '0', 'The open models each tier’s soup starts from. They cook; they are not paid.'],

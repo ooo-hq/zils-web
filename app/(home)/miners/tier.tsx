@@ -77,7 +77,7 @@ export function TierSoup({ tier, view, feed }: { tier: Tier; view: TierView | nu
     {tonight && view ? <>
       <Recipe view={view} />
       <p className={s.note}>
-        {view.crown ? <>Crown: <b>{view.crown.name}</b>. </> : 'No crown tonight: no body beat every house model and the soup alone by 0.3. '}
+        {view.crown ? <>Crown: <b>{view.crown.name}</b>. </> : 'No crown tonight: no body beat every house model and the soup alone by 1.2. '}
         Round {tonight.round}, finished {when(tonight.finished)}.
         {view.decision && ` Seats decided on ${view.decision.rounds} rounds, ${view.decision.items.toLocaleString('en-US')} items.`}
       </p>

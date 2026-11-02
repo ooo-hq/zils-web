@@ -94,7 +94,7 @@ export default async function MinersPage() {
         <h2 id="tonight-heading" className="sr-only">Tonight’s soup</h2>
         {!soup && <p className={b.down}>Tonight’s rounds are unavailable right now. Each tier shows its pot of house models until the feed returns.</p>}
         {TIER_NAMES.map(tier => <TierSoup key={tier} tier={tier} view={views.get(tier) ?? null} feed={Boolean(soup)} />)}
-        <p className={b.fine}>Seats and the crown are decided on the items of the last three rounds together, because one night’s slice of the private exam is noisier than the 0.3-point margin. The score is tonight’s slice alone, so small moves between rounds are partly noise. Each part’s number is what the soup loses without it, rounded to 0.5 point.</p>
+        <p className={b.fine}>Seats and the crown are decided on the items of the last three rounds together, because one night’s slice of the private exam is noisier than the greedy margin. The score is tonight’s slice alone, so small moves between rounds are partly noise. Each part’s number is what the soup loses without it, rounded to 0.5 point.</p>
       </section>
 
       <SectionRow n="02" label="Miners on chain" note={chain ? `Subnet ${chain.netuid}` : undefined} />
@@ -110,8 +110,8 @@ export default async function MinersPage() {
         </div>
         <ol className={s.roundSteps} aria-label="A round">
           <li><FoodIcon name="bowl" className={s.stepIcon} /><b>In the pot</b>The tier’s house models, the current members and the best new bodies, at most 20.</li>
-          <li><FoodIcon name="ladle" className={s.stepIcon} /><b>Greedy</b>Start from the best single body. Add the next only if the soup scores 0.3 higher. Stop at five.</li>
-          <li><FoodIcon name="ticket" className={s.stepIcon} /><b>Pay</b>A seat (4%) for each miner body that lifts the soup by 0.3 or more; scouts re-uploading public models earn a quarter. The crown (5%) goes to a body that beats every house model and the soup alone by 0.3.</li>
+          <li><FoodIcon name="ladle" className={s.stepIcon} /><b>Greedy</b>Start from the best single body. Add the next only if the soup scores 0.5 higher. Stop at five.</li>
+          <li><FoodIcon name="ticket" className={s.stepIcon} /><b>Pay</b>A seat (4%) for each miner body that lifts the soup by 0.8 or more; scouts re-uploading public models earn a quarter. The crown (5%) goes to a body that beats every house model and the soup alone by 1.2.</li>
           <li><FoodIcon name="flame" className={s.stepIcon} /><b>Burn</b>Anything unearned burns. House models are never paid.</li>
         </ol>
         <p className={b.later}>Feature tracks and customer adapters do not pay yet. The <Link href="/miners/tracks/box">box track</Link> runs as a synthetic-only pilot.</p>
