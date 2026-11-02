@@ -219,7 +219,7 @@ export default function ModelPage() {
           </Section>
 
           <Section id="model-merging" label="Model merging" eyebrow="Model merging · published research" title="Why averaging fine-tunes works, and where it may not.">
-            <p className="max-w-[70ch] text-[15px] leading-7 text-muted">Models fine-tuned from the same base tend to stay close enough in weight space that their plain average still works, and often works better than any one of them. That is the idea behind the soup: each night validators average up to five fine-tunes of each tier’s Qwen base, adding one only if the score rises by at least 0.3. The research below is why we chose this method, and where it stops being evidence for us.</p>
+            <p className="max-w-[70ch] text-[15px] leading-7 text-muted">Models fine-tuned from the same base tend to stay close enough in weight space that their plain average still works, and often works better than any one of them. That is the idea behind the soup: each night validators average up to five fine-tunes of each tier’s Qwen base, adding one only if the score rises by at least 0.5. The research below is why we chose this method, and where it stops being evidence for us.</p>
             <div className={`mt-6 ${CARD}`}>
               <div role="region" aria-label="Merging research and its limits for Zils" tabIndex={0} className="overflow-x-auto overscroll-x-contain">
                 <table className="w-full min-w-[720px] border-collapse text-sm">

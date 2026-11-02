@@ -10,7 +10,7 @@ test('/soup explains the greedy soup: seats, crown, house rules and the measured
 
   const steps = page.getByRole('list', { name: 'How a soup is made' }).getByRole('listitem');
   await expect(steps).toHaveCount(5);
-  await expect(steps.nth(2)).toContainText('only if the soup scores at least 0.3 points higher');
+  await expect(steps.nth(2)).toContainText('only if the soup scores at least 0.5 points higher');
 
   const bill = page.getByRole('table', { name: 'Who gets paid' });
   await expect(bill.getByRole('row', { name: /Soup seats/ })).toContainText('5 × 16%');
@@ -82,7 +82,7 @@ async function expectIngredients(page: import('@playwright/test').Page) {
 test('/soup states the crown bar, house rates and house models without internal scores or dates', async ({ page }) => {
   await page.goto('/soup');
   const crown = page.getByRole('table', { name: 'Who gets paid' }).getByRole('row', { name: /Solo crown/ });
-  await expect(crown).toContainText('beats every house model and the current soup by at least 0.3');
+  await expect(crown).toContainText('beats every house model and the current soup by at least 1.2');
   const mix = page.getByRole('table', { name: 'Seat rates' }).getByRole('row', { name: /House mix/ });
   await expect(mix).toContainText('0.25×');
   await expect(mix).toContainText('the soup and the release');
@@ -91,7 +91,7 @@ test('/soup states the crown bar, house rates and house models without internal 
   const rates = page.getByRole('table', { name: 'Seat rates' });
   await expect(rates.getByRole('row', { name: /Scout/ })).toContainText('known-public list');
   await expect(mix).toContainText('listed public models');
-  await expect(rates.getByRole('row', { name: /Trainer/ })).toContainText('beat what they started from by at least 0.3');
+  await expect(rates.getByRole('row', { name: /Trainer/ })).toContainText('beat what they started from by at least 1.2');
   await expect(page.locator('main')).not.toContainText('released after launch');
   // zils#150: seats and the crown are decided on the last 3 rounds' items together, not one fresh slice.
   const steps = page.getByRole('list', { name: 'How a soup is made' }).getByRole('listitem');
