@@ -10,7 +10,7 @@ import s from './box.module.css';
 
 export const metadata: Metadata = {
   title: 'Zils — box track',
-  description: 'Synthetic-only testnet pilot: independent mini and lite competitions for bounding-box adapters, with separate reviewed crowns.',
+  description: 'Synthetic-only pilot on subnet 127: independent mini and lite competitions for bounding-box adapters, with separate reviewed crowns.',
   alternates: { canonical: 'https://zils.ai/miners/tracks/box' },
 };
 
@@ -71,15 +71,15 @@ export default function BoxTrackPage() {
   const max = Math.max(...RESULTS.map(r => r.all));
   return (
     <SiteFrame current="miners">
-      <SectionRow n="01" label="Feature track · boxes" note="Testnet 579 · open" />
+      <SectionRow n="01" label="Feature track · boxes" note="Subnet 127 · pilot" />
       <header className={m.hero}>
         <p className={s.crumb}><Link href="/miners">Miners</Link> / Feature tracks</p>
         <h1><span className={s.target}>Boxes<span className={s.lock} aria-hidden="true"><i /><i /><i /><i /><b>0.97</b></span></span></h1>
-        <p>Teach a model to point at a named shape, or say it is absent. <b>Synthetic-only pilot, open on testnet 579.</b> Mini and lite compete separately on newly generated private pilot images. This pilot does not establish real-world box quality.</p>
+        <p>Teach a model to point at a named shape, or say it is absent. <b>Synthetic-only pilot on Bittensor subnet 127; it pays nothing until a feature share is configured.</b> Mini and lite compete separately on newly generated private pilot images. This pilot does not establish real-world box quality.</p>
       </header>
 
       <dl className={m.nums}>
-        <div><dt>Status</dt><dd className={m.sm}>Open on testnet</dd></div>
+        <div><dt>Status</dt><dd className={m.sm}>Pilot, unpaid on mainnet</dd></div>
         <div><dt>Score to beat</dt><dd className={m.sm}>Your track’s incumbent</dd></div>
         <div><dt>Competitions</dt><dd className={m.sm}>Mini / lite</dd></div>
         <div><dt>Validator allocation</dt><dd className={m.sm}>16% / 4%</dd></div>
@@ -97,7 +97,7 @@ export default function BoxTrackPage() {
             </tbody>
           </table>
         </div>
-        <p className={s.caveat}>The testnet split is 50% base improvement, 20% features and 30% customer adapters, with mini/lite split 80/20 inside both base and box budgets: 40% mini base, 10% lite base, 16% mini boxes, 4% lite boxes, 30% customer adapters. These are this validator’s allocation shares, not guaranteed earnings. Boxes initially receive the whole feature budget; future tracks require an announced reallocation.</p>
+        <p className={s.caveat}>On mainnet every emission goes to the base soup pools. The rehearsal split below was 50% base improvement, 20% features and 30% customer adapters, with mini/lite split 80/20 inside both base and box budgets: 40% mini base, 10% lite base, 16% mini boxes, 4% lite boxes, 30% customer adapters. These are this validator’s allocation shares, not guaranteed earnings. Boxes initially receive the whole feature budget; future tracks require an announced reallocation.</p>
         <p className={s.fine}>No qualified box kings yet. Operator references are the initial scores to beat and earn no crown. Both box allocations burn until qualifying miners are crowned. Historical research and small adapter smoke tests do not qualify a winning starter.</p>
       </section>
 
