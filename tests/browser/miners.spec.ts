@@ -211,8 +211,17 @@ for (const theme of ['dark', 'light']) {
     const results = await page.locator('[data-contrast]').evaluateAll(els => {
       const parse = (c: string) => (c.match(/[\d.]+/g) ?? []).map(Number);
       const lum = ([r, g, b]: number[]) => { const f = (v: number) => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }; return .2126 * f(r) + .7152 * f(g) + .0722 * f(b); };
-      const bg = parse(getComputedStyle(document.querySelector('.zs')!).backgroundColor).slice(0, 3);
+      // Text is read against what it is really painted on: the nearest ancestor with an opaque background (the chain
+      // table sits on the purple plate, the rest on the panel).
+      const backdrop = (e: Element) => {
+        for (let n: Element | null = e; n; n = n.parentElement) {
+          const c = parse(getComputedStyle(n).backgroundColor);
+          if (c.length && (c[3] ?? 1) === 1) return c.slice(0, 3);
+        }
+        return parse(getComputedStyle(document.querySelector('.zs')!).backgroundColor).slice(0, 3);
+      };
       return els.flatMap(root => [root, ...root.querySelectorAll('*')]).filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent!.trim())).map(e => {
+        const bg = backdrop(e);
         const [r, g, b, a = 1] = parse(getComputedStyle(e).color);
         const fg = [r, g, b].map((v, i) => v * a + bg[i] * (1 - a));
         const [hi, lo] = [lum(fg), lum(bg)].sort((x, y) => y - x);
@@ -223,3 +232,18 @@ for (const theme of ['dark', 'light']) {
     for (const r of results) expect(r.ratio, r.text).toBeGreaterThanOrEqual(4.5);
   });
 }
+
+test('the chain section sits on a Zils purple plate, in both themes, with its label on the plate', async ({ page }) => {
+  await page.goto('/miners');
+  const plate = page.getByRole('region', { name: 'Miners on chain' });
+  await expect(plate).toContainText('Miners on chain');
+  await expect(plate.getByRole('table', { name: 'Miners on chain' })).toBeVisible();
+  await expect(plate).toHaveCSS('background-color', 'rgb(75, 68, 200)'); // Zils purple #4b44c8
+  // Every word on the plate is set in white (the labels and fine print at a lighter alpha), never the page's ink.
+  const colors = await plate.locator('th, td, p, span').evaluateAll(els => [...new Set(els.map(e => getComputedStyle(e).color))]);
+  for (const c of colors) expect(c).toMatch(/^rgba?\(255, 255, 255/);
+  // Daylight keeps the plate: the purple is the brand mark on light surfaces too.
+  await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+  await expect(plate).toHaveCSS('background-color', 'rgb(75, 68, 200)');
+  await expect(plate.locator('td').first()).toHaveCSS('color', 'rgb(255, 255, 255)');
+});

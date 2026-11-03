@@ -97,8 +97,8 @@ export default async function MinersPage() {
         <p className={b.fine}>Seats and the crown are decided on the items of the last three rounds together, because one night’s slice of the private exam is noisier than the greedy margin. The score is tonight’s slice alone, so small moves between rounds are partly noise. Each part’s number is what the soup loses without it, rounded to 0.5 point.</p>
       </section>
 
-      <SectionRow n="02" label="Miners on chain" note={chain ? `Subnet ${chain.netuid}` : undefined} />
-      <section aria-label="Miners on chain">
+      <section aria-label="Miners on chain" className={b.plate}>
+        <SectionRow n="02" label="Miners on chain" note={chain ? `Subnet ${chain.netuid}` : undefined} />
         {chain ? <ChainTable chain={chain} rows={minerRows(chain, soup)} /> : <p className={b.down}>The chain view is unavailable right now.</p>}
       </section>
 

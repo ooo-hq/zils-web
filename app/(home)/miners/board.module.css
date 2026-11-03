@@ -58,7 +58,19 @@
 .pot span { color: var(--zs-t2); }
 .fine { margin: 0; padding: 18px 40px 26px; max-width: 110ch; font-size: 12.5px; line-height: 1.6; color: var(--zs-t2); }
 
-/* Miners on chain */
+/* Miners on chain: the one slab of Zils purple on the site. The roster is the page's record of who is really on the
+   subnet, so it is painted like an enamel plate: brand purple, white type, white hairlines, the site grain at a
+   whisper and a thin light along the top edge. Everything on it, the section label included, takes the plate's
+   tokens through the custom properties. Daylight keeps the plate: this purple is the brand mark on light surfaces. */
+.plate { --zs-fg: #fff; --zs-fg-rgb: 255,255,255; --zs-t2: rgba(255,255,255,.78); --zs-t3: rgba(255,255,255,.66); --zs-line: rgba(255,255,255,.2);
+  position: relative; isolation: isolate; margin-left: -56px; padding-left: 56px; background: #4b44c8; color: #fff; }
+/* The plate reaches into the gutter, the only section that does, so its number sits on the purple too. The orange
+   corner stays on the column line with the other sections'. */
+.plate::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: var(--zs-grain); opacity: .07; mix-blend-mode: screen; }
+.plate::after { content: ""; position: absolute; inset: 0 0 auto; height: 1px; pointer-events: none; background: rgba(255,255,255,.35); }
+.plate a { color: #fff; text-decoration: underline; text-decoration-color: rgba(255,255,255,.45); text-underline-offset: 3px; }
+.plate a:hover { text-decoration-color: #fff; }
+.plate a:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 .chain { border-bottom: 1px solid var(--zs-line); }
 .table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .table th { padding: 14px 16px 10px; text-align: left; font-family: var(--font-plex-mono), ui-monospace, monospace; font-weight: 400; font-size: 11.5px; color: var(--zs-t2); border-bottom: 1px solid var(--zs-line); }
@@ -84,6 +96,7 @@
   .hero { grid-template-columns: 1fr; padding: 32px 4px 28px; }
   .tier { padding: 26px 4px; }
   .down, .fine, .earn { padding-left: 4px; padding-right: 4px; }
+  .plate { margin-left: 0; padding-left: 0; }
   .table :is(th, td):first-child { padding-left: 4px; }
   .table :is(th, td):last-child { padding-right: 4px; }
 }
