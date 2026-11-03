@@ -75,3 +75,20 @@
   .steps { grid-template-columns: 1fr; }
   .card th, .card td { padding: 14px; }
 }
+
+/* House rules: a seal at the column's top-left, tilted like a sticker on a menu board, below the section row so the label stays readable. Orange is the warm end of the spectrum, as for corner markers. */
+.house { position: relative; }
+.sticker { position: absolute; left: 36px; top: 18px; width: 124px; height: 124px; transform: rotate(-8deg); z-index: 2; pointer-events: none; filter: drop-shadow(0 8px 18px rgba(0, 0, 0, .3)); }
+.stickerFace { fill: var(--zs-raised); }
+.stickerEdge { fill: none; stroke: var(--zs-orange); stroke-width: 2.5; }
+.stickerInner { fill: none; stroke: var(--zs-orange); stroke-width: 1; stroke-dasharray: 2 3; }
+.stickerText { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 8.4px; letter-spacing: .16em; font-weight: 500; fill: var(--zs-orange); }
+.stickerIcon { fill: none; stroke: var(--zs-fg); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.stickerRice { fill: rgba(var(--zs-fg-rgb), .14); }
+.stickerFish { fill: rgba(255, 122, 47, .42); }
+:global([data-theme=light]) .stickerFish { fill: rgba(171, 77, 37, .35); }
+.house .rules { padding-top: 132px; }
+@media (max-width: 899px) {
+  .sticker { left: 14px; top: 14px; width: 100px; height: 100px; }
+  .house .rules { padding-top: 104px; }
+}

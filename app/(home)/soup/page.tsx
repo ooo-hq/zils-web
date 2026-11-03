@@ -8,6 +8,7 @@ import { Reveal } from '@/components/site/reveal';
 import { Bowl, SEATS } from './bowl';
 import { Ingredients } from './ingredients';
 import { FoodIcon, type Food } from './food-icons';
+import { ScoutSticker } from './scout-sticker';
 import s from './soup.module.css';
 
 export const metadata: Metadata = {
@@ -114,7 +115,8 @@ export default function SoupPage() {
     </section>
 
     <SectionRow n="05" label="House rules" note="店のルール" />
-    <section className={s.section} aria-label="House rules">
+    <section className={`${s.section} ${s.house}`} aria-label="House rules">
+      <ScoutSticker />
       <ul className={s.rules}>{RULES.map((rule, i) => <li key={i}>{rule}</li>)}</ul>
     </section>
 
