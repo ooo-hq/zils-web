@@ -15,8 +15,8 @@ const LINKS = [
   { href: '/merge', label: 'Merge', id: 'merge' },
   { href: '/miners', label: 'Miners', id: 'miners' },
   { href: '/pricing', label: 'Pricing', id: 'pricing' },
-  { href: docsUrl, label: 'Docs', id: 'docs' },
   { href: '/contact', label: 'Contact', id: 'contact' },
+  { href: docsUrl, label: 'Docs', id: 'docs' },
 ] as const;
 
 /**
