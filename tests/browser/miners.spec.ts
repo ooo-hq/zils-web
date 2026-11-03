@@ -130,7 +130,7 @@ test('without a soup feed every tier shows its pot and says the rounds are unava
   await expect(page.getByRole('article', { name: 'z3-mini' }).getByRole('list', { name: 'In the pot' })).toContainText('pplx-decider-flash-v1.2');
 });
 
-test('the miners table is the chain: one row per uid, its tier, its body and where it stands tonight', async ({ page }) => {
+test('the miners on chain are a sheet on the pass: one row per uid, its tier, its body and where it stands tonight', async ({ page }) => {
   await page.goto('/miners');
   const table = page.getByRole('table', { name: 'Miners on chain' });
   const rows = table.getByRole('row');
@@ -141,10 +141,31 @@ test('the miners table is the chain: one row per uid, its tier, its body and whe
   await expect(rows.nth(1)).toContainText('Paid seat');
   await expect(rows.nth(1)).toContainText('Endpoint announced');
   await expect(rows.nth(2)).toContainText('Not in tonight’s soup');
+  await expect(rows.nth(2)).toContainText('No endpoint');
   await expect(rows.nth(3)).toContainText('z3-lite');
   await expect(rows.nth(3)).toContainText('Waiting for the first round');
   await expect(table.getByRole('link', { name: 'miner/body-one' })).toHaveAttribute('href', `https://huggingface.co/miner/body-one/tree/${'f'.repeat(40)}`);
   await expect(page.getByText('Block 8,351,998')).toBeVisible();
+  // The sheet is paper on the purple pass: light in both themes, with the page's ink on it.
+  await expect(rows.nth(1).getByRole('cell').first()).toHaveCSS('color', 'rgb(28, 26, 38)');
+  await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+  await expect(rows.nth(1).getByRole('cell').first()).toHaveCSS('color', 'rgb(28, 26, 38)');
+});
+
+test('an empty chain is an invitation, not a blank', async ({ page }) => {
+  snapshot = { ...CHAIN(), miners: [] };
+  await page.goto('/miners');
+  const plate = page.getByRole('region', { name: 'Miners on chain' });
+  await expect(plate).toContainText('No miner has committed a body yet.');
+  await expect(plate.getByRole('link', { name: 'Bring a body to the soup' })).toHaveAttribute('href', '/soup');
+  await expect(plate.getByRole('table', { name: 'Miners on chain' })).toHaveCount(0);
+});
+
+test('closed soups wear the sticker: z3-flash and z3 say No soup for you, lite and mini do not', async ({ page }) => {
+  await page.goto('/miners');
+  for (const tier of ['z3-flash', 'z3']) await expect(page.getByRole('article', { name: tier, exact: true }).getByText('No soup for you!')).toBeVisible();
+  for (const tier of ['z3-lite', 'z3-mini']) await expect(page.getByRole('article', { name: tier, exact: true })).not.toContainText('No soup for you');
+  await expect(page.getByRole('article', { name: 'z3-flash' })).toContainText('Opens later');
 });
 
 test('a chain outage says so and the rest of the page renders; the next refresh recovers', async ({ page }) => {
@@ -211,8 +232,17 @@ for (const theme of ['dark', 'light']) {
     const results = await page.locator('[data-contrast]').evaluateAll(els => {
       const parse = (c: string) => (c.match(/[\d.]+/g) ?? []).map(Number);
       const lum = ([r, g, b]: number[]) => { const f = (v: number) => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }; return .2126 * f(r) + .7152 * f(g) + .0722 * f(b); };
-      const bg = parse(getComputedStyle(document.querySelector('.zs')!).backgroundColor).slice(0, 3);
+      // Text is read against what it is really painted on: the nearest ancestor with an opaque background (the chain
+      // table sits on the purple plate, the rest on the panel).
+      const backdrop = (e: Element) => {
+        for (let n: Element | null = e; n; n = n.parentElement) {
+          const c = parse(getComputedStyle(n).backgroundColor);
+          if (c.length && (c[3] ?? 1) === 1) return c.slice(0, 3);
+        }
+        return parse(getComputedStyle(document.querySelector('.zs')!).backgroundColor).slice(0, 3);
+      };
       return els.flatMap(root => [root, ...root.querySelectorAll('*')]).filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent!.trim())).map(e => {
+        const bg = backdrop(e);
         const [r, g, b, a = 1] = parse(getComputedStyle(e).color);
         const fg = [r, g, b].map((v, i) => v * a + bg[i] * (1 - a));
         const [hi, lo] = [lum(fg), lum(bg)].sort((x, y) => y - x);
@@ -223,3 +253,16 @@ for (const theme of ['dark', 'light']) {
     for (const r of results) expect(r.ratio, r.text).toBeGreaterThanOrEqual(4.5);
   });
 }
+
+test('the chain section is the purple pass, in both themes', async ({ page }) => {
+  await page.goto('/miners');
+  const plate = page.getByRole('region', { name: 'Miners on chain' });
+  await expect(plate.getByRole('table', { name: 'Miners on chain' })).toBeVisible();
+  await expect(plate).toHaveCSS('background-color', 'rgb(75, 68, 200)'); // Zils purple #4b44c8
+  // The plate's own words (the block line) are white at some alpha, never the page's ink.
+  const colors = await plate.locator(':scope > div > p, :scope > div > p span').evaluateAll(els => [...new Set(els.map(e => getComputedStyle(e).color))]);
+  expect(colors.length).toBeGreaterThan(0);
+  for (const c of colors) expect(c).toMatch(/^rgba?\(255, 255, 255/);
+  await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+  await expect(plate).toHaveCSS('background-color', 'rgb(75, 68, 200)');
+});

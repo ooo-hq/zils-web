@@ -101,7 +101,7 @@ export default async function MinersPage() {
       </section>
 
       <SectionRow n="02" label="Miners on chain" note={chain ? `Subnet ${chain.netuid}` : undefined} />
-      <section aria-label="Miners on chain">
+      <section aria-label="Miners on chain" className={b.plate}>
         {chain ? <ChainTable chain={chain} rows={minerRows(chain, soup)} /> : <p className={b.down}>The chain view is unavailable right now.</p>}
       </section>
 

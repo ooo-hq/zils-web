@@ -40,11 +40,14 @@ function Recipe({ view }: { view: TierView }) {
   </>;
 }
 
-function Pot({ tier, note }: { tier: Tier; note: string | null }) {
+function Pot({ tier, note, closed }: { tier: Tier; note: string | null; closed: boolean }) {
   const house = TIERS[tier].house;
   return <>
-    <div className={s.bar} role="img" aria-label={`${tier} has not cooked tonight. In the pot: ${house.map(h => h.name).join(', ')}`}>
-      {house.map(h => <span key={h.name} className={s.part} data-part="pot" />)}
+    <div className={s.potBar}>
+      <div className={s.bar} role="img" aria-label={`${tier} has not cooked tonight. In the pot: ${house.map(h => h.name).join(', ')}`}>
+        {house.map(h => <span key={h.name} className={s.part} data-part="pot" />)}
+      </div>
+      {closed && <span className={s.sticker}><b>No soup for you!</b><small lang="ja">売り切れ</small></span>}
     </div>
     {note && <p className={s.note}>{note}</p>}
     <ul className={s.pot} aria-label="In the pot" data-contrast>
@@ -81,6 +84,6 @@ export function TierSoup({ tier, view, feed }: { tier: Tier; view: TierView | nu
         Round {tonight.round}, finished {when(tonight.finished)}.
         {view.decision && ` Seats decided on ${view.decision.rounds} ${view.decision.rounds === 1 ? 'round' : 'rounds'}, ${view.decision.items.toLocaleString('en-US')} items.`}
       </p>
-    </> : <Pot tier={tier} note={note} />}
+    </> : <Pot tier={tier} note={note} closed={later} />}
   </article>;
 }

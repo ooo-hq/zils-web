@@ -9,7 +9,7 @@
 .start a, .guide a, .later a, .pot a, .partName[href] { color: var(--zs-fg); text-decoration: underline; text-decoration-color: rgba(var(--zs-fg-rgb), .3); text-underline-offset: 3px; }
 .start a:hover, .guide a:hover, .later a:hover, .pot a:hover, .partName[href]:hover { text-decoration-color: currentColor; }
 .start code, .guide code { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; color: var(--zs-fg); }
-:is(.start, .guide, .later, .pot, .parts, .table) a:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 3px; }
+:is(.start, .guide, .later, .pot, .parts) a:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 3px; }
 
 .down { margin: 0; padding: 20px 40px; border-bottom: 1px solid var(--zs-line); font-size: 14px; color: var(--zs-fg); }
 
@@ -58,20 +58,49 @@
 .pot span { color: var(--zs-t2); }
 .fine { margin: 0; padding: 18px 40px 26px; max-width: 110ch; font-size: 12.5px; line-height: 1.6; color: var(--zs-t2); }
 
-/* Miners on chain */
-.chain { border-bottom: 1px solid var(--zs-line); }
-.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-.table th { padding: 14px 16px 10px; text-align: left; font-family: var(--font-plex-mono), ui-monospace, monospace; font-weight: 400; font-size: 11.5px; color: var(--zs-t2); border-bottom: 1px solid var(--zs-line); }
+/* Miners on chain: the pass. The one slab of Zils purple on the site, under the section's label row. Each miner is a
+   paper order ticket on the counter: the uid is the order number, the tier the station, the body the dish, and
+   tonight's standing is stamped on it. Paper stays paper in both themes; the plate's own words are white. */
+.plate { --zs-fg: #fff; --zs-fg-rgb: 255,255,255; --zs-t2: rgba(255,255,255,.78); --zs-t3: rgba(255,255,255,.66); --zs-line: rgba(255,255,255,.2);
+  position: relative; isolation: isolate; background: #4b44c8; color: #fff; }
+.plate::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: var(--zs-grain); opacity: .07; mix-blend-mode: screen; }
+.plate::after { content: ""; position: absolute; inset: 0 0 auto; height: 1px; pointer-events: none; background: rgba(255,255,255,.35); }
+.pass { padding: 24px 40px 2px; }
+/* The order sheet: one sheet of paper on the counter, paper in both themes, with the page's ink on it. */
+.sheet { --zs-fg: #1c1a26; --zs-fg-rgb: 28,26,38; --zs-t2: rgba(28,26,38,.70); --zs-t3: rgba(28,26,38,.64); --zs-line: rgba(28,26,38,.12);
+  background: #faf9fc; color: var(--zs-fg); box-shadow: 0 1px 0 rgba(0,0,0,.18), 0 12px 28px -16px rgba(0,0,0,.55); overflow: hidden; }
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th { padding: 14px 16px 10px; text-align: left; font-family: var(--font-plex-mono), ui-monospace, monospace; font-weight: 400; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #4b44c8; border-bottom: 1px solid rgba(75,68,200,.35); }
 .table td { padding: 14px 16px; border-bottom: 1px solid var(--zs-line); vertical-align: baseline; color: var(--zs-fg); }
-.table :is(th, td):first-child { padding-left: 40px; }
-.table :is(th, td):last-child { padding-right: 40px; }
-.table code { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; }
-.table a { overflow-wrap: anywhere; }
-.uid { font-variant-numeric: tabular-nums; }
-.rev { margin-left: 6px; color: var(--zs-t2); }
-.table tr:is([data-standing="out"], [data-standing="waiting"], [data-standing="none"], [data-standing="unknown"]) .standing { color: var(--zs-t2); }
+.table tr:last-child td { border-bottom: 0; }
+.table :is(th, td):first-child { padding-left: 20px; }
+.table :is(th, td):last-child { padding-right: 20px; }
+.table code { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; color: var(--zs-t2); }
+.table a { color: var(--zs-fg); text-decoration: underline; text-decoration-color: rgba(28,26,38,.3); text-underline-offset: 3px; overflow-wrap: anywhere; }
+.table a:hover { text-decoration-color: currentColor; }
+.table a:focus-visible { outline: 2px solid #4b44c8; outline-offset: 3px; }
+.uid { font-weight: 300; font-size: 22px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.station { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #4b44c8; }
+.rev { margin-left: 4px; }
+.table tr:is([data-standing="out"], [data-standing="waiting"], [data-standing="none"], [data-standing="unknown"]) .standing, .table td:last-child { color: var(--zs-t2); }
 .chip { display: inline-block; width: 10px; height: 10px; margin-right: 8px; background: var(--zs-spectrum); vertical-align: -1px; }
-.chain .fine span { color: var(--zs-fg); }
+/* No rows: the outline of a sheet, as an invitation. */
+.empty { margin: 0; max-width: 420px; padding: 18px 20px; border: 1px dashed rgba(255,255,255,.5); font-size: 14.5px; line-height: 1.5; color: #fff; }
+.empty a { color: #fff; text-decoration: underline; text-decoration-color: rgba(255,255,255,.5); text-underline-offset: 3px; }
+.empty a:hover { text-decoration-color: #fff; }
+.empty a:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.plate .fine { padding-left: 0; padding-right: 0; }
+.plate .fine span { color: #fff; }
+
+/* Closed soups wear a sticker slapped across the empty bar: a die-cut orange label with a paper edge, the ink on it
+   switching with the theme's orange so it stays readable, and a sold-out line under the words. */
+.potBar { position: relative; }
+.sticker { --ink: #1c1a26; position: absolute; right: 26px; top: 50%; display: grid; justify-items: center; gap: 3px; padding: 9px 18px 10px;
+  transform: translateY(-50%) rotate(-5deg); background: var(--zs-orange); color: var(--ink); border: 3px solid #faf9fc;
+  border-radius: 14px 8px 16px 7px / 8px 14px 7px 16px; box-shadow: 0 1px 0 rgba(0,0,0,.25), 0 6px 14px -4px rgba(0,0,0,.5); white-space: nowrap; }
+.sticker b { font-weight: 500; font-size: 19px; letter-spacing: -0.015em; line-height: 1; }
+.sticker small { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .18em; line-height: 1; opacity: .85; }
+:global([data-theme=light]) .sticker { --ink: #faf9fc; }
 
 /* How miners earn */
 .earn { display: grid; gap: 22px; padding: 36px 40px 40px; }
@@ -84,8 +113,10 @@
   .hero { grid-template-columns: 1fr; padding: 32px 4px 28px; }
   .tier { padding: 26px 4px; }
   .down, .fine, .earn { padding-left: 4px; padding-right: 4px; }
-  .table :is(th, td):first-child { padding-left: 4px; }
-  .table :is(th, td):last-child { padding-right: 4px; }
+  .pass { padding-left: 4px; padding-right: 4px; }
+  .sticker { right: 10px; padding: 6px 12px 7px; border-width: 2px; }
+  .sticker b { font-size: 15px; }
+  .sticker small { font-size: 9px; }
 }
 @media (max-width: 699px) {
   .head { grid-template-columns: 1fr; gap: 6px; }
@@ -99,12 +130,16 @@
   .parts li[data-part="house"]::before { border: 1px solid rgba(var(--zs-fg-rgb), .22); background: repeating-linear-gradient(135deg, rgba(var(--zs-fg-rgb), .2) 0 1px, transparent 1px 6px); }
   .parts li > * { grid-column: 2; }
   .lift { grid-column: 3 !important; grid-row: 1 / span 3; align-self: center; margin: 0; }
+  /* Rows stack as labelled cards. */
   .table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .table, .table tbody, .table tr, .table td { display: block; }
-  .table tr { padding: 12px 4px; border-bottom: 1px solid var(--zs-line); }
+  .table tr { padding: 10px 16px; border-bottom: 1px solid var(--zs-line); }
+  .table tr:last-child { border-bottom: 0; }
   .table td { display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: baseline; padding: 3px 0; border: 0; }
-  .table td::before { content: attr(data-label); font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11.5px; color: var(--zs-t2); }
+  .table td::before { content: attr(data-label); font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--zs-t3); }
   .table td > * { grid-column: 2; }
+  .table :is(th, td):first-child, .table :is(th, td):last-child { padding-left: 0; padding-right: 0; }
+  .uid { font-size: 18px; }
   .rev { margin-left: 0; }
 }
 @media (prefers-reduced-motion: no-preference) {
