@@ -3,6 +3,7 @@ import { ZilsWordmark } from '@/components/zils-wordmark';
 import { ThemeToggle } from '@/components/theme';
 import { MobileMenu } from '@/components/mobile-menu';
 import { AccountMenu } from '@/components/account-menu';
+import { docsUrl } from '@/lib/shared';
 import css from '@/components/site-header.module.css';
 
 export type NavId = 'examples' | 'z3' | 'soup' | 'merge' | 'model' | 'miners' | 'pricing';
@@ -14,6 +15,7 @@ const LINKS = [
   { href: '/merge', label: 'Merge', id: 'merge' },
   { href: '/miners', label: 'Miners', id: 'miners' },
   { href: '/pricing', label: 'Pricing', id: 'pricing' },
+  { href: docsUrl, label: 'Docs', id: 'docs' },
 ] as const;
 
 /**

@@ -33,7 +33,8 @@ test('no Bittensor link; current page is marked; Research lives in the footer', 
   await page.goto('/pricing');
   await expect(page.locator('header, footer').getByRole('link', { name: /bittensor/i })).toHaveCount(0);
   const nav = page.getByRole('navigation', { name: 'Main navigation' });
-  await expect(nav.getByRole('link')).toHaveText(['Z3', 'Examples', 'Soup', 'Merge', 'Miners', 'Pricing']);
+  await expect(nav.getByRole('link')).toHaveText(['Z3', 'Examples', 'Soup', 'Merge', 'Miners', 'Pricing', 'Docs']);
+  await expect(nav.getByRole('link', { name: 'Docs' })).toHaveAttribute('href', /^https:\/\/docs\.zils\.ai/);
   await expect(nav.getByRole('link', { name: 'Pricing' })).toHaveAttribute('aria-current', 'page');
   await expect(nav.locator('[aria-current]')).toHaveCount(1);
   await expect(nav.getByRole('link', { name: 'Research' })).toHaveCount(0);
@@ -76,7 +77,7 @@ test.describe('mobile menu', () => {
     await menu.click();
     await expect(menu).toHaveAttribute('aria-expanded', 'true');
     const panel = page.getByRole('group', { name: 'Site menu' });
-    await expect(panel.getByRole('link')).toHaveText(['Z3', 'Examples', 'Soup', 'Merge', 'Miners', 'Pricing', 'Sign in']);
+    await expect(panel.getByRole('link')).toHaveText(['Z3', 'Examples', 'Soup', 'Merge', 'Miners', 'Pricing', 'Docs', 'Sign in']);
     await expect(panel.getByRole('link', { name: 'Pricing' })).toHaveAttribute('aria-current', 'page');
     await page.keyboard.press('Escape');
     await expect(panel).toHaveCount(0);
