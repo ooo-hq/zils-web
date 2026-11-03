@@ -9,7 +9,7 @@
 .start a, .guide a, .later a, .pot a, .partName[href] { color: var(--zs-fg); text-decoration: underline; text-decoration-color: rgba(var(--zs-fg-rgb), .3); text-underline-offset: 3px; }
 .start a:hover, .guide a:hover, .later a:hover, .pot a:hover, .partName[href]:hover { text-decoration-color: currentColor; }
 .start code, .guide code { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; color: var(--zs-fg); }
-:is(.start, .guide, .later, .pot, .parts, .table) a:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 3px; }
+:is(.start, .guide, .later, .pot, .parts) a:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 3px; }
 
 .down { margin: 0; padding: 20px 40px; border-bottom: 1px solid var(--zs-line); font-size: 14px; color: var(--zs-fg); }
 
@@ -58,32 +58,48 @@
 .pot span { color: var(--zs-t2); }
 .fine { margin: 0; padding: 18px 40px 26px; max-width: 110ch; font-size: 12.5px; line-height: 1.6; color: var(--zs-t2); }
 
-/* Miners on chain: the one slab of Zils purple on the site. The roster is the page's record of who is really on the
-   subnet, so it is painted like an enamel plate: brand purple, white type, white hairlines, the site grain at a
-   whisper and a thin light along the top edge. Everything on it, the section label included, takes the plate's
-   tokens through the custom properties. Daylight keeps the plate: this purple is the brand mark on light surfaces. */
+/* Miners on chain: the pass. The one slab of Zils purple on the site, reaching into the gutter so its number sits
+   on it too; the orange corner stays on the column line with the other sections'. Each miner is a paper order
+   ticket clipped on the counter: the uid is the order number, the tier the station, the body the dish, and tonight's
+   standing is stamped on it. Paper stays paper in both themes; the plate's own words are white. */
 .plate { --zs-fg: #fff; --zs-fg-rgb: 255,255,255; --zs-t2: rgba(255,255,255,.78); --zs-t3: rgba(255,255,255,.66); --zs-line: rgba(255,255,255,.2);
   position: relative; isolation: isolate; margin-left: -56px; padding-left: 56px; background: #4b44c8; color: #fff; }
-/* The plate reaches into the gutter, the only section that does, so its number sits on the purple too. The orange
-   corner stays on the column line with the other sections'. */
 .plate::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: var(--zs-grain); opacity: .07; mix-blend-mode: screen; }
 .plate::after { content: ""; position: absolute; inset: 0 0 auto; height: 1px; pointer-events: none; background: rgba(255,255,255,.35); }
-.plate a { color: #fff; text-decoration: underline; text-decoration-color: rgba(255,255,255,.45); text-underline-offset: 3px; }
-.plate a:hover { text-decoration-color: #fff; }
-.plate a:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-.chain { border-bottom: 1px solid var(--zs-line); }
-.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-.table th { padding: 14px 16px 10px; text-align: left; font-family: var(--font-plex-mono), ui-monospace, monospace; font-weight: 400; font-size: 11.5px; color: var(--zs-t2); border-bottom: 1px solid var(--zs-line); }
-.table td { padding: 14px 16px; border-bottom: 1px solid var(--zs-line); vertical-align: baseline; color: var(--zs-fg); }
-.table :is(th, td):first-child { padding-left: 40px; }
-.table :is(th, td):last-child { padding-right: 40px; }
-.table code { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; }
-.table a { overflow-wrap: anywhere; }
-.uid { font-variant-numeric: tabular-nums; }
-.rev { margin-left: 6px; color: var(--zs-t2); }
-.table tr:is([data-standing="out"], [data-standing="waiting"], [data-standing="none"], [data-standing="unknown"]) .standing { color: var(--zs-t2); }
+.pass { padding: 28px 40px 4px; }
+.tickets { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+.ticket { --zs-fg: #1c1a26; --zs-fg-rgb: 28,26,38; --zs-t2: rgba(28,26,38,.70); --zs-t3: rgba(28,26,38,.64); --zs-line: rgba(28,26,38,.12);
+  position: relative; display: grid; gap: 8px; align-content: start; padding: 14px 18px 18px; background: #faf9fc; color: var(--zs-fg);
+  box-shadow: 0 1px 0 rgba(0,0,0,.18), 0 10px 24px -14px rgba(0,0,0,.5); }
+/* The clip: a short bar of the counter's deeper purple over the ticket's top edge. */
+.ticket::before { content: ""; position: absolute; top: -5px; left: 50%; width: 34px; height: 9px; margin-left: -17px; border-radius: 2px; background: #352f9e; box-shadow: 0 1px 1px rgba(0,0,0,.35); }
+.ticketHead { display: flex; justify-content: space-between; align-items: end; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--zs-line); }
+.uid { font-weight: 300; font-size: 40px; letter-spacing: -0.03em; line-height: .9; font-variant-numeric: tabular-nums; }
+.uid small { display: block; margin-bottom: 6px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--zs-t3); }
+.station { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #4b44c8; }
+.hotkey { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; color: var(--zs-t2); }
+.dish, .standing, .serving { margin: 0; font-size: 14px; line-height: 1.45; }
+.dish a { color: var(--zs-fg); text-decoration: underline; text-decoration-color: rgba(28,26,38,.3); text-underline-offset: 3px; overflow-wrap: anywhere; }
+.dish a:hover { text-decoration-color: currentColor; }
+.dish a:focus-visible { outline: 2px solid #4b44c8; outline-offset: 3px; }
+.rev { margin-left: 4px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12px; color: var(--zs-t2); }
+.standing { margin-top: 4px; color: var(--zs-fg); }
+.ticket:is([data-standing="out"], [data-standing="waiting"], [data-standing="none"], [data-standing="unknown"]) .standing, .serving { color: var(--zs-t2); }
+.serving { font-size: 12.5px; }
 .chip { display: inline-block; width: 10px; height: 10px; margin-right: 8px; background: var(--zs-spectrum); vertical-align: -1px; }
-.chain .fine span { color: var(--zs-fg); }
+/* No tickets: the outline of one, as an invitation. */
+.empty { margin: 0; max-width: 420px; padding: 18px 20px; border: 1px dashed rgba(255,255,255,.5); font-size: 14.5px; line-height: 1.5; color: #fff; }
+.empty a { color: #fff; text-decoration: underline; text-decoration-color: rgba(255,255,255,.5); text-underline-offset: 3px; }
+.empty a:hover { text-decoration-color: #fff; }
+.empty a:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.plate .fine { padding-left: 0; padding-right: 0; }
+.plate .fine span { color: #fff; }
+
+/* Closed soups wear a sticker slapped across the empty bar. */
+.potBar { position: relative; }
+.sticker { position: absolute; right: 28px; top: 50%; transform: translateY(-50%) rotate(-3deg); padding: 7px 14px 8px; border: 1.5px solid var(--zs-orange); border-radius: 3px;
+  background: var(--zs-panel); color: var(--zs-orange); font-size: 19px; font-weight: 400; letter-spacing: -0.01em; line-height: 1; white-space: nowrap;
+  box-shadow: 0 2px 0 rgba(0,0,0,.25); }
 
 /* How miners earn */
 .earn { display: grid; gap: 22px; padding: 36px 40px 40px; }
@@ -97,8 +113,8 @@
   .tier { padding: 26px 4px; }
   .down, .fine, .earn { padding-left: 4px; padding-right: 4px; }
   .plate { margin-left: 0; padding-left: 0; }
-  .table :is(th, td):first-child { padding-left: 4px; }
-  .table :is(th, td):last-child { padding-right: 4px; }
+  .pass { padding-left: 4px; padding-right: 4px; }
+  .sticker { right: 12px; font-size: 15px; padding: 5px 10px 6px; }
 }
 @media (max-width: 699px) {
   .head { grid-template-columns: 1fr; gap: 6px; }
@@ -112,13 +128,7 @@
   .parts li[data-part="house"]::before { border: 1px solid rgba(var(--zs-fg-rgb), .22); background: repeating-linear-gradient(135deg, rgba(var(--zs-fg-rgb), .2) 0 1px, transparent 1px 6px); }
   .parts li > * { grid-column: 2; }
   .lift { grid-column: 3 !important; grid-row: 1 / span 3; align-self: center; margin: 0; }
-  .table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .table, .table tbody, .table tr, .table td { display: block; }
-  .table tr { padding: 12px 4px; border-bottom: 1px solid var(--zs-line); }
-  .table td { display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: baseline; padding: 3px 0; border: 0; }
-  .table td::before { content: attr(data-label); font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11.5px; color: var(--zs-t2); }
-  .table td > * { grid-column: 2; }
-  .rev { margin-left: 0; }
+  .tickets { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .part { transition: opacity .2s; }
