@@ -130,25 +130,26 @@ test('without a soup feed every tier shows its pot and says the rounds are unava
   await expect(page.getByRole('article', { name: 'z3-mini' }).getByRole('list', { name: 'In the pot' })).toContainText('pplx-decider-flash-v1.2');
 });
 
-test('the miners on chain are order tickets on the pass: one per uid, its tier, its body and where it stands tonight', async ({ page }) => {
+test('the miners on chain are a sheet on the pass: one row per uid, its tier, its body and where it stands tonight', async ({ page }) => {
   await page.goto('/miners');
-  const tickets = page.getByRole('list', { name: 'Miners on chain' }).getByRole('listitem');
-  await expect(tickets).toHaveCount(3);
-  await expect(tickets.nth(0)).toContainText('1');
-  await expect(tickets.nth(0)).toContainText('z3-mini');
-  await expect(tickets.nth(0)).toContainText('miner/body-one');
-  await expect(tickets.nth(0)).toContainText('Paid seat');
-  await expect(tickets.nth(0)).toContainText('Endpoint announced');
-  await expect(tickets.nth(1)).toContainText('Not in tonight’s soup');
-  await expect(tickets.nth(1)).toContainText('No endpoint');
-  await expect(tickets.nth(2)).toContainText('z3-lite');
-  await expect(tickets.nth(2)).toContainText('Waiting for the first round');
-  await expect(tickets.nth(0).getByRole('link', { name: 'miner/body-one' })).toHaveAttribute('href', `https://huggingface.co/miner/body-one/tree/${'f'.repeat(40)}`);
+  const table = page.getByRole('table', { name: 'Miners on chain' });
+  const rows = table.getByRole('row');
+  await expect(rows).toHaveCount(4); // header + three uids
+  await expect(rows.nth(1)).toContainText('1');
+  await expect(rows.nth(1)).toContainText('z3-mini');
+  await expect(rows.nth(1)).toContainText('miner/body-one');
+  await expect(rows.nth(1)).toContainText('Paid seat');
+  await expect(rows.nth(1)).toContainText('Endpoint announced');
+  await expect(rows.nth(2)).toContainText('Not in tonight’s soup');
+  await expect(rows.nth(2)).toContainText('No endpoint');
+  await expect(rows.nth(3)).toContainText('z3-lite');
+  await expect(rows.nth(3)).toContainText('Waiting for the first round');
+  await expect(table.getByRole('link', { name: 'miner/body-one' })).toHaveAttribute('href', `https://huggingface.co/miner/body-one/tree/${'f'.repeat(40)}`);
   await expect(page.getByText('Block 8,351,998')).toBeVisible();
-  // Tickets are paper on the purple pass: light in both themes, with the page's ink on them.
-  await expect(tickets.nth(0)).toHaveCSS('background-color', 'rgb(250, 249, 252)');
+  // The sheet is paper on the purple pass: light in both themes, with the page's ink on it.
+  await expect(rows.nth(1).getByRole('cell').first()).toHaveCSS('color', 'rgb(28, 26, 38)');
   await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
-  await expect(tickets.nth(0)).toHaveCSS('background-color', 'rgb(250, 249, 252)');
+  await expect(rows.nth(1).getByRole('cell').first()).toHaveCSS('color', 'rgb(28, 26, 38)');
 });
 
 test('an empty chain is an invitation, not a blank', async ({ page }) => {
@@ -157,7 +158,7 @@ test('an empty chain is an invitation, not a blank', async ({ page }) => {
   const plate = page.getByRole('region', { name: 'Miners on chain' });
   await expect(plate).toContainText('No miner has committed a body yet.');
   await expect(plate.getByRole('link', { name: 'Bring a body to the soup' })).toHaveAttribute('href', '/soup');
-  await expect(plate.getByRole('list', { name: 'Miners on chain' })).toHaveCount(0);
+  await expect(plate.getByRole('table', { name: 'Miners on chain' })).toHaveCount(0);
 });
 
 test('closed soups wear the sticker: z3-flash and z3 say No soup for you, lite and mini do not', async ({ page }) => {
@@ -174,11 +175,11 @@ test('a chain outage says so and the rest of the page renders; the next refresh 
   page.on('pageerror', e => errors.push(e));
   await page.goto('/miners');
   await expect(page.getByText('The chain view is unavailable right now.')).toBeVisible();
-  await expect(page.getByRole('list', { name: 'Miners on chain' })).toHaveCount(0);
+  await expect(page.getByRole('table', { name: 'Miners on chain' })).toHaveCount(0);
   await expect(page.getByRole('article', { name: 'z3-mini' })).toBeVisible();
   mode = 'ok';
   await page.clock.fastForward(30_000);
-  await expect(page.getByRole('list', { name: 'Miners on chain' })).toBeVisible();
+  await expect(page.getByRole('table', { name: 'Miners on chain' })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -253,14 +254,13 @@ for (const theme of ['dark', 'light']) {
   });
 }
 
-test('the chain section is the purple pass, in both themes, with its label on it', async ({ page }) => {
+test('the chain section is the purple pass, in both themes', async ({ page }) => {
   await page.goto('/miners');
   const plate = page.getByRole('region', { name: 'Miners on chain' });
-  await expect(plate).toContainText('Miners on chain');
-  await expect(plate.getByRole('list', { name: 'Miners on chain' })).toBeVisible();
+  await expect(plate.getByRole('table', { name: 'Miners on chain' })).toBeVisible();
   await expect(plate).toHaveCSS('background-color', 'rgb(75, 68, 200)'); // Zils purple #4b44c8
-  // The plate's own words (label, block line) are white at some alpha, never the page's ink.
-  const colors = await plate.locator(':scope > div:first-child span, :scope > div > p, :scope > div > p span').evaluateAll(els => [...new Set(els.map(e => getComputedStyle(e).color))]);
+  // The plate's own words (the block line) are white at some alpha, never the page's ink.
+  const colors = await plate.locator(':scope > div > p, :scope > div > p span').evaluateAll(els => [...new Set(els.map(e => getComputedStyle(e).color))]);
   expect(colors.length).toBeGreaterThan(0);
   for (const c of colors) expect(c).toMatch(/^rgba?\(255, 255, 255/);
   await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
