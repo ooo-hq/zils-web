@@ -75,6 +75,8 @@ function Bars({ compare }: { compare: Compare }) {
 export default async function MinersPage() {
   const [soup, chain] = await Promise.all([soupBoard(), networkBodies()]);
   const views = new Map((soup?.tiers ?? []).map(t => [t.tier, tierView(t)]));
+  // Launch state: the chain view is live and no miner has committed a body, so every bowl is house models only.
+  const noMinerBodies = chain !== null && !chain.miners.some(m => m.body);
   return (
     <SiteFrame current="miners">
       <Refresh />
@@ -93,6 +95,7 @@ export default async function MinersPage() {
       <section aria-labelledby="tonight-heading" className={b.tiers}>
         <h2 id="tonight-heading" className="sr-only">Tonight’s soup</h2>
         {!soup && <p className={b.down}>Tonight’s rounds are unavailable right now. Each tier shows its pot of house models until the feed returns.</p>}
+        {noMinerBodies && <p className={b.down}>No soup for you yet. No miner has committed a body on subnet {chain.netuid}, so tonight’s soups are house models only, and house models are never paid. Every tier’s share burns until the first miner body earns a seat. <Link href="/soup">Bring a body to the soup</Link>.</p>}
         {TIER_NAMES.map(tier => <TierSoup key={tier} tier={tier} view={views.get(tier) ?? null} feed={Boolean(soup)} />)}
         <p className={b.fine}>Seats and the crown are decided on the items of the last three rounds together, because one night’s slice of the private exam is noisier than the greedy margin. The score is tonight’s slice alone, so small moves between rounds are partly noise. Each part’s number is what the soup loses without it, rounded to 0.5 point.</p>
       </section>
