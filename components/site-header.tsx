@@ -3,9 +3,10 @@ import { ZilsWordmark } from '@/components/zils-wordmark';
 import { ThemeToggle } from '@/components/theme';
 import { MobileMenu } from '@/components/mobile-menu';
 import { AccountMenu } from '@/components/account-menu';
+import { docsUrl } from '@/lib/shared';
 import css from '@/components/site-header.module.css';
 
-export type NavId = 'examples' | 'z3' | 'soup' | 'merge' | 'model' | 'miners' | 'pricing';
+export type NavId = 'examples' | 'z3' | 'soup' | 'merge' | 'model' | 'miners' | 'pricing' | 'docs' | 'contact';
 
 const LINKS = [
   { href: '/z3', label: 'Z3', id: 'z3' },
@@ -13,8 +14,9 @@ const LINKS = [
   { href: '/soup', label: 'Soup', id: 'soup' },
   { href: '/merge', label: 'Merge', id: 'merge' },
   { href: '/miners', label: 'Miners', id: 'miners' },
-  { href: '/model', label: 'Research', id: 'model' },
   { href: '/pricing', label: 'Pricing', id: 'pricing' },
+  { href: docsUrl, label: 'Docs', id: 'docs' },
+  { href: '/contact', label: 'Contact', id: 'contact' },
 ] as const;
 
 /**

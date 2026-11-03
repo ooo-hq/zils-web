@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
-  return <SiteFrame>
+  return <SiteFrame current="contact">
     <SectionRow n="01" label="Contact" />
     <div className={css.fpSplit}>
       <div>

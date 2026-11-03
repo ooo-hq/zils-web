@@ -12,11 +12,8 @@ const LINK_GROUPS = [
     { href: '/early-access', label: 'Early access' },
   ] },
   { label: 'Explore', links: [
-    { href: '/z3', label: 'Z3' },
     { href: '/model', label: 'Research' },
     { href: '/miners', label: 'Miners' },
-    { href: '/bases', label: 'Bases' },
-    { href: '/roadmap', label: 'Roadmap' },
     { href: 'https://github.com/ooo-hq/zils', label: 'Model source' },
   ] },
   { label: 'Keep in touch', links: [

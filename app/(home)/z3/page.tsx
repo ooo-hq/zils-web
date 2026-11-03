@@ -115,7 +115,7 @@ export default function Z3Page() {
         </div>
         <Ingredients />
       </div>
-      <div className={s.links}><Link href="/soup">How the soup is made</Link><Link href="/bases">Explore the base history</Link><Link href="/model">Read the research</Link></div>
+      <div className={s.links}><Link href="/soup">How the soup is made</Link><Link href="/miners">See the miners</Link><Link href="/model">Read the research</Link></div>
     </section>
   </SiteFrame>;
 }

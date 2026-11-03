@@ -157,7 +157,6 @@ export default async function MinersPage() {
         <a href={DOCS}>Miner guide</a>
         <Link href="/soup">The soup</Link>
         <Link href="/model#base-tier">Base tier rules</Link>
-        <Link href="/bases">Base lineage</Link>
         <a href="/model/testnet-round-001.json">Public chain view</a>
       </div>
     </SiteFrame>

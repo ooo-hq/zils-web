@@ -215,7 +215,7 @@ export default function ModelPage() {
               <p><strong className="font-medium text-ink">Every tier is a soup.</strong> Miners commit full bodies and validators build a nightly greedy soup of up to five per tier, starting from that tier’s open house models; the soup replaces the base only through the release gate above. See <Link href="/soup" className={LINK}>the soup</Link>.</p>
               <p className="mt-3">Round one’s sealed holdout has 1,458 teacher-authored cases in six families. The incumbent, stock H2O Lightning 4B v1.2.3, scores Brier 0.184 and 87.7% accuracy on it. d3-mini’s confirmation draw did not confirm a winner, but d3-mini became the base by decision on 17 October (see below), so both channels now point at it and stock d3-mini is the incumbent for round two.</p>
             </div>
-            <p className="mt-6 text-sm leading-7 text-muted">Want to compete? Read the <a href={DOCS} className={LINK}>miner guide</a> in the Zils docs. For every attempt so far, in order, see the <Link href="/miners" className={LINK}>miners page</Link>; for how the bases have changed, see <Link href="/bases" className={LINK}>bases</Link>.</p>
+            <p className="mt-6 text-sm leading-7 text-muted">Want to compete? Read the <a href={DOCS} className={LINK}>miner guide</a> in the Zils docs. For every attempt so far, in order, see the <Link href="/miners" className={LINK}>miners page</Link>.</p>
           </Section>
 
           <Section id="model-merging" label="Model merging" eyebrow="Model merging · published research" title="Why averaging fine-tunes works, and where it may not.">
