@@ -91,6 +91,11 @@ test('/soup states the crown bar, house rates and house models without internal 
   await expect(rates.getByRole('row', { name: /Scout/ })).toContainText('known-public list');
   await expect(mix).toContainText('listed public models');
   await expect(rates.getByRole('row', { name: /Trainer/ })).toContainText('beat what they started from by at least 1.2');
+  // Scouting is a role, not only a discount: any eligible open fine-tune can be committed by its finder,
+  // and a find that is not on the list pays the trainer rate.
+  await expect(rates.getByRole('row', { name: /Scout/ })).toContainText('not on the list');
+  await expect(page.getByRole('region', { name: 'House rules' })).toContainText('whoever finds it first');
+  await expect(page.getByRole('region', { name: 'House rules' }).getByRole('img', { name: 'New: scouts welcome' })).toBeVisible();
   await expect(page.locator('main')).not.toContainText('released after launch');
   // zils#150: seats and the crown are decided on the last 3 rounds' items together, not one fresh slice.
   const steps = page.getByRole('list', { name: 'How a soup is made' }).getByRole('listitem');

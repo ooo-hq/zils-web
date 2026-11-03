@@ -8,6 +8,7 @@ import { Reveal } from '@/components/site/reveal';
 import { Bowl, SEATS } from './bowl';
 import { Ingredients } from './ingredients';
 import { FoodIcon, type Food } from './food-icons';
+import { ScoutSticker } from './scout-sticker';
 import s from './soup.module.css';
 
 export const metadata: Metadata = {
@@ -37,7 +38,7 @@ const BILL = [
 
 const RATES = [
   ['Trainer', '1×', 'You trained the body, well away from every listed public model. Fine-tunes of a house model, the soup or a release count; at launch their seats pay only if they beat what they started from by at least 1.2 points.'],
-  ['Scout', '0.25×', 'A public decision model on the tier’s known-public list, re-uploaded as is or lightly changed by the first miner to commit it. Fine-tunes of a listed model also pay 0.25× at launch.'],
+  ['Scout', '0.25× to 1×', 'An open model you found and committed first. One on the tier’s known-public list, re-uploaded as is or lightly changed, pays 0.25×, as do fine-tunes of a listed model at launch. A find that is not on the list and well away from every listed model pays the full trainer rate.'],
   ['House mix', '0.25×', 'A body that is almost entirely a blend of house models and listed public models, or of these with the soup and the release, with less than 5% of its own change.'],
   ['House model', '0', 'The open models each tier’s soup starts from. They cook; they are not paid.'],
 ] as const;
@@ -48,6 +49,7 @@ const RULES = [
   <>Move at most about 15% away from Qwen.</>,
   <>Apache-2.0, MIT or BSD licence.</>,
   <>Your repo names your hotkey in <code>zils-owner.json</code>. The first valid commitment of a body wins it.</>,
+  <>Scouts welcome. Any open fine-tune that passes these rules can be committed by whoever finds it first, listed or not. The known-public list only marks the models validators already know about; it is not the limit of what you can bring.</>,
   <>No reheats: near-exact re-uploads, bodies built largely from other miners’ bodies, and models that answer like a pool body are turned away.</>,
   <>Up to 20 bodies compete for the five seats each round. At most 6 new bodies are admitted per round, in commitment order. Flash and z3 take fewer.</>,
   <>Upload to a private repo, commit, then make it public before the day’s commit deadline, so nobody can commit your body first.</>,
@@ -113,7 +115,8 @@ export default function SoupPage() {
     </section>
 
     <SectionRow n="05" label="House rules" note="店のルール" />
-    <section className={s.section} aria-label="House rules">
+    <section className={`${s.section} ${s.house}`} aria-label="House rules">
+      <ScoutSticker />
       <ul className={s.rules}>{RULES.map((rule, i) => <li key={i}>{rule}</li>)}</ul>
     </section>
 
