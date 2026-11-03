@@ -34,7 +34,6 @@ export default function MergePage() {
       </section>
 
       <div className={m.more}>
-        <Link href="/bases">Bases</Link>
         <Link href="/miners">Compete for a base</Link>
       </div>
     </SiteFrame>

@@ -13,7 +13,6 @@ const LINKS = [
   { href: '/soup', label: 'Soup', id: 'soup' },
   { href: '/merge', label: 'Merge', id: 'merge' },
   { href: '/miners', label: 'Miners', id: 'miners' },
-  { href: '/model', label: 'Research', id: 'model' },
   { href: '/pricing', label: 'Pricing', id: 'pricing' },
 ] as const;
 

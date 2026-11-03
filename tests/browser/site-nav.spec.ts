@@ -29,13 +29,17 @@ test('signed in: centered nav, Account menu replaces Early access', async ({ pag
   expect(await centered(page)).toBeLessThanOrEqual(2);
 });
 
-test('no Bittensor link; current page is marked', async ({ page }) => {
-  await page.goto('/model');
+test('no Bittensor link; current page is marked; Research lives in the footer', async ({ page }) => {
+  await page.goto('/pricing');
   await expect(page.locator('header, footer').getByRole('link', { name: /bittensor/i })).toHaveCount(0);
   const nav = page.getByRole('navigation', { name: 'Main navigation' });
-  await expect(nav.getByRole('link')).toHaveText(['Z3', 'Examples', 'Soup', 'Merge', 'Miners', 'Research', 'Pricing']);
-  await expect(nav.getByRole('link', { name: 'Research' })).toHaveAttribute('aria-current', 'page');
+  await expect(nav.getByRole('link')).toHaveText(['Z3', 'Examples', 'Soup', 'Merge', 'Miners', 'Pricing']);
+  await expect(nav.getByRole('link', { name: 'Pricing' })).toHaveAttribute('aria-current', 'page');
   await expect(nav.locator('[aria-current]')).toHaveCount(1);
+  await expect(nav.getByRole('link', { name: 'Research' })).toHaveCount(0);
+  const footer = page.getByRole('navigation', { name: 'Footer' });
+  await expect(footer.getByRole('link', { name: 'Research', exact: true })).toHaveAttribute('href', '/model');
+  for (const name of ['Z3', 'Bases', 'Roadmap']) await expect(footer.getByRole('link', { name, exact: true })).toHaveCount(0);
 });
 
 test('/soup and /merge are in the header and mark themselves current', async ({ page }) => {
@@ -72,14 +76,14 @@ test.describe('mobile menu', () => {
     await menu.click();
     await expect(menu).toHaveAttribute('aria-expanded', 'true');
     const panel = page.getByRole('group', { name: 'Site menu' });
-    await expect(panel.getByRole('link')).toHaveText(['Z3', 'Examples', 'Soup', 'Merge', 'Miners', 'Research', 'Pricing', 'Sign in']);
+    await expect(panel.getByRole('link')).toHaveText(['Z3', 'Examples', 'Soup', 'Merge', 'Miners', 'Pricing', 'Sign in']);
     await expect(panel.getByRole('link', { name: 'Pricing' })).toHaveAttribute('aria-current', 'page');
     await page.keyboard.press('Escape');
     await expect(panel).toHaveCount(0);
     await expect(menu).toBeFocused();
     await menu.click();
-    await page.getByRole('group', { name: 'Site menu' }).getByRole('link', { name: 'Research' }).click();
-    await expect(page).toHaveURL(/\/model$/);
+    await page.getByRole('group', { name: 'Site menu' }).getByRole('link', { name: 'Miners' }).click();
+    await expect(page).toHaveURL(/\/miners$/);
     await expect(page.getByRole('group', { name: 'Site menu' })).toHaveCount(0);
   });
   test('outside click closes it', async ({ page }) => {
