@@ -92,11 +92,15 @@
 .plate .fine { padding-left: 0; padding-right: 0; }
 .plate .fine span { color: #fff; }
 
-/* Closed soups wear a sticker slapped across the empty bar. */
+/* Closed soups wear a sticker slapped across the empty bar: a die-cut orange label with a paper edge, the ink on it
+   switching with the theme's orange so it stays readable, and a sold-out line under the words. */
 .potBar { position: relative; }
-.sticker { position: absolute; right: 28px; top: 50%; transform: translateY(-50%) rotate(-3deg); padding: 7px 14px 8px; border: 1.5px solid var(--zs-orange); border-radius: 3px;
-  background: var(--zs-panel); color: var(--zs-orange); font-size: 19px; font-weight: 400; letter-spacing: -0.01em; line-height: 1; white-space: nowrap;
-  box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+.sticker { --ink: #1c1a26; position: absolute; right: 26px; top: 50%; display: grid; justify-items: center; gap: 3px; padding: 9px 18px 10px;
+  transform: translateY(-50%) rotate(-5deg); background: var(--zs-orange); color: var(--ink); border: 3px solid #faf9fc;
+  border-radius: 14px 8px 16px 7px / 8px 14px 7px 16px; box-shadow: 0 1px 0 rgba(0,0,0,.25), 0 6px 14px -4px rgba(0,0,0,.5); white-space: nowrap; }
+.sticker b { font-weight: 500; font-size: 19px; letter-spacing: -0.015em; line-height: 1; }
+.sticker small { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .18em; line-height: 1; opacity: .85; }
+:global([data-theme=light]) .sticker { --ink: #faf9fc; }
 
 /* How miners earn */
 .earn { display: grid; gap: 22px; padding: 36px 40px 40px; }
@@ -110,7 +114,9 @@
   .tier { padding: 26px 4px; }
   .down, .fine, .earn { padding-left: 4px; padding-right: 4px; }
   .pass { padding-left: 4px; padding-right: 4px; }
-  .sticker { right: 12px; font-size: 15px; padding: 5px 10px 6px; }
+  .sticker { right: 10px; padding: 6px 12px 7px; border-width: 2px; }
+  .sticker b { font-size: 15px; }
+  .sticker small { font-size: 9px; }
 }
 @media (max-width: 699px) {
   .head { grid-template-columns: 1fr; gap: 6px; }

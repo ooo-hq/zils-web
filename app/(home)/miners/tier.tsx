@@ -47,7 +47,7 @@ function Pot({ tier, note, closed }: { tier: Tier; note: string | null; closed: 
       <div className={s.bar} role="img" aria-label={`${tier} has not cooked tonight. In the pot: ${house.map(h => h.name).join(', ')}`}>
         {house.map(h => <span key={h.name} className={s.part} data-part="pot" />)}
       </div>
-      {closed && <span className={s.sticker}>No soup for you!</span>}
+      {closed && <span className={s.sticker}><b>No soup for you!</b><small lang="ja">売り切れ</small></span>}
     </div>
     {note && <p className={s.note}>{note}</p>}
     <ul className={s.pot} aria-label="In the pot" data-contrast>
