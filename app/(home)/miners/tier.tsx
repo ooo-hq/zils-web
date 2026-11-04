@@ -58,7 +58,18 @@ function Pot({ tier, note, closed }: { tier: Tier; note: string | null; closed: 
 
 /** A tier: what serves it, tonight's soup score and parts, or its pot of house models before it cooks.
  *  `view` is null when the soup feed is down (`feed` false) or does not list the tier. */
-export function TierSoup({ tier, view, feed }: { tier: Tier; view: TierView | null; feed: boolean }) {
+/** The bodies a tier still has to grade and when its next round freezes them. */
+function Queue({ queue }: { queue: { waiting: number; freezes: string | null } }) {
+  if (!queue.freezes) return null;
+  const at = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', timeZoneName: 'short' }).format(new Date(queue.freezes));
+  const utc = queue.freezes.slice(11, 16);
+  return <p className={s.queue}>
+    {queue.waiting === 0 ? 'No bodies waiting.' : <><b>{queue.waiting}</b> {queue.waiting === 1 ? 'body' : 'bodies'} waiting.</>}
+    {' '}The next round freezes its bodies at {at} ({utc} UTC) and grades them in the hours after.
+  </p>;
+}
+
+export function TierSoup({ tier, view, feed, queue }: { tier: Tier; view: TierView | null; feed: boolean; queue?: { waiting: number; freezes: string | null } }) {
   const later = 'later' in TIERS[tier];
   const base = TIERS[tier].base;
   const tonight = view?.tonight ?? null;
@@ -85,5 +96,6 @@ export function TierSoup({ tier, view, feed }: { tier: Tier; view: TierView | nu
         {view.decision && ` Seats decided on ${view.decision.rounds} ${view.decision.rounds === 1 ? 'round' : 'rounds'}, ${view.decision.items.toLocaleString('en-US')} items.`}
       </p>
     </> : <Pot tier={tier} note={note} closed={later} />}
+    {queue && !later && <Queue queue={queue} />}
   </article>;
 }
