@@ -5,7 +5,8 @@ import s from './board.module.css';
 
 const STANDING: Record<Standing, string> = {
   crown: 'Crown', seat: 'Paid seat', unpaid: 'In the soup, unpaid', out: 'Not in tonight’s soup',
-  waiting: 'Waiting for the first round', unknown: '—', none: 'No body committed',
+  pending: 'Committed after the deadline, graded in the next round', waiting: 'Waiting for the first round',
+  unknown: '—', none: 'No body committed',
 };
 const short = (hotkey: string) => `${hotkey.slice(0, 6)}…${hotkey.slice(-4)}`;
 
@@ -26,6 +27,6 @@ export function ChainTable({ chain, rows }: { chain: NetworkBodies; rows: MinerR
         </tr>)}</tbody>
       </table>
     </div> : <p className={s.empty}>No miner has committed a body yet. <Link href="/soup">Bring a body to the soup</Link></p>}
-    <p className={s.fine}><span>Block {chain.block.toLocaleString('en-US')}</span> on subnet {chain.netuid}. Bodies come from chain commitments; a miner may hold one per hotkey. An announced endpoint means the miner can serve; Zils does not send traffic to miners yet.</p>
+    <p className={s.fine}><span>Block {chain.block.toLocaleString('en-US')}</span> on subnet {chain.netuid}. Bodies come from chain commitments; a miner may hold one per hotkey. Each round freezes its bodies at 00:00 UTC (7 PM New York); a body committed later waits for the next round. An announced endpoint means the miner can serve; Zils does not send traffic to miners yet.</p>
   </div>;
 }
