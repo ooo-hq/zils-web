@@ -4,7 +4,7 @@ import { SiteFrame } from '@/components/site/site-frame';
 import { SectionRow } from '@/components/site/section-row';
 import { DetailsRow } from '@/components/site/details-row';
 import { InstallCommand } from '@/components/site/install-command';
-import { networkBodies, minerRows } from '@/lib/network-bodies';
+import { networkBodies, minerRows, tierQueue } from '@/lib/network-bodies';
 import { soupBoard, tierView } from '@/lib/soup-board';
 import { TIER_NAMES } from '@/lib/soup-tiers';
 import { Rehearsal } from './rehearsal';
@@ -75,6 +75,8 @@ function Bars({ compare }: { compare: Compare }) {
 export default async function MinersPage() {
   const [soup, chain] = await Promise.all([soupBoard(), networkBodies()]);
   const views = new Map((soup?.tiers ?? []).map(t => [t.tier, tierView(t)]));
+  const rows = chain ? minerRows(chain, soup) : null;
+  const queues = new Map((soup?.tiers ?? []).map(t => [t.tier, rows ? tierQueue(t.pool, rows) : null]));
   // Launch state: the chain view is live and no miner has committed a body, so every bowl is house models only.
   const noMinerBodies = chain !== null && !chain.miners.some(m => m.body);
   return (
@@ -96,13 +98,13 @@ export default async function MinersPage() {
         <h2 id="tonight-heading" className="sr-only">Tonight’s soup</h2>
         {!soup && <p className={b.down}>Tonight’s rounds are unavailable right now. Each tier shows its pot of house models until the feed returns.</p>}
         {noMinerBodies && <p className={b.down}>No soup for you yet. No miner has committed a body on subnet {chain.netuid}, so tonight’s soups are house models only, and house models are never paid. Every tier’s share burns until the first miner body earns a seat. <Link href="/soup">Bring a body to the soup</Link>.</p>}
-        {TIER_NAMES.map(tier => <TierSoup key={tier} tier={tier} view={views.get(tier) ?? null} feed={Boolean(soup)} />)}
+        {TIER_NAMES.map(tier => <TierSoup key={tier} tier={tier} view={views.get(tier) ?? null} feed={Boolean(soup)} queue={queues.get(tier) ?? undefined} />)}
         <p className={b.fine}>Seats and the crown are decided on the items of the last three rounds together, because one night’s slice of the private exam is noisier than the greedy margin. The score is tonight’s slice alone, so small moves between rounds are partly noise. Each part’s number is what the soup loses without it, rounded to 0.5 point.</p>
       </section>
 
       <SectionRow n="02" label="Miners on chain" note={chain ? `Subnet ${chain.netuid}` : undefined} />
       <section aria-label="Miners on chain" className={b.plate}>
-        {chain ? <ChainTable chain={chain} rows={minerRows(chain, soup)} /> : <p className={b.down}>The chain view is unavailable right now.</p>}
+        {chain && rows ? <ChainTable chain={chain} rows={rows} /> : <p className={b.down}>The chain view is unavailable right now.</p>}
       </section>
 
       <SectionRow n="03" label="How miners earn" note="お品書き" />

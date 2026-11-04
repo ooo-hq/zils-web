@@ -53,6 +53,8 @@
 
 .note { margin: 0; max-width: 78ch; font-size: 13.5px; line-height: 1.6; color: var(--zs-t2); }
 .note b { font-weight: 400; color: var(--zs-fg); }
+.queue { margin: 0; max-width: 78ch; font-size: 13.5px; line-height: 1.6; color: var(--zs-t2); }
+.queue b { font-weight: 500; color: var(--zs-fg); }
 .pot { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 13px; }
 .pot a { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; }
 .pot span { color: var(--zs-t2); }
