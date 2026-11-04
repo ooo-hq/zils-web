@@ -29,3 +29,18 @@ test('at 930px the empty index column is gone and nothing overflows', async ({ p
   expect(box.x).toBeLessThanOrEqual(main.x + 1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test('privacy and terms commit to not storing paid real-time text requests', async ({ page }) => {
+  await page.goto('/privacy');
+  const kept = page.locator('#what-we-keep-from-model-requests');
+  await expect(kept).toContainText('we do not store what you send or the predictions we return');
+  await expect(kept).toContainText('token counts');
+  await expect(kept).toContainText('seven days');
+  await expect(kept.getByRole('link', { name: 'free tier terms' })).toHaveAttribute('href', '/free-tier-terms');
+  await expect(page.getByText('Updated 4 November 2026')).toBeVisible();
+  await page.goto('/terms');
+  const data = page.locator('#your-request-data');
+  await expect(data).toContainText('does not store the content of the request or the predictions it returns');
+  await expect(data.getByRole('link', { name: 'privacy policy' })).toHaveAttribute('href', '/privacy#what-we-keep-from-model-requests');
+  await expect(page.getByText('Updated 4 November 2026')).toBeVisible();
+});
