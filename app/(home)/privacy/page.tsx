@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <PolicyPage title="Privacy policy." updated="9 October 2026">
+    <PolicyPage title="Privacy policy." updated="4 November 2026">
       <p>This notice describes information handled by the Zils website and its decision-model services, including sign-in, training, model requests, and support.</p>
 
       <PolicySection title="Accounts and browser storage">
@@ -33,6 +33,14 @@ export default function PrivacyPage() {
         <p>Running the playground or calling the model API sends your supplied context and questions to the model service to produce predictions. These requests are processed on servers, rather than only in your browser. Use information you are authorized to send, and avoid sensitive data in public examples.</p>
         <p>When the setup assistant is connected, requesting suggestions sends your description, follow-up conversation, and any question draft being revised to its configured AI provider. This is separate from running a prediction or submitting training data. Choosing and editing a built-in starter does not call the assistant.</p>
         <p>Optional voice entry uses your browser’s speech recognition service, which may process audio remotely. It starts only when you choose Speak your goal. The transcript appears for you to review before requesting suggestions.</p>
+      </PolicySection>
+
+      <PolicySection title="What we keep from model requests">
+        <p>When you call the model API in real time with text on a paid account, we do not store what you send or the predictions we return. Your context and questions are held in memory to produce the answer and are discarded when the response is sent. They are not written to logs, databases, or backups, and they are not used to train models.</p>
+        <p>For each request we record the time, your account, token counts, and whether it succeeded. We use these records for billing, limits, and usage reports.</p>
+        <p>Other ways of calling the service do store data. Bulk jobs keep their inputs and results for seven days after the job ends so you can download them, and database backups can hold a copy for up to seven more days. Uploaded images are kept for 24 hours for a prediction and for 30 days after a training run ends.</p>
+        <p>Requests on the free tier are covered by the <Link href="/free-tier-terms">free tier terms</Link>, which allow requests and answers to be stored to train models.</p>
+        <p>Paid real-time requests are answered on servers that Zils operates. The hosting infrastructure in front of them may process technical records such as IP addresses and request times, as described under service providers below.</p>
       </PolicySection>
 
       <PolicySection title="Website analytics">

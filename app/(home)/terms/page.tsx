@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <PolicyPage title="Terms of use.">
+    <PolicyPage title="Terms of use." updated="4 November 2026">
       <p>These terms apply to zils.ai and the Zils decision-model services. By using these services, you agree to these terms.</p>
 
       <PolicySection title="An experimental service">
@@ -24,6 +24,11 @@ export default function TermsPage() {
       <PolicySection title="Your training submissions">
         <p>Submit only information you have the right to use and share for training and evaluation. You authorize Zils to process your submitted data, job settings, and resulting artifacts to carry out the requested run and provide its results.</p>
         <p>Training submission separately requires your permission to export learning data to assigned, approved workers. Their operators can read and retain it. This is not confidential compute. Canceling a run cannot erase copies already downloaded or immediately terminate remote processing. The <Link href="/privacy">privacy policy</Link> explains the current data-handling workflow.</p>
+      </PolicySection>
+
+      <PolicySection title="Your request data">
+        <p>For real-time text requests on a paid account, Zils does not store the content of the request or the predictions it returns once the response is sent, and does not use them to train models.</p>
+        <p>Zils keeps usage records such as the time, account, and token counts. Bulk jobs, image uploads, training submissions, and the free tier store data as the <Link href="/privacy#what-we-keep-from-model-requests">privacy policy</Link> describes.</p>
       </PolicySection>
 
       <PolicySection title="Using model outputs">
