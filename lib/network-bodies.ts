@@ -29,18 +29,21 @@ export type NetworkBodies = z.infer<typeof networkBodiesSchema>;
 export type Standing = 'crown' | 'seat' | 'unpaid' | 'out' | 'pending' | 'waiting' | 'unknown' | 'none';
 
 type Rounds = Pick<SoupBoard['tiers'][number], 'pool' | 'rounds'>[];
-type Round = Pick<SoupBoard['tiers'][number]['rounds'][number], 'round_id' | 'members' | 'crown'>;
+type Round = Pick<SoupBoard['tiers'][number]['rounds'][number], 'round_id' | 'pool_id' | 'members' | 'crown'>;
 
 // A round freezes its bodies at the first block after its day's commit deadline (zils/soup_pool.py `due`,
-// `seed_block`); its id ends in that day, and the live pools' deadline is 00:00 UTC (`schedule.deadline_utc`).
-// The feed gives a commitment's block, not its time, so the time is estimated from the chain head at 12 s a
-// block. Only a commit clearly after the deadline counts: within this margin the estimate cannot tell.
+// `seed_block`); its id ends in that day. Each pool's deadline hour is `schedule.deadline_utc` in
+// zils/data/base-pools-launch.json (pools are staggered so one card grades them in turn). The feed gives a
+// commitment's block, not its time, so the time is estimated from the chain head at 12 s a block. Only a
+// commit clearly after the deadline counts: within this margin the estimate cannot tell.
+const DEADLINE_UTC: Record<string, string> = { 'd3-lite': '06:00', 'd3-mini': '00:00', 'd3-flash': '12:00', 'd3': '18:00' };
 const BLOCK_SECONDS = 12;
 const DEADLINE_MARGIN_MS = 30 * 60_000;
 
 function deadline(round: Round) {
   const day = /(\d{4}-\d{2}-\d{2})$/.exec(round.round_id)?.[1];
-  return day ? Date.parse(`${day}T00:00:00Z`) : NaN;
+  const hour = DEADLINE_UTC[round.pool_id];
+  return day && hour ? Date.parse(`${day}T${hour}:00Z`) : NaN;
 }
 
 function committedAfter(round: Round, chain: Pick<NetworkBodies, 'block' | 'as_of'>, block: number) {
