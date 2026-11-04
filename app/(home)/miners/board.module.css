@@ -101,7 +101,7 @@
   transform: translateY(-50%) rotate(-5deg); background: var(--zs-orange); color: var(--ink); border: 3px solid #faf9fc;
   border-radius: 14px 8px 16px 7px / 8px 14px 7px 16px; box-shadow: 0 1px 0 rgba(0,0,0,.25), 0 6px 14px -4px rgba(0,0,0,.5); white-space: nowrap; }
 .sticker b { font-weight: 500; font-size: 19px; letter-spacing: -0.015em; line-height: 1; }
-.sticker small { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .18em; line-height: 1; opacity: .85; }
+.sticker small { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .18em; line-height: 1; }
 :global([data-theme=light]) .sticker { --ink: #faf9fc; }
 
 /* How miners earn */
