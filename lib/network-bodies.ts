@@ -24,19 +24,38 @@ export type NetworkBodies = z.infer<typeof networkBodiesSchema>;
 
 /** Where a miner's body stands in tonight's soup of its tier.
  *  crown/seat: in the soup and paid; unpaid: in the soup, not paid (a scout or a body that did not lift it enough);
- *  out: the tier cooked without it; waiting: the tier has not cooked yet; unknown: no soup feed; none: no body. */
-export type Standing = 'crown' | 'seat' | 'unpaid' | 'out' | 'waiting' | 'unknown' | 'none';
+ *  out: the tier cooked without it; pending: committed after tonight's deadline, so the next round grades it;
+ *  waiting: the tier has not cooked yet; unknown: no soup feed; none: no body. */
+export type Standing = 'crown' | 'seat' | 'unpaid' | 'out' | 'pending' | 'waiting' | 'unknown' | 'none';
 
 type Rounds = Pick<SoupBoard['tiers'][number], 'pool' | 'rounds'>[];
-type Round = Pick<SoupBoard['tiers'][number]['rounds'][number], 'members' | 'crown'>;
+type Round = Pick<SoupBoard['tiers'][number]['rounds'][number], 'round_id' | 'members' | 'crown'>;
 
-function standing(sha: string, pool: string, tiers: { pool: string; rounds: Round[] }[] | null): Standing {
+// A round freezes its bodies at the first block after its day's commit deadline (zils/soup_pool.py `due`,
+// `seed_block`); its id ends in that day, and the live pools' deadline is 00:00 UTC (`schedule.deadline_utc`).
+// The feed gives a commitment's block, not its time, so the time is estimated from the chain head at 12 s a
+// block. Only a commit clearly after the deadline counts: within this margin the estimate cannot tell.
+const BLOCK_SECONDS = 12;
+const DEADLINE_MARGIN_MS = 30 * 60_000;
+
+function deadline(round: Round) {
+  const day = /(\d{4}-\d{2}-\d{2})$/.exec(round.round_id)?.[1];
+  return day ? Date.parse(`${day}T00:00:00Z`) : NaN;
+}
+
+function committedAfter(round: Round, chain: Pick<NetworkBodies, 'block' | 'as_of'>, block: number) {
+  const committed = Date.parse(chain.as_of) - (chain.block - block) * BLOCK_SECONDS * 1000;
+  return committed > deadline(round) + DEADLINE_MARGIN_MS;
+}
+
+function standing(body: NonNullable<NetworkBodies['miners'][number]['body']>, chain: Pick<NetworkBodies, 'block' | 'as_of'>, tiers: { pool: string; rounds: Round[] }[] | null): Standing {
   if (!tiers) return 'unknown';
-  const tonight = tiers.find(t => t.pool === pool)?.rounds[0];
+  const tonight = tiers.find(t => t.pool === body.pool)?.rounds[0];
   if (!tonight) return 'waiting';
-  if (tonight.crown?.body_sha256 === sha) return 'crown';
-  const seat = tonight.members.find(m => m.body_sha256 === sha);
-  return !seat ? 'out' : seat.seat_weight > 0 ? 'seat' : 'unpaid';
+  if (tonight.crown?.body_sha256 === body.sha256) return 'crown';
+  const seat = tonight.members.find(m => m.body_sha256 === body.sha256);
+  if (seat) return seat.seat_weight > 0 ? 'seat' : 'unpaid';
+  return committedAfter(tonight, chain, body.block) ? 'pending' : 'out';
 }
 
 /** One row per uid: its chain facts, its tier, and where its body stands in tonight's soup. */
@@ -44,7 +63,7 @@ export function minerRows(chain: NetworkBodies, soup: { tiers: { pool: string; r
   return chain.miners.map(m => ({
     uid: m.uid, hotkey: m.hotkey, serving: m.serving, body: m.body,
     tier: m.body ? poolTier(m.body.pool) : null as Tier | null,
-    standing: m.body ? standing(m.body.sha256, m.body.pool, soup?.tiers ?? null) : 'none' as Standing,
+    standing: m.body ? standing(m.body, chain, soup?.tiers ?? null) : 'none' as Standing,
   }));
 }
 export type MinerRow = ReturnType<typeof minerRows>[number];

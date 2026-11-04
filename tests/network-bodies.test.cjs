@@ -13,7 +13,7 @@ const valid = () => ({
     { uid: 9, hotkey: '5ServeOnly', body: null, serving: true },
   ],
 });
-const round = (members, crown = null) => ({ members, crown });
+const round = (members, crown = null, round_id = 'd3-mini-2026-11-04', finished_at = '2026-11-04T02:34:00Z') => ({ round_id, finished_at, members, crown });
 const soup = {
   tiers: [
     { pool: 'd3-mini', tier: 'z3-mini', rounds: [round([
@@ -42,6 +42,21 @@ test('each miner row says its tier and where its body stands in tonight’s soup
     [7, 'z3-lite', 'waiting', false],
     [9, null, 'none', true],
   ]);
+});
+
+test('a body committed after tonight’s deadline is pending, not out', () => {
+  // Mainnet 4 Nov 2026: the lite round d3-lite-2026-11-04 froze bodies at 00:00 UTC; chain head 9,433,301 at 14:43 UTC.
+  // uid 80 committed at block 9,428,404 (the evening before) and was graded; uid 90 committed at 9,431,812 (about
+  // 09:45 UTC, ten hours after the deadline) and waits for the next round. Both are absent from the soup.
+  const chain = { ...valid(), block: 9433301, as_of: '2026-11-04T14:43:09Z', miners: [
+    { uid: 80, hotkey: '5Early', body: { ...body('d3-lite', 'e'), block: 9428404 }, serving: false },
+    { uid: 90, hotkey: '5Late', body: { ...body('d3-lite', 'f'), block: 9431812 }, serving: false },
+    { uid: 91, hotkey: '5Edge', body: { ...body('d3-lite', 'g'), block: 9428990 }, serving: false },  // ~20 min after: too close to call
+  ] };
+  const lite = { tiers: [{ pool: 'd3-lite', tier: 'z3-lite', rounds: [round([
+    { hotkey: null, body_sha256: 'a'.repeat(64), rate: 0, seat_weight: 0, contribution: 2 },
+  ], null, 'd3-lite-2026-11-04', '2026-11-04T16:50:00Z')] }] };
+  assert.deepEqual(minerRows(chain, lite).map(r => [r.uid, r.standing]), [[80, 'out'], [90, 'pending'], [91, 'out']]);
 });
 
 test('without a soup feed, rows still show chain facts but claim no standing', () => {
