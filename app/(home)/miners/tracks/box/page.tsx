@@ -75,7 +75,7 @@ export default function BoxTrackPage() {
       <header className={m.hero}>
         <p className={s.crumb}><Link href="/miners">Miners</Link> / Feature tracks</p>
         <h1><span className={s.target}>Boxes<span className={s.lock} aria-hidden="true"><i /><i /><i /><i /><b>0.97</b></span></span></h1>
-        <p>Teach a model to point at a named shape, or say it is absent. <b>Synthetic-only pilot on Bittensor subnet 127; it pays nothing until a feature share is configured.</b> Mini and lite compete separately on newly generated private pilot images. This pilot does not establish real-world box quality.</p>
+        <p>Teach a model to point at a named shape, or say it is absent. <b>Synthetic-only pilot on subnet 127; it pays nothing until a feature share is configured.</b> Mini and lite compete separately on newly generated private pilot images. This pilot does not establish real-world box quality.</p>
       </header>
 
       <dl className={m.nums}>
