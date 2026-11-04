@@ -70,6 +70,19 @@ export function minerRows(chain: NetworkBodies, soup: { tiers: { pool: string; r
   }));
 }
 export type MinerRow = ReturnType<typeof minerRows>[number];
+
+/** What a tier's card says about the bodies still to be graded: how many wait (`pending`, or every body while the
+ *  tier has no round yet) and when the next round freezes its bodies (the pool's next deadline after `now`, ISO;
+ *  null for a pool with no deadline, such as one not yet open). */
+export function tierQueue(pool: string, rows: Pick<MinerRow, 'body' | 'standing'>[], now = Date.now()) {
+  const waiting = rows.filter(r => r.body?.pool === pool && (r.standing === 'pending' || r.standing === 'waiting')).length;
+  const hour = DEADLINE_UTC[pool];
+  if (!hour) return { waiting, freezes: null as string | null };
+  const today = new Date(now).toISOString().slice(0, 10);
+  let freezes = Date.parse(`${today}T${hour}:00Z`);
+  if (freezes <= now) freezes += 86_400_000;
+  return { waiting, freezes: new Date(freezes).toISOString() };
+}
 export type { Rounds };
 
 /** The chain view, or null when the feed is unconfigured, down, malformed or more than an hour old. */
