@@ -84,7 +84,7 @@
 .uid { font-weight: 300; font-size: 22px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .station { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #4b44c8; }
 .rev { margin-left: 4px; }
-.table tr:is([data-standing="out"], [data-standing="waiting"], [data-standing="none"], [data-standing="unknown"]) .standing, .table td:last-child { color: var(--zs-t2); }
+.table tr:is([data-standing="out"], [data-standing="waiting"], [data-standing="none"], [data-standing="unknown"], [data-standing="queued"], [data-standing="deferred"], [data-standing="refused"]) .standing, .table td:last-child { color: var(--zs-t2); }
 .chip { display: inline-block; width: 10px; height: 10px; margin-right: 8px; background: var(--zs-spectrum); vertical-align: -1px; }
 /* No rows: the outline of a sheet, as an invitation. */
 .empty { margin: 0; max-width: 420px; padding: 18px 20px; border: 1px dashed rgba(255,255,255,.5); font-size: 14.5px; line-height: 1.5; color: #fff; }
@@ -167,4 +167,17 @@
 .grading { margin-top: 4px; display: flex; align-items: center; gap: 8px; }
 .grading::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--zs-orange); }
 .nowrap { white-space: nowrap; }
-@media (prefers-reduced-motion: reduce) { .ring { transition: none; } }
+
+/* Tonight's round while it runs: one cell per new body. Filled once checked and admitted, struck through when
+   refused, dashed when it waits for the next round, and the one being checked breathes in the brand orange. */
+.live { display: grid; gap: 8px; }
+.rail { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.rail li { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--zs-line); }
+.rail li[data-state="admitted"] { background: var(--zs-fg); border-color: var(--zs-fg); }
+.rail li[data-state="refused"] { background: linear-gradient(135deg, transparent 45%, var(--zs-t3) 45% 55%, transparent 55%); }
+.rail li[data-state="deferred"] { border-style: dashed; opacity: .6; }
+.rail li[data-state="checking"] { background: var(--zs-orange); border-color: var(--zs-orange); animation: checking 1.4s ease-in-out infinite; }
+.live:not([data-running]) .rail li[data-state="checking"] { animation: none; opacity: .5; }
+.liveText { margin: 0; max-width: 78ch; font-size: 13.5px; line-height: 1.6; color: var(--zs-fg); }
+@keyframes checking { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .ring { transition: none; } .rail li[data-state="checking"] { animation: none; } }

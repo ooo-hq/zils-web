@@ -98,7 +98,7 @@ export default async function MinersPage() {
         <h2 id="tonight-heading" className="sr-only">Tonight’s soup</h2>
         {!soup && <p className={b.down}>Tonight’s rounds are unavailable right now. Each tier shows its pot of house models until the feed returns.</p>}
         {noMinerBodies && <p className={b.down}>No soup for you yet. No miner has committed a body on subnet {chain.netuid}, so tonight’s soups are house models only, and house models are never paid. Every tier’s share burns until the first miner body earns a seat. <Link href="/soup">Bring a body to the soup</Link>.</p>}
-        {TIER_NAMES.map(tier => <TierSoup key={tier} tier={tier} view={views.get(tier) ?? null} feed={Boolean(soup)} queue={queues.get(tier) ?? undefined} />)}
+        {TIER_NAMES.map(tier => <TierSoup key={tier} tier={tier} view={views.get(tier) ?? null} feed={Boolean(soup)} queue={queues.get(tier) ?? undefined} live={soup?.tiers.find(t => t.tier === tier)?.live} />)}
         <p className={b.fine}>Seats and the crown are decided on the items of the last three rounds together, because one night’s slice of the private exam is noisier than the greedy margin. The score is tonight’s slice alone, so small moves between rounds are partly noise. Each part’s number is what the soup loses without it, rounded to 0.5 point.</p>
       </section>
 

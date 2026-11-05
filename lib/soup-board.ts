@@ -32,6 +32,17 @@ const round = z.object({
   scoring: z.enum(['calibrated_brier', 'calibrated_argmax', 'argmax']).optional(),
   temperature: z.number().finite().min(0.1).max(10).optional(),
 }).strict();
+// zils#205 / zils-platform#81: the round in progress, only while it runs. One public state per committed claim;
+// refusal reasons stay in the validator's private records and are never part of this contract.
+const claimState = z.enum(['waiting', 'checking', 'admitted', 'in_pool', 'deferred', 'refused']);
+const live = z.object({
+  round_id: z.string().min(1).max(64), attempt: z.number().int().min(1).max(10).nullable(),
+  running: z.boolean(), stage: z.enum(['starting', 'intake', 'scoring']),
+  started_at: z.iso.datetime({ offset: true }), deadline_at: z.iso.datetime({ offset: true }),
+  claims: z.array(z.object({ uid: z.number().int().min(0).max(65535), state: claimState }).strict()).max(256),
+}).strict();
+export type LiveRound = z.infer<typeof live>;
+
 const tier = z.object({
   pool: z.string().min(1).max(32),
   tier: z.string().regex(/^z3(-[a-z]+)?$/),
@@ -39,6 +50,7 @@ const tier = z.object({
   serving: z.object({ release: z.string().min(1).max(60), served_by: z.enum(['zils', 'miners']) }).strict().nullable(),
   bodies: z.record(sha, z.object({ house: z.string().max(80).nullable(), repo: repo.nullable() }).strict()),
   rounds: z.array(round).max(60), // newest first
+  live: live.optional(),
 }).strict();
 export const soupBoardSchema = z.object({ as_of: z.iso.datetime({ offset: true }), tiers: z.array(tier).max(8) }).strict();
 
@@ -47,6 +59,19 @@ export type SoupTier = z.infer<typeof tier>;
 type Bodies = SoupTier['bodies'];
 
 const tenth = (value: number) => Math.round(value * 10) / 10;
+
+/** A running round in numbers: of the new bodies (every claim not already in the pool), how many are checked
+ *  (admitted or refused), admitted and over the round's limits, and the uid being checked now (null once scoring). */
+export function liveSummary(round: LiveRound) {
+  const fresh = round.claims.filter(c => c.state !== 'in_pool');
+  const count = (...states: LiveRound['claims'][number]['state'][]) => fresh.filter(c => states.includes(c.state)).length;
+  return {
+    stage: round.stage, running: round.running, attempt: round.attempt,
+    started: round.started_at, deadline: round.deadline_at,
+    total: fresh.length, checked: count('admitted', 'refused'), admitted: count('admitted'), deferred: count('deferred'),
+    checking: round.stage === 'scoring' ? null : fresh.find(c => c.state === 'checking')?.uid ?? null,
+  };
+}
 
 /** The 0–100 soup score: category scores weighted as the validator weights them, to 0.1 point. */
 export function soupScore(scores: Record<Category, number>) {

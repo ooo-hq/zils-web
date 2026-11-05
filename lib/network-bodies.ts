@@ -26,7 +26,11 @@ export type NetworkBodies = z.infer<typeof networkBodiesSchema>;
  *  crown/seat: in the soup and paid; unpaid: in the soup, not paid (a scout or a body that did not lift it enough);
  *  out: the tier cooked without it; pending: committed after tonight's deadline, so the next round grades it;
  *  waiting: the tier has not cooked yet; unknown: no soup feed; none: no body. */
-export type Standing = 'crown' | 'seat' | 'unpaid' | 'out' | 'pending' | 'waiting' | 'unknown' | 'none';
+export type Standing = 'crown' | 'seat' | 'unpaid' | 'out' | 'pending' | 'waiting' | 'unknown' | 'none'
+  | 'checking' | 'checked' | 'queued' | 'deferred' | 'refused';
+// While a tier's round runs (zils#205 `live`), a new claim's state replaces last night's standing.
+const LIVE: Partial<Record<string, Standing>> = { checking: 'checking', admitted: 'checked', waiting: 'queued', deferred: 'deferred', refused: 'refused' };
+type Live = { claims: { uid: number; state: string }[] };
 
 type Rounds = Pick<SoupBoard['tiers'][number], 'pool' | 'rounds'>[];
 type Round = Pick<SoupBoard['tiers'][number]['rounds'][number], 'round_id' | 'pool_id' | 'members' | 'crown'>;
@@ -51,9 +55,12 @@ function committedAfter(round: Round, chain: Pick<NetworkBodies, 'block' | 'as_o
   return committed > deadline(round) + DEADLINE_MARGIN_MS;
 }
 
-function standing(body: NonNullable<NetworkBodies['miners'][number]['body']>, chain: Pick<NetworkBodies, 'block' | 'as_of'>, tiers: { pool: string; rounds: Round[] }[] | null): Standing {
+function standing(uid: number, body: NonNullable<NetworkBodies['miners'][number]['body']>, chain: Pick<NetworkBodies, 'block' | 'as_of'>, tiers: { pool: string; rounds: Round[]; live?: Live }[] | null): Standing {
   if (!tiers) return 'unknown';
-  const tonight = tiers.find(t => t.pool === body.pool)?.rounds[0];
+  const tier = tiers.find(t => t.pool === body.pool);
+  const now = LIVE[tier?.live?.claims.find(c => c.uid === uid)?.state ?? ''];
+  if (now) return now;
+  const tonight = tier?.rounds[0];
   if (!tonight) return 'waiting';
   if (tonight.crown?.body_sha256 === body.sha256) return 'crown';
   const seat = tonight.members.find(m => m.body_sha256 === body.sha256);
@@ -62,11 +69,11 @@ function standing(body: NonNullable<NetworkBodies['miners'][number]['body']>, ch
 }
 
 /** One row per uid: its chain facts, its tier, and where its body stands in tonight's soup. */
-export function minerRows(chain: NetworkBodies, soup: { tiers: { pool: string; rounds: Round[] }[] } | null) {
+export function minerRows(chain: NetworkBodies, soup: { tiers: { pool: string; rounds: Round[]; live?: Live }[] } | null) {
   return chain.miners.map(m => ({
     uid: m.uid, hotkey: m.hotkey, serving: m.serving, body: m.body,
     tier: m.body ? poolTier(m.body.pool) : null as Tier | null,
-    standing: m.body ? standing(m.body, chain, soup?.tiers ?? null) : 'none' as Standing,
+    standing: m.body ? standing(m.uid, m.body, chain, soup?.tiers ?? null) : 'none' as Standing,
   }));
 }
 export type MinerRow = ReturnType<typeof minerRows>[number];

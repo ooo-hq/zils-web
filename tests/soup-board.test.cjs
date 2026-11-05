@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { soupBoardSchema, soupBoard, soupScore, tierView, bodyLabel } = require('../.private/test-build/soup-board.js');
+const { soupBoardSchema, soupBoard, soupScore, tierView, bodyLabel, liveSummary } = require('../.private/test-build/soup-board.js');
 
 // One round's record as zils/soup_publish.public_record writes it, plus the feed's finished_at.
 const round = (id, scores, members, crown = null, finished = '2026-11-04T03:40:00Z') => ({
@@ -142,4 +142,38 @@ test('a change of scoring is not a change in the soup: compare and plot only rou
   assert.deepEqual(tierView(v.tiers[0]).history, [61.7]);
   v.tiers[0].rounds[0].scoring = 'argmax';
   assert.deepEqual(tierView(v.tiers[0]).history, [74.0, 74.6, 61.7]);
+});
+
+// zils#205 / zils-platform#81: while a round runs, its tier carries `live` with one public state per claim.
+const live = (claims, extra = {}) => ({
+  round_id: 'd3-mini-2026-11-05', attempt: 1, running: true, stage: 'intake',
+  started_at: '2026-11-05T01:22:10+00:00', deadline_at: '2026-11-05T07:22:10+00:00', claims, ...extra,
+});
+const claims = [
+  { uid: 69, state: 'in_pool' }, { uid: 124, state: 'admitted' }, { uid: 125, state: 'refused' },
+  { uid: 126, state: 'deferred' }, { uid: 130, state: 'checking' }, { uid: 131, state: 'waiting' },
+];
+
+test('a running round passes the schema; reasons, unknown states and extra fields never do', () => {
+  const ok = valid(); ok.tiers[0].live = live(claims);
+  assert.equal(soupBoardSchema.safeParse(ok).success, true);
+  for (const change of [
+    v => { v.claims[0].reason = 'copy of uid 82'; },
+    v => { v.claims[0].state = 'shadow-banned'; },
+    v => { v.stage = 'melting'; },
+    v => { v.secret = 'x'; },
+  ]) {
+    const bad = valid(); bad.tiers[0].live = live(structuredClone(claims)); change(bad.tiers[0].live);
+    assert.equal(soupBoardSchema.safeParse(bad).success, false);
+  }
+});
+
+test('the live summary counts checked bodies among the new ones and names the one being checked', () => {
+  const summary = liveSummary(live(claims));
+  assert.deepEqual(
+    { checked: summary.checked, total: summary.total, admitted: summary.admitted, deferred: summary.deferred, checking: summary.checking },
+    { checked: 2, total: 5, admitted: 1, deferred: 1, checking: 130 },
+  );
+  assert.equal(summary.stage, 'intake');
+  assert.equal(liveSummary(live(claims, { stage: 'scoring' })).checking, null);
 });
