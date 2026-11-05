@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import { TIERS, hfTree, type Tier } from '@/lib/soup-tiers';
 import type { TierView } from '@/lib/soup-board';
 import s from './board.module.css';
+import { Countdown } from './countdown';
 
 // One tier's soup as a recipe bar. The soup is a uniform average, so every body is an equal part. Miner bodies
 // carry the spectrum, each showing its own slice of it; house bodies are hatched, so a soup of house models alone
@@ -58,18 +59,20 @@ function Pot({ tier, note, closed }: { tier: Tier; note: string | null; closed: 
 
 /** A tier: what serves it, tonight's soup score and parts, or its pot of house models before it cooks.
  *  `view` is null when the soup feed is down (`feed` false) or does not list the tier. */
-/** The bodies a tier still has to grade and when its next round freezes them. */
-function Queue({ queue }: { queue: { waiting: number; freezes: string | null } }) {
+type Queued = { waiting: number; froze: string | null; grading: boolean; freezes: string | null };
+const clock = (iso: string) => new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', timeZoneName: 'short' }).format(new Date(iso));
+
+/** The bodies a tier still has to grade, a round being graded since its deadline, and a countdown to the next. */
+function Queue({ queue }: { queue: Queued }) {
   if (!queue.freezes) return null;
-  const at = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', timeZoneName: 'short' }).format(new Date(queue.freezes));
-  const utc = queue.freezes.slice(11, 16);
   return <p className={s.queue}>
     {queue.waiting === 0 ? 'No bodies waiting.' : <><b>{queue.waiting}</b> {queue.waiting === 1 ? 'body' : 'bodies'} waiting.</>}
-    {' '}The next round freezes its bodies at {at} ({utc} UTC) and grades them in the hours after.
+    {queue.grading && queue.froze && <> Commits closed at {clock(queue.froze)} ({queue.froze.slice(11, 16)} UTC); validators grade that round in the hours after, and it appears here when it finishes.</>}
+    {' '}The next round freezes its bodies<Countdown to={queue.freezes} />, at {clock(queue.freezes)} ({queue.freezes.slice(11, 16)} UTC){queue.grading ? '.' : ', and grades them in the hours after.'}
   </p>;
 }
 
-export function TierSoup({ tier, view, feed, queue }: { tier: Tier; view: TierView | null; feed: boolean; queue?: { waiting: number; freezes: string | null } }) {
+export function TierSoup({ tier, view, feed, queue }: { tier: Tier; view: TierView | null; feed: boolean; queue?: Queued }) {
   const later = 'later' in TIERS[tier];
   const base = TIERS[tier].base;
   const tonight = view?.tonight ?? null;

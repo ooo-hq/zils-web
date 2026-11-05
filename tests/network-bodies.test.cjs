@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { networkBodiesSchema, networkBodies, minerRows } = require('../.private/test-build/network-bodies.js');
+const { networkBodiesSchema, networkBodies, minerRows, tierQueue, countdown } = require('../.private/test-build/network-bodies.js');
 
 // GET /v1/network/bodies (zils-platform, ZIL-109): every uid with a soup body commitment or a serving endpoint.
 const body = (pool, sha, repo = 'owner/body') => ({ pool, sha256: sha.repeat(64), revision: 'f'.repeat(40), repo, block: 8300000 });
@@ -83,4 +83,44 @@ test('stale snapshots and outages never render as a current chain view', async (
     global.fetch = fetch;
     if (env === undefined) delete process.env.NEXT_PUBLIC_ZILS_TRAINING_API_URL; else process.env.NEXT_PUBLIC_ZILS_TRAINING_API_URL = env;
   }
+});
+
+// The countdown on each tier card: the last deadline, whether that round is still to be published, and the next one.
+test('after the mini deadline and before its round is published, the tier is grading', () => {
+  const now = Date.parse('2026-11-05T00:50:00Z');
+  assert.deepEqual(tierQueue('d3-mini', [], now, 'd3-mini-2026-11-04'), {
+    waiting: 0, froze: '2026-11-05T00:00:00.000Z', grading: true, freezes: '2026-11-06T00:00:00.000Z',
+  });
+  // Once tonight's round is in the feed, the card goes back to counting down.
+  assert.equal(tierQueue('d3-mini', [], now, 'd3-mini-2026-11-05').grading, false);
+});
+
+test('before the deadline the latest round is from yesterday and nothing is grading', () => {
+  const now = Date.parse('2026-11-04T23:00:00Z');
+  assert.deepEqual(tierQueue('d3-mini', [], now, 'd3-mini-2026-11-04'), {
+    waiting: 0, froze: '2026-11-04T00:00:00.000Z', grading: false, freezes: '2026-11-05T00:00:00.000Z',
+  });
+});
+
+test('lite counts to its own 06:00 deadline', () => {
+  const before = tierQueue('d3-lite', [], Date.parse('2026-11-05T05:59:00Z'), 'd3-lite-2026-11-04');
+  assert.equal(before.freezes, '2026-11-05T06:00:00.000Z');
+  assert.equal(before.grading, false);
+  const after = tierQueue('d3-lite', [], Date.parse('2026-11-05T06:01:00Z'), 'd3-lite-2026-11-04');
+  assert.equal(after.freezes, '2026-11-06T06:00:00.000Z');
+  assert.equal(after.grading, true);
+});
+
+test('a tier with no round yet or no deadline never claims to be grading', () => {
+  assert.equal(tierQueue('d3-mini', [], Date.parse('2026-11-05T00:50:00Z')).grading, false);
+  assert.deepEqual(tierQueue('d3-unknown', [], Date.parse('2026-11-05T00:50:00Z'), 'd3-unknown-2026-11-04'), {
+    waiting: 0, froze: null, grading: false, freezes: null,
+  });
+});
+
+test('countdown reads as hours, minutes and seconds and stops at zero', () => {
+  assert.equal(countdown(23 * 3_600_000 + 8 * 60_000 + 12_000), '23h 08m 12s');
+  assert.equal(countdown(8 * 60_000 + 5_000), '8m 05s');
+  assert.equal(countdown(42_400), '42s');
+  assert.equal(countdown(-5_000), '0s');
 });

@@ -76,7 +76,7 @@ export default async function MinersPage() {
   const [soup, chain] = await Promise.all([soupBoard(), networkBodies()]);
   const views = new Map((soup?.tiers ?? []).map(t => [t.tier, tierView(t)]));
   const rows = chain ? minerRows(chain, soup) : null;
-  const queues = new Map((soup?.tiers ?? []).map(t => [t.tier, rows ? tierQueue(t.pool, rows) : null]));
+  const queues = new Map((soup?.tiers ?? []).map(t => [t.tier, rows ? tierQueue(t.pool, rows, undefined, t.rounds[0]?.round_id ?? null) : null]));
   // Launch state: the chain view is live and no miner has committed a body, so every bowl is house models only.
   const noMinerBodies = chain !== null && !chain.miners.some(m => m.body);
   return (
