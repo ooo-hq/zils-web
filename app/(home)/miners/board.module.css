@@ -147,3 +147,12 @@
 @media (prefers-reduced-motion: no-preference) {
   .part { transition: opacity .2s; }
 }
+
+/* The round clock: the ring fills from the deadline that opened the round to the one that closes it. */
+.round { display: flex; align-items: center; gap: 14px; }
+.ring { width: 52px; height: 52px; flex: none; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke: var(--zs-line); stroke-width: 3; }
+.ring circle[data-fill] { stroke: var(--zs-fg); stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+.roundTime { margin: 0; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 26px; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.roundLabel { margin: 4px 0 0; font-size: 12.5px; color: var(--zs-t2); }
+.grading { margin: 4px 0 0; font-size: 12.5px; color: var(--zs-orange); }

@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import { TIERS, hfTree, type Tier } from '@/lib/soup-tiers';
 import type { TierView } from '@/lib/soup-board';
 import s from './board.module.css';
-import { Countdown } from './countdown';
+import { RoundClock } from './countdown';
 
 // One tier's soup as a recipe bar. The soup is a uniform average, so every body is an equal part. Miner bodies
 // carry the spectrum, each showing its own slice of it; house bodies are hatched, so a soup of house models alone
@@ -60,15 +60,12 @@ function Pot({ tier, note, closed }: { tier: Tier; note: string | null; closed: 
 /** A tier: what serves it, tonight's soup score and parts, or its pot of house models before it cooks.
  *  `view` is null when the soup feed is down (`feed` false) or does not list the tier. */
 type Queued = { waiting: number; froze: string | null; grading: boolean; freezes: string | null };
-const clock = (iso: string) => new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', timeZoneName: 'short' }).format(new Date(iso));
 
-/** The bodies a tier still has to grade, a round being graded since its deadline, and a countdown to the next. */
+/** How many bodies the tier still has to grade. */
 function Queue({ queue }: { queue: Queued }) {
-  if (!queue.freezes) return null;
   return <p className={s.queue}>
     {queue.waiting === 0 ? 'No bodies waiting.' : <><b>{queue.waiting}</b> {queue.waiting === 1 ? 'body' : 'bodies'} waiting.</>}
-    {queue.grading && queue.froze && <> Commits closed at {clock(queue.froze)} ({queue.froze.slice(11, 16)} UTC); validators grade that round in the hours after, and it appears here when it finishes.</>}
-    {' '}The next round freezes its bodies<Countdown to={queue.freezes} />, at {clock(queue.freezes)} ({queue.freezes.slice(11, 16)} UTC){queue.grading ? '.' : ', and grades them in the hours after.'}
+    {' '}A round grades the bodies committed before its deadline, in the hours after it.
   </p>;
 }
 
@@ -91,6 +88,7 @@ export function TierSoup({ tier, view, feed, queue }: { tier: Tier; view: TierVi
         <span className={s.change}>{view.change === null ? (view.rescored ? 'First round on the new scoring' : 'First round') : `${signed(view.change)} since the last round`}</span>
       </p>}
     </header>
+    {queue && !later && queue.froze && queue.freezes && <RoundClock froze={queue.froze} freezes={queue.freezes} grading={queue.grading} />}
     {tonight && view ? <>
       <Recipe view={view} />
       <p className={s.note}>
@@ -99,6 +97,6 @@ export function TierSoup({ tier, view, feed, queue }: { tier: Tier; view: TierVi
         {view.decision && ` Seats decided on ${view.decision.rounds} ${view.decision.rounds === 1 ? 'round' : 'rounds'}, ${view.decision.items.toLocaleString('en-US')} items.`}
       </p>
     </> : <Pot tier={tier} note={note} closed={later} />}
-    {queue && !later && <Queue queue={queue} />}
+    {queue && !later && queue.freezes && <Queue queue={queue} />}
   </article>;
 }

@@ -92,13 +92,19 @@ export function tierQueue(pool: string, rows: Pick<MinerRow, 'body' | 'standing'
   };
 }
 
-/** A time left as `23h 08m 12s`, `8m 05s` or `42s`; never below `0s`. */
-export function countdown(ms: number) {
+/** A time left on the round clock as `22:54:08`; never below `0:00:00`. */
+export function clockTime(ms: number) {
   const total = Math.max(0, Math.floor(ms / 1000));
-  const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
   const pad = (n: number) => String(n).padStart(2, '0');
-  return h ? `${h}h ${pad(m)}m ${pad(s)}s` : m ? `${m}m ${pad(s)}s` : `${s}s`;
+  return `${Math.floor(total / 3600)}:${pad(Math.floor((total % 3600) / 60))}:${pad(total % 60)}`;
 }
+
+/** How far a round's commit window has run, 0 at the deadline that opened it (`froze`) and 1 at the next. */
+export function roundProgress(froze: string, freezes: string, now: number) {
+  const start = Date.parse(froze), end = Date.parse(freezes);
+  return Math.min(1, Math.max(0, (now - start) / (end - start)));
+}
+
 export type { Rounds };
 
 /** The chain view, or null when the feed is unconfigured, down, malformed or more than an hour old. */

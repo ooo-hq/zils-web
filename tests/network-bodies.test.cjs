@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { networkBodiesSchema, networkBodies, minerRows, tierQueue, countdown } = require('../.private/test-build/network-bodies.js');
+const { networkBodiesSchema, networkBodies, minerRows, tierQueue, clockTime, roundProgress } = require('../.private/test-build/network-bodies.js');
 
 // GET /v1/network/bodies (zils-platform, ZIL-109): every uid with a soup body commitment or a serving endpoint.
 const body = (pool, sha, repo = 'owner/body') => ({ pool, sha256: sha.repeat(64), revision: 'f'.repeat(40), repo, block: 8300000 });
@@ -118,9 +118,12 @@ test('a tier with no round yet or no deadline never claims to be grading', () =>
   });
 });
 
-test('countdown reads as hours, minutes and seconds and stops at zero', () => {
-  assert.equal(countdown(23 * 3_600_000 + 8 * 60_000 + 12_000), '23h 08m 12s');
-  assert.equal(countdown(8 * 60_000 + 5_000), '8m 05s');
-  assert.equal(countdown(42_400), '42s');
-  assert.equal(countdown(-5_000), '0s');
+test('the round clock reads hh:mm:ss and fills from one deadline to the next', () => {
+  assert.equal(clockTime(22 * 3_600_000 + 54 * 60_000 + 8_000), '22:54:08');
+  assert.equal(clockTime(65_000), '0:01:05');
+  assert.equal(clockTime(-1), '0:00:00');
+  const froze = '2026-11-05T00:00:00.000Z', freezes = '2026-11-06T00:00:00.000Z';
+  assert.equal(roundProgress(froze, freezes, Date.parse('2026-11-05T06:00:00Z')), 0.25);
+  assert.equal(roundProgress(froze, freezes, Date.parse('2026-11-04T23:00:00Z')), 0);
+  assert.equal(roundProgress(froze, freezes, Date.parse('2026-11-06T01:00:00Z')), 1);
 });
