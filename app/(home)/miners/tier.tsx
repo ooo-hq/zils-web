@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { TIERS, hfTree, type Tier } from '@/lib/soup-tiers';
-import type { TierView } from '@/lib/soup-board';
+import { liveSummary, type LiveRound, type TierView } from '@/lib/soup-board';
 import s from './board.module.css';
 import { RoundClock } from './countdown';
 
@@ -69,7 +69,29 @@ function Queue({ queue }: { queue: Queued }) {
   </p>;
 }
 
-export function TierSoup({ tier, view, feed, queue }: { tier: Tier; view: TierView | null; feed: boolean; queue?: Queued }) {
+/** Tonight's round while it runs: one cell per new body, filling as each is checked, and what the round is doing. */
+function Live({ live }: { live: LiveRound }) {
+  const sum = liveSummary(live);
+  // Done first, then the one being checked, so the rail fills from the left.
+  const rank = { admitted: 0, refused: 0, checking: 1, waiting: 2, deferred: 3 } as Record<string, number>;
+  const fresh = live.claims.filter(c => c.state !== 'in_pool').sort((a, b) => (rank[a.state] ?? 2) - (rank[b.state] ?? 2));
+  const bodies = (n: number) => `${n} new ${n === 1 ? 'body' : 'bodies'}`;
+  const later = sum.deferred ? ` ${sum.deferred} over tonight’s limit, graded in the next round.` : '';
+  const doing = !sum.running
+    ? `The round stopped on attempt ${sum.attempt ?? 1} of 3. The validator restarts it on its next pass, about once an hour.`
+    : sum.stage === 'starting' ? `Starting tonight’s round: ${bodies(sum.total)} to check.`
+    : sum.stage === 'intake' ? `Checking bodies: ${sum.checked} of ${sum.total} checked${sum.checking !== null ? `, now uid ${sum.checking}` : ''}.${later}`
+    : `Scoring the soup with ${sum.admitted} of ${bodies(sum.total)} admitted.${later}`;
+  return <div className={s.live} data-running={sum.running || undefined}>
+    {fresh.length > 0 && <ol className={s.rail} aria-hidden="true">
+      {fresh.map(c => <li key={c.uid} data-state={c.state} title={`uid ${c.uid}`} />)}
+    </ol>}
+    <p className={s.liveText} role="status">{doing}</p>
+    <p className={s.roundLabel}>Started {when(sum.started)}. It has until {when(sum.deadline)} to finish.</p>
+  </div>;
+}
+
+export function TierSoup({ tier, view, feed, queue, live }: { tier: Tier; view: TierView | null; feed: boolean; queue?: Queued; live?: LiveRound }) {
   const later = 'later' in TIERS[tier];
   const base = TIERS[tier].base;
   const tonight = view?.tonight ?? null;
@@ -88,7 +110,8 @@ export function TierSoup({ tier, view, feed, queue }: { tier: Tier; view: TierVi
         <span className={s.change}>{view.change === null ? (view.rescored ? 'First round on the new scoring' : 'First round') : `${signed(view.change)} since the last round`}</span>
       </p>}
     </header>
-    {queue && !later && queue.froze && queue.freezes && <RoundClock froze={queue.froze} freezes={queue.freezes} grading={queue.grading} />}
+    {queue && !later && queue.froze && queue.freezes && <RoundClock froze={queue.froze} freezes={queue.freezes} grading={queue.grading && !live} />}
+    {live && !later && <Live live={live} />}
     {tonight && view ? <>
       <Recipe view={view} />
       <p className={s.note}>
@@ -97,6 +120,6 @@ export function TierSoup({ tier, view, feed, queue }: { tier: Tier; view: TierVi
         {view.decision && ` Seats decided on ${view.decision.rounds} ${view.decision.rounds === 1 ? 'round' : 'rounds'}, ${view.decision.items.toLocaleString('en-US')} items.`}
       </p>
     </> : <Pot tier={tier} note={note} closed={later} />}
-    {queue && !later && queue.freezes && <Queue queue={queue} />}
+    {queue && !later && queue.freezes && !live && <Queue queue={queue} />}
   </article>;
 }

@@ -7,6 +7,8 @@ const STANDING: Record<Standing, string> = {
   crown: 'Crown', seat: 'Paid seat', unpaid: 'In the soup, unpaid', out: 'Not in tonight’s soup',
   pending: 'Committed after the deadline, graded in the next round', waiting: 'Waiting for the first round',
   unknown: '—', none: 'No body committed',
+  checking: 'Being checked now', checked: 'Checked, in tonight’s round', queued: 'Waiting to be checked',
+  deferred: 'Over tonight’s limit, graded in the next round', refused: 'Not admitted tonight',
 };
 const short = (hotkey: string) => `${hotkey.slice(0, 6)}…${hotkey.slice(-4)}`;
 

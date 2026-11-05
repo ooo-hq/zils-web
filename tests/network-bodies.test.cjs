@@ -127,3 +127,18 @@ test('the round clock reads hh:mm:ss and fills from one deadline to the next', (
   assert.equal(roundProgress(froze, freezes, Date.parse('2026-11-04T23:00:00Z')), 0);
   assert.equal(roundProgress(froze, freezes, Date.parse('2026-11-06T01:00:00Z')), 1);
 });
+
+test('while a tier’s round runs, each claim says where its check stands', () => {
+  const running = structuredClone(soup);
+  running.tiers[0].live = { round_id: 'd3-mini-2026-11-05', stage: 'intake', running: true, claims: [
+    { uid: 1, state: 'in_pool' }, { uid: 5, state: 'checking' },
+  ] };
+  const rows = Object.fromEntries(minerRows(valid(), running).map(r => [r.uid, r.standing]));
+  assert.equal(rows[5], 'checking');
+  assert.equal(rows[1], 'crown');      // already in the pool: last night's standing until the round lands
+  assert.equal(rows[7], 'waiting');    // lite has no live round
+  for (const [state, standing] of [['admitted', 'checked'], ['waiting', 'queued'], ['deferred', 'deferred'], ['refused', 'refused']]) {
+    running.tiers[0].live.claims[1].state = state;
+    assert.equal(minerRows(valid(), running).find(r => r.uid === 5).standing, standing);
+  }
+});
