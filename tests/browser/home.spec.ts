@@ -50,7 +50,7 @@ test('jobs section keeps the Rank options badge and the CTA pair', async ({ page
   const jobs = page.getByRole('region', { name: 'Same idea, different jobs.' });
   await expect(jobs.getByText('New in SDK 0.3.0 · Experimental', { exact: true })).toBeVisible();
   await expect(jobs.getByRole('heading', { name: 'Rank options.' })).toBeVisible();
-  await expect(jobs.getByRole('link', { name: 'Request early access' })).toHaveAttribute('href', '/early-access');
+  await expect(jobs.getByRole('link', { name: 'Get started' })).toHaveAttribute('href', '/sign-in');
   await expect(jobs.getByRole('link', { name: 'See examples' })).toHaveAttribute('href', '/examples');
 });
 

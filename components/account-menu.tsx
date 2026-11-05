@@ -27,8 +27,8 @@ export function AccountMenu() {
     return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape); };
   }, [open]);
   const button = css.btn;
-  if (session === undefined) return <button className={button} disabled aria-busy="true">Early access</button>;
-  if (!session) return <div className={css.wrap}><Link href="/sign-in" className={`${css.signin} ${css.wide}`}>Sign in</Link><Link href="/early-access" className={button} title={sessionError || undefined}>Early access</Link>{error && <p role="alert" className={css.alert}>{error}</p>}</div>;
+  if (session === undefined) return <button className={button} disabled aria-busy="true">Get started</button>;
+  if (!session) return <div className={css.wrap}><Link href="/sign-in" className={`${css.signin} ${css.wide}`}>Sign in</Link><Link href="/sign-in" className={button} title={sessionError || undefined}>Get started</Link>{error && <p role="alert" className={css.alert}>{error}</p>}</div>;
   async function signOut() {
     if (!client || busy) return;
     setBusy(true); setError('');

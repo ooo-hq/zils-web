@@ -1,7 +1,6 @@
 'use client';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { useAuthSession } from '@/components/auth-session';
 import { AuthFrame, GoogleMark } from '@/components/site/auth-frame';
@@ -84,12 +83,12 @@ function SignIn({ client, authorizationId, sessionError, onStep }: { client: Sup
     try {
       const returnUrl = authorizationReturnUrl(window.location.origin, authorizationId);
       const result = event
-        ? await client.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false, emailRedirectTo: returnUrl } })
+        ? await client.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: returnUrl } })
         : await signInWithGoogle(client, window.location.origin, new URL(returnUrl).pathname + new URL(returnUrl).search);
       if (result.error) throw result.error;
       if (event) { setSent(true); onStep(LINES.emailSent); }
     } catch {
-      setError('Sign-in could not start. Workspace access is by invitation; use your invited email or join the early-access list.');
+      setError('Sign-in could not start. Please try again.');
     } finally { setBusy(null); }
   }
 
@@ -110,7 +109,7 @@ function SignIn({ client, authorizationId, sessionError, onStep }: { client: Sup
         <input id="cli-email" type="email" required autoComplete="email" placeholder="you@company.com" maxLength={254} value={email} onChange={event => setEmail(event.target.value)} disabled={busy !== null} />
       </div>
       <button type="submit" className={`${form.fpBtn} ${css.submit}`} disabled={busy !== null}>{busy === 'email' ? 'Sending…' : 'Email me a sign-in link'}</button>
-      <p className={css.fine}>Workspaces are invite-only for now. New here? <Link href="/early-access">Get early access</Link></p>
+      <p className={css.fine}>New here? Signing in creates your workspace.</p>
     </form>}
   </>;
 }

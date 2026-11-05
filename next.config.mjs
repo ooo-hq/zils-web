@@ -28,6 +28,8 @@ const config = {
       // Retired pages: the front page carries the pitch now. Temporary, so
       // an old link lands somewhere useful without freezing the decision.
       ...['/bazaar', '/whitepaper', '/mine'].map((source) => ({ source, destination: '/', permanent: false })),
+      // Sign-up is open: early access is the sign-in page now.
+      { source: '/early-access', destination: '/sign-in', permanent: false },
     ];
   },
 };

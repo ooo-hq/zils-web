@@ -49,10 +49,6 @@ export function TrainingDashboard({ config, runId, bulkImport = false, upgradeOf
     if (!client) { setError('Sign-in is unavailable. Please refresh and try again.'); setBusy(null); return; }
     try {
       const { error } = await sendSignInLink(client, email, window.location.origin);
-      if (error?.code === 'otp_disabled' || error?.code === 'signup_disabled') {
-        setError('Workspace access is by invitation. Join the early-access list below, or use the email address that was invited.');
-        return;
-      }
       if (error) throw error;
       setNotice('Check your email for a sign-in link. Open it to return to your training workspace.');
     } catch (error) { setError(message(error)); } finally { setBusy(null); }
@@ -81,8 +77,7 @@ export function TrainingDashboard({ config, runId, bulkImport = false, upgradeOf
     </div> : <>
       <div className={styles.workspaceHeading}><div><h1>Training</h1><p>Teach Zils a decision using examples your team has reviewed.</p></div></div>
       <section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}>
-        <h2>Sign in to Zils</h2><p>Workspace access is by invitation. Sign in with the email address that was invited.</p>
-        <p>New to Zils? <Link href="/early-access" className="underline underline-offset-4">Join the early-access list</Link>. Joining the list does not create an account.</p>
+        <h2>Sign in to Zils</h2><p>New to Zils? Signing in creates your workspace.</p>
         {process.env.NEXT_PUBLIC_ZILS_GOOGLE_AUTH_ENABLED === 'true' && <>
           <button type="button" className={styles.googleButton} onClick={googleSignIn} disabled={!client || Boolean(busy)} aria-label="Sign in with Google" aria-busy={busy === 'google'}>
             <Image src="/google-sign-in.png" alt="" width={180} height={40} unoptimized />

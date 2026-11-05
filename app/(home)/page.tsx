@@ -119,7 +119,7 @@ export default function HomePage() {
           </Reveal>
         </div>
         <div className={s.ctaRow}>
-          <SiteButton href="/early-access" variant="primary">Request early access</SiteButton>
+          <SiteButton href="/sign-in" variant="primary">Get started</SiteButton>
           <SiteButton href="/examples" variant="secondary">See examples</SiteButton>
         </div>
       </section>
@@ -192,7 +192,7 @@ export default function HomePage() {
           <h2 id="cta">Start with a decision<br />you know how to make.</h2>
           <p>Bring examples and their right answers. The training workspace helps you prepare your data and start a run.</p>
           <div className={s.ctaRow}>
-            <SiteButton href="/early-access" variant="primary">Request early access</SiteButton>
+            <SiteButton href="/sign-in" variant="primary">Get started</SiteButton>
             <SiteButton href="/examples" variant="secondary">See examples</SiteButton>
           </div>
         </Reveal>

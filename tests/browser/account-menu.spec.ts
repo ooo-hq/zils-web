@@ -28,12 +28,10 @@ async function account(page: Page, signedIn = true, failSignOut = false) {
   return { requests, errors };
 }
 
-test('signed-out visitors join early access and invited users can find sign-in', async ({ page }) => {
+test('signed-out visitors get started from the header', async ({ page }) => {
   const { errors } = await account(page, false);
   await page.goto('/model');
-  await page.locator('header').getByRole('link', { name: 'Early access', exact: true }).click();
-  await expect(page.getByRole('form', { name: 'Join Zils early access' })).toBeVisible();
-  await page.getByRole('link', { name: 'Sign in to your workspace' }).click();
+  await page.locator('header').getByRole('link', { name: 'Get started', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Sign in.', exact: true })).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'Email' })).toBeVisible();
   expect(errors).toEqual([]);
@@ -62,7 +60,7 @@ test('account menu follows navigation and signing out clears both header and wor
   await expect(page.getByRole('link', { name: 'Train a model', exact: true })).toHaveCount(0);
   await expect(sidebar.getByText('Not signed in', { exact: true })).toBeVisible();
   await page.goto('/model');
-  await expect(page.locator('header').getByRole('link', { name: 'Early access', exact: true })).toBeVisible();
+  await expect(page.locator('header').getByRole('link', { name: 'Get started', exact: true })).toBeVisible();
   expect(requests.filter(request => request === 'POST /auth/v1/logout')).toHaveLength(1);
   expect(errors).toEqual([]);
 });
@@ -73,7 +71,7 @@ test('server sign-out failure reports local sign-out honestly', async ({ page })
   await page.getByRole('button', { name: 'Account', exact: true }).click();
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await expect(page.locator('header').getByRole('alert')).toHaveText('Signed out on this device. Server sign-out could not be confirmed.');
-  await expect(page.locator('header').getByRole('link', { name: 'Early access', exact: true })).toBeVisible();
+  await expect(page.locator('header').getByRole('link', { name: 'Get started', exact: true })).toBeVisible();
 });
 
 test('workspace account controls stay at the top on mobile', async ({ page }) => {

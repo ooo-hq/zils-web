@@ -9,7 +9,7 @@ const LINK_GROUPS = [
     { href: docsUrl, label: 'Docs' },
     { href: '/examples', label: 'Examples' },
     { href: '/pricing', label: 'Pricing' },
-    { href: '/early-access', label: 'Early access' },
+    { href: '/sign-in', label: 'Get started' },
   ] },
   { label: 'Explore', links: [
     { href: '/model', label: 'Research' },
