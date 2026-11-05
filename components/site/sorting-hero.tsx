@@ -252,7 +252,7 @@ export function SortingHero({ title, description }: { title: string; description
         <h1 className={css.h}>{title}</h1>
         <p className={css.sub}>{description}</p>
         <div className={css.btns}>
-          <SiteButton href="/early-access" variant="primary">Request early access</SiteButton>
+          <SiteButton href="/sign-in" variant="primary">Get started</SiteButton>
           <SiteButton href="#workflow" variant="secondary">See how it works</SiteButton>
         </div>
         <DecisionConsole decision={decision} />

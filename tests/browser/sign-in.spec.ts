@@ -11,25 +11,19 @@ test('Continue with Google starts OAuth and returns to /train', async ({ page })
   expect(url.searchParams.get('redirect_to')).toBe('http://127.0.0.1:3107/train');
 });
 
-test('an emailed link never creates accounts; invite-only and success states show', async ({ page }) => {
-  let attempts = 0;
+test('an emailed link creates the account for a new address', async ({ page }) => {
   await page.route('http://127.0.0.1:8998/auth/v1/otp**', async route => {
     const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-expose-headers': 'x-supabase-api-version', 'x-supabase-api-version': '2024-01-01' };
     if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
-    expect(route.request().postDataJSON()).toMatchObject({ email: 'invited@example.com', create_user: false });
+    expect(route.request().postDataJSON()).toMatchObject({ email: 'new@example.com', create_user: true });
     expect(new URL(route.request().url()).searchParams.get('redirect_to')).toBe('http://127.0.0.1:3107/train');
-    attempts++;
-    await route.fulfill({ headers, status: attempts === 1 ? 400 : 200, json: attempts === 1 ? { code: 'otp_disabled', msg: 'Signups not allowed for otp' } : {} });
+    await route.fulfill({ headers, json: {} });
   });
   await page.goto('/sign-in');
-  await page.getByRole('textbox', { name: 'Email' }).fill('invited@example.com');
-  await page.getByRole('button', { name: 'Email me a sign-in link', exact: true }).click();
-  await expect(page.getByRole('main').getByRole('alert')).toContainText('invite-only');
-  await expect(page.getByRole('textbox', { name: 'Email' })).toHaveValue('invited@example.com');
+  await page.getByRole('textbox', { name: 'Email' }).fill('new@example.com');
   await page.getByRole('button', { name: 'Email me a sign-in link', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Check your email.' })).toBeVisible();
   await expect(page.getByRole('status')).toBeFocused();
-  expect(attempts).toBe(2);
 });
 
 test('a signed-in visitor goes straight to the workspace', async ({ page }) => {
@@ -43,12 +37,13 @@ test('a signed-in visitor goes straight to the workspace', async ({ page }) => {
   expect(await page.evaluate(() => (window as unknown as { seen: boolean }).seen)).toBe(false);
 });
 
-test('the page has its own theme toggle and the early-access link', async ({ page }) => {
+test('the page has its own theme toggle and says new visitors get a workspace', async ({ page }) => {
   await page.goto('/sign-in');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await page.getByRole('button', { name: 'Light mode', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await expect(page.getByRole('link', { name: 'Get early access', exact: true })).toHaveAttribute('href', '/early-access');
+  await expect(page.getByText('New here? Signing in creates your workspace.')).toBeVisible();
+  await expect(page.getByText(/invite-only/)).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Terms' })).toHaveAttribute('href', '/terms');
 });
 

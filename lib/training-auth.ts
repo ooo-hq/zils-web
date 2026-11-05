@@ -15,9 +15,9 @@ export function signInWithGoogle(client: SupabaseClient, origin: string, returnP
   });
 }
 
-/** Email a sign-in link. Never creates accounts: workspaces are invite-only. */
+/** Email a sign-in link. A new address gets a new account. */
 export function sendSignInLink(client: SupabaseClient, email: string, origin: string) {
-  return client.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false, emailRedirectTo: `${origin}/train` } });
+  return client.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: `${origin}/train` } });
 }
 
 /** Preserve active sessions and PKCE flows; use the Zils key for new sessions. */

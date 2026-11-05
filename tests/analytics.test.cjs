@@ -53,7 +53,7 @@ test('analytics excludes internal tools and artifact IDs while keeping public re
   for (const path of ['/admin', '/admin/access', '/pricing-lab', '/pricing-lab/', '/a', '/a/private-id', '/train/models', '/train/models/10000000-0000-4000-8000-000000000001', '/models', '/models/10000000-0000-4000-8000-000000000001']) {
     assert.equal(transformRequest({ n: 'pageview', d: 'zils.ai', u: `https://zils.ai${path}` }), null);
   }
-  for (const path of ['/', '/pricing', '/model', '/model/chess-study', '/early-access']) {
+  for (const path of ['/', '/pricing', '/model', '/model/chess-study', '/sign-in']) {
     const event = transformRequest({ n: 'pageview', d: 'zils.ai', u: `https://zils.ai${path}` });
     assert.equal(event.u, `https://zils.ai${path}`);
     assert.equal(event.r, null);

@@ -39,10 +39,10 @@ for (const action of ['Approve', 'Deny']) test(`signed-in CLI ${action.toLowerCa
   expect(page.url()).not.toContain('access_token');
 });
 
-test('email sign-in preserves the CLI request and never creates accounts', async ({ page }) => {
+test('email sign-in preserves the CLI request and creates new accounts', async ({ page }) => {
   await page.route('http://127.0.0.1:8998/auth/v1/otp**', async route => {
     if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
-    expect(route.request().postDataJSON()).toMatchObject({ email: 'invited@example.com', create_user: false });
+    expect(route.request().postDataJSON()).toMatchObject({ email: 'invited@example.com', create_user: true });
     expect(new URL(route.request().url()).searchParams.get('redirect_to')).toBe('http://127.0.0.1:3107' + path);
     return route.fulfill({ headers, json: {} });
   });

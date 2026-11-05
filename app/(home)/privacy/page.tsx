@@ -49,7 +49,7 @@ export default function PrivacyPage() {
       </PolicySection>
 
       <PolicySection title="Contact messages and service providers">
-        <p>If you join the early-access email list, we store your email address in Supabase and use it for access updates. Joining the list does not create a workspace account. You can use the contact form to request removal.</p>
+        <p>If you joined the early-access email list, we store your email address in Supabase and use it for product updates. You can use the contact form to request removal.</p>
         <p>The contact form sends your name, email address, optional company name, and message through Resend to the Zils support inbox so we can respond.</p>
         <p>Vercel hosts the website; Supabase supports authentication and job records and retains existing file copies during migration; DigitalOcean Spaces provides private file storage; Resend delivers contact messages. Hosting, authentication, and delivery infrastructure may process technical records such as request details, IP addresses, and delivery events as part of operating those services.</p>
       </PolicySection>

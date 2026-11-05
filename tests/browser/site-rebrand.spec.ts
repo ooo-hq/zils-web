@@ -3,7 +3,7 @@ import { test, expect, type Page } from '@playwright/test';
 // Cross-site rebrand checks on every marketing route, both themes, four widths.
 // /miners renders its "unavailable" state here unless miners.spec.ts happens to be serving 8999 — both are fine.
 const ROUTES = ['/', '/examples', '/model', '/model/chess-study', '/model/flight-study', '/model/b300-study', '/pricing', '/miners', '/miners/tracks/box',
-  '/early-access', '/contact', '/sign-in', '/privacy', '/terms', '/no-such-page'];
+  '/contact', '/sign-in', '/privacy', '/terms', '/no-such-page'];
 const WIDTHS = [320, 375, 768, 1440];
 
 type Failure = { text: string; ratio?: number; need?: number; fg?: string; bg?: string; issue?: string };

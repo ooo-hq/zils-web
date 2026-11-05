@@ -9,22 +9,22 @@ const centered = (page: Page) => page.evaluate(() => {
   return Math.abs((r.left + r.right) / 2 - document.documentElement.getBoundingClientRect().width / 2);
 });
 
-test('signed out: centered nav, Sign in and Early access', async ({ page }) => {
+test('signed out: centered nav, Sign in and Get started', async ({ page }) => {
   await page.goto('/model');
   const header = page.locator('header');
   await expect(header.getByRole('link', { name: 'Sign in', exact: true })).toHaveAttribute('href', '/sign-in');
-  await expect(header.getByRole('link', { name: 'Early access', exact: true })).toBeVisible();
+  await expect(header.getByRole('link', { name: 'Get started', exact: true })).toHaveAttribute('href', '/sign-in');
   expect(await centered(page)).toBeLessThanOrEqual(2);
 });
 
-test('signed in: centered nav, Account menu replaces Early access', async ({ page }) => {
+test('signed in: centered nav, Account menu replaces Get started', async ({ page }) => {
   await signIn(page);
   await page.goto('/model');
   const header = page.locator('header');
   await header.getByRole('button', { name: 'Account', exact: true }).click();
   for (const name of ['Your workspace', 'Billing']) await expect(header.getByRole('link', { name, exact: true })).toBeVisible();
   await expect(header.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible();
-  await expect(header.getByRole('link', { name: 'Early access', exact: true })).toHaveCount(0);
+  await expect(header.getByRole('link', { name: 'Get started', exact: true })).toHaveCount(0);
   await expect(header.getByRole('link', { name: 'Sign in', exact: true })).toHaveCount(0);
   expect(await centered(page)).toBeLessThanOrEqual(2);
 });
@@ -97,7 +97,7 @@ test.describe('mobile menu', () => {
     if (signedIn) await signIn(page);
     await page.setViewportSize({ width: 320, height: 700 });
     await page.goto('/model');
-    await expect(page.locator('header').getByRole(signedIn ? 'button' : 'link', { name: signedIn ? 'Account' : 'Early access', exact: true })).toBeVisible();
+    await expect(page.locator('header').getByRole(signedIn ? 'button' : 'link', { name: signedIn ? 'Account' : 'Get started', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     const r = await page.locator('header.zs').evaluate(h => [h.scrollWidth, h.clientWidth]);
     expect(r[0]).toBeLessThanOrEqual(r[1]);
