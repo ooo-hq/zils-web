@@ -147,3 +147,24 @@
 @media (prefers-reduced-motion: no-preference) {
   .part { transition: opacity .2s; }
 }
+
+/* The round clock: a day dial painted with the brand spectrum (tokens --zs-spectrum, as conic stops), warm at
+   the deadline that opened the round and cool at the one that closes it. --round is how far the round has run. */
+@property --round { syntax: '<number>'; inherits: false; initial-value: 0; }
+.round { display: flex; align-items: center; gap: 16px; }
+.dial { position: relative; width: 56px; height: 56px; flex: none; }
+.ring { position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(#ef8d5a 0turn, #d9a08c .18turn, #cfa2e4 .42turn, #c3b4f6 .64turn, #a9b5f2 .82turn, #8ea6ff 1turn);
+  --ring-shape: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px));
+  -webkit-mask: conic-gradient(#000 calc(var(--round) * 1turn), transparent 0), var(--ring-shape);
+  -webkit-mask-composite: source-in;
+  mask: conic-gradient(#000 calc(var(--round) * 1turn), transparent 0), var(--ring-shape);
+  mask-composite: intersect;
+  transition: --round 1.4s cubic-bezier(.2, .7, .2, 1); }
+.ringTrack { position: absolute; inset: 0; border: 4px solid var(--zs-line); border-radius: 50%; }
+.roundTime { margin: 0; font-weight: 300; font-size: 34px; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--zs-fg); }
+.roundLabel, .grading { margin: 8px 0 0; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--zs-t3); }
+.grading { margin-top: 4px; display: flex; align-items: center; gap: 8px; }
+.grading::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--zs-orange); }
+.nowrap { white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .ring { transition: none; } }

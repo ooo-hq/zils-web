@@ -72,17 +72,39 @@ export function minerRows(chain: NetworkBodies, soup: { tiers: { pool: string; r
 export type MinerRow = ReturnType<typeof minerRows>[number];
 
 /** What a tier's card says about the bodies still to be graded: how many wait (`pending`, or every body while the
- *  tier has no round yet) and when the next round freezes its bodies (the pool's next deadline after `now`, ISO;
- *  null for a pool with no deadline, such as one not yet open). */
-export function tierQueue(pool: string, rows: Pick<MinerRow, 'body' | 'standing'>[], now = Date.now()) {
+ *  tier has no round yet), when the last round froze its bodies (`froze`) and the next one will (`freezes`), both
+ *  ISO and null for a pool with no deadline, such as one not yet open. `grading` is true between a deadline and
+ *  that day's round reaching the feed: `latest` is the newest published round id, which ends in its day. */
+export function tierQueue(pool: string, rows: Pick<MinerRow, 'body' | 'standing'>[], now = Date.now(), latest: string | null = null) {
   const waiting = rows.filter(r => r.body?.pool === pool && (r.standing === 'pending' || r.standing === 'waiting')).length;
   const hour = DEADLINE_UTC[pool];
-  if (!hour) return { waiting, freezes: null as string | null };
+  if (!hour) return { waiting, froze: null as string | null, grading: false, freezes: null as string | null };
   const today = new Date(now).toISOString().slice(0, 10);
-  let freezes = Date.parse(`${today}T${hour}:00Z`);
-  if (freezes <= now) freezes += 86_400_000;
-  return { waiting, freezes: new Date(freezes).toISOString() };
+  let froze = Date.parse(`${today}T${hour}:00Z`);
+  if (froze > now) froze -= 86_400_000;
+  const frozeDay = new Date(froze).toISOString().slice(0, 10);
+  const latestDay = latest ? /(\d{4}-\d{2}-\d{2})$/.exec(latest)?.[1] : undefined;
+  return {
+    waiting,
+    froze: new Date(froze).toISOString(),
+    grading: latestDay !== undefined && latestDay < frozeDay,
+    freezes: new Date(froze + 86_400_000).toISOString(),
+  };
 }
+
+/** A time left on the round clock as `22:54:08`; never below `0:00:00`. */
+export function clockTime(ms: number) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${Math.floor(total / 3600)}:${pad(Math.floor((total % 3600) / 60))}:${pad(total % 60)}`;
+}
+
+/** How far a round's commit window has run, 0 at the deadline that opened it (`froze`) and 1 at the next. */
+export function roundProgress(froze: string, freezes: string, now: number) {
+  const start = Date.parse(froze), end = Date.parse(freezes);
+  return Math.min(1, Math.max(0, (now - start) / (end - start)));
+}
+
 export type { Rounds };
 
 /** The chain view, or null when the feed is unconfigured, down, malformed or more than an hour old. */
