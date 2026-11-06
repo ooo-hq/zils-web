@@ -177,3 +177,17 @@ test('the live summary counts checked bodies among the new ones and names the on
   assert.equal(summary.stage, 'intake');
   assert.equal(liveSummary(live(claims, { stage: 'scoring' })).checking, null);
 });
+
+// GET /v1/network/soup `intake`: the newest finished intake, graded and rejected hashes, passed-over claims.
+test('a tier’s intake passes the schema and anything extra is refused', () => {
+  const intake = () => ({ round_id: 'd3-mini-2026-11-06', max_new_per_round: 12, graded: ['a'.repeat(64)], rejected: [],
+    claims: [{ uid: 193, sha256: 'b'.repeat(64), state: 'deferred', reason: 'the round’s new-body cap is reached; retried next round' }] });
+  const ok = valid(); ok.tiers[0].intake = intake();
+  assert.equal(soupBoardSchema.safeParse(ok).success, true);
+  const none = valid(); none.tiers[0].intake = { ...intake(), round_id: null, claims: [] };
+  assert.equal(soupBoardSchema.safeParse(none).success, true);
+  for (const change of [i => { i.secret = 1; }, i => { i.claims[0].state = 'banned'; }, i => { i.graded = ['x']; }, i => { i.claims[0].note = 'x'; }]) {
+    const bad = valid(); bad.tiers[0].intake = intake(); change(bad.tiers[0].intake);
+    assert.equal(soupBoardSchema.safeParse(bad).success, false);
+  }
+});

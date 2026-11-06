@@ -168,3 +168,56 @@ test('a page out of range or not a number shows the nearest real page', () => {
   }
   assert.deepEqual(minerPage([], '2'), { rows: [], page: 1, pages: 1, total: 0, from: 0, to: 0 });
 });
+
+// Between rounds, the tier's `intake` (zils soup_publish.intake) says which bodies the validator has graded and
+// why last round passed some over. Ungraded bodies line up in commitment order: block, then hotkey, then uid.
+test('ungraded bodies line up by commit block against the next round’s limit', () => {
+  const sha = c => c.repeat(64);
+  const chain = { network: 'finney', netuid: 127, block: 9448539, as_of: new Date().toISOString(), miners: [
+    { uid: 64, hotkey: '5B', body: { ...body('d3-lite', '1'), block: 9442157 }, serving: false },
+    { uid: 193, hotkey: '5A', body: { ...body('d3-lite', '2'), block: 9442402 }, serving: false },
+    { uid: 72, hotkey: '5C', body: { ...body('d3-lite', '3'), block: 9444901 }, serving: false },
+    { uid: 150, hotkey: '5D', body: { ...body('d3-lite', '4'), block: 9442402 }, serving: false },
+    { uid: 80, hotkey: '5E', body: { ...body('d3-lite', '5'), block: 9428404 }, serving: false },
+    { uid: 165, hotkey: '5F', body: { ...body('d3-lite', '6'), block: 9438537 }, serving: false },
+    { uid: 9, hotkey: '5G', body: { ...body('d3-lite', '7'), block: 9440000 }, serving: false },
+  ] };
+  const lite = { tiers: [{ pool: 'd3-lite', tier: 'z3-lite', rounds: [round([], null, 'd3-lite-2026-11-06')], intake: {
+    round_id: 'd3-lite-2026-11-06', max_new_per_round: 2, graded: [sha('5')], rejected: [sha('7')],
+    claims: [
+      { uid: 193, sha256: sha('2'), state: 'deferred', reason: 'the round’s new-body cap is reached; retried next round' },
+      { uid: 165, sha256: sha('6'), state: 'refused', reason: null },
+      { uid: 72, sha256: sha('9'), state: 'refused', reason: null },  // an older body: uid 72 has recommitted since
+    ],
+  } }] };
+  const rows = Object.fromEntries(minerRows(chain, lite).map(r => [r.uid, r]));
+  assert.equal(rows[80].standing, 'out');            // graded: last night's standing as before
+  assert.equal(rows[165].standing, 'refused');
+  assert.equal(rows[9].standing, 'refused');         // its hash was rejected
+  assert.deepEqual([64, 193, 150, 72].map(u => [rows[u].standing, rows[u].line]), [
+    ['in_line', { position: 1, limit: 2, next: true, reason: null }],
+    ['in_line', { position: 2, limit: 2, next: true, reason: 'the round’s new-body cap is reached' }],
+    ['in_line', { position: 3, limit: 2, next: false, reason: null }],  // same block as 193: hotkey 5D sorts after 5A
+    ['in_line', { position: 4, limit: 2, next: false, reason: null }],
+  ]);
+  assert.equal(rows[80].line, null);
+});
+
+test('a running round’s state still wins over the line', () => {
+  const chain = valid();
+  const tiers = structuredClone(soup);
+  tiers.tiers[0].intake = { round_id: 'd3-mini-2026-11-04', max_new_per_round: 6, graded: [], rejected: [], claims: [] };
+  assert.equal(minerRows(chain, tiers).find(r => r.uid === 5).standing, 'in_line');
+  tiers.tiers[0].live = { round_id: 'd3-mini-2026-11-05', stage: 'intake', running: true, claims: [{ uid: 5, state: 'checking' }] };
+  assert.equal(minerRows(chain, tiers).find(r => r.uid === 5).standing, 'checking');
+});
+
+test('bodies in line count as waiting on the tier card', () => {
+  assert.equal(tierQueue('d3-lite', [{ body: { pool: 'd3-lite' }, standing: 'in_line' }], Date.parse('2026-11-06T12:00:00Z')).waiting, 1);
+});
+
+test('after the soup, bodies in line come next in their tier’s line order, lite before mini', () => {
+  const inLine = (uid, tier, position) => ({ uid, standing: 'in_line', tier, line: { position, limit: 12, next: true, reason: null } });
+  const rows = [row(9, 'out'), inLine(193, 'z3-lite', 2), row(7, 'crown'), inLine(64, 'z3-lite', 1), inLine(8, 'z3-mini', 1), row(1, 'none')];
+  assert.deepEqual(minerPage(rows, undefined).rows.map(r => r.uid), [7, 64, 193, 8, 1, 9]);
+});

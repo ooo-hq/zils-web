@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { serviceUrl } from './training';
-import { poolTier, type Tier } from './soup-tiers';
+import { poolTier, TIER_NAMES, type Tier } from './soup-tiers';
 import type { SoupBoard } from './soup-board';
 
 // Contract for GET /v1/network/bodies (zils-platform, Linear ZIL-109): every uid that has committed a soup body
@@ -27,10 +27,17 @@ export type NetworkBodies = z.infer<typeof networkBodiesSchema>;
  *  out: the tier cooked without it; pending: committed after tonight's deadline, so the next round grades it;
  *  waiting: the tier has not cooked yet; unknown: no soup feed; none: no body. */
 export type Standing = 'crown' | 'seat' | 'unpaid' | 'out' | 'pending' | 'waiting' | 'unknown' | 'none'
-  | 'checking' | 'checked' | 'queued' | 'deferred' | 'refused';
+  | 'checking' | 'checked' | 'queued' | 'deferred' | 'refused' | 'in_line';
 // While a tier's round runs (zils#205 `live`), a new claim's state replaces last night's standing.
 const LIVE: Partial<Record<string, Standing>> = { checking: 'checking', admitted: 'checked', waiting: 'queued', deferred: 'deferred', refused: 'refused' };
 type Live = { claims: { uid: number; state: string }[] };
+// Between rounds, a tier's `intake` (zils soup_publish.intake): a body the validator has not graded is in line
+// (`in_line`), refused when its hash or its claim was refused. The line is commitment order, as intake reads it.
+type Intake = { max_new_per_round: number; graded: string[]; rejected: string[]; claims: { uid: number; sha256: string; state: string; reason: string | null }[] };
+type Tiers = { pool: string; rounds: Round[]; live?: Live; intake?: Intake }[];
+/** A body's place in its pool's line: 1-based, against the next round's new-body limit, with last round's
+ *  deferral reason (its "retried next round" tail dropped) when that round passed over this same body. */
+export type Line = { position: number; limit: number; next: boolean; reason: string | null };
 
 type Rounds = Pick<SoupBoard['tiers'][number], 'pool' | 'rounds'>[];
 type Round = Pick<SoupBoard['tiers'][number]['rounds'][number], 'round_id' | 'pool_id' | 'members' | 'crown'>;
@@ -55,11 +62,16 @@ function committedAfter(round: Round, chain: Pick<NetworkBodies, 'block' | 'as_o
   return committed > deadline(round) + DEADLINE_MARGIN_MS;
 }
 
-function standing(uid: number, body: NonNullable<NetworkBodies['miners'][number]['body']>, chain: Pick<NetworkBodies, 'block' | 'as_of'>, tiers: { pool: string; rounds: Round[]; live?: Live }[] | null): Standing {
+function standing(uid: number, body: NonNullable<NetworkBodies['miners'][number]['body']>, chain: Pick<NetworkBodies, 'block' | 'as_of'>, tiers: Tiers | null): Standing {
   if (!tiers) return 'unknown';
   const tier = tiers.find(t => t.pool === body.pool);
   const now = LIVE[tier?.live?.claims.find(c => c.uid === uid)?.state ?? ''];
   if (now) return now;
+  const intake = tier?.intake;
+  if (intake && !intake.graded.includes(body.sha256)) {
+    const claim = intake.claims.find(c => c.uid === uid && c.sha256 === body.sha256);
+    return intake.rejected.includes(body.sha256) || claim?.state === 'refused' ? 'refused' : 'in_line';
+  }
   const tonight = tier?.rounds[0];
   if (!tonight) return 'waiting';
   if (tonight.crown?.body_sha256 === body.sha256) return 'crown';
@@ -69,22 +81,37 @@ function standing(uid: number, body: NonNullable<NetworkBodies['miners'][number]
 }
 
 /** One row per uid: its chain facts, its tier, and where its body stands in tonight's soup. */
-export function minerRows(chain: NetworkBodies, soup: { tiers: { pool: string; rounds: Round[]; live?: Live }[] } | null) {
-  return chain.miners.map(m => ({
+export function minerRows(chain: NetworkBodies, soup: { tiers: Tiers } | null) {
+  const rows = chain.miners.map(m => ({
     uid: m.uid, hotkey: m.hotkey, serving: m.serving, body: m.body,
     tier: m.body ? poolTier(m.body.pool) : null as Tier | null,
     standing: m.body ? standing(m.uid, m.body, chain, soup?.tiers ?? null) : 'none' as Standing,
+    line: null as Line | null,
   }));
+  for (const tier of soup?.tiers ?? []) {
+    if (!tier.intake) continue;
+    const { max_new_per_round: limit, claims } = tier.intake;
+    const queued = rows.filter(r => r.body?.pool === tier.pool && r.standing === 'in_line')
+      .sort((a, b) => a.body!.block - b.body!.block || (a.hotkey < b.hotkey ? -1 : a.hotkey > b.hotkey ? 1 : 0) || a.uid - b.uid);
+    queued.forEach((r, i) => {
+      const deferred = claims.find(c => c.uid === r.uid && c.sha256 === r.body!.sha256 && c.state === 'deferred');
+      r.line = { position: i + 1, limit, next: i < limit, reason: deferred?.reason?.replace(/; retried next round$/, '') ?? null };
+    });
+  }
+  return rows;
 }
 export type MinerRow = ReturnType<typeof minerRows>[number];
 
 export const MINERS_PER_PAGE = 25;
-const SOUP_ORDER: Partial<Record<Standing, number>> = { crown: 0, seat: 1, unpaid: 2 };
+const SOUP_ORDER: Partial<Record<Standing, number>> = { crown: 0, seat: 1, unpaid: 2, in_line: 3 };
 
-/** One page of the chain table: tonight's soup first (crown, paid seats, unpaid seats), then everyone else by
- *  uid. `asked` is the raw `?page=` value; anything out of range or not a number shows the nearest real page. */
-export function minerPage<R extends { uid: number; standing: Standing }>(rows: R[], asked: string | string[] | undefined) {
-  const ordered = [...rows].sort((a, b) => (SOUP_ORDER[a.standing] ?? 3) - (SOUP_ORDER[b.standing] ?? 3) || a.uid - b.uid);
+/** One page of the chain table: tonight's soup first (crown, paid seats, unpaid seats), then bodies in line by
+ *  tier and place, then everyone else by uid. `asked` is the raw `?page=` value; anything out of range or not a
+ *  number shows the nearest real page. */
+export function minerPage<R extends { uid: number; standing: Standing; tier?: Tier | null; line?: Line | null }>(rows: R[], asked: string | string[] | undefined) {
+  const group = (r: R) => SOUP_ORDER[r.standing] ?? 4;
+  const inLine = (a: R, b: R) => TIER_NAMES.indexOf(a.tier!) - TIER_NAMES.indexOf(b.tier!) || a.line!.position - b.line!.position;
+  const ordered = [...rows].sort((a, b) => group(a) - group(b) || (a.line && b.line ? inLine(a, b) : 0) || a.uid - b.uid);
   const pages = Math.max(1, Math.ceil(ordered.length / MINERS_PER_PAGE));
   const wanted = Number.parseInt(Array.isArray(asked) ? asked[0] : asked ?? '1', 10);
   const page = Math.min(pages, Math.max(1, Number.isFinite(wanted) ? wanted : 1));
@@ -98,7 +125,7 @@ export function minerPage<R extends { uid: number; standing: Standing }>(rows: R
  *  ISO and null for a pool with no deadline, such as one not yet open. `grading` is true between a deadline and
  *  that day's round reaching the feed: `latest` is the newest published round id, which ends in its day. */
 export function tierQueue(pool: string, rows: Pick<MinerRow, 'body' | 'standing'>[], now = Date.now(), latest: string | null = null) {
-  const waiting = rows.filter(r => r.body?.pool === pool && (r.standing === 'pending' || r.standing === 'waiting')).length;
+  const waiting = rows.filter(r => r.body?.pool === pool && (r.standing === 'pending' || r.standing === 'waiting' || r.standing === 'in_line')).length;
   const hour = DEADLINE_UTC[pool];
   if (!hour) return { waiting, froze: null as string | null, grading: false, freezes: null as string | null };
   const today = new Date(now).toISOString().slice(0, 10);
