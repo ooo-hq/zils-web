@@ -4,7 +4,7 @@ import { SiteFrame } from '@/components/site/site-frame';
 import { SectionRow } from '@/components/site/section-row';
 import { DetailsRow } from '@/components/site/details-row';
 import { InstallCommand } from '@/components/site/install-command';
-import { networkBodies, minerRows, minerPage, tierQueue } from '@/lib/network-bodies';
+import { networkBodies, minerRows, minerPage, minerSort, tierQueue } from '@/lib/network-bodies';
 import { soupBoard, tierView } from '@/lib/soup-board';
 import { TIER_NAMES } from '@/lib/soup-tiers';
 import { Rehearsal } from './rehearsal';
@@ -76,6 +76,7 @@ export default async function MinersPage({ searchParams }: { searchParams: Promi
   const [soup, chain, query] = await Promise.all([soupBoard(), networkBodies(), searchParams]);
   const views = new Map((soup?.tiers ?? []).map(t => [t.tier, tierView(t)]));
   const rows = chain ? minerRows(chain, soup) : null;
+  const sort = minerSort(query.sort, query.dir);
   const queues = new Map((soup?.tiers ?? []).map(t => [t.tier, rows ? tierQueue(t.pool, rows, undefined, t.rounds[0]?.round_id ?? null) : null]));
   // Launch state: the chain view is live and no miner has committed a body, so every bowl is house models only.
   const noMinerBodies = chain !== null && !chain.miners.some(m => m.body);
@@ -104,7 +105,7 @@ export default async function MinersPage({ searchParams }: { searchParams: Promi
 
       <SectionRow n="02" label="Miners on chain" note={chain ? `Subnet ${chain.netuid}` : undefined} />
       <section id="miners" aria-label="Miners on chain" className={b.plate}>
-        {chain && rows ? <ChainTable chain={chain} page={minerPage(rows, query.page)} /> : <p className={b.down}>The chain view is unavailable right now.</p>}
+        {chain && rows ? <ChainTable chain={chain} page={minerPage(rows, query.page, sort)} sort={sort} /> : <p className={b.down}>The chain view is unavailable right now.</p>}
       </section>
 
       <SectionRow n="03" label="How miners earn" note="お品書き" />
