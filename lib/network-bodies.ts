@@ -78,6 +78,21 @@ export function minerRows(chain: NetworkBodies, soup: { tiers: { pool: string; r
 }
 export type MinerRow = ReturnType<typeof minerRows>[number];
 
+export const MINERS_PER_PAGE = 25;
+const SOUP_ORDER: Partial<Record<Standing, number>> = { crown: 0, seat: 1, unpaid: 2 };
+
+/** One page of the chain table: tonight's soup first (crown, paid seats, unpaid seats), then everyone else by
+ *  uid. `asked` is the raw `?page=` value; anything out of range or not a number shows the nearest real page. */
+export function minerPage<R extends { uid: number; standing: Standing }>(rows: R[], asked: string | string[] | undefined) {
+  const ordered = [...rows].sort((a, b) => (SOUP_ORDER[a.standing] ?? 3) - (SOUP_ORDER[b.standing] ?? 3) || a.uid - b.uid);
+  const pages = Math.max(1, Math.ceil(ordered.length / MINERS_PER_PAGE));
+  const wanted = Number.parseInt(Array.isArray(asked) ? asked[0] : asked ?? '1', 10);
+  const page = Math.min(pages, Math.max(1, Number.isFinite(wanted) ? wanted : 1));
+  const start = (page - 1) * MINERS_PER_PAGE;
+  const slice = ordered.slice(start, start + MINERS_PER_PAGE);
+  return { rows: slice, page, pages, total: ordered.length, from: slice.length ? start + 1 : 0, to: start + slice.length };
+}
+
 /** What a tier's card says about the bodies still to be graded: how many wait (`pending`, or every body while the
  *  tier has no round yet), when the last round froze its bodies (`froze`) and the next one will (`freezes`), both
  *  ISO and null for a pool with no deadline, such as one not yet open. `grading` is true between a deadline and

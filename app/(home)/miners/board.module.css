@@ -86,6 +86,12 @@
 .rev { margin-left: 4px; }
 .table tr:is([data-standing="out"], [data-standing="waiting"], [data-standing="none"], [data-standing="unknown"], [data-standing="queued"], [data-standing="deferred"], [data-standing="refused"]) .standing, .table td:last-child { color: var(--zs-t2); }
 .chip { display: inline-block; width: 10px; height: 10px; margin-right: 8px; background: var(--zs-spectrum); vertical-align: -1px; }
+/* Pages of the sheet: plain links on the counter, the page's rows between them. */
+.pager { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 14px 0 0; font-size: 13.5px; color: var(--zs-t2); font-variant-numeric: tabular-nums; }
+.pager a { color: #fff; text-decoration: underline; text-decoration-color: rgba(255,255,255,.5); text-underline-offset: 3px; }
+.pager a:hover { text-decoration-color: #fff; }
+.pager a:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.pager span[aria-hidden] { color: var(--zs-t3); opacity: .6; }
 /* No rows: the outline of a sheet, as an invitation. */
 .empty { margin: 0; max-width: 420px; padding: 18px 20px; border: 1px dashed rgba(255,255,255,.5); font-size: 14.5px; line-height: 1.5; color: #fff; }
 .empty a { color: #fff; text-decoration: underline; text-decoration-color: rgba(255,255,255,.5); text-underline-offset: 3px; }

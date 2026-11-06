@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { hfTree } from '@/lib/soup-tiers';
 import type { MinerRow, NetworkBodies, Standing } from '@/lib/network-bodies';
+
+type Page = { rows: MinerRow[]; page: number; pages: number; total: number; from: number; to: number };
 import s from './board.module.css';
 
 const STANDING: Record<Standing, string> = {
@@ -12,9 +14,21 @@ const STANDING: Record<Standing, string> = {
 };
 const short = (hotkey: string) => `${hotkey.slice(0, 6)}…${hotkey.slice(-4)}`;
 
+/** Previous and next pages of the sheet; each link lands back on the table. */
+function Pager({ page }: { page: Page }) {
+  if (page.pages < 2) return null;
+  const to = (n: number) => `/miners?page=${n}#miners`;
+  return <nav className={s.pager} aria-label="Miner pages">
+    {page.page > 1 ? <Link href={to(page.page - 1)} rel="prev">Previous</Link> : <span aria-hidden="true">Previous</span>}
+    <span>{page.from}–{page.to} of {page.total}</span>
+    {page.page < page.pages ? <Link href={to(page.page + 1)} rel="next">Next</Link> : <span aria-hidden="true">Next</span>}
+  </nav>;
+}
+
 /** The pass: every uid with a soup body or a serving endpoint on chain, one row of the order sheet on the purple
- *  counter, joined with tonight's soups for the standing. */
-export function ChainTable({ chain, rows }: { chain: NetworkBodies; rows: MinerRow[] }) {
+ *  counter, joined with tonight's soups for the standing. Tonight's soup comes first, 25 rows a page. */
+export function ChainTable({ chain, page }: { chain: NetworkBodies; page: Page }) {
+  const rows = page.rows;
   return <div className={s.pass}>
     {rows.length ? <div className={s.sheet}>
       <table className={s.table} aria-label="Miners on chain" data-contrast>
@@ -29,6 +43,7 @@ export function ChainTable({ chain, rows }: { chain: NetworkBodies; rows: MinerR
         </tr>)}</tbody>
       </table>
     </div> : <p className={s.empty}>No miner has committed a body yet. <Link href="/soup">Bring a body to the soup</Link></p>}
+    <Pager page={page} />
     <p className={s.fine}><span>Block {chain.block.toLocaleString('en-US')}</span> on subnet {chain.netuid}. Bodies come from chain commitments; a miner may hold one per hotkey. Each round freezes its bodies at its pool’s deadline (mini 00:00 UTC, lite 06:00 UTC; 7 PM and 1 AM New York); a body committed later waits for the next round. An announced endpoint means the miner can serve; Zils does not send traffic to miners yet.</p>
   </div>;
 }
