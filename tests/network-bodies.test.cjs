@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { networkBodiesSchema, networkBodies, minerRows, tierQueue, clockTime, roundProgress } = require('../.private/test-build/network-bodies.js');
+const { networkBodiesSchema, networkBodies, minerRows, tierQueue, clockTime, roundProgress, minerPage, MINERS_PER_PAGE } = require('../.private/test-build/network-bodies.js');
 
 // GET /v1/network/bodies (zils-platform, ZIL-109): every uid with a soup body commitment or a serving endpoint.
 const body = (pool, sha, repo = 'owner/body') => ({ pool, sha256: sha.repeat(64), revision: 'f'.repeat(40), repo, block: 8300000 });
@@ -141,4 +141,30 @@ test('while a tier’s round runs, each claim says where its check stands', () =
     running.tiers[0].live.claims[1].state = state;
     assert.equal(minerRows(valid(), running).find(r => r.uid === 5).standing, standing);
   }
+});
+
+// /miners shows the chain table 25 rows at a time, tonight's soup first.
+const row = (uid, standing) => ({ uid, standing });
+
+test('the soup comes first: crown, paid seats, unpaid seats, then everyone else by uid', () => {
+  const rows = [row(9, 'out'), row(3, 'seat'), row(7, 'crown'), row(1, 'none'), row(5, 'unpaid'), row(2, 'seat')];
+  assert.deepEqual(minerPage(rows, undefined).rows.map(r => r.uid), [7, 2, 3, 5, 1, 9]);
+});
+
+test('pages are 25 rows, numbered from 1, and say which rows they show', () => {
+  assert.equal(MINERS_PER_PAGE, 25);
+  const rows = Array.from({ length: 80 }, (_, i) => row(i + 1, 'out'));
+  const first = minerPage(rows, undefined);
+  assert.deepEqual({ page: first.page, pages: first.pages, total: first.total, from: first.from, to: first.to },
+    { page: 1, pages: 4, total: 80, from: 1, to: 25 });
+  const last = minerPage(rows, '4');
+  assert.deepEqual([last.from, last.to, last.rows.length], [76, 80, 5]);
+});
+
+test('a page out of range or not a number shows the nearest real page', () => {
+  const rows = Array.from({ length: 30 }, (_, i) => row(i + 1, 'out'));
+  for (const [asked, page] of [['99', 2], ['0', 1], ['-3', 1], ['abc', 1], [['2', '3'], 2], [undefined, 1]]) {
+    assert.equal(minerPage(rows, asked).page, page, String(asked));
+  }
+  assert.deepEqual(minerPage([], '2'), { rows: [], page: 1, pages: 1, total: 0, from: 0, to: 0 });
 });
