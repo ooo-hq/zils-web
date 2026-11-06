@@ -105,15 +105,47 @@ export type MinerRow = ReturnType<typeof minerRows>[number];
 export const MINERS_PER_PAGE = 25;
 const SOUP_ORDER: Partial<Record<Standing, number>> = { crown: 0, seat: 1, unpaid: 2, in_line: 3 };
 
-/** One page of the chain table: tonight's soup first (crown, paid seats, unpaid seats), then bodies in line by
- *  tier and place, then everyone else by uid. `asked` is the raw `?page=` value; anything out of range or not a
- *  number shows the nearest real page. */
-export function minerPage<R extends { uid: number; standing: Standing; tier?: Tier | null; line?: Line | null }>(rows: R[], asked: string | string[] | undefined) {
+export type SortKey = 'tonight' | 'uid' | 'tier';
+export type MinerSort = { key: SortKey; dir: 'asc' | 'desc' };
+const SORT_KEYS: SortKey[] = ['tonight', 'uid', 'tier'];
+const first = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] : value;
+
+/** The chain table's sort from the raw `?sort=` and `?dir=` values; anything unknown is the default. */
+export function minerSort(sort: string | string[] | undefined, dir: string | string[] | undefined): MinerSort {
+  const key = SORT_KEYS.find(k => k === first(sort)) ?? 'tonight';
+  return { key, dir: first(dir) === 'desc' ? 'desc' : 'asc' };
+}
+
+/** A link back to the table: with `column`, its header link (the active column flips, others start ascending);
+ *  without, the same sort on `page`. The default sort and page 1 stay out of the URL. */
+export function sortHref(now: MinerSort, column: SortKey | null, page = 1) {
+  const next = column === null ? now : { key: column, dir: column === now.key && now.dir === 'asc' ? 'desc' : 'asc' };
+  const params = new URLSearchParams();
+  if (next.key !== 'tonight' || next.dir !== 'asc') { params.set('sort', next.key); params.set('dir', next.dir); }
+  if (column === null && page > 1) params.set('page', String(page));
+  const query = params.toString();
+  return `/miners${query ? `?${query}` : ''}#miners`;
+}
+
+/** One page of the chain table, sorted across every page. Tonight (the default): tonight's soup first (crown, paid
+ *  seats, unpaid seats), then bodies in line by tier and place, then everyone else by uid. Tier keeps tonight's
+ *  order inside each tier and puts rows with no tier last either way. `asked` is the raw `?page=` value; anything
+ *  out of range or not a number shows the nearest real page. */
+export function minerPage<R extends { uid: number; standing: Standing; tier?: Tier | null; line?: Line | null }>(rows: R[], asked: string | string[] | undefined, sort: MinerSort = { key: 'tonight', dir: 'asc' }) {
   const group = (r: R) => SOUP_ORDER[r.standing] ?? 4;
   const inLine = (a: R, b: R) => TIER_NAMES.indexOf(a.tier!) - TIER_NAMES.indexOf(b.tier!) || a.line!.position - b.line!.position;
-  const ordered = [...rows].sort((a, b) => group(a) - group(b) || (a.line && b.line ? inLine(a, b) : 0) || a.uid - b.uid);
+  const tonight = (a: R, b: R) => group(a) - group(b) || (a.line && b.line ? inLine(a, b) : 0) || a.uid - b.uid;
+  const tierRank = (r: R) => r.tier ? TIER_NAMES.indexOf(r.tier) : null;
+  const sign = sort.dir === 'desc' ? -1 : 1;
+  const compare = sort.key === 'uid' ? (a: R, b: R) => sign * (a.uid - b.uid)
+    : sort.key === 'tier' ? (a: R, b: R) => {
+      const [x, y] = [tierRank(a), tierRank(b)];
+      return (x === null) !== (y === null) ? (x === null ? 1 : -1) : sign * ((x ?? 0) - (y ?? 0)) || tonight(a, b);
+    }
+    : (a: R, b: R) => sign * tonight(a, b);
+  const ordered = [...rows].sort(compare);
   const pages = Math.max(1, Math.ceil(ordered.length / MINERS_PER_PAGE));
-  const wanted = Number.parseInt(Array.isArray(asked) ? asked[0] : asked ?? '1', 10);
+  const wanted = Number.parseInt(first(asked) ?? '1', 10);
   const page = Math.min(pages, Math.max(1, Number.isFinite(wanted) ? wanted : 1));
   const start = (page - 1) * MINERS_PER_PAGE;
   const slice = ordered.slice(start, start + MINERS_PER_PAGE);

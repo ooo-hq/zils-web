@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { networkBodiesSchema, networkBodies, minerRows, tierQueue, clockTime, roundProgress, minerPage, MINERS_PER_PAGE } = require('../.private/test-build/network-bodies.js');
+const { networkBodiesSchema, networkBodies, minerRows, tierQueue, clockTime, roundProgress, minerPage, minerSort, sortHref, MINERS_PER_PAGE } = require('../.private/test-build/network-bodies.js');
 
 // GET /v1/network/bodies (zils-platform, ZIL-109): every uid with a soup body commitment or a serving endpoint.
 const body = (pool, sha, repo = 'owner/body') => ({ pool, sha256: sha.repeat(64), revision: 'f'.repeat(40), repo, block: 8300000 });
@@ -220,4 +220,36 @@ test('after the soup, bodies in line come next in their tier’s line order, lit
   const inLine = (uid, tier, position) => ({ uid, standing: 'in_line', tier, line: { position, limit: 12, next: true, reason: null } });
   const rows = [row(9, 'out'), inLine(193, 'z3-lite', 2), row(7, 'crown'), inLine(64, 'z3-lite', 1), inLine(8, 'z3-mini', 1), row(1, 'none')];
   assert.deepEqual(minerPage(rows, undefined).rows.map(r => r.uid), [7, 64, 193, 8, 1, 9]);
+});
+
+// The chain table sorts on the server, so a sort covers every page: ?sort=tonight|uid|tier&dir=asc|desc.
+test('the sort comes from the query; anything unknown is the default, tonight ascending', () => {
+  assert.deepEqual(minerSort(undefined, undefined), { key: 'tonight', dir: 'asc' });
+  assert.deepEqual(minerSort('uid', 'desc'), { key: 'uid', dir: 'desc' });
+  assert.deepEqual(minerSort(['tier', 'uid'], ['desc']), { key: 'tier', dir: 'desc' });
+  assert.deepEqual(minerSort('hotkey', 'sideways'), { key: 'tonight', dir: 'asc' });
+  assert.deepEqual(minerSort('uid', 'sideways'), { key: 'uid', dir: 'asc' });
+});
+
+test('every page is sorted: by uid either way, by tier keeping tonight’s order inside a tier', () => {
+  const r = (uid, standing, tier, position) => ({ uid, standing, tier, line: position ? { position, limit: 12, next: true, reason: null } : null });
+  const rows = [r(9, 'out', 'z3-mini'), r(193, 'in_line', 'z3-lite', 2), r(7, 'crown', 'z3-mini'), r(64, 'in_line', 'z3-lite', 1), r(1, 'none', null), r(3, 'out', 'z3-lite')];
+  const uids = sort => minerPage(rows, undefined, sort).rows.map(x => x.uid);
+  assert.deepEqual(uids({ key: 'uid', dir: 'asc' }), [1, 3, 7, 9, 64, 193]);
+  assert.deepEqual(uids({ key: 'uid', dir: 'desc' }), [193, 64, 9, 7, 3, 1]);
+  assert.deepEqual(uids({ key: 'tier', dir: 'asc' }), [64, 193, 3, 7, 9, 1]);   // no tier last either way
+  assert.deepEqual(uids({ key: 'tier', dir: 'desc' }), [7, 9, 64, 193, 3, 1]);
+  assert.deepEqual(uids({ key: 'tonight', dir: 'desc' }), [9, 3, 1, 193, 64, 7]);
+  assert.deepEqual(uids(undefined), [7, 64, 193, 1, 3, 9]);
+  const many = Array.from({ length: 30 }, (_, i) => r(i + 1, 'out', 'z3-lite'));
+  assert.deepEqual(minerPage(many, '2', { key: 'uid', dir: 'desc' }).rows.map(x => x.uid), [5, 4, 3, 2, 1]);
+});
+
+test('header links flip the active column and start others ascending; links keep the sort and drop the page', () => {
+  const now = { key: 'uid', dir: 'asc' };
+  assert.equal(sortHref(now, 'uid'), '/miners?sort=uid&dir=desc#miners');
+  assert.equal(sortHref(now, 'tier'), '/miners?sort=tier&dir=asc#miners');
+  assert.equal(sortHref({ key: 'tonight', dir: 'desc' }, 'tonight'), '/miners#miners');  // back to the default
+  assert.equal(sortHref(now, null, 3), '/miners?sort=uid&dir=asc&page=3#miners');      // the pager
+  assert.equal(sortHref({ key: 'tonight', dir: 'asc' }, null, 2), '/miners?page=2#miners');
 });
