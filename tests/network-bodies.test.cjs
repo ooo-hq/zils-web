@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { networkBodiesSchema, networkBodies, minerRows, tierQueue, clockTime, roundProgress, minerPage, minerSort, sortHref, MINERS_PER_PAGE } = require('../.private/test-build/network-bodies.js');
+const { networkBodiesSchema, networkBodies, minerRows, tierQueue, clockTime, roundProgress, minerPage, minerSort, sortHref, nextRound, MINERS_PER_PAGE } = require('../.private/test-build/network-bodies.js');
 
 // GET /v1/network/bodies (zils-platform, ZIL-109): every uid with a soup body commitment or a serving endpoint.
 const body = (pool, sha, repo = 'owner/body') => ({ pool, sha256: sha.repeat(64), revision: 'f'.repeat(40), repo, block: 8300000 });
@@ -252,4 +252,19 @@ test('header links flip the active column and start others ascending; links keep
   assert.equal(sortHref({ key: 'tonight', dir: 'desc' }, 'tonight'), '/miners#miners');  // back to the default
   assert.equal(sortHref(now, null, 3), '/miners?sort=uid&dir=asc&page=3#miners');      // the pager
   assert.equal(sortHref({ key: 'tonight', dir: 'asc' }, null, 2), '/miners?page=2#miners');
+});
+
+// /miners "Next round": one table per tier that has an intake, its line in order, cut at the next round's limit.
+test('next round lists each tier’s line in order and says where the limit cuts it', () => {
+  const line = (position, limit = 2, reason = null) => ({ position, limit, next: position <= limit, reason });
+  const r = (uid, tier, l, block = 100 + uid) => ({ uid, hotkey: `5H${uid}`, tier, standing: l ? 'in_line' : 'out',
+    body: { pool: tier === 'z3-lite' ? 'd3-lite' : 'd3-mini', sha256: 'a'.repeat(64), revision: 'b'.repeat(40), repo: `o/b-${uid}`, block }, line: l });
+  const rows = [r(5, 'z3-lite', line(3)), r(1, 'z3-mini', line(1, 15)), r(9, 'z3-lite', line(1, 2, 'the round’s new-body cap is reached')), r(2, 'z3-lite', null), r(7, 'z3-lite', line(2))];
+  const tiers = nextRound(rows);
+  assert.deepEqual(tiers.map(t => [t.tier, t.limit, t.rows.map(x => x.uid), t.cut]), [
+    ['z3-lite', 2, [9, 7, 5], 2],
+    ['z3-mini', 15, [1], 1],     // the whole line fits: the cut falls after the last row
+  ]);
+  assert.equal(tiers[0].rows[0].line.reason, 'the round’s new-body cap is reached');
+  assert.deepEqual(nextRound([r(2, 'z3-lite', null)]), []);
 });

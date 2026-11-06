@@ -102,6 +102,17 @@ export function minerRows(chain: NetworkBodies, soup: { tiers: Tiers } | null) {
 }
 export type MinerRow = ReturnType<typeof minerRows>[number];
 
+/** The "Next round" tables: per tier with a line, its bodies in line order, and `cut`, how many of them the next
+ *  round's new-body limit reaches (the table marks the cut after that row). Tiers in display order. */
+export function nextRound<R extends { tier: Tier | null; line: Line | null }>(rows: R[]) {
+  return TIER_NAMES.flatMap(tier => {
+    const line = rows.filter(r => r.tier === tier && r.line).sort((a, b) => a.line!.position - b.line!.position);
+    if (!line.length) return [];
+    const limit = line[0].line!.limit;
+    return [{ tier, limit, rows: line, cut: Math.min(limit, line.length) }];
+  });
+}
+
 export const MINERS_PER_PAGE = 25;
 const SOUP_ORDER: Partial<Record<Standing, number>> = { crown: 0, seat: 1, unpaid: 2, in_line: 3 };
 

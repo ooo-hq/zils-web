@@ -4,13 +4,14 @@ import { SiteFrame } from '@/components/site/site-frame';
 import { SectionRow } from '@/components/site/section-row';
 import { DetailsRow } from '@/components/site/details-row';
 import { InstallCommand } from '@/components/site/install-command';
-import { networkBodies, minerRows, minerPage, minerSort, tierQueue } from '@/lib/network-bodies';
+import { networkBodies, minerRows, minerPage, minerSort, nextRound, tierQueue } from '@/lib/network-bodies';
 import { soupBoard, tierView } from '@/lib/soup-board';
 import { TIER_NAMES } from '@/lib/soup-tiers';
 import { Rehearsal } from './rehearsal';
 import { Refresh } from './refresh';
 import { TierSoup } from './tier';
 import { ChainTable } from './chain';
+import { NextRound } from './next-round';
 import { FoodIcon } from '../soup/food-icons';
 import s from './miners.module.css';
 import b from './board.module.css';
@@ -77,6 +78,7 @@ export default async function MinersPage({ searchParams }: { searchParams: Promi
   const views = new Map((soup?.tiers ?? []).map(t => [t.tier, tierView(t)]));
   const rows = chain ? minerRows(chain, soup) : null;
   const sort = minerSort(query.sort, query.dir);
+  const lines = rows ? nextRound(rows) : [];
   const queues = new Map((soup?.tiers ?? []).map(t => [t.tier, rows ? tierQueue(t.pool, rows, undefined, t.rounds[0]?.round_id ?? null) : null]));
   // Launch state: the chain view is live and no miner has committed a body, so every bowl is house models only.
   const noMinerBodies = chain !== null && !chain.miners.some(m => m.body);
@@ -103,12 +105,19 @@ export default async function MinersPage({ searchParams }: { searchParams: Promi
         <p className={b.fine}>Seats and the crown are decided on the items of the last three rounds together, because one night’s slice of the private exam is noisier than the greedy margin. The score is tonight’s slice alone, so small moves between rounds are partly noise. Each part’s number is what the soup loses without it, rounded to 0.5 point.</p>
       </section>
 
-      <SectionRow n="02" label="Miners on chain" note={chain ? `Subnet ${chain.netuid}` : undefined} />
+      {lines.length > 0 && <>
+        <SectionRow n="02" label="Next round" />
+        <section id="next-round" aria-label="Next round" className={b.plate}>
+          <NextRound lines={lines} />
+        </section>
+      </>}
+
+      <SectionRow n={lines.length ? '03' : '02'} label="Miners on chain" note={chain ? `Subnet ${chain.netuid}` : undefined} />
       <section id="miners" aria-label="Miners on chain" className={b.plate}>
         {chain && rows ? <ChainTable chain={chain} page={minerPage(rows, query.page, sort)} sort={sort} /> : <p className={b.down}>The chain view is unavailable right now.</p>}
       </section>
 
-      <SectionRow n="03" label="How miners earn" note="お品書き" />
+      <SectionRow n={lines.length ? '04' : '03'} label="How miners earn" note="お品書き" />
       <section aria-labelledby="earn-heading" className={b.earn}>
         <div className={b.earnHead}>
           <h2 id="earn-heading">How miners earn</h2>
