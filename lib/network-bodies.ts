@@ -102,6 +102,17 @@ export function minerRows(chain: NetworkBodies, soup: { tiers: Tiers } | null) {
 }
 export type MinerRow = ReturnType<typeof minerRows>[number];
 
+// The validator's deferral reasons (zils soup_round._intake_claims), keyed by a phrase each contains.
+const REASONS: [string, string][] = [
+  ['new-body cap', 'Over the new-body cap'], ['claims cap', 'Over the claims cap'],
+  ['download budget', 'Download budget spent'], ['free disk', 'Validator disk full'],
+];
+/** A deferral reason as a short label; one not known here is shown as sent, capitalized. */
+export function reasonLabel(reason: string | null) {
+  if (reason === null) return null;
+  return REASONS.find(([phrase]) => reason.includes(phrase))?.[1] ?? reason.charAt(0).toUpperCase() + reason.slice(1);
+}
+
 /** The "Next round" tables: per tier with a line, its bodies in line order, and `cut`, how many of them the next
  *  round's new-body limit reaches (the table marks the cut after that row). Tiers in display order. */
 export function nextRound<R extends { tier: Tier | null; line: Line | null }>(rows: R[]) {

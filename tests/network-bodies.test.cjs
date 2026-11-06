@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { networkBodiesSchema, networkBodies, minerRows, tierQueue, clockTime, roundProgress, minerPage, minerSort, sortHref, nextRound, MINERS_PER_PAGE } = require('../.private/test-build/network-bodies.js');
+const { networkBodiesSchema, networkBodies, minerRows, tierQueue, clockTime, roundProgress, minerPage, minerSort, sortHref, nextRound, reasonLabel, MINERS_PER_PAGE } = require('../.private/test-build/network-bodies.js');
 
 // GET /v1/network/bodies (zils-platform, ZIL-109): every uid with a soup body commitment or a serving endpoint.
 const body = (pool, sha, repo = 'owner/body') => ({ pool, sha256: sha.repeat(64), revision: 'f'.repeat(40), repo, block: 8300000 });
@@ -267,4 +267,15 @@ test('next round lists each tier’s line in order and says where the limit cuts
   ]);
   assert.equal(tiers[0].rows[0].line.reason, 'the round’s new-body cap is reached');
   assert.deepEqual(nextRound([r(2, 'z3-lite', null)]), []);
+});
+
+// The validator's deferral reasons are machine sentences; the Next round table shows a short label for each kind.
+test('deferral reasons read as short labels; anything new is shown as sent, capitalized', () => {
+  assert.equal(reasonLabel('the round’s new-body cap is reached'), 'Over the new-body cap');
+  assert.equal(reasonLabel("the round's new-body cap is reached"), 'Over the new-body cap');
+  assert.equal(reasonLabel("the round's claims cap is reached"), 'Over the claims cap');
+  assert.equal(reasonLabel("the round's download budget is spent"), 'Download budget spent');
+  assert.equal(reasonLabel("the validator's free disk is below its floor"), 'Validator disk full');
+  assert.equal(reasonLabel('something else came up'), 'Something else came up');
+  assert.equal(reasonLabel(null), null);
 });

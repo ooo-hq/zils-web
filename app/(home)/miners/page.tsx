@@ -107,7 +107,7 @@ export default async function MinersPage({ searchParams }: { searchParams: Promi
 
       {lines.length > 0 && <>
         <SectionRow n="02" label="Next round" />
-        <section id="next-round" aria-label="Next round" className={b.plate}>
+        <section id="next-round" aria-label="Next round">
           <NextRound lines={lines} />
         </section>
       </>}
