@@ -1,0 +1,58 @@
+/* Next round: each pool's line on the site's own column, with tier cards' spacing. The strip is the one visual:
+   bodies the next round reaches take the spectrum, the rest are hatched like everything not yet in a soup. */
+.pool { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 32px 40px 8px; border-bottom: 1px solid var(--zs-line); }
+.head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.head h3 { margin: 0; font-weight: 300; font-size: clamp(28px, 3vw, 38px); letter-spacing: -0.03em; line-height: 1; }
+.count { margin: 0; font-size: 14px; color: var(--zs-t2); }
+.count b { margin-right: 6px; font-weight: 300; font-size: clamp(28px, 3vw, 38px); letter-spacing: -0.02em; color: var(--zs-fg); font-variant-numeric: tabular-nums; }
+.lede { margin: -6px 0 0; font-size: 14px; color: var(--zs-t2); }
+
+/* A grid of equal cells always fits the column, however long the line; cells are split by a panel-colored edge. */
+.strip { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); margin: 10px 0 8px; padding: 0; list-style: none; }
+.strip li { position: relative; height: 28px; box-shadow: inset -2px 0 0 var(--zs-panel); background: repeating-linear-gradient(135deg, rgba(var(--zs-fg-rgb), .22) 0 1px, transparent 1px 6px); }
+.strip li[data-next] { background: var(--zs-spectrum); background-size: calc(var(--k) * 100%) 100%; background-position: calc(var(--i) * 100% / max(var(--k) - 1, 1)) 0; }
+.strip li[data-cut]::before { content: ""; position: absolute; left: -2px; top: -7px; bottom: -7px; width: 2px; background: var(--zs-fg); }
+
+.table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 14px; font-variant-numeric: tabular-nums; }
+.cPlace { width: 72px; } .cUid { width: 72px; } .cBlock { width: 130px; } .cReason { width: 220px; }
+.table th { padding: 12px 12px 10px; text-align: left; font-family: var(--font-plex-mono), ui-monospace, monospace; font-weight: 400; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--zs-t3); border-bottom: 1px solid var(--zs-line); }
+.table td { padding: 13px 12px; border-bottom: 1px solid var(--zs-line); color: var(--zs-t2); overflow-wrap: anywhere; }
+.table :is(th, td):first-child { padding-left: 0; }
+.table tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover td { background: var(--zs-raised); }
+.quiet { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.place { font-weight: 300; font-size: 22px; letter-spacing: -0.02em; line-height: 1; color: var(--zs-fg); }
+.table a { color: var(--zs-fg); text-decoration: underline; text-decoration-color: rgba(var(--zs-fg-rgb), .3); text-underline-offset: 3px; }
+.table a:hover { text-decoration-color: currentColor; }
+.table a:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 3px; }
+.table code { margin-left: 6px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12px; color: var(--zs-t3); }
+.num { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; }
+.reason { font-size: 13px; }
+/* Bodies after the cut: places in body color, so the ones the next round reaches stand out. */
+.pool details .place { color: var(--zs-t2); }
+/* The collapsed row sits flush with the table above it. */
+.pool > details { margin: 0 -40px; }
+.pool > details summary { padding-left: 40px; padding-right: 40px; }
+.pool > details > div { padding-left: 40px; padding-right: 40px; }
+
+.fine { margin: 0; padding: 18px 40px 26px; max-width: 110ch; font-size: 12.5px; line-height: 1.6; color: var(--zs-t2); }
+
+@media (max-width: 899px) {
+  .pool { padding: 26px 4px 6px; }
+  .pool > details { margin: 0; }
+  .pool > details summary, .pool > details > div { padding-left: 0; padding-right: 0; }
+  .fine { padding: 18px 4px 24px; }
+  .strip li { height: 22px; }
+  .strip li[data-cut]::before { top: -5px; bottom: -5px; }
+}
+@media (max-width: 699px) {
+  /* Rows stack as labelled cards, like the chain table. */
+  .table, .table tbody, .table tr, .table td { display: block; }
+  .table colgroup, .table thead { display: none; }
+  .table tr { padding: 10px 0; border-bottom: 1px solid var(--zs-line); }
+  .table td { display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: baseline; padding: 3px 0; border: 0; }
+  .table td > * { grid-column: 2; }
+  .table td::before { content: attr(data-label); font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-t3); }
+  .table tbody tr:hover td { background: none; }
+  .table code { margin-left: 0; justify-self: start; }
+}

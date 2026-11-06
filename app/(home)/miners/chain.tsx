@@ -13,10 +13,9 @@ const STANDING: Record<Standing, string> = {
   deferred: 'Over tonight’s limit, graded in the next round', refused: 'Not admitted tonight',
   in_line: 'In line',
 };
-/** A body in line: its place, whether the next round reaches it, and why last round passed it over. */
-function InLine({ line }: { line: Line }) {
-  return <span>In line, #{line.position} · {line.next ? 'next round' : `past the next round’s limit of ${line.limit}`}
-    {line.reason && <small className={s.lineNote}>Last round: {line.reason}</small>}</span>;
+/** A body in line: its place, linking to its tier's table under Next round. */
+function InLine({ line, tier }: { line: Line; tier: string | null }) {
+  return <span><a href={`#next-${tier}`}>In line, #{line.position}</a></span>;
 }
 const short = (hotkey: string) => `${hotkey.slice(0, 6)}…${hotkey.slice(-4)}`;
 
@@ -52,12 +51,12 @@ export function ChainTable({ chain, page, sort }: { chain: NetworkBodies; page: 
           <td data-label="Hotkey"><code title={r.hotkey}>{short(r.hotkey)}</code></td>
           <td data-label="Tier"><span className={s.station}>{r.tier ?? '—'}</span></td>
           <td data-label="Body">{r.body ? <><a href={hfTree(r.body.repo, r.body.revision)}>{r.body.repo}</a> <code className={s.rev}>{r.body.revision.slice(0, 7)}</code></> : <span>—</span>}</td>
-          <td data-label="Tonight" className={s.standing}>{r.line ? <InLine line={r.line} /> : <span>{(r.standing === 'seat' || r.standing === 'crown') && <i className={s.chip} aria-hidden="true" />}{STANDING[r.standing]}</span>}</td>
+          <td data-label="Tonight" className={s.standing}>{r.line ? <InLine line={r.line} tier={r.tier} /> : <span>{(r.standing === 'seat' || r.standing === 'crown') && <i className={s.chip} aria-hidden="true" />}{STANDING[r.standing]}</span>}</td>
           <td data-label="Serving"><span>{r.serving ? 'Endpoint announced' : 'No endpoint'}</span></td>
         </tr>)}</tbody>
       </table>
     </div> : <p className={s.empty}>No miner has committed a body yet. <Link href="/soup">Bring a body to the soup</Link></p>}
     <Pager page={page} sort={sort} />
-    <p className={s.fine}><span>Block {chain.block.toLocaleString('en-US')}</span> on subnet {chain.netuid}. Bodies come from chain commitments; a miner may hold one per hotkey. Each round freezes its bodies at its pool’s deadline (mini 00:00 UTC, lite 06:00 UTC; 7 PM and 1 AM New York); a body committed later waits for the next round. Each round checks new bodies in commitment order, earliest block first, up to its pool’s limit; the rest stay in line for the next one. An announced endpoint means the miner can serve; Zils does not send traffic to miners yet.</p>
+    <p className={s.fine}><span>Block {chain.block.toLocaleString('en-US')}</span> on subnet {chain.netuid}. Bodies come from chain commitments; a miner may hold one per hotkey. Each round freezes its bodies at its pool’s deadline (mini 00:00 UTC, lite 06:00 UTC; 7 PM and 1 AM New York); a body committed later waits for the next round. An announced endpoint means the miner can serve; Zils does not send traffic to miners yet.</p>
   </div>;
 }
