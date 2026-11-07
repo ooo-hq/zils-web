@@ -4,7 +4,7 @@ import { SiteFrame } from '@/components/site/site-frame';
 import { SectionRow } from '@/components/site/section-row';
 import { DetailsRow } from '@/components/site/details-row';
 import { InstallCommand } from '@/components/site/install-command';
-import { networkBodies, minerRows, minerPage, minerSort, nextRound, tierQueue, withoutOffTiers, OFF_TIERS } from '@/lib/network-bodies';
+import { networkBodies, minerRows, minerPage, minerSort, nextRound, tierQueue, withoutOffTiers } from '@/lib/network-bodies';
 import { soupBoard, tierView } from '@/lib/soup-board';
 import { TIER_NAMES } from '@/lib/soup-tiers';
 import { Rehearsal } from './rehearsal';
@@ -101,7 +101,7 @@ export default async function MinersPage({ searchParams }: { searchParams: Promi
         <h2 id="tonight-heading" className="sr-only">Tonight’s soup</h2>
         {!soup && <p className={b.down}>Tonight’s rounds are unavailable right now. Each tier shows its pot of house models until the feed returns.</p>}
         {noMinerBodies && <p className={b.down}>No soup for you yet. No miner has committed a body on subnet {chain.netuid}, so tonight’s soups are house models only, and house models are never paid. Every tier’s share burns until the first miner body earns a seat. <Link href="/soup">Bring a body to the soup</Link>.</p>}
-        {TIER_NAMES.filter(tier => !OFF_TIERS.includes(tier)).map(tier => <TierSoup key={tier} tier={tier} view={views.get(tier) ?? null} feed={Boolean(soup)} queue={queues.get(tier) ?? undefined} live={soup?.tiers.find(t => t.tier === tier)?.live} />)}
+        {TIER_NAMES.map(tier => <TierSoup key={tier} tier={tier} view={views.get(tier) ?? null} feed={Boolean(soup)} queue={queues.get(tier) ?? undefined} live={soup?.tiers.find(t => t.tier === tier)?.live} />)}
         <p className={b.fine}>Seats and the crown are decided on the items of the last three rounds together, because one night’s slice of the private exam is noisier than the greedy margin. The score is tonight’s slice alone, so small moves between rounds are partly noise. Each part’s number is what the soup loses without it, rounded to 0.5 point.</p>
       </section>
 
@@ -121,7 +121,7 @@ export default async function MinersPage({ searchParams }: { searchParams: Promi
       <section aria-labelledby="earn-heading" className={b.earn}>
         <div className={b.earnHead}>
           <h2 id="earn-heading">How miners earn</h2>
-          <p>Each tier’s share is 25% of emissions. Every open tier pays five seats of 4% and a crown of 5%. Whatever nobody earns burns, including the whole share of any tier that is not open.</p>
+          <p>The four tiers share emissions equally, 25% each. Every tier pays five seats of 4% and a crown of 5%: 24 paid spots in all. Whatever nobody earns burns, including the whole share of a tier that has not opened.</p>
         </div>
         <ol className={s.roundSteps} aria-label="A round">
           <li><FoodIcon name="bowl" className={s.stepIcon} /><b>In the pot</b>The tier’s house models, the current members and the best new bodies, at most 20.</li>

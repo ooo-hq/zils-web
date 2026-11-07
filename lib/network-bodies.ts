@@ -113,8 +113,8 @@ export function reasonLabel(reason: string | null) {
   return REASONS.find(([phrase]) => reason.includes(phrase))?.[1] ?? reason.charAt(0).toUpperCase() + reason.slice(1);
 }
 
-// Tiers /miners does not show (owner, 6 Nov 2026: the flash pool is closed on validators, so its
-// bodies are never graded). Other pages keep the full tier list.
+// Tiers whose bodies /miners never shows in line (owner, 6 Nov 2026: the flash pool is closed on
+// validators, so its bodies are never graded). The tier's tile stays, with its "No soup for you!" sticker.
 export const OFF_TIERS: Tier[] = ['z3-flash'];
 
 /** Rows as /miners shows them: a body committed to an off tier stays listed, with no tier and never in line. */
