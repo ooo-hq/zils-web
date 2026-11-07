@@ -1,5 +1,5 @@
 // Each tier's soup starts from its own Qwen base and open house models, which enter every round and are never paid.
-// zils main 0974870: zils/data/soup-house*.json and the "Four pools" table in docs/mining.md. z3 opens later; flash is off (owner, 6 Nov 2026: its pool is closed on validators).
+// zils main 0974870: zils/data/soup-house*.json and the "Four pools" table in docs/mining.md. Flash and z3 open later.
 export const TIERS = {
   'z3-lite': {
     pool: 'd3-lite', size: '0.8B',
@@ -19,6 +19,12 @@ export const TIERS = {
       { name: 'Matilda-Decision-v1-Mini', repo: 'Maincode/Matilda-Decision-v1-Mini', revision: '39479a8a372987bf81ec867e8fc3b2cc364ff343' },
       { name: 'KnowLine-4B-Gen5', repo: 'PelaAI/KnowLine-4B-Gen5', revision: 'a8e0cd664f88bd2d2561dc69de74fdc48c641da5' },
     ],
+  },
+  'z3-flash': {
+    pool: 'd3-flash', size: '8.4B',
+    later: true,
+    base: { repo: 'Qwen/Qwen3.5-9B', revision: 'c202236235762e1c871ad0ccb60c8ee5ba337b9a' },
+    house: [{ name: 'd3-flash', repo: 'vllm-sr/d3-flash', revision: '13dc1cc8ef23caefa765907e1d764751e5629f7d', note: 'Also the flash chassis' }],
   },
   'z3': {
     pool: 'd3', size: '27B',

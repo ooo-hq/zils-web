@@ -21,6 +21,7 @@ const WEIGHTS = 'https://huggingface.co/zils-ai/z3-mini-v1/tree/c9b7515250c04441
 const LINEUP = [
   { name: 'z3-lite', params: 0.85, status: 'v1 · Founding baseline', color: '#ef8d5a', released: true },
   { name: 'z3-mini', params: 4.54, status: 'v1 · Founding baseline', color: '#cfa2e4', released: true },
+  { name: 'z3-flash', params: 8.39, status: 'Planned release', color: '#a9b5f2' },
   { name: 'z3', params: 26.09, status: 'Planned release', color: '#8ea6ff' },
 ];
 
@@ -72,7 +73,7 @@ export default function Z3Page() {
         <thead><tr><th scope="col">Model line</th><th scope="col">Parameters</th><th scope="col">Release status</th></tr></thead>
         <tbody>{LINEUP.map(m => <tr key={m.name}><th scope="row">{m.name}</th><td>{m.params}B</td><td>{m.status}</td></tr>)}</tbody>
       </table>
-      <p className={s.fine}>A size for each workload. Lite and mini soups cook from the launch; z3 opens later. Each lineage needs its own qualification. Hosted availability is separate from weight publication; use the models listed for your account.</p>
+      <p className={s.fine}>A size for each workload. Lite and mini soups cook from the launch; flash and z3 open later. Each lineage needs its own qualification. Hosted availability is separate from weight publication; use the models listed for your account.</p>
     </header>
 
     <SectionRow n="02" label="z3-mini" note="Current release: v1" />

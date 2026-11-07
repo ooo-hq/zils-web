@@ -4,7 +4,7 @@ import { SiteFrame } from '@/components/site/site-frame';
 import { SectionRow } from '@/components/site/section-row';
 import { DetailsRow } from '@/components/site/details-row';
 import { InstallCommand } from '@/components/site/install-command';
-import { networkBodies, minerRows, minerPage, minerSort, nextRound, tierQueue } from '@/lib/network-bodies';
+import { networkBodies, minerRows, minerPage, minerSort, nextRound, tierQueue, withoutOffTiers, OFF_TIERS } from '@/lib/network-bodies';
 import { soupBoard, tierView } from '@/lib/soup-board';
 import { TIER_NAMES } from '@/lib/soup-tiers';
 import { Rehearsal } from './rehearsal';
@@ -76,7 +76,7 @@ function Bars({ compare }: { compare: Compare }) {
 export default async function MinersPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const [soup, chain, query] = await Promise.all([soupBoard(), networkBodies(), searchParams]);
   const views = new Map((soup?.tiers ?? []).map(t => [t.tier, tierView(t)]));
-  const rows = chain ? minerRows(chain, soup) : null;
+  const rows = chain ? withoutOffTiers(minerRows(chain, soup)) : null;
   const sort = minerSort(query.sort, query.dir);
   const lines = rows ? nextRound(rows) : [];
   const queues = new Map((soup?.tiers ?? []).map(t => [t.tier, rows ? tierQueue(t.pool, rows, undefined, t.rounds[0]?.round_id ?? null) : null]));
@@ -101,7 +101,7 @@ export default async function MinersPage({ searchParams }: { searchParams: Promi
         <h2 id="tonight-heading" className="sr-only">Tonight’s soup</h2>
         {!soup && <p className={b.down}>Tonight’s rounds are unavailable right now. Each tier shows its pot of house models until the feed returns.</p>}
         {noMinerBodies && <p className={b.down}>No soup for you yet. No miner has committed a body on subnet {chain.netuid}, so tonight’s soups are house models only, and house models are never paid. Every tier’s share burns until the first miner body earns a seat. <Link href="/soup">Bring a body to the soup</Link>.</p>}
-        {TIER_NAMES.map(tier => <TierSoup key={tier} tier={tier} view={views.get(tier) ?? null} feed={Boolean(soup)} queue={queues.get(tier) ?? undefined} live={soup?.tiers.find(t => t.tier === tier)?.live} />)}
+        {TIER_NAMES.filter(tier => !OFF_TIERS.includes(tier)).map(tier => <TierSoup key={tier} tier={tier} view={views.get(tier) ?? null} feed={Boolean(soup)} queue={queues.get(tier) ?? undefined} live={soup?.tiers.find(t => t.tier === tier)?.live} />)}
         <p className={b.fine}>Seats and the crown are decided on the items of the last three rounds together, because one night’s slice of the private exam is noisier than the greedy margin. The score is tonight’s slice alone, so small moves between rounds are partly noise. Each part’s number is what the soup loses without it, rounded to 0.5 point.</p>
       </section>
 
