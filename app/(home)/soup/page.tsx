@@ -44,14 +44,14 @@ const RATES = [
 ] as const;
 
 const RULES = [
-  <>Any fine-tune of your tier’s Qwen base (<code>Qwen/Qwen3.5-0.8B</code> for lite, <code>Qwen/Qwen3.5-4B</code> for mini, <code>Qwen/Qwen3.5-9B</code> for flash, <code>Qwen/Qwen3.8-27B</code> for z3) with that tier’s body layout, trained from plain Qwen, a z3 release, the current soup or another open model.</>,
+  <>Any fine-tune of your tier’s Qwen base (<code>Qwen/Qwen3.5-0.8B</code> for lite, <code>Qwen/Qwen3.5-4B</code> for mini, <code>Qwen/Qwen3.8-27B</code> for z3) with that tier’s body layout, trained from plain Qwen, a z3 release, the current soup or another open model.</>,
   <>You bring the body only. The tier’s answer layer, prompt and runtime stay fixed.</>,
   <>Move at most about 15% away from Qwen.</>,
   <>Apache-2.0, MIT or BSD licence.</>,
   <>Your repo names your hotkey in <code>zils-owner.json</code>. The first valid commitment of a body wins it.</>,
   <>Scouts welcome. Any open fine-tune that passes these rules can be committed by whoever finds it first, listed or not. The known-public list only marks the models validators already know about; it is not the limit of what you can bring.</>,
   <>No reheats: near-exact re-uploads, bodies built largely from other miners’ bodies, and models that answer like a pool body are turned away.</>,
-  <>Up to 20 bodies compete for the five seats each round. At most 6 new bodies are admitted per round, in commitment order. Flash and z3 take fewer.</>,
+  <>Up to 20 bodies compete for the five seats each round. At most 6 new bodies are admitted per round, in commitment order. z3 takes fewer.</>,
   <>Upload to a private repo, commit, then make it public before the day’s commit deadline, so nobody can commit your body first.</>,
 ];
 
@@ -124,7 +124,7 @@ export default function SoupPage() {
     <section className={s.section} aria-labelledby="release-heading">
       <h2 id="release-heading" className={s.h2}>A good soup becomes the next release.</h2>
       <div className={s.prose}>
-        <p>Every 14 to 28 days the soup can become the next release. It must beat the current release by at least one point on two sealed release exams that rounds never use, hold that lead 12 hours later, and keep customer adapters at least as good. A reviewed promotion then makes it that tier’s next version. Its members are paid through their seats; the release itself has no single winner. Every tier is a soup with its own house models, and each is released on its own. Lite and mini cook from the launch; flash and z3 open later.</p>
+        <p>Every 14 to 28 days the soup can become the next release. It must beat the current release by at least one point on two sealed release exams that rounds never use, hold that lead 12 hours later, and keep customer adapters at least as good. A reviewed promotion then makes it that tier’s next version. Its members are paid through their seats; the release itself has no single winner. Every tier is a soup with its own house models, and each is released on its own. Lite and mini cook from the launch; z3 opens later.</p>
       </div>
       <div className={s.links}><Link href="/z3">The z3 model line</Link><Link href="/miners">Miner leaderboard</Link></div>
     </section>

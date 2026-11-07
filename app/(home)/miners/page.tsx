@@ -121,7 +121,7 @@ export default async function MinersPage({ searchParams }: { searchParams: Promi
       <section aria-labelledby="earn-heading" className={b.earn}>
         <div className={b.earnHead}>
           <h2 id="earn-heading">How miners earn</h2>
-          <p>The four tiers share emissions equally, 25% each. Every tier pays five seats of 4% and a crown of 5%: 24 paid spots in all. Whatever nobody earns burns, including the whole share of a tier that has not opened.</p>
+          <p>Each tier’s share is 25% of emissions. Every open tier pays five seats of 4% and a crown of 5%. Whatever nobody earns burns, including the whole share of any tier that is not open.</p>
         </div>
         <ol className={s.roundSteps} aria-label="A round">
           <li><FoodIcon name="bowl" className={s.stepIcon} /><b>In the pot</b>The tier’s house models, the current members and the best new bodies, at most 20.</li>
