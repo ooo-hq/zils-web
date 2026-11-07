@@ -4,7 +4,7 @@ import { SiteFrame } from '@/components/site/site-frame';
 import { SectionRow } from '@/components/site/section-row';
 import { DetailsRow } from '@/components/site/details-row';
 import { InstallCommand } from '@/components/site/install-command';
-import { networkBodies, minerRows, minerPage, minerSort, nextRound, tierQueue } from '@/lib/network-bodies';
+import { networkBodies, minerRows, minerPage, minerSort, nextRound, tierQueue, withoutOffTiers } from '@/lib/network-bodies';
 import { soupBoard, tierView } from '@/lib/soup-board';
 import { TIER_NAMES } from '@/lib/soup-tiers';
 import { Rehearsal } from './rehearsal';
@@ -76,7 +76,7 @@ function Bars({ compare }: { compare: Compare }) {
 export default async function MinersPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const [soup, chain, query] = await Promise.all([soupBoard(), networkBodies(), searchParams]);
   const views = new Map((soup?.tiers ?? []).map(t => [t.tier, tierView(t)]));
-  const rows = chain ? minerRows(chain, soup) : null;
+  const rows = chain ? withoutOffTiers(minerRows(chain, soup)) : null;
   const sort = minerSort(query.sort, query.dir);
   const lines = rows ? nextRound(rows) : [];
   const queues = new Map((soup?.tiers ?? []).map(t => [t.tier, rows ? tierQueue(t.pool, rows, undefined, t.rounds[0]?.round_id ?? null) : null]));
