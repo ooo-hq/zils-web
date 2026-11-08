@@ -23,6 +23,24 @@ export function suggestAnswers(data: CsvData, answer: string): string[] {
   return values.length <= MAX_TEXT_OUTCOMES && values.every(value => value.length <= 100) ? values : [];
 }
 
+/** Columns whose value almost fixes the answer, like the agent who handled a ticket: usually filled in after the
+ * decision, so the model would learn nothing it can use. Same rule as the SDK's train_prepare: free text and IDs
+ * (one value per few rows) are not judged, and a common answer alone is not a leak. */
+export function leaks(data: CsvData, answer: string, columns: string[]): { column: string; agreement: number }[] {
+  const answerIndex = data.headers.indexOf(answer);
+  if (answerIndex < 0 || !data.rows.length) return [];
+  const count = (values: string[]) => values.reduce((counts, value) => counts.set(value, (counts.get(value) || 0) + 1), new Map<string, number>());
+  const base = Math.max(...count(data.rows.map(row => row[answerIndex].trim())).values()) / data.rows.length;
+  return columns.flatMap(column => {
+    const index = data.headers.indexOf(column);
+    const answers = new Map<string, string[]>();
+    for (const row of data.rows) answers.set(row[index], [...answers.get(row[index]) || [], row[answerIndex].trim()]);
+    if (index < 0 || answers.size < 2 || answers.size > Math.floor(data.rows.length / 4)) return [];
+    const agreement = [...answers.values()].reduce((sum, values) => sum + Math.max(...count(values).values()), 0) / data.rows.length;
+    return agreement >= 0.95 && agreement - base >= 0.9 * (1 - base) ? [{ column, agreement: Math.round(agreement * 1000) / 1000 }] : [];
+  });
+}
+
 /** Corrections are a separate draft; the original data is never changed. */
 export function reviewData(data: CsvData, mapping: ColumnMapping, outcomes: string[], edits: ReviewEdits) {
   const answerIndex = data.headers.indexOf(mapping.answer);

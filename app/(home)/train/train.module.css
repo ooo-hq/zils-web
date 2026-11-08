@@ -88,6 +88,7 @@
 .dataChoice>span { min-width:0; }
 .dataChoice strong { display:block; font-size:14px; font-weight:400; line-height:1.5; overflow-wrap:anywhere; white-space:pre-wrap; }
 .dataChoice small { font-size:11px; color:var(--zils-muted); overflow-wrap:anywhere; }
+.dataChoice small.leak { display:block; margin-top:4px; color:var(--zils-danger); }
 .dataChoice[data-selected=true] { border-color:var(--zils-accent); background:var(--zils-soft); }
 .dataChoice:focus-within { outline:2px solid var(--zils-accent); outline-offset:3px; }
 .teachingPreview { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); border:1px solid var(--zils-edge); border-radius:6px; overflow:hidden; margin-top:24px; }
