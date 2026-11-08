@@ -1,0 +1,14 @@
+/* Train with your agent: a quiet panel under the runs. The commands reuse the site's copy-command box. */
+.card { display:grid; gap:14px; border:1px solid var(--zils-edge); border-radius:8px; background:var(--zils-page); padding:24px 28px; min-width:0; }
+.head { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px 24px; }
+.head h2 { margin:0; font-size:21px; font-weight:500; letter-spacing:-.02em; }
+.head p { margin:6px 0 0; max-width:62ch; color:var(--zils-muted); font-size:14px; line-height:1.55; }
+.agents { display:inline-flex; border:1px solid var(--zils-edge); border-radius:999px; padding:3px; }
+.agents button { border:0; background:transparent; color:var(--zils-muted); font:inherit; font-size:13px; padding:6px 14px; border-radius:999px; cursor:pointer; }
+.agents button[aria-pressed=true] { background:var(--zils-soft); color:var(--zils-ink); }
+.agents button:focus-visible { outline:2px solid var(--zils-accent); outline-offset:2px; }
+.step { display:grid; gap:8px; min-width:0; }
+.step > span { font-size:13px; color:var(--zils-muted); }
+.ask { margin:0; padding:12px 16px; border-left:2px solid var(--zils-accent); background:var(--zils-surface); font-size:15px; line-height:1.5; color:var(--zils-ink); }
+.note { margin:0; font-size:12px; line-height:1.55; color:var(--zils-muted); }
+@media(max-width:480px) { .card { padding:20px; } }

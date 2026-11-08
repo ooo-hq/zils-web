@@ -10,6 +10,7 @@ import { canDownload, downloadFiles, isImageJob, SPLITS, submissionSchema, termi
 import Link from 'next/link';
 import { WorkspaceLoading, LinkLoading } from '@/components/workspace-loading';
 import { TrainingGuide } from '@/components/training-guide';
+import { AgentTrainingCard } from '@/components/agent-training-card';
 import { TrainingIntake } from '@/components/training-intake';
 import { ApiKeysPanel } from '@/components/api-keys-panel';
 import { TrainedModelQuickstart } from '@/components/trained-model-quickstart';
@@ -365,6 +366,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
       </div> : null}
       {!runId && runRows(jobs.filter(job => job.id !== selected?.id && !terminal(job)), 'Other active runs')}
       {!runId && runRows(history.filter(job => terminal(job)), 'Run history')}
+      {!runId && !loading && <AgentTrainingCard />}
     </div>
     {!runId && imagesAvailable && config.decisionApiUrl && <details className={imageStyles.stockTest}><summary>Test images with the starting model</summary><p>Try a batch or a single photo. For a trained model, choose View model above.</p><ImageDecisionPanel owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storage={config.storage} /></details>}
     {intakeMode === 'choose' && <SheetContent className={`${styles.page} ${styles.trainingSheet}`}>
