@@ -137,6 +137,8 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
   const [progress, setProgress] = useState('');
   const [needsCredit, setNeedsCredit] = useState(false);
   const [cancellable, setCancellable] = useState(false);
+  // A ticked "email me" box shows at once; it falls back to the job's saved choice when the request ends.
+  const [emailChoice, setEmailChoice] = useState<Record<string, boolean>>({});
   const [files, setFiles] = useState<Partial<Record<Split, File>>>({});
   const [downloads, setDownloads] = useState<{ name: string; url: string }[]>([]);
   const [formVersion, setFormVersion] = useState(0);
@@ -253,6 +255,12 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     catch (error) { if (!life.current?.signal.aborted) handleError(error); }
     finally { setBusy(false); }
   }
+  async function setRunEmail(job: Job, emailWhenDone: boolean) {
+    setEmailChoice(choice => ({ ...choice, [job.id]: emailWhenDone })); setError('');
+    try { const result = await api.notify(job.id, emailWhenDone, life.current?.signal); replaceJob(result.job); }
+    catch (error) { if (!life.current?.signal.aborted) handleError(error); }
+    finally { setEmailChoice(({ [job.id]: _, ...rest }) => rest); }
+  }
   async function retrySubmit(job: Job) {
     setBusy(true); setError(''); setDownloads([]);
     try { const result = await api.submit(job.id, life.current?.signal); replaceJob(result.job); setPendingUpload(''); setFiles({}); setFormVersion(v => v + 1); setProgress(''); requestAnimationFrame(() => statusMessage.current?.focus()); }
@@ -268,6 +276,11 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
   function runDetails(job: Job) {
     return <>
       <TrainingRunStatus job={job} />
+      {!terminal(job) && job.email_when_done !== undefined && <>
+        <label className={styles.checkLabel}><input type="checkbox" checked={emailChoice[job.id] ?? job.email_when_done} disabled={job.id in emailChoice} onChange={event => setRunEmail(job, event.target.checked)} /><span>Email me when this run finishes</span></label>
+        {(emailChoice[job.id] ?? job.email_when_done) && <p className={styles.help}>We’ll email your account address once, when this run finishes.</p>}
+      </>}
+      {terminal(job) && job.email_sent && <p className={styles.help}>We emailed you when this run finished.</p>}
       {canDownload(job) && <Link className={styles.secondary} href={`/models/${job.id}`}>View model stats and access</Link>}
       {isImageJob(job) && <>
         {job.data_expires_at && <p>Training photos expire {new Date(job.data_expires_at).toLocaleString()}. Saved evaluation results remain available.</p>}
