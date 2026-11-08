@@ -1,0 +1,6 @@
+.tiers { border:0; padding:0; margin:18px 0; display:grid; gap:8px; min-width:0; }
+.tiers legend { font-size:13px; font-weight:500; margin-bottom:8px; padding:0; }
+.tier { display:flex; align-items:flex-start; gap:12px; font-size:12px; font-weight:400; line-height:1.65; padding:13px 15px; border:1px solid var(--zils-edge); border-radius:6px; background:var(--zils-page); cursor:pointer; }
+.tier:has(input:checked) { border-color:var(--zils-accent); background:var(--zils-soft); }
+.tier input { margin-top:4px; flex-shrink:0; width:17px; height:17px; }
+.tier strong { display:block; font-weight:500; font-size:13px; }

@@ -82,6 +82,7 @@ async function prepared(page: Page) {
 }
 
 async function consent(page: Page) {
+  await page.getByRole('radio', { name: /^Private/ }).check();
   await page.getByLabel('I am authorized to share these examples.', { exact: false }).check();
 }
 
@@ -145,7 +146,8 @@ for (const recover of [false, true]) test(`reviewed examples submit without leak
   await expect(page).toHaveURL(`/train?run=${jobId}`);
   if (recover) expect(downloaded).toEqual(state.uploads);
   expect(state.creates).toBe(1); expect(state.submits).toBe(1);
-  expect(created()).toMatchObject({ name: 'reviewed-live', allow_training_data_export: true });
+  expect(created()).toMatchObject({ name: 'reviewed-live', allow_training_data_export: true, tier: 'private' });
+  expect(created()).not.toHaveProperty('allow_open_tier_training');
   expect(created()).not.toHaveProperty('allow_jev_comparison');
   const rows = Object.values(state.uploads).flatMap(file => file.trim().split('\n').map(line => JSON.parse(line)));
   expect(rows).toHaveLength(9);

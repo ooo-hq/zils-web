@@ -5,12 +5,13 @@ import Link from 'next/link';
 import { prepareTraining, type ColumnMapping, type CsvData, type PreparedTraining } from '@/lib/training-csv';
 import { readSpreadsheet, type SpreadsheetSheet } from '@/lib/training-spreadsheet';
 import { reviewData, suggestAnswers, suggestMapping, type ReviewEdits } from '@/lib/training-review';
-import { MAX_DATASET_BYTES, MAX_TEXT_OUTCOMES, SPLITS, submissionSchema, validateDatasets, type Split, type Submission } from '@/lib/training';
+import { MAX_DATASET_BYTES, MAX_TEXT_OUTCOMES, SPLITS, submissionSchema, tierFields, validateDatasets, type Split, type Submission, type TrainingTier } from '@/lib/training';
 import { TrainingDecisionSetup } from '@/components/training-decision-setup';
 import { TrainingExampleSetup } from '@/components/training-example-setup';
 import { TrainingExampleReview } from '@/components/training-example-review';
 import { SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
 import { ModelPoolSelect } from '@/components/model-pool-select';
+import { TierChoice } from '@/components/tier-choice';
 import type { PoolSelection } from '@/lib/base-model';
 import styles from '@/app/(home)/train/train.module.css';
 
@@ -64,6 +65,7 @@ export function TrainingIntake({ apiUrl, active = true, onChooseType, assistantC
   const [accuracy, setAccuracy] = useState('80');
   const [improvement, setImprovement] = useState('0.01');
   const [consent, setConsent] = useState(false);
+  const [tier, setTier] = useState<TrainingTier | null>(null);
   const [reviewed, setReviewed] = useState(false);
   const [working, setWorking] = useState(false);
   const [error, setError] = useState('');
@@ -147,7 +149,8 @@ export function TrainingIntake({ apiUrl, active = true, onChooseType, assistantC
   async function submit(event: FormEvent) {
     event.preventDefault(); setError('');
     if (!selection) { setError('Choose a pool with qualified training capacity.'); return; }
-    const parsed = submissionSchema.safeParse({ name, ...selection, acceptance: { min_accuracy: accuracy === '' ? NaN : Number(accuracy) / 100, min_brier_improvement: improvement === '' ? NaN : Number(improvement), ...(upgrade ? { previous_job_id: upgrade.id } : {}) }, allow_training_data_export: consent, allow_jev_comparison: consent });
+    if (!tier) { setError('Choose who trains this run.'); return; }
+    const parsed = submissionSchema.safeParse({ name, ...selection, acceptance: { min_accuracy: accuracy === '' ? NaN : Number(accuracy) / 100, min_brier_improvement: improvement === '' ? NaN : Number(improvement), ...(upgrade ? { previous_job_id: upgrade.id } : {}) }, allow_training_data_export: consent, ...tierFields(tier), allow_jev_comparison: consent });
     if (!parsed.success) { setError('Check your run name, success criteria, and data-sharing permission.'); return; }
     let files = advanced ? advancedFiles : prepared?.files;
     if (!files?.train || !files.calibration || !files.test) { setError('Prepare all three dataset files before submitting.'); return; }
@@ -187,7 +190,8 @@ export function TrainingIntake({ apiUrl, active = true, onChooseType, assistantC
       <label htmlFor="min-brier">Minimum Brier improvement</label><input id="min-brier" type="number" required min="0" max="2" step="any" value={improvement} onChange={event => setImprovement(event.target.value)} />
       <small>An absolute Brier loss decrease from 0 to 2, not a percentage. The default is 0.01.</small>
     </details>
-    <label className={styles.consent}><input type="checkbox" required checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I am authorized to use and share these examples. I permit the learning data to be copied to assigned, approved workers, whose operators can read and retain it. I also permit final-evaluation inputs and questions to be sent to TypeSafe JEV for one saved comparison. Correct answers and confidence-check data stay with Zils. This is not confidential compute.</span></label>
+    <TierChoice value={tier} onChange={setTier} data="examples" price="$0.20 per million training tokens" />
+    <label className={styles.consent}><input type="checkbox" required checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I am authorized to use and share these examples. I permit the learning data to be copied to {tier === 'open' ? 'Zils network miners and assigned, approved workers' : 'assigned, approved workers'}, whose operators can read and retain it. I also permit final-evaluation inputs and questions to be sent to TypeSafe JEV for one saved comparison. Correct answers and confidence-check data stay with Zils. This is not confidential compute.</span></label>
   </>;
   if (!active) return null;
   return <SheetContent className={`${styles.page} ${styles.trainingSheet}`} onCloseAutoFocus={onCloseAutoFocus} onOpenAutoFocus={event => { event.preventDefault(); heading.current?.focus(); }}>

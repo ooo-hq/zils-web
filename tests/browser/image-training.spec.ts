@@ -98,6 +98,7 @@ for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,fa
   await page.getByLabel('I have reviewed the labels and item groups',{exact:true}).check();
   await page.getByRole('button',{name:'Review image splits',exact:true}).click();
   await expect(page.getByLabel('Positive class',{exact:true})).toHaveCount(0);
+  await page.getByRole('radio',{name:/^Private/}).check();
   await page.getByLabel('I have permission to share training images with approved workers',{exact:true}).check();
   await page.getByRole('button',{name:'Start image training',exact:true}).click();
   if(insufficient) {
@@ -110,6 +111,7 @@ for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,fa
   }
   await expect(page.getByText('Image run submitted for validation.',{exact:true})).toBeVisible();
   expect(created?.acceptance).toEqual({min_accuracy:.8,min_brier_improvement:.01});
+  expect(created?.tier).toBe('private');
   expect(await page.locator('body').evaluate(el=>el.scrollWidth<=window.innerWidth)).toBe(true);
   await page.screenshot({path:`.private/image-training-${mobile?'mobile':'desktop'}-${spaces?'spaces':'legacy'}.png`,fullPage:true});
   expect(rows).toHaveLength(insufficient?36:18);expect(complete.size).toBe(18);

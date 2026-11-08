@@ -162,7 +162,7 @@
 .historyRow:hover { color:var(--zils-accent); }
 .historyRow>span:first-child { min-width:0; }
 .historyRow strong { display:block; font-weight:400; overflow-wrap:anywhere; }
-.historyRow time { display:block; font-size:11px; color:var(--zils-muted); margin-top:3px; }
+.historyRow time,.historyRow small { display:block; font-size:11px; color:var(--zils-muted); margin-top:3px; }
 .historyStatus { display:flex; align-items:center; gap:10px; font-size:12px; color:var(--zils-muted); }
 .historyStatus svg { flex-shrink:0; }
 .modelDownloads { margin:22px 0; }

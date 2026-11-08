@@ -3,6 +3,9 @@ import { uploadSchema, uploadDescriptor, storageUrl, type StorageLocations } fro
 
 export const SPLITS = ['train', 'calibration', 'test'] as const;
 export type Split = typeof SPLITS[number];
+/** Open runs are free and may be trained by Zils network miners; private runs are charged and stay on Zils workers. */
+export const TRAINING_TIERS = ['open', 'private'] as const;
+export type TrainingTier = typeof TRAINING_TIERS[number];
 export const MAX_DATASET_BYTES = 384 * 1024 * 1024;
 /** Text adapters train on the pinned d3-mini profile, which accepts up to 255 outcomes per question; image questions use the image training profile's max_options. */
 export const MAX_TEXT_OUTCOMES = 255;
@@ -17,8 +20,12 @@ export const submissionSchema = z.object({
   pool: z.enum(['d3-lite', 'd3-nano', 'd3-mini', 'd3-flash', 'd3']).optional(),
   base_channel: z.enum(['stable', 'latest']).optional(),
   model: z.string().min(1).optional(),
+  tier: z.enum(TRAINING_TIERS).optional(),
+  allow_open_tier_training: z.literal(true).optional(),
 });
 export type Submission = z.infer<typeof submissionSchema>;
+/** The request fields for a tier: an open run always carries the permission to share its training data with network miners. */
+export const tierFields = (tier: TrainingTier) => tier === 'open' ? { tier, allow_open_tier_training: true as const } : { tier };
 export const imageAcceptanceSchema = acceptanceSchema.safeExtend({ positive_class: z.string().min(1).optional(), min_positive_recall: z.number().min(0).max(1).optional(), max_false_positive_rate: z.number().min(0).max(1).optional(), min_class_recall: z.record(z.string(), z.number().min(0).max(1)).optional() });
 export const imageIntakeSchema = z.object({ version: z.literal('zils-image-intake/v1'), seed: z.string().min(1).max(100), snapshot_sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict();
 export const imageSubmissionSchema = submissionSchema.extend({ model: z.string().min(1), image_intake: imageIntakeSchema,
@@ -40,6 +47,7 @@ const jevComparisonSchema = z.discriminatedUnion('status', [
 ]);
 export const jobSchema = z.object({
   id: z.string().uuid(), name: z.string(), status: z.enum(STATUSES), created_at: z.string().optional(), error: z.string().nullable().optional(),
+  tier: z.enum(TRAINING_TIERS).optional(),
   model: modelSchema.nullable().optional(),
   dataset_source: z.object({ job_id: z.string().uuid(), job_sha256: z.string().regex(/^[a-f0-9]{64}$/), request_id: z.string().uuid() }).nullable().optional(),
   jev_comparison: jevComparisonSchema.nullable().optional().catch(null),
@@ -67,6 +75,8 @@ export const migrationRequestSchema = submissionSchema.pick({ model: true, pool:
 export type MigrationPreview = z.infer<typeof migrationPreviewSchema>;
 /** Multimodal base capability alone does not make a text dataset an image job. */
 export const isImageJob = (job: Job) => Boolean(job.image_intake) || job.model?.id === 'imajev-4b-v1';
+/** Who trains a run, for its label; runs created before tiers have none. */
+export const tierLabel = (job: Job) => job.tier === 'open' ? 'Open tier · free' : job.tier === 'private' ? 'Private' : null;
 export const terminal = (job: Job) => job.status === 'completed' || job.status === 'failed';
 export const canDownload = (job: Job) => job.status === 'completed' && job.result?.delivery.status === 'accepted';
 export const DOWNLOAD_FILES = ['adapter_config.json', 'adapter_model.safetensors', 'head.pt', 'release.json'] as const;
