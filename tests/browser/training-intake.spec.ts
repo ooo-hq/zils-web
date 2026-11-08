@@ -12,6 +12,7 @@ async function workspace(page: Page, start = true) {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const uploads: Record<string, string> = {};
   const mutations: string[] = [];
+  const created: Record<string, unknown> = {};
   const user = { id: '10000000-0000-4000-8000-000000000002', email: 'client@example.com', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
   const expires = Math.floor(Date.now() / 1000) + 3600;
   const token = `${Buffer.from(JSON.stringify({ alg: 'HS256' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: user.id, exp: expires })).toString('base64url')}.browser-test`;
@@ -36,6 +37,7 @@ async function workspace(page: Page, start = true) {
     }
     if (url.pathname === '/v1/jobs' && request.method() === 'GET') return route.fulfill({ json: { jobs: job ? [job] : [] }, headers });
     if (url.pathname === '/v1/jobs' && request.method() === 'POST') {
+      Object.assign(created, request.postDataJSON());
       job = { id: jobId, name: request.postDataJSON().name, status: 'uploading' };
       const slots = Object.fromEntries(['train', 'calibration', 'test'].map(split => [split, { url: `http://127.0.0.1:8998/storage/v1/object/upload/sign/fez-training-data/${jobId}/inputs/${split}.jsonl?token=test-upload`, method: 'PUT', headers: { 'Content-Type': 'application/octet-stream', 'x-upsert': 'false' } }]));
       return route.fulfill({ json: { job, uploads: slots }, headers });
@@ -49,7 +51,7 @@ async function workspace(page: Page, start = true) {
   await page.goto('/train');
   await expect(page.getByRole('button', { name: 'Classic setup', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Continue bulk import', exact: true })).toHaveCount(0);
-  if (!start) return { uploads, mutations };
+  if (!start) return { uploads, mutations, created };
   await page.getByRole('link', { name: 'Train a model', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Import labeled examples', exact: true })).not.toBeVisible();
   await expect(page.getByRole('link', { name: 'Import labeled photos', exact: true })).not.toBeVisible();
@@ -62,7 +64,7 @@ async function workspace(page: Page, start = true) {
   await page.getByRole('button', { name: 'Text examples', exact: true }).click();
   await page.getByLabel('The decision', { exact: true }).fill('Which team should handle this support ticket?');
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  return { uploads, mutations };
+  return { uploads, mutations, created };
 }
 
 function workbook(rows: string[][]) {
@@ -89,7 +91,7 @@ test('bulk import accepts more than the guided 500-example limit', async ({ page
 });
 
 test('Excel import, corrections and exclusions reach the existing submission contract', async ({ page }) => {
-  const { uploads, mutations } = await workspace(page);
+  const { uploads, mutations, created } = await workspace(page);
   const rows = [['Ticket ID', 'Message', 'Correct Answer', 'Customer Email'], ...Array.from({ length: 18 }, (_, index) => [`case-${index}`, `Help with request ${index}`, ['Billing', 'Technical support', 'Account changes'][index % 3], 'private@example.com'])];
   rows[1][2] = '';
   rows.push([...rows[2]]);
@@ -118,9 +120,13 @@ test('Excel import, corrections and exclusions reach the existing submission con
   expect(mutations).toEqual([]);
   await page.getByLabel('Run name', { exact: true }).fill('reviewed-client-run');
   await page.getByLabel('I checked the answers', { exact: false }).check();
+  await expect(page.getByLabel('I am authorized', { exact: false })).not.toContainText('network miners');
+  await page.getByRole('radio', { name: /^Open tier · free/ }).check();
+  await expect(page.getByText('copied to Zils network miners and assigned, approved workers', { exact: false })).toBeVisible();
   await page.getByLabel('I am authorized', { exact: false }).check();
   await page.getByRole('button', { name: 'Send for training', exact: true }).click();
   await expect(page.getByRole('dialog')).not.toBeVisible();
+  expect(created).toMatchObject({ tier: 'open', allow_open_tier_training: true, allow_training_data_export: true });
   expect(Object.keys(uploads).sort()).toEqual(['calibration', 'test', 'train']);
   const examples = Object.values(uploads).flatMap(text => text.trim().split('\n').map(line => JSON.parse(line)));
   expect(examples).toHaveLength(18);
@@ -223,7 +229,7 @@ test('unsupported assistant suggestions leave the training draft unchanged', asy
 });
 
 for (const format of ['json', 'jsonl', 'paste']) test(`${format} intake preserves nested data through review and submission`, async ({ page }) => {
-  const { mutations, uploads } = await workspace(page);
+  const { mutations, uploads, created } = await workspace(page);
   const records = Array.from({ length: 6 }, (_, index) => ({
     case_id: `case-${index}`, content: { transcript: [{ text: `Request ${index}`, start: 0 }], brief: 'Route to the right team' },
     answer: index % 2 ? 'Billing' : 'Technical support', private_email: 'private@example.com',
@@ -248,7 +254,12 @@ for (const format of ['json', 'jsonl', 'paste']) test(`${format} intake preserve
   await page.getByLabel('I checked the answers', { exact: false }).check();
   await page.getByLabel('I am authorized', { exact: false }).check();
   await page.getByRole('button', { name: 'Send for training', exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveText('Choose who trains this run.');
+  await page.getByRole('radio', { name: /^Private/ }).check();
+  await page.getByRole('button', { name: 'Send for training', exact: true }).click();
   await expect(page.getByRole('dialog')).not.toBeVisible();
+  expect(created).toMatchObject({ tier: 'private' });
+  expect(created).not.toHaveProperty('allow_open_tier_training');
   const examples = Object.values(uploads).flatMap(text => text.trim().split('\n').map(line => JSON.parse(line)));
   expect(examples).toHaveLength(6);
   expect(examples.every(row => Object.keys(row.state.information).join() === 'content')).toBe(true);

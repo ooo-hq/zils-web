@@ -6,8 +6,9 @@ import { useRouter } from 'next/navigation';
 import { useAuthSession } from '@/components/auth-session';
 import { imageApi, ImageApiError, type ImageQuestion } from '@/lib/images';
 import { uploadImageTraining, type ImageDraft, type PreparedImageTraining } from '@/lib/image-training';
-import { SPLITS, submissionSchema, trainingApi, TrainingApiError, validateDatasets, type Split, type Submission } from '@/lib/training';
+import { SPLITS, submissionSchema, tierFields, trainingApi, TrainingApiError, validateDatasets, type Split, type Submission, type TrainingTier } from '@/lib/training';
 import { ModelPoolSelect } from '@/components/model-pool-select';
+import { TierChoice } from '@/components/tier-choice';
 import type { PoolSelection } from '@/lib/base-model';
 import type { TrainingConfig } from '@/lib/training-config';
 import s from './teach-by-example.module.css';
@@ -28,7 +29,7 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
   const router = useRouter(), id = useId();
   const [name, setName] = useState(initialName), [accuracy, setAccuracy] = useState(initialAccuracy), [improvement, setImprovement] = useState(initialImprovement);
   const [selection, setSelection] = useState<PoolSelection | null>(null);
-  const [consent, setConsent] = useState(false), [comparison, setComparison] = useState(false);
+  const [consent, setConsent] = useState(false), [comparison, setComparison] = useState(false), [tier, setTier] = useState<TrainingTier | null>(null);
   const [busy, setBusy] = useState(false), [frozen, setFrozen] = useState(false), [uncertain, setUncertain] = useState(false);
   const [error, setError] = useState(''), [progress, setProgress] = useState(''), [needsCredit, setNeedsCredit] = useState(false);
   const [savedId, setSavedId] = useState(''), [savedOwner, setSavedOwner] = useState('');
@@ -49,13 +50,14 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
     event.preventDefault();
     if (operation.current || uncertain || !config || !client || !session || accountChanged) return;
     setError(''); setNeedsCredit(false);
+    if (!tier && !snapshot.current) { setError('Choose who trains this run.'); return; }
     if (!consent) { setError('Confirm permission to share the training examples.'); return; }
     if (!snapshot.current && !selection) { setError('Choose a pool with qualified training capacity.'); return; }
     const controller = new AbortController(); operation.current = controller;
     setBusy(true); onLock(true);
     try {
       if (!snapshot.current) {
-        const input = submissionSchema.parse({ name, ...selection, acceptance: { min_accuracy: accuracy.trim() ? Number(accuracy) / 100 : NaN, min_brier_improvement: improvement.trim() ? Number(improvement) : NaN }, allow_training_data_export: true, ...(comparison && !imageAnswers ? { allow_jev_comparison: true } : {}) });
+        const input = submissionSchema.parse({ name, ...selection, acceptance: { min_accuracy: accuracy.trim() ? Number(accuracy) / 100 : NaN, min_brier_improvement: improvement.trim() ? Number(improvement) : NaN }, allow_training_data_export: true, ...tierFields(tier!), ...(comparison && !imageAnswers ? { allow_jev_comparison: true } : {}) });
         setProgress('Checking your training data locally…');
         const data = await prepare(input.name);
         if (data.kind === 'text') await validateDatasets(data.files, controller.signal);
@@ -148,17 +150,18 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
   if (!config) return <p className={s.hint}>Live training is not configured in this environment. You can still download your draft.</p>;
   return <section className={s.preparedReview} aria-label="Submit training run" aria-busy={busy}>
     <h2>Start a real training run</h2>
-    <p className={s.hint}>Costs $0.20 per million training tokens, with a $2 minimum; an included run covers the first $2. If your balance cannot cover a large dataset, the run stops before training and shows the price. A completed evaluation is charged even if no model meets your targets. <Link href="/billing" target="_blank" rel="noopener noreferrer">View billing</Link>.</p>
+    {tier === 'open' ? <p className={s.hint}>Open-tier runs are free.</p> : <p className={s.hint}>Private runs cost $0.20 per million training tokens, with a $2 minimum; an included run covers the first $2. If your balance cannot cover a large dataset, the run stops before training and shows the price. A completed evaluation is charged even if no model meets your targets. <Link href="/billing" target="_blank" rel="noopener noreferrer">View billing</Link>.</p>}
     {session === undefined ? <p role="status">Checking your sign-in…</p> : !session || accountChanged ? <p className={s.hint}>{accountChanged ? 'Sign in to the original account to resume this run.' : 'Sign in before submitting.'} <Link className={s.secondary} href="/train" target="_blank" rel="noopener noreferrer">Sign in to train</Link> Your draft stays in this tab; return here after signing in.</p> : <form onSubmit={submit}>
       <ModelPoolSelect apiUrl={config.apiUrl} modality={imageAnswers ? 'images' : 'text'} disabled={busy || frozen} onChange={setSelection} />
       <fieldset disabled={busy || frozen}>
         <label htmlFor={`${id}-name`}>Training run name</label><input id={`${id}-name`} required maxLength={64} pattern="[a-z0-9][a-z0-9-]{0,63}" placeholder="support-routing-v1" value={name} onChange={event => setName(event.target.value)} />
         <div className={s.pairFields}><div><label htmlFor={`${id}-accuracy`}>Required accuracy (%)</label><input id={`${id}-accuracy`} type="number" required min="0" max="100" step="any" value={accuracy} onChange={event => setAccuracy(event.target.value)} /></div><div><label htmlFor={`${id}-improvement`}>Required Brier improvement</label><input id={`${id}-improvement`} type="number" required min="0" max="2" step="any" value={improvement} onChange={event => setImprovement(event.target.value)} /></div></div>
         <p className={s.hint}>The trained model must meet these targets on held-out data. Lower Brier loss means better probability estimates. Training does not guarantee an approved model.</p>
-        <label className={s.checkLabel}><input type="checkbox" required checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I am authorized to share these examples. Approved workers can read and retain the training data. Calibration and test labels stay with Zils. This is not confidential compute.</span></label>
+        <TierChoice value={tier} onChange={setTier} data={imageAnswers ? 'photos' : 'examples'} price={imageAnswers ? '$2 per run' : '$0.20 per million training tokens'} />
+        <label className={s.checkLabel}><input type="checkbox" required checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I am authorized to share these examples. {tier === 'open' ? 'Zils network miners and approved workers' : 'Approved workers'} can read and retain the training data. Calibration and test labels stay with Zils. This is not confidential compute.</span></label>
         {!imageAnswers && <label className={s.checkLabel}><input type="checkbox" checked={comparison} onChange={event => setComparison(event.target.checked)} /><span>Also compare against TypeSafe JEV. Send final-evaluation inputs and questions to TypeSafe; correct answers stay with Zils. Optional.</span></label>}
       </fieldset>
-      <div className={s.actions}><span className={s.hint}>{session.user.email}</span><button className={s.primary} disabled={busy || uncertain || !consent || (!frozen && !selection)}>{busy ? 'Submitting…' : frozen ? 'Resume training submission' : 'Start training'}</button></div>
+      <div className={s.actions}><span className={s.hint}>{session.user.email}</span><button className={s.primary} disabled={busy || uncertain || !consent || (!frozen && (!selection || !tier))}>{busy ? 'Submitting…' : frozen ? 'Resume training submission' : 'Start training'}</button></div>
     </form>}
     {(error || sessionError) && <p role="alert" className={s.error}>{error || sessionError}{needsCredit && <Link href="/billing" target="_blank" rel="noopener noreferrer">Add credit</Link>}</p>}
     {progress && <p role="status" className={s.hint}>{progress}</p>}

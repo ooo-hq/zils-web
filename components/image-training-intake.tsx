@@ -7,8 +7,9 @@ import { TrainingDecisionSetup } from '@/components/training-decision-setup';
 import { SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { mapImageExamples, prepareImageTraining, uploadImageTraining, type ImageExample, type ImageDraft, type PreparedImageTraining } from '@/lib/image-training';
 import { ImageApiError, imageQuestion, type imageApi, type ImageModels } from '@/lib/images';
-import { TrainingApiError, type trainingApi, type Job } from '@/lib/training';
+import { TrainingApiError, tierFields, type trainingApi, type Job, type TrainingTier } from '@/lib/training';
 import { ModelPoolSelect } from '@/components/model-pool-select';
+import { TierChoice } from '@/components/tier-choice';
 import type { PoolSelection } from '@/lib/base-model';
 import styles from '@/app/(home)/train/train.module.css';
 import photoStyles from './image-training-intake.module.css';
@@ -25,7 +26,7 @@ function Intake({apiUrl,active=true,onChooseType,assistantConfigured,trainingApi
   const [question,setQuestion]=useState(''),[answers,setAnswers]=useState(''),[name,setName]=useState('inspection');
   const [reviewed,setReviewed]=useState(false),[consent,setConsent]=useState(false),[prepared,setPrepared]=useState<PreparedImageTraining|null>(null);
   const [positive,setPositive]=useState(''),[recall,setRecall]=useState('95'),[alarms,setAlarms]=useState('20'),[accuracy,setAccuracy]=useState('80'),[improvement,setImprovement]=useState('0.01');
-  const [needsCredit,setNeedsCredit]=useState(false);
+  const [needsCredit,setNeedsCredit]=useState(false),[tier,setTier]=useState<TrainingTier|null>(null);
   const [savedJob,setSavedJob]=useState<Job>();
   const [busy,setBusy]=useState(false),[frozen,setFrozen]=useState(false),[error,setError]=useState(''),[progress,setProgress]=useState(''),[submitted,setSubmitted]=useState(false);
   const draft=useRef<ImageDraft>({assets:{}}),operation=useRef<AbortController|null>(null),urls=useRef<string[]>([]),life=useRef({active:true});
@@ -74,6 +75,7 @@ function Intake({apiUrl,active=true,onChooseType,assistantConfigured,trainingApi
   }
   async function submit(){
     if(!prepared||busy)return;setError('');setNeedsCredit(false);setSubmitted(false);
+    if(!tier&&!existingJob){setError('Choose who trains this run.');return;}
     if(!consent){setError('Confirm permission to share the training photos.');return;}
     if(!/^[a-z0-9][a-z0-9-]{0,63}$/.test(name)){setError('Use a run name with 1–64 lowercase letters, numbers or hyphens.');return;}
     if([accuracy,improvement,...(binary?[recall,alarms]:[])].some(value=>!value.trim())){setError('Enter each required quality target.');return;}
@@ -86,7 +88,7 @@ function Intake({apiUrl,active=true,onChooseType,assistantConfigured,trainingApi
     try{
       if (!draft.current.job && !selection) throw new Error('Choose a pool with qualified image training capacity.');
       const selected = draft.current.job ? {model: draft.current.job.model?.id || profile.model} : {...selection, model: selection?.model || profile.model};
-      const job=await uploadImageTraining(prepared,decision,{name,...selected,acceptance,allow_training_data_export:true},training,images,draft.current,controller.signal,text=>{if(!controller.signal.aborted){setProgress(text);setFrozen(Boolean(draft.current.job));setSavedJob(draft.current.job);}});
+      const job=await uploadImageTraining(prepared,decision,{name,...selected,acceptance,allow_training_data_export:true,...(tier?tierFields(tier):{})},training,images,draft.current,controller.signal,text=>{if(!controller.signal.aborted){setProgress(text);setFrozen(Boolean(draft.current.job));setSavedJob(draft.current.job);}});
       if(!controller.signal.aborted){onSubmitted(job);setSubmitted(true);setProgress('');setFrozen(true);}
     }catch(error){if(!controller.signal.aborted){setNeedsCredit((error instanceof TrainingApiError || error instanceof ImageApiError) && error.status===402);setError(error instanceof Error?error.message:'Upload interrupted. Retry to resume missing photos.');}}
     finally{if(life.current.active){setBusy(false);setFrozen(Boolean(draft.current.job));setSavedJob(draft.current.job);}operation.current=null;}
@@ -132,10 +134,11 @@ function Intake({apiUrl,active=true,onChooseType,assistantConfigured,trainingApi
           <label>Minimum accuracy (%)<input type="number" min="0" max="100" value={accuracy} onChange={e=>setAccuracy(e.target.value)}/></label><label>Minimum Brier improvement<input type="number" min="0" max="2" step="0.01" value={improvement} onChange={e=>setImprovement(e.target.value)}/></label></fieldset>
         <p>Only training photos go to approved workers. Calibration and evaluation photos stay private to evaluation. Draft uploads expire after 24 hours; submitted photos are retained until 30 days after the run finishes.</p>
         {(savedJob?.data_expires_at||resumeJob?.data_expires_at)&&<p>Current draft expires: {new Date((savedJob?.data_expires_at||resumeJob?.data_expires_at)!).toLocaleString()}.</p>}
-        <p>Each standard image run uses one included training run or $2 from your credit balance. Completed runs are charged even if no model meets your targets. <Link href="/billing" target="_blank" rel="noopener noreferrer">View billing</Link>.</p>
-        <label className={photoStyles.check}><input type="checkbox" checked={consent} disabled={busy||submitted} onChange={e=>setConsent(e.target.checked)}/>I have permission to share training images with approved workers</label>
+        {!existingJob&&<TierChoice value={tier} onChange={setTier} data="photos" price="$2 per run" disabled={locked}/>}
+        {tier==='open'?<p>Open-tier runs are free.</p>:<p>Each private image run uses one included training run or $2 from your credit balance. Completed runs are charged even if no model meets your targets. <Link href="/billing" target="_blank" rel="noopener noreferrer">View billing</Link>.</p>}
+        <label className={photoStyles.check}><input type="checkbox" checked={consent} disabled={busy||submitted} onChange={e=>setConsent(e.target.checked)}/>{tier==='open'?'I have permission to share training images with Zils network miners and approved workers':'I have permission to share training images with approved workers'}</label>
         {!locked&&<button type="button" className={styles.secondary} onClick={()=>{setPrepared(null);setConsent(false);go(2);}}>Back</button>}
-        {!submitted&&<button className={styles.button} disabled={busy||!consent||(!existingJob&&!selection)} onClick={()=>void submit()}>{busy?'Uploading…':existingJob?'Resume missing image uploads':'Start image training'}</button>}
+        {!submitted&&<button className={styles.button} disabled={busy||!consent||(!existingJob&&(!selection||!tier))} onClick={()=>void submit()}>{busy?'Uploading…':existingJob?'Resume missing image uploads':'Start image training'}</button>}
       </div>}
       {busy&&<button className={styles.secondary} onClick={()=>{operation.current?.abort();setProgress('Upload stopped. Completed photos remain saved.');}}>Stop image upload</button>}
       {(frozen||resumeJob?.status==='uploading')&&<button className={styles.secondary} disabled={busy} onClick={()=>void reset()}>Start a new run</button>}

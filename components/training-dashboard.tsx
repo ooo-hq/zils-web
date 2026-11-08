@@ -6,7 +6,7 @@ import type { StorageLocations } from '@/lib/storage';
 import { type SupabaseClient } from '@supabase/supabase-js';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { canDownload, downloadFiles, isImageJob, SPLITS, submissionSchema, terminal, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
+import { canDownload, downloadFiles, isImageJob, SPLITS, submissionSchema, terminal, tierLabel, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
 import Link from 'next/link';
 import { WorkspaceLoading, LinkLoading } from '@/components/workspace-loading';
 import { TrainingGuide } from '@/components/training-guide';
@@ -316,7 +316,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     if (!items.length) return null;
     return <section className={styles.runHistory} aria-label={title}><div className={styles.historyHeading}><h2>{title}</h2>{title === 'Run history' && <button className={styles.textButton} onClick={refresh} disabled={busy || refreshing}>{refreshing ? 'Checking…' : 'Refresh runs'}</button>}</div><ul>{items.map(job => <li key={job.id}>
       <Link className={styles.historyRow} href={`/train?run=${job.id}`}>
-        <span><strong>{job.name}</strong>{job.created_at && <time dateTime={job.created_at}>{new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time>}</span>
+        <span><strong>{job.name}</strong>{job.created_at && <time dateTime={job.created_at}>{new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time>}{tierLabel(job) && <small>{tierLabel(job)}</small>}</span>
         <span className={styles.historyStatus}>{trainingProgress(job).label}<LinkLoading /><ArrowUpRight size={16} aria-hidden="true" /></span>
       </Link>
     </li>)}</ul></section>;
@@ -357,7 +357,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
       </section> : selected ? <div>
         <div className={styles.currentLabel}><span>{runId ? 'Run details' : 'Current run'}</span><button className={styles.textButton} onClick={refresh} disabled={busy || refreshing}>{refreshing ? 'Checking…' : 'Refresh status'}</button></div>
         <section className={`${styles.panel} ${styles.currentRun}`} aria-labelledby="current-run-title">
-          <div className={styles.currentRunHeader}><h2 id="current-run-title" ref={statusMessage} tabIndex={-1}>{selected.name}</h2><span className={styles.runBadge} data-tone={trainingProgress(selected).tone}>{trainingProgress(selected).label}</span></div>
+          <div className={styles.currentRunHeader}><h2 id="current-run-title" ref={statusMessage} tabIndex={-1}>{selected.name}</h2><span className={styles.runBadge} data-tone={trainingProgress(selected).tone}>{trainingProgress(selected).label}</span>{tierLabel(selected) && <span className={styles.runBadge}>{tierLabel(selected)}</span>}</div>
           {runId || selected.status === 'uploading' ? runDetails(selected) : <TrainingRunStatus job={selected} />}
           {!runId && <Link className={styles.textButton} href={`/train?run=${selected.id}`}>View full run<LinkLoading /></Link>}
           <p className={styles.statusFreshness} data-stale={refreshError}>{refreshError ? 'Connection interrupted. Showing the last known status; we’ll retry automatically.' : <>Last checked {checkedAt ? new Date(checkedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'just now'}. {!terminal(selected) && 'Updates automatically.'}</>}</p>

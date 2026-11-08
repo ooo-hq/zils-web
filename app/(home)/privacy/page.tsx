@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <PolicyPage title="Privacy policy." updated="4 November 2026">
+    <PolicyPage title="Privacy policy." updated="7 November 2026">
       <p>This notice describes information handled by the Zils website and its decision-model services, including sign-in, training, model requests, and support.</p>
 
       <PolicySection title="Accounts and browser storage">
@@ -25,6 +25,7 @@ export default function PrivacyPage() {
 
       <PolicySection title="Training workers and retained copies">
         <p>Submitting a run requires permission to copy the learning dataset to assigned, approved training workers. Their operators can read and retain that data. Confidence-check and final-evaluation datasets remain with the evaluation service rather than being included in worker training exports.</p>
+        <p>Each run is open tier or private, chosen when you submit it. Private runs are trained only by Zils workers. Open-tier runs are free and may be trained by Zils network miners: independent operators admitted to the Zils network who accept its miner terms. They receive only the learning dataset, must delete it within 7 days of the run finishing and must not use it for anything else, but Zils cannot verify that they do. Choose open tier only for data you are allowed to share this way.</p>
         <p>This training workflow is not confidential compute. Files, model artifacts, and local run records remain until operator cleanup; automatic deletion is not currently implemented. Canceling a job does not erase data already downloaded or immediately stop remote work. Expiring a download link does not remove a copy already obtained.</p>
       </PolicySection>
 
