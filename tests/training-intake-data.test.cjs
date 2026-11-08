@@ -176,3 +176,21 @@ test('readiness counts independent groups after exclusions and review sampling i
   const sampled = reviewData(many, {inputs:['Message'], answer:'Answer', group:''}, manyAnswers, {});
   for (const answer of manyAnswers) assert.ok(sampled.sample.some(index => many.rows[index][1] === answer));
 });
+
+test('a column that gives away the answer is flagged; free text, IDs and a common answer are not', () => {
+  const { leaks } = require('../.private/test-build/training-review.js');
+  const teams = ['Billing', 'Technical support', 'Account changes'];
+  const agents = { Billing: 'Ana', 'Technical support': 'Raj', 'Account changes': 'Li' };
+  const rows = Array.from({ length: 60 }, (_, i) => {
+    const team = teams[i % 3];
+    return [`message ${i}`, `T-${i}`, agents[team], ['low', 'high'][Math.floor(i / 3) % 2], team];
+  });
+  const data = { headers: ['message', 'ticket', 'handled_by', 'priority', 'team'], rows };
+  const found = leaks(data, 'team', ['message', 'ticket', 'handled_by', 'priority']);
+  assert.deepEqual(found.map(leak => leak.column), ['handled_by']);
+  assert.equal(found[0].agreement, 1);
+  // Nearly every row has the same answer: any column agrees with it, but that is not a leak.
+  const common = { headers: ['region', 'answer'], rows: Array.from({ length: 40 }, (_, i) => [['north', 'south'][i % 2], i === 0 ? 'no' : 'yes']) };
+  assert.deepEqual(leaks(common, 'answer', ['region']), []);
+  assert.deepEqual(leaks(data, '', ['handled_by']), []);
+});

@@ -290,3 +290,23 @@ test('mobile pasted payload lets users select records and clears stale data afte
   expect(await page.getByRole('dialog').evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
   expect(mutations).toEqual([]);
 });
+
+test('a column that gives away the answer is flagged when chosen as information', async ({ page }) => {
+  const { mutations } = await workspace(page);
+  const agents: Record<string, string> = { Billing: 'Ana', Support: 'Raj', Accounts: 'Li' };
+  const teams = Object.keys(agents);
+  const rows = ['message,handled_by,team', ...Array.from({ length: 30 }, (_, i) => `Request ${i},${agents[teams[i % 3]]},${teams[i % 3]}`)];
+  await page.getByLabel('Drop your data here or choose a file').setInputFiles({ name: 'tickets.csv', mimeType: 'text/csv', buffer: Buffer.from(rows.join('\n')) });
+  await expect(page.getByText('30 examples found')).toBeVisible();
+  const warning = page.getByRole('status').filter({ hasText: 'handled_by' });
+  await expect(warning).toHaveCount(0);
+  await page.getByText('Change what Zils reads or answers').click();
+  const choice = page.locator('label').filter({ has: page.getByRole('checkbox') }).filter({ hasText: 'handled_by' });
+  await expect(choice).toContainText('Gives away the answer in 100% of examples');
+  await choice.getByRole('checkbox').check();
+  await expect(warning).toContainText('handled_by gives away the answer in 100% of examples');
+  await page.screenshot({ path: '.private/leak-warning.png', fullPage: true, animations: 'disabled' });
+  await choice.getByRole('checkbox').uncheck();
+  await expect(warning).toHaveCount(0);
+  expect(mutations).toEqual([]);
+});

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { ColumnMapping, CsvData } from '@/lib/training-csv';
+import { leaks } from '@/lib/training-review';
 import styles from '@/app/(home)/train/train.module.css';
 
 type Props = {
@@ -16,6 +17,8 @@ export function TrainingExampleSetup({ csv, mapping, independent, onMapping, onI
   const [example, setExample] = useState(0);
   const [grouped, setGrouped] = useState(Boolean(mapping.group));
   const [editing, setEditing] = useState(!mapping.answer || !mapping.inputs.length);
+  const flagged = useMemo(() => new Map(leaks(csv, mapping.answer, csv.headers.filter(header => header !== mapping.answer && header !== mapping.group)).map(leak => [leak.column, `${Math.round(leak.agreement * 100)}%`])), [csv, mapping.answer, mapping.group]);
+  const chosenLeaks = mapping.inputs.filter(header => flagged.has(header));
   const value = (header: string) => csv.rows[example][csv.headers.indexOf(header)] || '';
   const excerpt = (header: string) => {
     const text = value(header);
@@ -30,6 +33,7 @@ export function TrainingExampleSetup({ csv, mapping, independent, onMapping, onI
       <div><h4>Zils reads</h4>{mapping.inputs.length ? mapping.inputs.map(header => <p key={header}>{value(header) || 'Empty in this example'}</p>) : <p className={styles.previewPlaceholder}>Choose the information below.</p>}</div>
       <div><h4>Should answer</h4><p>{mapping.answer ? value(mapping.answer) || 'This example needs a correct answer.' : 'Choose the answer below.'}</p></div>
     </div>
+    {chosenLeaks.map(header => <p key={header} role="status" className={styles.notice}>{header} gives away the answer in {flagged.get(header)} of examples. Columns like this are usually filled in after the decision, so the model learns nothing it can use. Keep it only if it is known when deciding.</p>)}
     <details className={styles.details} open={editing} onToggle={event => setEditing(event.currentTarget.open)}>
       <summary>Change what Zils reads or answers</summary>
       <fieldset className={styles.teachingQuestion}>
@@ -44,7 +48,7 @@ export function TrainingExampleSetup({ csv, mapping, independent, onMapping, onI
         <p>Leave out the answer and anything added after the decision.</p>
         <div className={styles.dataChoices}>{csv.headers.filter(header => header !== mapping.answer && header !== mapping.group).map(header => <label key={header} className={styles.dataChoice} data-selected={mapping.inputs.includes(header)}>
           <input type="checkbox" checked={mapping.inputs.includes(header)} onChange={event => onMapping({ ...mapping, inputs: event.target.checked ? [...mapping.inputs, header] : mapping.inputs.filter(name => name !== header) })} />
-          <span><strong>{excerpt(header)}</strong><small>{header}</small></span>
+          <span><strong>{excerpt(header)}</strong><small>{header}</small>{flagged.has(header) && <small className={styles.leak}>Gives away the answer in {flagged.get(header)} of examples</small>}</span>
         </label>)}</div>
       </fieldset>
     </details>
