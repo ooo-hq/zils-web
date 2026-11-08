@@ -55,6 +55,9 @@ export const jobSchema = z.object({
   image_intake: imageIntakeSchema.nullable().optional(),
   selection: z.object({ version: z.literal('zils-version-selection/v1'), root_job_id: z.string().uuid(), previous: z.object({ job_id: z.string().uuid(), model_id: z.string().min(1), sha256: z.string().regex(/^[a-f0-9]{64}$/) }).nullable() }).nullable().optional(),
   data_expires_at: z.string().nullable().optional(),
+  // Opt-in email when the run finishes; absent on a coordinator that predates it.
+  email_when_done: z.boolean().optional(),
+  email_sent: z.boolean().optional(),
   workflow: z.object({ state: z.string(), message: z.string().optional(), model_id: z.string().optional(), model_alias: z.string().optional(), model_name: z.string().min(1).max(128).optional(), fingerprint: z.string().optional() }).nullable().optional(),
   result: z.object({
     delivery: z.object({ status: z.enum(['accepted', 'no_qualifying_model', 'qualification_complete']), uid: z.number().optional(), sha256: z.string().optional(), brier_improvement: z.number().optional(), acceptance: imageAcceptanceSchema.optional() }),
@@ -212,6 +215,7 @@ export function trainingApi(baseUrl: string, storage: StorageLocations, token: (
     imageAssets: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/image-assets`, z.object({ assets: z.array(z.object({ id: z.string().uuid(), filename: z.string(), source_sha256: z.string() })) }), undefined, signal),
     resume: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/uploads`, z.object({ job: jobSchema, uploads: uploadsSchema }), {}, signal).then(result => checkedUploads(result, id)),
     cancel: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/cancel`, z.object({ job: jobSchema }), {}, signal),
+    notify: (id: string, emailWhenDone: boolean, signal?: AbortSignal) => call(`${idPath(id)}/notify`, z.object({ job: jobSchema }), { email_when_done: emailWhenDone }, signal),
     submit: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/submit`, z.object({ job: jobSchema }), {}, signal),
     downloads: async (job: Job, signal?: AbortSignal) => {
       if (!canDownload(job)) throw new Error('Downloads require a completed, accepted model.');
