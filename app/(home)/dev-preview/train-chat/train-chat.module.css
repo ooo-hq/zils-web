@@ -1,0 +1,122 @@
+/* An AI chat window in the Zils workspace: a centered question and one input, then a centered conversation with
+   the input pinned below. Workspace .zs tokens throughout. The one splash of color is the spectrum edge and halo
+   on the input (the brand keeps the spectrum off page backgrounds), and the spectrum bar in each proposal. */
+.page { --mono: var(--font-plex-mono), ui-monospace, monospace; --spectrum: linear-gradient(90deg, #ef8d5a 0%, #d9a08c 18%, #cfa2e4 42%, #c3b4f6 64%, #a9b5f2 82%, #8ea6ff 100%);
+  min-height:calc(100svh - 110px); display:flex; flex-direction:column; }
+.inner { flex:1; display:flex; flex-direction:column; width:100%; max-width:760px; margin:0 auto; }
+.page[data-started=false] .inner { justify-content:center; padding-bottom:12vh; }
+
+.intro { text-align:center; margin-bottom:28px; }
+.title { margin:0; font-weight:300; font-size:clamp(28px,3vw,40px); letter-spacing:-.025em; line-height:1.15; color:var(--zs-fg); }
+.lede { margin:12px auto 0; font-size:15px; line-height:1.6; color:var(--zs-t2); max-width:60ch; text-wrap:balance; }
+
+.thread { display:grid; gap:26px; padding-top:32px; margin-bottom:24px; }
+/* Scrolling to the newest reply leaves room for the pinned input, so its buttons stay visible. */
+.end { scroll-margin-bottom:140px; }
+.you { justify-self:end; max-width:80%; display:grid; gap:6px; justify-items:end; padding:11px 16px; border-radius:20px 20px 6px 20px; background:var(--zs-raised); font-size:15px; line-height:1.55; color:var(--zs-fg); }
+.you p { margin:0; }
+.zils { font-size:15px; line-height:1.65; color:var(--zs-t2); }
+.zils > p { margin:0 0 12px; }
+.zils > p.lead { color:var(--zs-fg); font-size:16px; }
+.zils > p.small { font-size:13px; color:var(--zs-t3); }
+.thinking { color:var(--zs-t3); animation:breathe 1.6s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity:.45; } }
+
+.file { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--zs-t3); }
+.file button { border:0; background:none; color:inherit; cursor:pointer; padding:2px; display:inline-flex; }
+
+/* One grid for every row, so the bar stays straight. */
+.sample { display:grid; grid-template-columns:minmax(0,1fr) auto; margin:4px 0 12px; border:1px solid var(--zs-line); border-radius:14px; overflow:hidden; font-size:14px; }
+.sampleRow { display:contents; }
+.sampleRow > span { padding:11px 16px; border-top:1px solid var(--zs-line); min-width:0; }
+.sampleRow:first-child > span { border-top:0; }
+.sampleRow > .head { font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--zs-t3); padding-top:9px; padding-bottom:9px; }
+.sees { color:var(--zs-t2); overflow:hidden; white-space:nowrap; display:flex; align-items:center; gap:10px; }
+.sees > span { overflow:hidden; text-overflow:ellipsis; min-width:0; }
+/* Each value it reads is set apart by a thin rule, not run together with commas. */
+.sees > span + span { flex-shrink:0; padding-left:10px; border-left:1px solid var(--zs-line); }
+.decides, .decideHead { position:relative; background:var(--zs-raised); }
+.decides::before, .decideHead::before { content:''; position:absolute; left:-1px; top:0; bottom:0; width:2px; background:linear-gradient(180deg, #ef8d5a 0%, #d9a08c 18%, #cfa2e4 42%, #c3b4f6 64%, #a9b5f2 82%, #8ea6ff 100%); }
+.decides { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.thumb { width:24px; height:24px; border-radius:5px; flex-shrink:0; }
+
+/* Answer tag (SYSTEM.md): a square in the answer's lane color, then the label in mono uppercase. */
+.tag { display:inline-flex; align-items:center; gap:8px; padding:4px 9px 4px 4px; border:1px solid var(--zs-line); border-radius:6px; font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--zs-fg); white-space:nowrap; }
+.tag i { width:12px; height:12px; border-radius:3px; background:var(--lane); }
+
+/* Replies end in suggested next steps, as chips; Train is the one orange action. */
+.actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+.primary, .secondary, .chip { font:inherit; font-size:14px; line-height:1.2; padding:9px 16px; border-radius:999px; cursor:pointer; text-align:left; }
+.primary { border:0; background:var(--zs-orange); color:#140a04; font-weight:500; padding:9px 22px; }
+.secondary, .chip { background:transparent; color:var(--zs-fg); border:1px solid rgba(var(--zs-fg-rgb), .22); }
+.secondary:hover, .chip:hover { border-color:rgba(var(--zs-fg-rgb), .5); background:rgba(var(--zs-fg-rgb), .04); }
+:global([data-theme=light]) .primary, :global([data-theme=light]) .send { color:#fff; }
+
+.steps { list-style:none; padding:0; margin:4px 0 14px; display:grid; gap:8px; font-size:14px; color:var(--zs-t3); }
+.steps li { display:flex; align-items:center; gap:10px; }
+.steps li::before { content:''; width:8px; height:8px; border-radius:50%; border:1px solid rgba(var(--zs-fg-rgb), .3); }
+.steps li[data-state=done], .steps li[data-state=now] { color:var(--zs-fg); }
+.steps li[data-state=done]::before { background:var(--zs-fg); border-color:var(--zs-fg); }
+.steps li[data-state=now]::before { background:var(--zs-orange); border-color:var(--zs-orange); }
+
+/* The input: a rounded pill with a spectrum edge and a faint halo, centered before the chat starts, pinned after. */
+.composer { display:grid; gap:8px; }
+.page[data-started=true] .composer { position:sticky; bottom:0; margin-top:auto; padding:12px 0 6px; background:linear-gradient(transparent, var(--zs-panel) 28%); }
+.row { position:relative; display:flex; align-items:flex-end; gap:6px; padding:7px; border:1px solid transparent; border-radius:28px;
+  background:linear-gradient(var(--zs-raised), var(--zs-raised)) padding-box, var(--spectrum) border-box; }
+.row::after { content:''; position:absolute; inset:-1px; z-index:-1; border-radius:inherit; background:var(--spectrum); filter:blur(22px); opacity:.16; transition:opacity .3s; pointer-events:none; }
+.row:focus-within::after, .page[data-over=true] .row::after { opacity:.32; }
+.row textarea { flex:1; resize:none; border:0; background:transparent; color:var(--zs-fg); font:inherit; font-size:16px; line-height:1.5; padding:8px 2px; min-height:40px; max-height:180px; field-sizing:content; }
+.row textarea::placeholder { color:var(--zs-t3); }
+.row textarea:focus { outline:none; }
+.icon, .send, .sendQuiet { flex-shrink:0; width:38px; height:38px; display:grid; place-items:center; border-radius:50%; cursor:pointer; }
+.icon { border:0; background:transparent; color:var(--zs-t2); }
+.icon:hover { color:var(--zs-fg); background:rgba(var(--zs-fg-rgb), .06); }
+.send { border:0; background:var(--zs-orange); color:#140a04; }
+.sendQuiet { border:0; background:rgba(var(--zs-fg-rgb), .12); color:var(--zs-fg); }
+.send:disabled, .sendQuiet:disabled { opacity:.35; cursor:not-allowed; }
+.composer > .file { padding:0 14px; }
+
+.starters { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:18px; }
+.chip { color:var(--zs-t2); font-size:13px; }
+.footnote { margin:12px 0 0; text-align:center; font-size:12px; color:var(--zs-t3); }
+
+@media (prefers-reduced-motion: reduce) { .thinking { animation:none; } .row::after { transition:none; } }
+@media (max-width:899px) { .you { max-width:90%; } .page[data-started=false] .inner { padding-bottom:6vh; } }
+@media (max-width:520px) {
+  .sample { grid-template-columns:minmax(0,1fr) minmax(0,1fr); } /* both sides share the width; answer tags wrap */
+  .sampleRow > span { padding:10px 12px; }
+}
+
+/* Adding examples is as visible as the question: a named button in the input, the formats underneath,
+   and the whole window as a drop target while a file is dragged over it. */
+.add { flex-shrink:0; height:38px; display:inline-flex; align-items:center; gap:6px; padding:0 14px 0 10px; border:1px solid rgba(var(--zs-fg-rgb), .22); border-radius:999px; background:transparent; color:var(--zs-fg); font:inherit; font-size:14px; cursor:pointer; white-space:nowrap; }
+.add:hover { border-color:rgba(var(--zs-fg-rgb), .5); background:rgba(var(--zs-fg-rgb), .04); }
+.page[data-started=true] .add { width:38px; padding:0; justify-content:center; border-color:transparent; }
+.hint { margin:12px auto 0; max-width:60ch; text-align:center; font-size:13px; line-height:1.6; color:var(--zs-t3); text-wrap:balance; }
+.inline { border:0; background:none; padding:0; font:inherit; color:var(--zs-fg); text-decoration:underline; text-underline-offset:3px; text-decoration-color:rgba(var(--zs-fg-rgb), .35); cursor:pointer; }
+.inline:hover { text-decoration-color:var(--zs-peach); }
+.dropOverlay { position:fixed; inset:12px; z-index:40; display:grid; place-items:center; border:2px dashed rgba(var(--zs-fg-rgb), .35); border-radius:24px; background:rgba(var(--zs-bg-rgb), .94); backdrop-filter:blur(6px); pointer-events:none; }
+.dropOverlay span { font-size:clamp(22px,2.4vw,30px); font-weight:300; color:var(--zs-fg); }
+@media (max-width:520px) { .add { padding:0 12px 0 8px; font-size:13px; } }
+
+/* Typing in answers: one example at a time, answer buttons in their lane colors, progress toward a useful set. */
+.labeler { display:grid; gap:10px; margin-top:4px; }
+.progress { height:3px; border-radius:2px; background:rgba(var(--zs-fg-rgb), .1); overflow:hidden; }
+.progress span { display:block; height:100%; background:var(--spectrum); transition:width .3s ease; }
+.labeler > p.small { margin:0; font-size:13px; color:var(--zs-t3); }
+.card { border:1px solid var(--zs-line); border-radius:14px; padding:16px 18px; background:var(--zs-raised); }
+.card dl { margin:0; display:grid; gap:10px; }
+.card dl > div { display:grid; gap:2px; }
+.card dt { font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--zs-t3); }
+.card dd { margin:0; font-size:16px; line-height:1.5; color:var(--zs-fg); overflow-wrap:anywhere; }
+.photoCard { display:flex; align-items:center; gap:14px; color:var(--zs-fg); }
+.photoCard i { width:96px; height:96px; border-radius:10px; flex-shrink:0; }
+.choices { display:flex; flex-wrap:wrap; gap:8px; }
+.choice { display:inline-flex; align-items:center; gap:9px; padding:8px 16px 8px 8px; border:1px solid rgba(var(--zs-fg-rgb), .22); border-radius:999px; background:transparent; color:var(--zs-fg); font:inherit; font-size:14px; cursor:pointer; }
+.choice:hover { border-color:var(--lane); background:rgba(var(--zs-fg-rgb), .04); }
+.choice i { width:10px; height:10px; border-radius:3px; background:var(--lane); }
+.choice kbd { min-width:22px; height:22px; display:grid; place-items:center; border-radius:6px; background:rgba(var(--zs-fg-rgb), .08); font-family:var(--mono); font-size:11px; color:var(--zs-t2); }
+.skip { padding:8px 14px; border:0; border-radius:999px; background:transparent; color:var(--zs-t3); font:inherit; font-size:14px; cursor:pointer; }
+.skip:hover { color:var(--zs-fg); }
+@media (prefers-reduced-motion: reduce) { .progress span { transition:none; } }
