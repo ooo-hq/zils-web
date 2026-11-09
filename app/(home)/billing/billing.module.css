@@ -52,13 +52,13 @@
 .allowance p { margin:0; color:var(--zils-muted); font-size:12px; line-height:1.65; }
 .allowance>div>p { display:inline-flex; align-items:center; gap:8px; color:var(--zils-accent); }
 .usageDetails { scroll-margin-top:24px; }
-.usageTableScroll { max-width:100%; overflow-x:auto; }
+.usageTableScroll { max-width:100%; overflow-x:auto; padding-top:12px; }
 .usageTable { border-collapse:collapse; width:100%; text-align:left; font-size:13px; font-variant-numeric:tabular-nums; }
 .usageTable th,.usageTable td { padding:16px 12px; border-bottom:1px solid var(--zils-edge); vertical-align:top; }
 .usageTable th:first-child { padding-left:0; min-width:160px; max-width:350px; overflow-wrap:anywhere; }
 .usageTable th:last-child,.usageTable td:last-child { padding-right:0; }
 .usageTable thead th { color:var(--zils-muted); font-size:12px; font-weight:400; white-space:nowrap; }
-.usageTable tbody th { font-weight:500; }
+.usageTable tbody th { font-size:15px; font-weight:400; }
 .usageTable td,.usageTable thead th:not(:first-child) { text-align:right; }
 .usageTable td { white-space:nowrap; }
 .usageTable small { display:block; font-size:11px; font-weight:400; color:var(--zils-muted); margin-top:5px; }
@@ -155,4 +155,55 @@
   .tierOption + .tierOption { border-left:0; border-top:1px solid var(--zils-edge); }
   .tierPrice strong { font-size:40px; }
   .tierState { padding:22px 20px; }
+}
+
+/* Billing in the zils.ai rebrand (components/workspace-page.module.css): the credit split, the plan side by side and the
+   histories all run edge to edge under section rows, with no boxes. Overrides the card rules above. */
+.testNotice { margin:0 -40px; padding:14px 40px; border-top:1px solid var(--zs-line); border-radius:0; background:none; }
+.testNotice svg { color:var(--zs-peach); }
+.testNotice.testNotice.testNotice h2 { font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:10.5px; font-weight:400; letter-spacing:.12em; text-transform:uppercase; color:var(--zs-peach); }
+.testNotice p { font-size:13px; color:var(--zs-t2); }
+.start { display:flex; padding:36px 40px 40px; background:none; border-right:1px solid var(--zs-line); }
+.startAmount strong { font-size:clamp(64px,7vw,112px); font-weight:200; line-height:.9; }
+.start .balances { font-size:13px; }
+.balanceNote { font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:11px; letter-spacing:.04em; color:var(--zs-t3); }
+.topUp { padding:36px 40px 40px; }
+.topUpHeading.topUpHeading.topUpHeading h2, .history.history.history h2 { margin:0; font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:10.5px; font-weight:400; letter-spacing:.12em; text-transform:uppercase; color:var(--zs-t3); }
+.pricingLink { font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--zs-peach); text-decoration:none; }
+.topUp > p { font-size:14px; color:var(--zs-t2); }
+.amounts button { min-height:64px; padding:0 18px; border-color:rgba(var(--zs-fg-rgb),.2); color:var(--zs-fg); }
+.amounts strong { font-size:28px; font-weight:200; }
+.amounts button:hover:enabled { border-color:var(--zs-peach); background:rgba(var(--zs-fg-rgb),.03); }
+.tier { margin:0; }
+.tierNotice { margin:16px 0 0; }
+.tierGrid { margin:0 -40px; border:0; }
+.tierOption { padding:36px 40px 40px; }
+.tierOption + .tierOption { border-left-color:var(--zs-line); }
+.tierPrice strong { font-size:clamp(48px,5vw,72px); font-weight:200; }
+.tierLead { font-size:14px; color:var(--zs-t2); }
+.tierCurrent { font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--zs-lilac); }
+.tierState { border:0; padding:32px 0; }
+.allowance { margin:0; padding:28px 0 32px; border-block:0; }
+.allowance > div > p { font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--zs-lilac); }
+.allowance p { font-size:14px; color:var(--zs-t2); }
+.histories { margin-top:0; gap:0; }
+.history h2 { margin-bottom:16px; }
+.rows { border-top:0; }
+.rows li { padding:18px 0; border-bottom-color:var(--zs-line); font-size:14px; }
+.rows strong { font-size:17px; font-weight:300; }
+.rows time { font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:11px; letter-spacing:.04em; }
+.rows a { font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--zs-peach); text-decoration:none; }
+.paymentStatus { font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--zs-lilac); }
+.transactionAmount { font-size:17px; font-weight:300; }
+.emptyHistory { border-block:0; font-size:14px; }
+@media (max-width:860px) {
+  .testNotice { margin:0 -16px; padding:14px 16px; }
+  /* Credit and top-ups stay on a phone's first screen. */
+  .start { padding:20px 16px 24px; border-right:0; }
+  .startAmount { margin:12px 0 14px; }
+  .startAmount strong { font-size:48px; }
+  .topUp { padding:20px 16px 28px; }
+  .amounts button { min-height:52px; }
+  .tierGrid { margin:0 -16px; }
+  .tierOption { padding:28px 16px 32px; }
 }

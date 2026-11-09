@@ -1,20 +1,16 @@
-/* Home hero in the zils.ai rebrand: a light headline, then three answer specimens in a hairline grid. */
-.hero { margin: 36px 0 32px; border: 1px solid var(--zs-line); }
-.copy { padding: 36px 32px 32px; border-bottom: 1px solid var(--zs-line); }
-.greeting { margin: 0; font-size: clamp(36px, 4vw, 56px); font-weight: 300; line-height: 1.04; letter-spacing: -.03em; color: var(--zs-fg); overflow-wrap: anywhere; }
-.copy > p { max-width: 52ch; margin: 14px 0 0; font-size: 15px; line-height: 1.6; color: var(--zs-t2); }
-.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+/* Home in the zils.ai rebrand: the greeting as the page title, then three answer specimens edge to edge. */
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .primary, .secondary { display: inline-flex; align-items: center; padding: 11px 15px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; }
 .primary { background: var(--zs-orange); color: #140a04; }
 :global([data-theme=light]) .primary { color: #fff; }
 .secondary { border: 1px solid rgba(var(--zs-fg-rgb), .3); color: var(--zs-fg); }
 .secondary:hover { border-color: var(--zs-fg); }
 
-.specimens { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.card { min-width: 0; padding: 22px 24px 20px; }
+.specimens { list-style: none; margin: 0 -40px; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.card { min-width: 0; padding: 32px 40px 36px; }
 .card + .card { border-left: 1px solid var(--zs-line); }
 .kind { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--zs-t3); }
-.question { margin: 10px 0 16px; min-height: 2.8em; font-size: 15px; font-weight: 300; line-height: 1.4; color: var(--zs-fg); }
+.question { margin: 12px 0 20px; min-height: 2.6em; font-size: 20px; font-weight: 300; line-height: 1.4; color: var(--zs-fg); }
 .card dl { margin: 0; display: grid; gap: 9px; }
 .card dl > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--zs-t3); }
 .card dl > div[data-top] { color: var(--zs-fg); }
@@ -27,8 +23,8 @@
 .answer { display: flex; justify-content: space-between; align-items: baseline; margin: 16px 0 0; padding-top: 12px; border-top: 1px dashed var(--zs-line); font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-peach); }
 .answer span { color: var(--zs-t3); font-size: 10px; }
 
+@media (max-width: 860px) { .specimens { margin: 0 -16px; } .card { padding: 24px 16px 28px; } }
 @media (max-width: 900px) {
-  .copy { padding: 26px 18px 22px; }
   .specimens { grid-template-columns: minmax(0, 1fr); }
   .card + .card { border-left: 0; border-top: 1px solid var(--zs-line); }
   .question { min-height: 0; }

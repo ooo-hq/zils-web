@@ -9,6 +9,7 @@ import { CopyField } from '@/components/trained-model-quickstart';
 import { useWorkspaceModels } from '@/components/workspace-models';
 import { WorkspaceHero } from '@/components/workspace-hero';
 import { WorkspaceLoading } from '@/components/workspace-loading';
+import { Section, workspacePage } from '@/components/workspace-page';
 import { billingApi, formatBalance, formatCredit, type BillingSummary } from '@/lib/billing';
 import { curlCommand } from '@/lib/model-quickstart';
 import type { TrainingConfig } from '@/lib/training-config';
@@ -39,9 +40,9 @@ export function WorkspaceHome({ config, sharedModel, baseName }: { config: Train
   const usage = summary?.usage;
   return <>
   <WorkspaceHero email={session.user.email} />
-  <div className={s.grid}>
+  <Section label="Quickstart" id="quickstart-title" />
+  <div className={`${workspacePage.split} ${s.grid}`}>
     <section className={s.quickstart} aria-labelledby="quickstart-title">
-      <h2 id="quickstart-title">Quickstart</h2>
       <ol className={s.steps}>
         <li><div><h3>Create an API key</h3><p>Keys belong to your account. Keep them on your server.</p></div><Link href="/keys" className={s.action}>API keys</Link></li>
         <li><div><h3>Choose a model</h3><p>Start with the shared Zils model, or use one of your own by its API name.</p></div><Link href="/models" className={s.action}>Your models</Link></li>

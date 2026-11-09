@@ -37,7 +37,7 @@ function ModelRow({ job, bases }: { job: Job; bases?: BaseConfig | null }) {
     </div>
     <div className={styles.controls}>
       <button type="button" className={training.secondary} onClick={copy}>{copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}{copied ? 'Copied' : job.workflow!.model_alias ? 'Copy alias' : job.workflow!.model_name ? 'Copy name' : 'Copy ID'}</button>
-      <Link className={training.button} href={`/models/${job.id}`}>View model<LinkLoading /></Link>
+      <Link className={training.secondary} href={`/models/${job.id}`}>View model<LinkLoading /></Link>
       <span role="status" className={styles.notice}>{notice}</span>
     </div>
   </li>;

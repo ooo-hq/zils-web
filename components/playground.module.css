@@ -1,7 +1,8 @@
-.modelBar { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),360px)); gap:16px; padding:0 0 20px; margin-bottom:24px; border-bottom:1px solid var(--zils-edge); }
-.label { display:block; font-size:13px; font-weight:500; margin:0 0 8px; }
-.input { display:block; box-sizing:border-box; width:100%; min-width:0; height:40px; padding:0 12px; border:1px solid var(--zils-edge-strong); border-radius:6px; background:var(--zils-page); color:var(--zils-ink); font:inherit; font-size:14px; }
+.modelBar { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),420px)); gap:16px 24px; padding:0 0 40px; }
+.modelBar .label { display:block; margin:0 0 8px; font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:10.5px; font-weight:400; letter-spacing:.12em; text-transform:uppercase; color:var(--zs-t3); }
+.input { display:block; box-sizing:border-box; width:100%; min-width:0; height:44px; padding:0 14px; border:1px solid var(--zs-line); border-radius:0; background:var(--zs-raised); color:var(--zs-fg); font:inherit; font-size:15px; }
 .helper { margin:6px 0 0; font-size:12px; color:var(--zils-subtle); line-height:1.6; }
 .helper a { color:var(--zils-accent); text-decoration:underline; text-underline-offset:3px; }
 /* Beats the page-wide `.page select` rule; Safari ignores height on a native select, so draw the arrow. */
-.modelBar select.input { -webkit-appearance:none; appearance:none; padding-right:36px; background-image:linear-gradient(45deg,transparent 50%,var(--zils-muted) 50%),linear-gradient(135deg,var(--zils-muted) 50%,transparent 50%); background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%; background-size:5px 5px; background-repeat:no-repeat; }
+.modelBar select.input { -webkit-appearance:none; appearance:none; padding:10px 36px 10px 14px; border:1px solid var(--zs-line); border-radius:0; background-color:var(--zs-raised); background-image:linear-gradient(45deg,transparent 50%,var(--zils-muted) 50%),linear-gradient(135deg,var(--zils-muted) 50%,transparent 50%); background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%; background-size:5px 5px; background-repeat:no-repeat; }
+.modelBar input.input:not([type=checkbox]):not([type=radio]) { border:1px solid var(--zs-line); border-radius:0; background:var(--zs-raised); }

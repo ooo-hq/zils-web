@@ -1,0 +1,58 @@
+/* Workspace pages in the zils.ai rebrand, laid out like /pricing: sections run edge to edge under orange-cornered rows,
+   two-column splits share a hairline, and type does the work instead of boxes. Used inside ConsoleShell's bleed main. */
+.hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 32px; padding: 72px 0 48px; }
+.hero h1 { margin: 0; font-weight: 300; font-size: clamp(42px, 5.8vw, 80px); letter-spacing: -0.03em; line-height: .98; }
+.back { margin-bottom: 18px; }
+.aside { display: grid; justify-items: start; gap: 20px; max-width: 360px; }
+.aside p { margin: 0; font-size: 15.5px; line-height: 1.55; color: var(--zs-t2); }
+
+.row { margin: 0 -40px; border-top: 1px solid var(--zs-line); }
+.row.row > h2 { margin: 0; font-size: 10.5px; font-weight: 400; letter-spacing: .14em; line-height: 1; } /* beats the shell's quiet h2 rule */
+.rowAction { margin-left: auto; padding-right: 20px; }
+.rowAction button, .rowAction a { border: 0; padding: 0; background: none; font: inherit; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--zs-peach); text-decoration: none; cursor: pointer; }
+.rowAction button:hover:not(:disabled), .rowAction a:hover { color: var(--zs-fg); }
+.rowAction button:disabled { color: var(--zs-t3); cursor: default; }
+
+/* Two columns split by a hairline, as /pricing's plan and rates. */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); margin: 0 -40px; }
+.split > * { min-width: 0; padding: 36px 40px 40px; }
+.split > :first-child { border-right: 1px solid var(--zs-line); }
+.label { margin: 0; font-family: var(--font-plex-mono), ui-monospace, monospace; font-weight: 400; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--zs-t3); }
+.count { display: block; width: fit-content; margin: 18px 0 0; font-weight: 200; font-size: clamp(96px, 11vw, 160px); letter-spacing: -0.05em; line-height: .85; font-variant-numeric: tabular-nums; background: var(--zs-spectrum-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.amount { display: block; width: fit-content; max-width: 100%; margin: 18px 0 0; font-weight: 200; font-size: clamp(64px, 7vw, 112px); letter-spacing: -0.04em; line-height: .9; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; background: var(--zs-spectrum-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sub { margin: 16px 0 0; max-width: 40ch; font-size: 15px; line-height: 1.5; color: var(--zs-t2); }
+.fine { margin: 14px 0 0; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .04em; line-height: 1.6; color: var(--zs-t3); }
+.fine a, .sub a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+
+/* Status words, as INCLUDED and FREE on /pricing. */
+.status { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-lilac); white-space: nowrap; }
+.status[data-tone=busy] { color: var(--zs-peach); }
+.status[data-tone=stopped] { color: var(--zs-bad); }
+.status[data-tone=done], .status[data-tone=off] { color: var(--zs-t3); }
+
+/* /train: the run list stacks its sections flush, each opened by its own row. */
+div.stack { display: block; }
+.empty { padding-bottom: 48px; }
+.empty.empty.empty > h2 { margin: 40px 0 0; font-weight: 300; font-size: clamp(30px, 3.4vw, 44px); letter-spacing: -0.02em; line-height: 1.1; }
+.empty > p { margin: 12px 0 24px; max-width: 56ch; font-size: 15px; color: var(--zs-t2); }
+.run { padding: 40px 0 44px; }
+.run h2.runName.runName { margin: 0; font-weight: 300; font-size: clamp(32px, 4vw, 56px); letter-spacing: -0.03em; line-height: 1; }
+
+/* A DetailsRow that lines up with the content above it instead of the site's 28px inset. */
+.flush details > summary, .flush details > div { padding-left: 0; padding-right: 0; }
+
+/* A flat notice line between sections. */
+.notice { margin: 0 -40px; padding: 12px 40px; border-top: 1px solid var(--zs-line); font-size: 13px; color: var(--zs-t2); }
+.notice a, .notice button { color: var(--zs-peach); }
+.notice[role=alert] { color: var(--zs-bad); }
+
+@media (max-width: 860px) {
+  .hero { flex-direction: column; align-items: flex-start; padding: 48px 0 32px; }
+  .row, .split, .notice { margin: 0 -16px; }
+  .notice { padding: 12px 16px; }
+  .split { grid-template-columns: minmax(0, 1fr); }
+  .split > * { padding: 28px 16px 32px; }
+  .split > :first-child { border-right: 0; border-bottom: 1px solid var(--zs-line); }
+  .rowAction { padding-right: 16px; }
+}

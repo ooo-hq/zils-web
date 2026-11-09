@@ -8,6 +8,7 @@ import { useAuthSession } from '@/components/auth-session';
 import { WorkspaceLoading } from '@/components/workspace-loading';
 import { apiKeysApi, ApiKeyError, type ApiKey, type CreatedApiKey } from '@/lib/api-keys';
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { PageHero, Section, workspacePage } from '@/components/workspace-page';
 import training from '@/app/(home)/train/train.module.css';
 import styles from './api-keys-panel.module.css';
 
@@ -111,43 +112,78 @@ export function KeyControls({ client, apiUrl, onExpired, onPending = () => {}, p
   const revoked = keys?.filter(key => key.revoked_at) || [];
 
   if (!api) return <div className={training.sheetBody}><p className={training.error} role="alert">API keys are not configured in this environment.</p></div>;
-  return <div className={page ? `${styles.body} ${styles.pageBody}` : `${training.sheetBody} ${styles.body}`}>
-    {page ? <div className={training.workspaceHeading}>
-      <div><h1>API keys</h1><p>A key lets your app call models available to your account. Choose the model in each request.</p></div>
-      {!secret && !creating && <button className={training.button} disabled={keys === null || Boolean(busy)} onClick={() => { setCreating(true); requestAnimationFrame(() => nameInput.current?.focus()); }}><Plus size={16} aria-hidden="true" />Create key</button>}
-    </div> : <p className={styles.intro}>A key lets your app make predictions with models available to your account. Choose the model in each request.</p>}
+  const refresh = <button className={training.textButton} disabled={loading || Boolean(busy)} onClick={() => { setError(''); setLoading(true); if (life.current) void load(life.current.signal); }}>{loading ? 'Refreshing…' : 'Refresh'}</button>;
+  const secretBox = secret && <>
+    <label htmlFor="new-api-key">{secret.name}</label>
+    <textarea id="new-api-key" ref={secretInput} readOnly rows={3} spellCheck={false} value={secret.key} onFocus={event => event.currentTarget.select()} aria-describedby="key-storage-note" />
+    <div className={styles.secretActions}>
+      <button className={training.button} onClick={copy}>{copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}{copied ? 'Copied' : 'Copy key'}</button>
+      <button className={training.secondary} onClick={dismissSecret}>I’ve saved this key</button>
+    </div>
+    <p role="status" className={styles.copyStatus}>{copyError ? 'Copy was blocked. Select the key above and copy it manually.' : copied ? 'Key copied to your clipboard.' : ''}</p>
+  </>;
+  const nameField = <>
+    <label htmlFor="api-key-name">Key name</label>
+    <p id="key-name-help" className={styles.hint}>A name to help you recognize where it’s used.</p>
+    <div className={styles.createRow}>
+      <input ref={nameInput} id="api-key-name" required maxLength={80} autoComplete="off" placeholder="e.g. Flight app — production" aria-describedby="key-name-help" value={name} onChange={event => setName(event.target.value)} disabled={Boolean(busy)} />
+      <button className={training.button} disabled={Boolean(busy) || loading || keys === null || !name.trim()}><Plus size={16} aria-hidden="true" />{busy === 'create' ? 'Creating…' : 'Create key'}</button>
+      {page && <button type="button" className={training.secondary} disabled={Boolean(busy)} onClick={() => { setCreating(false); setName(''); }}>Cancel</button>}
+    </div>
+  </>;
+  const activeList = keys === null ? <p className={styles.empty} role="status">{loading ? 'Loading your keys…' : 'Your keys could not be loaded. Refresh to try again.'}</p> : active.length === 0 ? <div className={styles.empty}><KeyRound size={22} aria-hidden="true" /><p>No active keys yet.</p><span>{page ? 'Create one to connect your app.' : 'Create one above to connect your app.'}</span></div> : <KeyTable label="Active keys">{active.map(key => <Fragment key={key.id}>
+    <tr><th scope="row">{key.name}</th><td><span className={styles.active}>Active</span></td><td><code>{key.prefix}…</code></td><td>{date(key.created_at)}</td><td><button className={training.textButton} aria-label={`Revoke ${key.name}`} disabled={Boolean(busy) || loading || Boolean(secret)} onClick={() => setConfirmId(key.id)}>Revoke</button></td></tr>
+    {confirmId === key.id && <tr><td colSpan={5}><div className={styles.confirm} role="group" aria-label={`Confirm revocation of ${key.name}`}><p>Revoke <strong>{key.name}</strong>?</p><p>Requests using this key will stop working. This can’t be undone.</p><div><button className={training.secondary} disabled={Boolean(busy)} onClick={() => setConfirmId('')}>Keep key</button><button className={styles.revoke} disabled={Boolean(busy) || loading} onClick={() => void mutate('revoke', key.id)}>{busy === key.id ? 'Revoking…' : 'Revoke key'}</button></div></div></td></tr>}
+  </Fragment>)}</KeyTable>;
+  const revokedList = revoked.length > 0 && <details className={styles.revoked}><summary>Show {revoked.length} revoked {revoked.length === 1 ? 'key' : 'keys'}</summary><KeyTable label="Revoked keys" revoked>{revoked.map(key => <tr key={key.id}><th scope="row">{key.name}</th><td><span className={styles.inactive}>Revoked</span></td><td><code>{key.prefix}…</code></td><td>{date(key.revoked_at!)}</td><td /></tr>)}</KeyTable></details>;
+
+  // The /keys page, laid out like zils.ai/pricing: the count of live keys on the left, the keys themselves on the right.
+  if (page) return <div className={styles.pageBody}>
+    <PageHero title="API keys" intro="A key lets your app call models available to your account. Choose the model in each request." action={!secret && !creating && <button className={training.button} disabled={keys === null || Boolean(busy)} onClick={() => { setCreating(true); requestAnimationFrame(() => nameInput.current?.focus()); }}><Plus size={16} aria-hidden="true" />Create key</button>} />
+    {error && <p className={`${workspacePage.notice} ${styles.alert}`} role="alert">{error}</p>}
+    {notice && <p className={workspacePage.notice} role="status">{notice}</p>}
+    {secret ? <>
+      <Section label="Key created" />
+      <section className={`${workspacePage.split} ${styles.secretBand}`} aria-labelledby="new-key-heading">
+        <div><h3 id="new-key-heading" className={styles.saveTitle}>Save your key now.</h3><p className={workspacePage.sub}>This is the only time you can see the full key. Leaving this page hides it.</p></div>
+        <div className={styles.secretPage}>{secretBox}<p id="key-storage-note" className={workspacePage.fine}>Keep it in your app’s server settings. Don’t put it in browser code or share it publicly.</p></div>
+      </section>
+    </> : creating && <>
+      <Section label="Create a key" />
+      <form className={styles.createPage} onSubmit={create}>{nameField}</form>
+    </>}
+    <Section label="Active keys" action={refresh} />
+    <div className={workspacePage.split} aria-busy={loading}>
+      <div>
+        <p className={workspacePage.label}>Live keys</p>
+        <span className={workspacePage.count}>{keys ? active.length : '–'}</span>
+        <p className={workspacePage.sub}>Each one can call every model on your account. Revoke a key and the requests using it stop at once.</p>
+      </div>
+      <div className={styles.keysColumn}>{activeList}{revokedList}</div>
+    </div>
+    <Section label="Connect your app" />
+    <div className={workspacePage.split}>
+      <div><p className={workspacePage.sub}>Use your key on your server to call the Zils API.</p><p className={workspacePage.fine}><a href="https://github.com/ooo-hq/zils/blob/main/docs/decision-api.md" target="_blank" rel="noreferrer">View API documentation ↗</a></p></div>
+      <div><p className={workspacePage.label}>API base URL</p><code className={styles.baseUrl}>{apiUrl}</code></div>
+    </div>
+  </div>;
+
+  return <div className={`${training.sheetBody} ${styles.body}`}>
+    <p className={styles.intro}>A key lets your app make predictions with models available to your account. Choose the model in each request.</p>
     {error && <p className={training.error} role="alert">{error}</p>}
     {notice && <p className={training.notice} role="status">{notice}</p>}
     {secret ? <section className={styles.secret} aria-labelledby="new-key-heading">
       <span className={styles.eyebrow}><Check size={14} aria-hidden="true" />Key created</span>
       <h3 id="new-key-heading">Save your key now.</h3>
       <p>This is the only time you can see the full key. Closing this panel hides it.</p>
-      <label htmlFor="new-api-key">{secret.name}</label>
-      <textarea id="new-api-key" ref={secretInput} readOnly rows={3} spellCheck={false} value={secret.key} onFocus={event => event.currentTarget.select()} aria-describedby="key-storage-note" />
-      <div className={styles.secretActions}>
-        <button className={training.button} onClick={copy}>{copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}{copied ? 'Copied' : 'Copy key'}</button>
-        <button className={training.secondary} onClick={dismissSecret}>I’ve saved this key</button>
-      </div>
-      <p role="status" className={styles.copyStatus}>{copyError ? 'Copy was blocked. Select the key above and copy it manually.' : copied ? 'Key copied to your clipboard.' : ''}</p>
+      {secretBox}
       <p id="key-storage-note" className={styles.storageNote}>Keep it in your app’s server settings. Don’t put it in browser code or share it publicly.</p>
-    </section> : (!page || creating) && <form className={page ? `${styles.create} ${styles.createPanel}` : styles.create} onSubmit={create}>
-      <h3>Create a key</h3>
-      <label htmlFor="api-key-name">Key name</label>
-      <p id="key-name-help" className={styles.hint}>A name to help you recognize where it’s used.</p>
-      <div className={styles.createRow}>
-        <input ref={nameInput} id="api-key-name" required maxLength={80} autoComplete="off" placeholder="e.g. Flight app — production" aria-describedby="key-name-help" value={name} onChange={event => setName(event.target.value)} disabled={Boolean(busy)} />
-        <button className={training.button} disabled={Boolean(busy) || loading || keys === null || !name.trim()}><Plus size={16} aria-hidden="true" />{busy === 'create' ? 'Creating…' : 'Create key'}</button>
-        {page && <button type="button" className={training.secondary} disabled={Boolean(busy)} onClick={() => { setCreating(false); setName(''); }}>Cancel</button>}
-      </div>
-    </form>}
+    </section> : <form className={styles.create} onSubmit={create}><h3>Create a key</h3>{nameField}</form>}
     <section className={styles.keySection} aria-labelledby="active-keys-heading" aria-busy={loading}>
-      <div className={styles.sectionHeading}><h3 id="active-keys-heading">Active keys{keys && <span>{active.length}</span>}</h3><button className={training.textButton} disabled={loading || Boolean(busy)} onClick={() => { setError(''); setLoading(true); if (life.current) void load(life.current.signal); }}>{loading ? 'Refreshing…' : 'Refresh'}</button></div>
-      {keys === null ? <p className={styles.empty} role="status">{loading ? 'Loading your keys…' : 'Your keys could not be loaded. Refresh to try again.'}</p> : active.length === 0 ? <div className={styles.empty}><KeyRound size={22} aria-hidden="true" /><p>No active keys yet.</p><span>{page ? 'Create one to connect your app.' : 'Create one above to connect your app.'}</span></div> : <KeyTable label="Active keys">{active.map(key => <Fragment key={key.id}>
-        <tr><th scope="row">{key.name}</th><td><span className={styles.active}>Active</span></td><td><code>{key.prefix}…</code></td><td>{date(key.created_at)}</td><td><button className={training.textButton} aria-label={`Revoke ${key.name}`} disabled={Boolean(busy) || loading || Boolean(secret)} onClick={() => setConfirmId(key.id)}>Revoke</button></td></tr>
-        {confirmId === key.id && <tr><td colSpan={5}><div className={styles.confirm} role="group" aria-label={`Confirm revocation of ${key.name}`}><p>Revoke <strong>{key.name}</strong>?</p><p>Requests using this key will stop working. This can’t be undone.</p><div><button className={training.secondary} disabled={Boolean(busy)} onClick={() => setConfirmId('')}>Keep key</button><button className={styles.revoke} disabled={Boolean(busy) || loading} onClick={() => void mutate('revoke', key.id)}>{busy === key.id ? 'Revoking…' : 'Revoke key'}</button></div></div></td></tr>}
-      </Fragment>)}</KeyTable>}
+      <div className={styles.sectionHeading}><h3 id="active-keys-heading">Active keys{keys && <span>{active.length}</span>}</h3>{refresh}</div>
+      {activeList}
     </section>
-    {revoked.length > 0 && <details className={styles.revoked}><summary>Show {revoked.length} revoked {revoked.length === 1 ? 'key' : 'keys'}</summary><KeyTable label="Revoked keys" revoked>{revoked.map(key => <tr key={key.id}><th scope="row">{key.name}</th><td><span className={styles.inactive}>Revoked</span></td><td><code>{key.prefix}…</code></td><td>{date(key.revoked_at!)}</td><td /></tr>)}</KeyTable></details>}
+    {revokedList}
     <footer className={styles.connection}><h3>Connect your app</h3><p>Use your key on your server to call the Zils API.</p><span>API base URL</span><code>{apiUrl}</code><a href="https://github.com/ooo-hq/zils/blob/main/docs/decision-api.md" target="_blank" rel="noreferrer">View API documentation <span aria-hidden="true">↗</span></a></footer>
   </div>;
 }
@@ -163,6 +199,6 @@ function KeyTable({ label, revoked = false, children }: { label: string; revoked
 export function ApiKeysPage({ auth, apiUrl }: { auth: { url: string; key: string }; apiUrl: string | null }) {
   const { client, session } = useAuthSession(auth);
   if (session === undefined) return <WorkspaceLoading label="Loading your keys" />;
-  if (!session || !client) return <><div className={training.workspaceHeading}><h1>API keys</h1></div><section className={training.panel}><h2>Sign in to manage API keys</h2><p>Keys connect your app to models available to your account.</p><Link href="/train" className={training.button}>Sign in to Zils</Link></section></>;
+  if (!session || !client) return <PageHero title="API keys" intro="Sign in to manage the keys that connect your app to models available to your account." action={<Link href="/train" className={training.button}>Sign in to Zils</Link>} />;
   return <KeyControls page key={session.user.id} client={client} apiUrl={apiUrl} onExpired={async () => { await client.auth.signOut({ scope: 'local' }); }} />;
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { ConsoleShell } from '@/components/console-shell';
 import { WorkspaceHome } from '@/components/workspace-home';
+import { PageHero } from '@/components/workspace-page';
 import { playgroundConfig } from '@/lib/playground-server';
 import { trainingConfig } from '@/lib/training-config';
 import { currentBase } from '@/lib/base-model';
@@ -17,8 +18,8 @@ export default async function DashboardPage() {
   const config = trainingConfig();
   const base = await currentBase();
   const shared = playgroundConfig();
-  return <ConsoleShell className={styles.page}>
+  return <ConsoleShell bleed className={styles.page}>
     {config ? <WorkspaceHome config={config} baseName={base?.channels.stable.name ?? null} sharedModel={shared.configured ? shared.models[0]?.id ?? null : null} />
-      : <section className={styles.panel}><h1>The workspace is not configured here yet.</h1><p>This environment is not connected to the training service.</p></section>}
+      : <PageHero title="Home" intro="The workspace is not configured here yet. This environment is not connected to the training service." />}
   </ConsoleShell>;
 }

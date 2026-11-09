@@ -1,7 +1,13 @@
 .library { margin-bottom:40px; min-width:0; background:var(--workspace-wash,var(--zils-soft)); border-radius:12px 12px 30px 12px; padding:28px 30px 8px; }
 .library.bare { background:none; border-radius:0; padding:0; }
-.bare .model { border-top-color:var(--zils-edge); }
-.bare .model:last-child { border-bottom:1px solid var(--zils-edge); }
+/* /models in the zils.ai rebrand: each model a light display name, its API name in mono, a READY status word. */
+.bare .model { gap:32px; padding:28px 0; border-top:0; border-bottom:1px solid var(--zs-line); }
+.bare .identity h3 { margin:0 0 8px; font-size:clamp(26px,2.6vw,36px); font-weight:300; letter-spacing:-.02em; line-height:1.1; }
+.bare .identity code { font-size:12.5px; color:var(--zs-t2); }
+.bare .ready { gap:14px; margin-top:12px; font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--zs-lilac); }
+.bare .ready::before { display:none; }
+.bare .ready time { letter-spacing:.04em; text-transform:none; color:var(--zs-t3); }
+.bare .upgrade { font-family:var(--font-plex-mono),ui-monospace,monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--zs-peach); }
 .library header { display:flex; justify-content:space-between; gap:24px; align-items:center; }
 .library h2 { display:flex; align-items:center; gap:10px; font-size:26px; font-weight:500; letter-spacing:-.035em; margin:0; }
 .library h2 span { font-size:13px; font-weight:400; color:var(--zils-muted); letter-spacing:0; }
@@ -20,3 +26,4 @@
 .controls { position:relative; display:flex; gap:8px; flex-shrink:0; }
 .notice { position:absolute; top:100%; right:0; margin-top:3px; font-size:11px; color:var(--zils-muted); }
 @media(max-width:650px) { .library { padding:22px 20px 6px; border-bottom-right-radius:24px; }.mark { width:70px; height:52px; }.library header { gap:10px; }.library header p { font-size:13px; }.model { flex-direction:column; align-items:stretch; gap:16px; padding-bottom:30px; }.controls { flex-wrap:wrap; }.notice { left:0; right:auto; } }
+@media(max-width:650px) { .bare .model { padding-bottom:34px; } }

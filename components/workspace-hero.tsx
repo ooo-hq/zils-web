@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PageHero, Section } from '@/components/workspace-page';
 import s from './workspace-hero.module.css';
 
 const greeting = (hour: number) => hour < 5 ? 'Up late' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
@@ -13,15 +14,13 @@ const SPECIMENS: { kind: string; question: string; rows: Row[]; answer: string }
 
 export function WorkspaceHero({ email }: { email?: string }) {
   const name = email?.split('@')[0];
-  return <section className={s.hero} aria-labelledby="workspace-greeting">
-    <div className={s.copy}>
-      <h1 id="workspace-greeting" className={s.greeting}>{greeting(new Date().getHours())}{name ? `, ${name}` : ''}.</h1>
-      <p>Ask Zils anything about one input. Every answer comes back as a probability your code can act on.</p>
-      <div className={s.actions}>
+  return <>
+    <PageHero title={`${greeting(new Date().getHours())}${name ? `, ${name}` : ''}.`} intro="Ask Zils anything about one input. Every answer comes back as a probability your code can act on."
+      action={<div className={s.actions}>
         <Link href="/playground" className={s.primary}>Open the playground</Link>
         <Link href="/train/new" className={s.secondary}>Train a model</Link>
-      </div>
-    </div>
+      </div>} />
+    <Section label="Three kinds of answer" />
     <ul className={s.specimens} aria-label="The three kinds of answer">
       {SPECIMENS.map(item => <li key={item.kind} className={s.card}>
         <span className={s.kind}>{item.kind}</span>
@@ -34,5 +33,5 @@ export function WorkspaceHero({ email }: { email?: string }) {
         <p className={s.answer}><span>Answer</span>{item.answer}</p>
       </li>)}
     </ul>
-  </section>;
+  </>;
 }

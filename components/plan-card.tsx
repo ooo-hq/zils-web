@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { BETA_PRICING } from '@/lib/pricing';
 import { canChooseFree, termsOutdated, tierErrorAction, TERMS_PATH, type TierState, type tierApi } from '@/lib/account-tier';
+import { Section } from '@/components/workspace-page';
 import styles from '@/app/(home)/billing/billing.module.css';
 
 type Api = ReturnType<typeof tierApi>;
@@ -42,7 +43,7 @@ export function PlanCard({ api }: { api: Api }) {
     } finally { setBusy(false); }
   }
 
-  const heading = <div className={styles.sectionRow}><h2 id="plan-heading" className={styles.sectionHeading}>Plan</h2></div>;
+  const heading = <Section label="Plan" id="plan-heading" />;
   if (!state) return <section className={styles.tier} aria-labelledby="plan-heading">{heading}
     <div className={styles.tierState}>
       {loadFailed
