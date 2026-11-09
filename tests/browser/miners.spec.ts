@@ -183,16 +183,18 @@ test('a chain outage says so and the rest of the page renders; the next refresh 
   expect(errors).toEqual([]);
 });
 
-test('emissions read as four equal tiers with fixed seats and crowns', async ({ page }) => {
+test('emissions read as the four tiers plus 20% for customer models, with fixed seats and crowns', async ({ page }) => {
   await page.goto('/miners');
   const section = page.getByRole('region', { name: 'How miners earn' });
   await expect(section).toContainText('24 paid spots');
-  await expect(section).toContainText('25%');
-  await expect(section).toContainText('4%');
-  await expect(section).toContainText('5%');
+  await expect(section).toContainText('Lite and mini get 25% of emissions each, flash and z3 15% each');
+  await expect(section).toContainText('a seat is 4% and a crown 5%');
+  await expect(section).toContainText('2.4% and 3%');
   await expect(section.getByRole('list', { name: 'A round' }).getByRole('listitem')).toHaveCount(4);
   for (const gone of ['50%', '30%', '35%', 'boosted']) await expect(section).not.toContainText(gone);
-  await expect(section).toContainText('Feature tracks and customer adapters do not pay yet');
+  await expect(section).toContainText('Customer models pay from the other 20% of emissions');
+  await expect(section).toContainText('Feature tracks do not pay yet');
+  await expect(section).not.toContainText('equally');
 });
 
 test('the rehearsal row holds every sentence of the old /bittensor page', async ({ page }) => {
