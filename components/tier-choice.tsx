@@ -21,7 +21,7 @@ export function TierChoice({ value, onChange, data, price, disabled }: Props) {
     <legend>Who trains this run?</legend>
     <label className={css.tier}>
       <input type="radio" name={name} checked={value === 'open'} onChange={() => onChange('open')} />
-      <span><strong>Open tier · free</strong> Zils network miners train it. They receive your training {data} and must delete them within 7 days of the run finishing; Zils cannot verify that they do. Use only data you are allowed to share this way. Each account can start 3 open runs a day, up to 5,000,000 training tokens each. The model is used through the Zils API; its files cannot be downloaded.</span>
+      <span><strong>Open tier · free</strong> Zils network miners train it. They receive your training {data} and must delete them within 7 days of the run finishing; Zils cannot verify that they do. Use only data you are allowed to share this way. Each account can start 3 open runs a day, up to 5,000 examples and 5,000,000 training tokens each. The model is used through the Zils API; its files cannot be downloaded.</span>
     </label>
     <label className={css.tier}>
       <input type="radio" name={name} checked={value === 'private'} onChange={() => onChange('private')} />
