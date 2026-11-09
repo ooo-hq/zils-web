@@ -82,6 +82,8 @@ export const isImageJob = (job: Job) => Boolean(job.image_intake) || job.model?.
 export const tierLabel = (job: Job) => job.tier === 'open' ? 'Open tier · free' : job.tier === 'private' ? 'Private' : null;
 export const terminal = (job: Job) => job.status === 'completed' || job.status === 'failed';
 export const canDownload = (job: Job) => job.status === 'completed' && job.result?.delivery.status === 'accepted';
+/** Open-tier models are served by Zils and used through the API; model files come with private training. */
+export const canDownloadFiles = (job: Job) => canDownload(job) && job.tier !== 'open';
 export const DOWNLOAD_FILES = ['adapter_config.json', 'adapter_model.safetensors', 'head.pt', 'release.json'] as const;
 const TEXT_ADAPTER_DOWNLOAD_FILES = ['adapter_config.json', 'adapter_model.safetensors', 'model.json', 'release.json'] as const;
 const IMAGE_DOWNLOAD_FILES = ['adapter_config.json', 'adapter_model.safetensors', 'decision_readout.json', 'decision_readout.safetensors', 'model.json', 'release.json'] as const;
@@ -219,6 +221,7 @@ export function trainingApi(baseUrl: string, storage: StorageLocations, token: (
     submit: (id: string, signal?: AbortSignal) => call(`${idPath(id)}/submit`, z.object({ job: jobSchema }), {}, signal),
     downloads: async (job: Job, signal?: AbortSignal) => {
       if (!canDownload(job)) throw new Error('Downloads require a completed, accepted model.');
+      if (!canDownloadFiles(job)) throw new Error('Models trained on the open tier are served by Zils through the API. Model files come with private training.');
       const schema = z.object({ downloads: z.record(z.string(), z.object({ url: z.string() })) });
       const data = await call(`${idPath(job.id)}/downloads`, schema, undefined, signal);
       const files = downloadFiles(job);

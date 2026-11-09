@@ -6,7 +6,7 @@ import type { StorageLocations } from '@/lib/storage';
 import { type SupabaseClient } from '@supabase/supabase-js';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { canDownload, downloadFiles, isImageJob, SPLITS, submissionSchema, terminal, tierLabel, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
+import { canDownload, canDownloadFiles, downloadFiles, isImageJob, SPLITS, submissionSchema, terminal, tierLabel, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
 import Link from 'next/link';
 import { PageHero, Section, workspacePage } from '@/components/workspace-page';
 import { WorkspaceLoading, LinkLoading } from '@/components/workspace-loading';
@@ -302,7 +302,8 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
         apiUrl={config.decisionApiUrl}
         apiKeys={<ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={onExpired} />}
       /></div>}
-      {canDownload(job) && <details className={styles.details}>
+      {canDownload(job) && !canDownloadFiles(job) && <p className={styles.help}>This model was trained on the open tier, so Zils serves it: use it through the API. Model files come with private training.</p>}
+      {canDownloadFiles(job) && <details className={styles.details}>
         <summary>Model files (optional)</summary>
         <p className={styles.help}>Optional: download a private copy of the accepted adapter.</p>
         <button disabled={busy} className={styles.secondary} onClick={() => getDownloads(job)}>Get model files</button>
@@ -322,7 +323,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
           {job.result.delivery.acceptance && <p className={styles.help}>Required: {metric(job.result.delivery.acceptance.min_accuracy, true)} accuracy; {job.result.delivery.acceptance.migration === 'no_regression' ? 'Brier score must match or improve on your previous model' : job.result.delivery.acceptance.migration ? 'at most 0.005 increase in Brier loss' : `${metric(job.result.delivery.acceptance.min_brier_improvement)} absolute Brier improvement`}.</p>}
           <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Candidate evaluations"><table><thead><tr><th>Candidate</th><th>Status</th><th>Accuracy</th><th>Brier loss</th></tr></thead><tbody>{job.result.miners.map(miner => <tr key={miner.uid}><th>{miner.uid}{job.result?.delivery.uid === miner.uid ? ' · selected' : ''}</th><td>{miner.status}</td><td>{metric(miner.accuracy, true)}</td><td>{metric(miner.brier)}</td></tr>)}</tbody></table></div>
           {job.result.delivery.sha256 && <p className={styles.hash}>Checkpoint SHA-256<br /><code>{job.result.delivery.sha256}</code></p>}
-          {canDownload(job) && <p className={styles.help}>Download links expire. Files: {downloadFiles(job).join(', ')}.</p>}
+          {canDownloadFiles(job) && <p className={styles.help}>Download links expire. Files: {downloadFiles(job).join(', ')}.</p>}
         </>}
       </details>
     </>;
