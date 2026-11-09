@@ -114,8 +114,9 @@ export function reasonLabel(reason: string | null) {
 }
 
 // Tiers whose bodies /miners never shows in line (owner, 6 Nov 2026: the flash pool is closed on
-// validators, so its bodies are never graded). The tier's tile stays, with its "No soup for you!" sticker.
-export const OFF_TIERS: Tier[] = ['z3-flash'];
+// validators, so its bodies are never graded; 9 Nov 2026: so is z3). The tier's tile stays, with its
+// "No soup for you!" sticker.
+export const OFF_TIERS: Tier[] = ['z3-flash', 'z3'];
 
 /** Rows as /miners shows them: a body committed to an off tier stays listed, with no tier and never in line. */
 export function withoutOffTiers<R extends { tier: Tier | null; standing: Standing; line: Line | null }>(rows: R[]): R[] {
