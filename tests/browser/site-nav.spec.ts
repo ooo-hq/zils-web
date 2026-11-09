@@ -9,12 +9,23 @@ const centered = (page: Page) => page.evaluate(() => {
   return Math.abs((r.left + r.right) / 2 - document.documentElement.getBoundingClientRect().width / 2);
 });
 
-test('signed out: centered nav, Sign in and Get started', async ({ page }) => {
+test('signed out: centered nav and one Get started, no separate Sign in', async ({ page }) => {
   await page.goto('/model');
   const header = page.locator('header');
-  await expect(header.getByRole('link', { name: 'Sign in', exact: true })).toHaveAttribute('href', '/sign-in');
   await expect(header.getByRole('link', { name: 'Get started', exact: true })).toHaveAttribute('href', '/sign-in');
+  await expect(header.getByRole('link', { name: 'Sign in', exact: true })).toHaveCount(0);
   expect(await centered(page)).toBeLessThanOrEqual(2);
+});
+
+test('signed out on a phone: Get started in the header, no Sign in in the menu', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/model');
+  const header = page.locator('header');
+  await expect(header.getByRole('link', { name: 'Get started', exact: true })).toBeVisible();
+  await header.getByRole('button', { name: 'Menu', exact: true }).click();
+  const menu = page.getByRole('group', { name: 'Site menu' });
+  await expect(menu.getByRole('link', { name: 'Pricing', exact: true })).toBeVisible();
+  await expect(menu.getByRole('link', { name: 'Sign in', exact: true })).toHaveCount(0);
 });
 
 test('signed in: centered nav, Account menu replaces Get started', async ({ page }) => {
@@ -77,7 +88,7 @@ test.describe('mobile menu', () => {
     await menu.click();
     await expect(menu).toHaveAttribute('aria-expanded', 'true');
     const panel = page.getByRole('group', { name: 'Site menu' });
-    await expect(panel.getByRole('link')).toHaveText(['Z3', 'Examples', 'Soup', 'Merge', 'Miners', 'Pricing', 'Contact', 'Docs', 'Sign in']);
+    await expect(panel.getByRole('link')).toHaveText(['Z3', 'Examples', 'Soup', 'Merge', 'Miners', 'Pricing', 'Contact', 'Docs']);
     await expect(panel.getByRole('link', { name: 'Pricing' })).toHaveAttribute('aria-current', 'page');
     await page.keyboard.press('Escape');
     await expect(panel).toHaveCount(0);
