@@ -34,7 +34,7 @@ export default function PricingPage() {
           <p className={s.badge}>Beta launch pricing</p>
           <h1>Your model.<br />Pay as you go.</h1>
         </div>
-        <p className={s.intro}>Train on your examples. Pay for the decisions you use. No subscriptions, tiers, or fees for model slots.</p>
+        <p className={s.intro}>Train on your examples. Pay for the decisions you use. No subscriptions or fees for model slots.</p>
       </header>
 
       <section className={s.plan} aria-labelledby="plan-heading">
@@ -57,6 +57,10 @@ export default function PricingPage() {
             <div className={s.rate}>
               <dt>More training<span>Per million training tokens, each additional run or retraining (${PRICING.trainingRun} minimum)</span></dt>
               <dd>${PRICING.millionTrainingTokens.toFixed(2)}</dd>
+            </div>
+            <div className={s.rate}>
+              <dt>Open-tier training<span>Zils network miners train it and receive your training examples. 3 runs a day per account</span></dt>
+              <dd className={s.free}>Free</dd>
             </div>
             <div className={s.rate}>
               <dt>Model usage<span>Per million input tokens, including custom models</span></dt>
@@ -84,6 +88,7 @@ export default function PricingPage() {
         </div>
         <DetailsRow summary="What counts as an input token?"><p className={s.answer}>A token is a small piece of text. Input tokens are the context, questions, and answer choices you send for a decision. Under the planned billing model, shared context is counted once per request; repeated internal processing is not charged again.</p></DetailsRow>
         <DetailsRow summary="Can I train more than one model?"><p className={s.answer}>Yes. There are no model-count tiers or fees for model slots. Each additional training run costs ${PRICING.millionTrainingTokens.toFixed(2)} per million training tokens, with a ${PRICING.trainingRun} minimum, and you pay for inference when you use a model. Serving availability depends on capacity; this plan does not reserve dedicated hardware.</p></DetailsRow>
+        <DetailsRow summary="Open tier or private: what’s the difference?"><p className={s.answer}>Who sees your training data. You choose for each run. On the open tier, Zils network miners train the model: they receive your training examples and must delete them within 7 days of the run finishing, which Zils cannot verify. It is free, up to 3 runs a day per account and 5,000,000 training tokens per run. Private runs are trained only by Zils workers, and your examples are never sent to network miners; they cost ${PRICING.millionTrainingTokens.toFixed(2)} per million training tokens.</p></DetailsRow>
         <DetailsRow summary="Does my credit expire each month?"><p className={s.answer}>The launch plan has no monthly credit expiry and no recurring subscription. You’ll be able to set a spending cap. These billing controls will be available with paid access.</p></DetailsRow>
         <DetailsRow summary="What happens if training fails?"><p className={s.answer}>A run that fails because of our infrastructure receives a credit. A completed run is charged for its training and evaluation work, even if the resulting model does not meet the agreed quality requirements.</p></DetailsRow>
         <DetailsRow summary="Can I pay and start today?"><p className={s.answer}>These are planned beta launch prices. Checkout and usage billing are not open yet. <Link href="/sign-in">Sign in</Link> to create your workspace.</p></DetailsRow>
