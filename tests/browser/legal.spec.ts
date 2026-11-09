@@ -42,5 +42,6 @@ test('privacy and terms commit to not storing paid real-time text requests', asy
   const data = page.locator('#your-request-data');
   await expect(data).toContainText('does not store the content of the request or the predictions it returns');
   await expect(data.getByRole('link', { name: 'privacy policy' })).toHaveAttribute('href', '/privacy#what-we-keep-from-model-requests');
-  await expect(page.getByText('Updated 7 November 2026')).toBeVisible();
+  await expect(page.getByText('its model files cannot be downloaded')).toBeVisible();
+  await expect(page.getByText('Updated 9 November 2026')).toBeVisible();
 });

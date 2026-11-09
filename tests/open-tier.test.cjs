@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { submissionSchema, jobSchema, tierFields, tierLabel } = require('../.private/test-build/training.js');
+const { submissionSchema, jobSchema, tierFields, tierLabel, canDownloadFiles } = require('../.private/test-build/training.js');
 
 const base = { name: 'tiered', acceptance: { min_accuracy: .8, min_brier_improvement: .01 }, allow_training_data_export: true };
 
@@ -25,4 +25,12 @@ test('each run is labelled with who trains it; runs from before tiers get no lab
   assert.equal(tierLabel({ ...job, tier: 'open' }), 'Open tier · free');
   assert.equal(tierLabel({ ...job, tier: 'private' }), 'Private');
   assert.equal(tierLabel(job), null);
+});
+
+test('open-tier models are used through the API, so only private ones offer model files', () => {
+  const accepted = { id: '10000000-0000-4000-8000-000000000002', name: 'tiered', status: 'completed', result: { delivery: { status: 'accepted' } } };
+  assert.equal(canDownloadFiles({ ...accepted, tier: 'private' }), true);
+  assert.equal(canDownloadFiles(accepted), true); // runs from before tiers were private
+  assert.equal(canDownloadFiles({ ...accepted, tier: 'open' }), false);
+  assert.equal(canDownloadFiles({ ...accepted, tier: 'private', status: 'failed' }), false);
 });

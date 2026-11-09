@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <PolicyPage title="Terms of use." updated="7 November 2026">
+    <PolicyPage title="Terms of use." updated="9 November 2026">
       <p>These terms apply to zils.ai and the Zils decision-model services. By using these services, you agree to these terms.</p>
 
       <PolicySection title="An experimental service">
@@ -23,7 +23,7 @@ export default function TermsPage() {
 
       <PolicySection title="Your training submissions">
         <p>Submit only information you have the right to use and share for training and evaluation. You authorize Zils to process your submitted data, job settings, and resulting artifacts to carry out the requested run and provide its results.</p>
-        <p>Training submission separately requires your permission to export learning data to assigned, approved workers. Their operators can read and retain it. For an open-tier run, which is free, you also permit the learning data to be sent to Zils network miners, independent operators who must delete it within 7 days of the run finishing; Zils cannot verify deletion. Private runs are trained only by Zils workers and are charged at the listed training price. This is not confidential compute. Canceling a run cannot erase copies already downloaded or immediately terminate remote processing. The <Link href="/privacy">privacy policy</Link> explains the current data-handling workflow.</p>
+        <p>Training submission separately requires your permission to export learning data to assigned, approved workers. Their operators can read and retain it. For an open-tier run, which is free, you also permit the learning data to be sent to Zils network miners, independent operators who must delete it within 7 days of the run finishing; Zils cannot verify deletion. A model trained on the open tier is served by Zils and used only through the Zils API; its model files cannot be downloaded. Private runs are trained only by Zils workers and are charged at the listed training price, and their accepted model files can be downloaded. This is not confidential compute. Canceling a run cannot erase copies already downloaded or immediately terminate remote processing. The <Link href="/privacy">privacy policy</Link> explains the current data-handling workflow.</p>
       </PolicySection>
 
       <PolicySection title="Your request data">
