@@ -173,7 +173,9 @@ test('a page out of range or not a number shows the nearest real page', () => {
 // why last round passed some over. Ungraded bodies line up in commitment order: block, then hotkey, then uid.
 test('ungraded bodies line up by commit block against the next round’s limit', () => {
   const sha = c => c.repeat(64);
-  const chain = { network: 'finney', netuid: 127, block: 9448539, as_of: new Date().toISOString(), miners: [
+  // The head's time is pinned: commit times are estimated back from it, so a moving clock would slide uid 80's
+  // body past the 2026-11-06 deadline and read it as pending.
+  const chain = { network: 'finney', netuid: 127, block: 9448539, as_of: '2026-11-08T00:00:00Z', miners: [
     { uid: 64, hotkey: '5B', body: { ...body('d3-lite', '1'), block: 9442157 }, serving: false },
     { uid: 193, hotkey: '5A', body: { ...body('d3-lite', '2'), block: 9442402 }, serving: false },
     { uid: 72, hotkey: '5C', body: { ...body('d3-lite', '3'), block: 9444901 }, serving: false },
