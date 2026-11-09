@@ -101,3 +101,15 @@
 .question { display:grid; gap:6px; margin:14px 0 4px; }
 .question textarea { font:inherit; font-size:15px; padding:10px 12px; border:1px solid var(--zils-edge); border-radius:10px; background:transparent; color:var(--zils-ink); resize:vertical; }
 .elsewhere { font-size:13px; color:var(--zils-muted); margin:18px 0 0; display:flex; flex-wrap:wrap; gap:6px 16px; }
+
+/* Column names and their menu use the page's text face (workspace tables set headers in mono), and the
+   menu floats over the rows instead of growing the header row. */
+.colButton, .menu, .leak { font-family:var(--font-inter-tight), system-ui, sans-serif; letter-spacing:normal; text-transform:none; }
+.colName { font-size:14px; }
+.colRole { font-family:var(--font-plex-mono), ui-monospace, monospace; }
+.menu { position:absolute; top:calc(100% - 6px); left:14px; z-index:6; margin-top:0; width:max-content; max-width:280px; box-shadow:0 8px 24px rgb(0 0 0 / .28); }
+.menu button { white-space:normal; line-height:1.35; }
+.unused + .menu { position:static; width:max-content; }
+/* Body cells carry view-transition names, which give each its own layer: keep the header (and an open menu) above them. */
+.table thead th { z-index:3; }
+.menu { background:var(--zils-page); border-color:var(--zils-edge); }
