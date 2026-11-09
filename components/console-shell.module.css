@@ -50,6 +50,7 @@
 .row::before { content: ''; position: absolute; left: 0; top: 0; border-style: solid; border-width: 7px 7px 0 0; border-color: var(--zs-orange) transparent transparent transparent; }
 .rowNote { margin-left: auto; color: var(--zs-t3); font-size: 10px; letter-spacing: .12em; }
 .main { min-width: 0; width: 100%; max-width: 1180px; margin: 0 auto; padding: 8px 40px 72px; }
+.main.bleed { max-width: none; padding: 0 40px 96px; }
 
 @media (max-width: 860px) {
   .shell { grid-template-columns: minmax(0, 1fr); }
@@ -68,6 +69,7 @@
   .menu { left: auto; right: 0; bottom: auto; top: calc(100% + 6px); width: 220px; }
   .row { padding: 0 16px; }
   .main { padding: 8px 16px 48px; }
+  .main.bleed { padding: 0 16px 64px; }
 }
 
 /* Quiet hierarchy inside pages: light headings, as on zils.ai. Doubled class beats page-module rules. */

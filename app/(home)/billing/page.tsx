@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ConsoleShell } from '@/components/console-shell';
+import { PageHero, Section, workspacePage } from '@/components/workspace-page';
 import { BillingDashboard } from '@/components/billing-dashboard';
 import { decisionApiUrl } from '@/lib/api-keys';
 import { serviceUrl } from '@/lib/training';
@@ -25,9 +26,9 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
       apiUrl = decisionApiUrl(trainingUrl, process.env.NEXT_PUBLIC_ZILS_API_URL);
     }
   } catch { /* Unconfigured environments keep billing unavailable. */ }
-  return <ConsoleShell className={styles.page}>
-        <header className={styles.heading}><div><h1>Billing</h1><p>Your shared credit balance, top-ups, and receipts.</p></div></header>
+  return <ConsoleShell bleed className={styles.page}>
+        <PageHero title="Billing" intro="Your shared credit balance, top-ups, and receipts." />
         {apiUrl ? <BillingDashboard config={{ url, key, apiUrl }} testPreview={process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test'} checkoutReturn={checkoutReturn} />
-          : <section className={styles.empty}><h2>Billing is not configured here yet.</h2><p>Account balances and top-ups are unavailable in this environment. Real payments are not open.</p><Link href="/pricing" className={styles.button}>View planned pricing</Link></section>}
+          : <><Section label="Billing is not configured here yet" /><p className={workspacePage.sub}>Account balances and top-ups are unavailable in this environment. Real payments are not open.</p><div className={workspacePage.actions}><Link href="/pricing" className={styles.button}>View planned pricing</Link></div></>}
   </ConsoleShell>;
 }

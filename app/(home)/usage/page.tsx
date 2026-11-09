@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { ConsoleShell } from '@/components/console-shell';
 import { BillingDashboard } from '@/components/billing-dashboard';
+import { PageHero, Section, workspacePage } from '@/components/workspace-page';
 import { decisionApiUrl } from '@/lib/api-keys';
 import { serviceUrl } from '@/lib/training';
 import styles from '../billing/billing.module.css';
@@ -22,9 +23,9 @@ export default function UsagePage() {
       apiUrl = decisionApiUrl(trainingUrl, process.env.NEXT_PUBLIC_ZILS_API_URL);
     }
   } catch { /* Unconfigured environments keep billing unavailable. */ }
-  return <ConsoleShell className={styles.page}>
-        <header className={styles.heading}><div><h1>Usage</h1><p>API calls, training runs, and spend across your models.</p></div></header>
+  return <ConsoleShell bleed className={styles.page}>
+        <PageHero title="Usage" intro="API calls, training runs, and spend across your models." />
         {apiUrl ? <BillingDashboard config={{ url, key, apiUrl }} testPreview={process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test'} checkoutReturn={null} view="usage" />
-          : <section className={styles.empty}><h2>Usage is not available here yet.</h2><p>This environment is not connected to the billing service.</p></section>}
+          : <><Section label="Account usage" /><p className={workspacePage.sub}>Usage is not available here yet. This environment is not connected to the billing service.</p></>}
   </ConsoleShell>;
 }

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { sessionHeaders } from '@/components/auth-session';
 import { DecisionPlayground } from '@/components/decision-playground';
+import { Section } from '@/components/workspace-page';
 import { ownFirst, type ModelOption } from '@/lib/playground';
 import s from './playground.module.css';
 
@@ -41,6 +42,7 @@ export function Playground({ configured, models: shared, apiUrl }: { configured:
         <p className={s.helper}>Used for this tab only and never saved. <Link href="/keys">Create a key</Link></p></div>}
     </div>
     {/* A model with saved questions starts from them, with an empty context to fill in. */}
+    <Section label="Request and answers" />
     <DecisionPlayground key={model.id} configured={configured} model={model} apiKey={apiKey} apiUrl={apiUrl} initialRequest={model.questions && { state: '', model: model.id, questions: model.questions }} />
   </div>;
 }

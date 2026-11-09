@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { canDownload, downloadFiles, isImageJob, SPLITS, submissionSchema, terminal, tierLabel, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
 import Link from 'next/link';
+import { PageHero, Section, workspacePage } from '@/components/workspace-page';
 import { WorkspaceLoading, LinkLoading } from '@/components/workspace-loading';
 import { TrainingGuide } from '@/components/training-guide';
 import { AgentTrainingCard } from '@/components/agent-training-card';
@@ -76,7 +77,7 @@ export function TrainingDashboard({ config, runId, bulkImport = false, upgradeOf
     {session && client ? <div id="training-workspace">
       <SignedInDashboard key={`${session.user.id}:${runId || (upgradeOf ? `upgrade:${upgradeOf}:${migrateTo ?? ''}` : bulkImport ? "bulk" : "index")}`} runId={runId} bulkImport={bulkImport} upgradeOf={upgradeOf} migrateTo={migrateTo} owner={session.user.id} client={client} config={config} onExpired={signOut} />
     </div> : <>
-      <div className={styles.workspaceHeading}><div><h1>Training</h1><p>Teach Zils a decision using examples your team has reviewed.</p></div></div>
+      <PageHero title="Training" intro="Teach Zils a decision using examples your team has reviewed." />
       <section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}>
         <h2>Sign in to Zils</h2><p>New to Zils? Signing in creates your workspace.</p>
         {process.env.NEXT_PUBLIC_ZILS_GOOGLE_AUTH_ENABLED === 'true' && <>
@@ -328,29 +329,26 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
   }
   function runRows(items: Job[], title: string) {
     if (!items.length) return null;
-    return <section className={styles.runHistory} aria-label={title}><div className={styles.historyHeading}><h2>{title}</h2>{title === 'Run history' && <button className={styles.textButton} onClick={refresh} disabled={busy || refreshing}>{refreshing ? 'Checking…' : 'Refresh runs'}</button>}</div><ul>{items.map(job => <li key={job.id}>
+    return <section className={styles.runHistory} aria-label={title}><Section label={title} action={title === 'Run history' && <button onClick={refresh} disabled={busy || refreshing}>{refreshing ? 'Checking…' : 'Refresh runs'}</button>} /><ul>{items.map(job => <li key={job.id}>
       <Link className={styles.historyRow} href={`/train?run=${job.id}`}>
         <span><strong>{job.name}</strong>{job.created_at && <time dateTime={job.created_at}>{new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time>}{tierLabel(job) && <small>{tierLabel(job)}</small>}</span>
-        <span className={styles.historyStatus}>{trainingProgress(job).label}<LinkLoading /><ArrowUpRight size={16} aria-hidden="true" /></span>
+        <span className={`${styles.historyStatus} ${workspacePage.status}`} data-tone={trainingProgress(job).tone}>{trainingProgress(job).label}<LinkLoading /><ArrowUpRight size={16} aria-hidden="true" /></span>
       </Link>
     </li>)}</ul></section>;
   }
   return <Sheet open={panelOpen} onOpenChange={open => { if (open) focusSubmitted.current = false; setPanelOpen(open); }}>
-    {runId && <Link href="/train" className={styles.textButton}>Back to Training<LinkLoading /></Link>}
-    <div className={styles.workspaceHeading}>
-      <div><h1>{runId ? 'Training run' : 'Training'}</h1><p>{runId ? 'The progress, evaluation, and files for this run.' : 'Start a training run and follow it until your model is ready.'}</p></div>
-      <div className={styles.workspaceActions}>
-        {!runId && <Link className={styles.button} href="/train/new"><Plus size={16} aria-hidden="true" />Train a model</Link>}
-      </div>
-    </div>
-    {bulkImport && <p className={styles.notice}><SheetTrigger asChild><button className={styles.textButton} disabled={busy}>Continue bulk import</button></SheetTrigger> · Import a spreadsheet, prepared datasets, or labeled photos.</p>}
-    {process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && <p className={styles.notice}>Billing test preview. Submitting a standard run reserves one included run or $2 in test credit. <Link href="/billing" className={styles.textButton}>View credit and billing</Link>.</p>}
-    {error && <p className={styles.error} role="alert">{error}{needsCredit && <> <Link href="/billing" className={styles.textButton}>Add credit</Link>.</>}</p>}
-    {progress && <p role="status" className={styles.notice}>{progress}</p>}
+    <PageHero title={runId ? 'Training run' : 'Training'} intro={runId ? 'The progress, evaluation, and files for this run.' : 'Start a training run and follow it until your model is ready.'}
+      back={runId && <Link href="/train" className={styles.textButton}>Back to Training<LinkLoading /></Link>}
+      action={!runId && <Link className={styles.button} href="/train/new"><Plus size={16} aria-hidden="true" />Train a model</Link>} />
+    {bulkImport && <p className={workspacePage.notice}><SheetTrigger asChild><button className={styles.textButton} disabled={busy}>Continue bulk import</button></SheetTrigger> · Import a spreadsheet, prepared datasets, or labeled photos.</p>}
+    {process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && <p className={workspacePage.notice}>Billing test preview. Submitting a standard run reserves one included run or $2 in test credit. <Link href="/billing" className={styles.textButton}>View credit and billing</Link>.</p>}
+    {error && <p className={workspacePage.notice} role="alert">{error}{needsCredit && <> <Link href="/billing" className={styles.textButton}>Add credit</Link>.</>}</p>}
+    {progress && <p role="status" className={workspacePage.notice}>{progress}</p>}
     {busy && cancellable && <button type="button" className={styles.secondary} onClick={() => operation.current?.abort()}>Stop upload</button>}
-    {refreshError && !runId && history.length > 0 && !selected && <p role="status" className={styles.notice}>Connection interrupted. Showing your last loaded runs; we’ll retry automatically.</p>}
-    <div className={styles.workspace}>
-      {loading ? <WorkspaceLoading label={runId ? "Loading your training run" : "Loading your models and runs"} /> : !selected && (runId || !history.length) ? <section className={styles.emptyWorkspace}>
+    {refreshError && !runId && history.length > 0 && !selected && <p role="status" className={workspacePage.notice}>Connection interrupted. Showing your last loaded runs; we’ll retry automatically.</p>}
+    <div className={`${styles.workspace} ${workspacePage.stack}`}>
+      {loading ? <WorkspaceLoading label={runId ? "Loading your training run" : "Loading your models and runs"} /> : !selected && (runId || !history.length) ? <section className={workspacePage.empty}>
+        <Section label={runId ? 'Run details' : 'Get started'} />
         <h2>{runId ? 'Run unavailable' : refreshError ? 'Your runs could not be loaded.' : 'Train your first model.'}</h2>
         <p>{runId ? 'Return to Training to choose a run, or try loading it again.' : refreshError ? 'Try checking again in a moment.' : 'Bring a decision and a few reviewed examples. Zils will guide you through the rest.'}</p>
         {refreshError || runId ? <button className={styles.secondary} onClick={refresh} disabled={refreshing}>Try again</button> : <Link className={styles.secondary} href="/train/teach">Get started</Link>}
@@ -369,9 +367,9 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
           </Dialog.Content>
         </Dialog.Root>
       </section> : selected ? <div>
-        <div className={styles.currentLabel}><span>{runId ? 'Run details' : 'Current run'}</span><button className={styles.textButton} onClick={refresh} disabled={busy || refreshing}>{refreshing ? 'Checking…' : 'Refresh status'}</button></div>
-        <section className={`${styles.panel} ${styles.currentRun}`} aria-labelledby="current-run-title">
-          <div className={styles.currentRunHeader}><h2 id="current-run-title" ref={statusMessage} tabIndex={-1}>{selected.name}</h2><span className={styles.runBadge} data-tone={trainingProgress(selected).tone}>{trainingProgress(selected).label}</span>{tierLabel(selected) && <span className={styles.runBadge}>{tierLabel(selected)}</span>}</div>
+        <Section label={runId ? 'Run details' : 'Current run'} action={<button onClick={refresh} disabled={busy || refreshing}>{refreshing ? 'Checking…' : 'Refresh status'}</button>} />
+        <section className={`${styles.currentRun} ${workspacePage.run}`} aria-labelledby="current-run-title">
+          <div className={styles.currentRunHeader}><h2 id="current-run-title" ref={statusMessage} tabIndex={-1} className={workspacePage.runName}>{selected.name}</h2><span className={workspacePage.status} data-tone={trainingProgress(selected).tone}>{trainingProgress(selected).label}</span>{tierLabel(selected) && <span className={workspacePage.status} data-tone="done">{tierLabel(selected)}</span>}</div>
           {runId || selected.status === 'uploading' ? runDetails(selected) : <TrainingRunStatus job={selected} />}
           {!runId && <Link className={styles.textButton} href={`/train?run=${selected.id}`}>View full run<LinkLoading /></Link>}
           <p className={styles.statusFreshness} data-stale={refreshError}>{refreshError ? 'Connection interrupted. Showing the last known status; we’ll retry automatically.' : <>Last checked {checkedAt ? new Date(checkedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'just now'}. {!terminal(selected) && 'Updates automatically.'}</>}</p>
