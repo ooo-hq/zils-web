@@ -65,7 +65,7 @@ test.describe('phones', () => {
     await page.goto('/sign-in');
     await expect(page.getByText('Account changes', { exact: true })).toBeHidden();
     const art = await page.getByText('System 01').boundingBox();
-    const heading = await page.getByRole('heading', { name: 'Sign in.' }).boundingBox();
+    const heading = await page.getByRole('heading', { name: 'Get started.' }).boundingBox();
     expect(heading!.y).toBeGreaterThan(art!.y);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
   });

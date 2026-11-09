@@ -3,7 +3,9 @@ import { test, expect } from '@playwright/test';
 test('/early-access now sends visitors to sign up, and the CTAs go to sign-in', async ({ page }) => {
   await page.goto('/early-access');
   await expect(page).toHaveURL(/\/sign-in$/);
-  await expect(page.getByRole('heading', { name: 'Sign in.', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Get started.', level: 1 })).toBeVisible();
+  await expect(page.getByText('Sign in, or create your Zils workspace.')).toBeVisible();
+  await expect(page).toHaveTitle(/Get started with Zils/);
   await page.goto('/');
   await page.getByRole('main').getByRole('link', { name: 'Get started', exact: true }).first().click();
   await expect(page).toHaveURL(/\/sign-in$/);

@@ -32,7 +32,7 @@ test('signed-out visitors get started from the header', async ({ page }) => {
   const { errors } = await account(page, false);
   await page.goto('/model');
   await page.locator('header').getByRole('link', { name: 'Get started', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Sign in.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Get started.', exact: true })).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'Email' })).toBeVisible();
   expect(errors).toEqual([]);
 });

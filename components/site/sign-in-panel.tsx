@@ -71,8 +71,8 @@ export function SignInPanel() {
           {sent && <><h1>Check your email.</h1><p>A sign-in link is on its way.</p></>}
         </div>
         {!sent && <form onSubmit={emailLink} aria-label="Sign in to Zils">
-          <h1>Sign in.</h1>
-          <p className={css.sub}>Open your Zils workspace.</p>
+          <h1>Get started.</h1>
+          <p className={css.sub}>Sign in, or create your Zils workspace.</p>
           {(error || sessionError) && <p role="alert" className={form.fpError} style={{ marginTop: 20 }}>{error || sessionError}</p>}
           {GOOGLE_ENABLED && <>
             <button type="button" className={css.google} disabled={busy !== null} onClick={google}>
