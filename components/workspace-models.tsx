@@ -46,7 +46,7 @@ export function WorkspaceModels({ config }: { config: TrainingConfig }) {
   if (!models.length) return <section className={training.panel}>
     <h2>No models yet</h2>
     <p>Train a model on examples your team has reviewed. When it passes evaluation, it appears here with its API name.</p>
-    <div className={training.actions}><Link href="/train/teach" className={training.button}><Plus size={16} aria-hidden="true" />Train a model</Link></div>
+    <div className={training.actions}><Link href="/train/new" className={training.button}><Plus size={16} aria-hidden="true" />Train a model</Link></div>
   </section>;
   return <TrainedModelLibrary jobs={models} bases={bases} bare />;
 }

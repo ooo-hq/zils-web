@@ -1,0 +1,115 @@
+/* One bold element: the line between what it sees and what it decides. Everything else stays quiet. */
+.page { --decide: color-mix(in oklab, var(--zils-accent) 9%, transparent); max-width:980px; margin:0 auto; padding:64px 16px 120px; }
+.note { font-size:13px; color:var(--zils-muted); margin:0 0 20px; }
+.title { font-size:clamp(40px,7vw,64px); font-weight:300; letter-spacing:-.025em; line-height:1; margin:0; }
+.lede { font-size:17px; line-height:1.55; color:var(--zils-muted); margin:16px 0 36px; max-width:60ch; }
+
+.sheet { border:1px solid var(--zils-edge); border-radius:14px; background:var(--zils-page); overflow:hidden; }
+.sheet[data-over=true] { border-color:var(--zils-accent); }
+.sheet[data-empty=true] { border-style:dashed; }
+
+.drop { display:grid; justify-items:center; text-align:center; gap:10px; padding:64px 20px 40px; color:var(--zils-muted); }
+.dropTitle { font-size:22px; color:var(--zils-ink); margin:6px 0 0; }
+.dropText { margin:0; font-size:14px; max-width:46ch; line-height:1.55; }
+.dropActions { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:10px; }
+.tryLine { margin:26px 0 0; font-size:14px; display:flex; flex-wrap:wrap; gap:6px 14px; justify-content:center; }
+
+.sheetTop { display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; padding:16px 20px; border-bottom:1px solid var(--zils-edge); font-size:14px; }
+.fileName { font-weight:500; overflow-wrap:anywhere; }
+.count { color:var(--zils-muted); margin-right:auto; }
+
+.tableWrap { overflow-x:auto; }
+.table { border-collapse:collapse; width:100%; font-size:14px; }
+.table th, .table td { text-align:left; vertical-align:top; padding:12px 20px; border-bottom:1px solid var(--zils-edge); max-width:360px; overflow-wrap:break-word; }
+.table th { white-space:nowrap; }
+.table td { min-width:9ch; }
+.table tbody tr:last-child td { border-bottom:0; }
+.table th { position:relative; padding-top:14px; padding-bottom:12px; font-weight:400; }
+.decideHead, .decideCell { background:var(--decide); }
+.decideCell { font-weight:500; }
+
+.sides th { padding-top:16px !important; padding-bottom:0 !important; border-bottom:0 !important; font-size:13px; color:var(--zils-muted); }
+.sides .decideHead { color:var(--zils-accent); }
+.table .seam { width:0; min-width:0; max-width:0; padding:0 !important; border-left:2px solid var(--zils-accent); border-bottom:0 !important; }
+
+.colButton { display:grid; gap:3px; text-align:left; border:0; background:none; padding:0; font:inherit; color:inherit; cursor:pointer; }
+.colButton:focus-visible { outline:2px solid var(--zils-accent); outline-offset:4px; border-radius:4px; }
+.colName { font-weight:500; text-decoration:underline; text-decoration-color:var(--zils-edge); text-underline-offset:4px; }
+.colButton:hover .colName { text-decoration-color:var(--zils-accent); }
+.colRole { font-size:12px; color:var(--zils-muted); white-space:nowrap; }
+.decideHead .colRole { color:var(--zils-accent); }
+
+.menu { display:grid; margin-top:10px; padding:4px; border:1px solid var(--zils-edge); border-radius:10px; background:var(--zils-surface); min-width:150px; }
+.menu button { text-align:left; border:0; background:none; font:inherit; font-size:14px; color:var(--zils-ink); padding:8px 10px; border-radius:6px; cursor:pointer; }
+.menu button:hover, .menu button:focus-visible { background:var(--zils-soft); outline:none; }
+
+.photo { display:inline-flex; align-items:center; gap:10px; }
+.photo i { width:34px; height:34px; border-radius:6px; flex-shrink:0; }
+.answerInput { font:inherit; font-weight:500; width:100%; min-width:110px; padding:6px 8px; border:1px dashed var(--zils-edge); border-radius:6px; background:transparent; color:var(--zils-ink); }
+.answerInput:focus { outline:2px solid var(--zils-accent); border-color:transparent; }
+.addCol { vertical-align:middle !important; white-space:nowrap; }
+
+.more, .unused, .hint { font-size:13px; color:var(--zils-muted); margin:0; padding:12px 20px 0; display:flex; flex-wrap:wrap; gap:4px 12px; }
+.hint { padding-bottom:16px; }
+.unused + .hint, .more + .hint { padding-top:8px; }
+.inline { border:0; background:none; padding:0; font:inherit; color:var(--zils-accent); cursor:pointer; text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:1px; }
+
+.bar { position:sticky; bottom:16px; z-index:4; display:flex; align-items:center; gap:12px; margin-top:20px; padding:12px 12px 12px 20px; border:1px solid var(--zils-edge); border-radius:14px; background:var(--zils-surface); }
+.summary { margin:0 auto 0 0; font-size:15px; line-height:1.5; }
+.primary, .secondary { min-height:44px; padding:0 20px; border-radius:10px; font:inherit; font-size:15px; cursor:pointer; white-space:nowrap; }
+.primary { border:0; background:var(--zils-action); color:var(--zils-on-action); font-weight:500; }
+.primary:disabled { opacity:.35; cursor:not-allowed; }
+.secondary { border:1px solid var(--zils-edge); background:transparent; color:var(--zils-ink); }
+.primary:focus-visible, .secondary:focus-visible, .inline:focus-visible { outline:2px solid var(--zils-accent); outline-offset:3px; }
+
+.settings { margin-top:12px; padding:20px; border:1px solid var(--zils-edge); border-radius:14px; display:grid; gap:18px; font-size:14px; line-height:1.55; }
+.settings fieldset { border:0; padding:0; margin:0; display:grid; gap:10px; }
+.settings legend { font-weight:500; margin-bottom:10px; padding:0; }
+.settings label { display:flex; gap:10px; align-items:flex-start; }
+.settings label input[type=radio] { margin-top:5px; }
+.settings strong { font-weight:500; }
+.range { flex-direction:column; }
+.range input { width:100%; max-width:360px; }
+.settings .hint { padding:0; }
+
+.review { margin-top:20px; padding:24px; border:1px solid var(--zils-accent); border-radius:14px; font-size:15px; line-height:1.6; max-width:640px; }
+.review h2 { font-size:24px; font-weight:400; margin:0 0 10px; }
+.review p { margin:6px 0; color:var(--zils-muted); }
+.reviewActions { display:flex; gap:10px; justify-content:flex-end; margin-top:18px; }
+.error { color:var(--zils-danger); font-size:14px; margin:0; padding:14px 20px; }
+.warn { color:var(--zils-ink) !important; }
+
+::view-transition-group(*) { animation-duration:.32s; animation-timing-function:cubic-bezier(.2,.7,.2,1); }
+
+@media (max-width:640px) {
+  .page { padding-top:40px; }
+  .bar { flex-wrap:wrap; bottom:8px; }
+  .summary { flex-basis:100%; }
+  .bar .primary { flex:1; }
+  .table th, .table td { padding:10px 12px; }
+  .table .decideHead:last-child, .table .decideCell:last-child { width:100%; }
+  /* Keep the line and the decide side on screen: what it sees is clamped, not scrolled away. */
+  .clamp { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; max-width:15ch; }
+  .seeHead { max-width:15ch; }
+  .seeHead .colName { display:block; max-width:15ch; overflow:hidden; text-overflow:ellipsis; }
+}
+
+/* Real-page additions */
+.leak { display:block; font-size:12px; color:var(--zils-danger); white-space:normal; }
+.groupHead { color:var(--zils-muted); }
+.sheetPick { font:inherit; font-size:14px; padding:4px 8px; border:1px solid var(--zils-edge); border-radius:8px; background:transparent; color:var(--zils-ink); }
+.question { display:grid; gap:6px; margin:14px 0 4px; }
+.question textarea { font:inherit; font-size:15px; padding:10px 12px; border:1px solid var(--zils-edge); border-radius:10px; background:transparent; color:var(--zils-ink); resize:vertical; }
+.elsewhere { font-size:13px; color:var(--zils-muted); margin:18px 0 0; display:flex; flex-wrap:wrap; gap:6px 16px; }
+
+/* Column names and their menu use the page's text face (workspace tables set headers in mono), and the
+   menu floats over the rows instead of growing the header row. */
+.colButton, .menu, .leak { font-family:var(--font-inter-tight), system-ui, sans-serif; letter-spacing:normal; text-transform:none; }
+.colName { font-size:14px; }
+.colRole { font-family:var(--font-plex-mono), ui-monospace, monospace; }
+.menu { position:absolute; top:calc(100% - 6px); left:14px; z-index:6; margin-top:0; width:max-content; max-width:280px; box-shadow:0 8px 24px rgb(0 0 0 / .28); }
+.menu button { white-space:normal; line-height:1.35; }
+.unused + .menu { position:static; width:max-content; }
+/* Body cells carry view-transition names, which give each its own layer: keep the header (and an open menu) above them. */
+.table thead th { z-index:3; }
+.menu { background:var(--zils-page); border-color:var(--zils-edge); }
