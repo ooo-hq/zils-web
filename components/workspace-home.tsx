@@ -72,7 +72,7 @@ export function WorkspaceHome({ config, sharedModel, baseName }: { config: Train
       <div className={s.cardHeading}><h2 id="latest-models-title">Latest models</h2><Link href="/models">View all</Link></div>
       {error ? <p role="alert" className={s.muted}>{error}</p>
         : !models ? <p className={s.muted} role="status">Loading your models…</p>
-        : !models.length ? <p className={s.muted}>No models yet. <Link href="/train/teach">Train your first model</Link> on examples your team has reviewed.</p>
+        : !models.length ? <p className={s.muted}>No models yet. <Link href="/train/new">Train your first model</Link> on examples your team has reviewed.</p>
         : <ul>{models.slice(0, 3).map(job => <li key={job.id}>
           <Link href={`/models/${job.id}`}><strong>{job.name}</strong><code>{job.workflow?.model_alias || job.workflow?.model_name || job.workflow?.model_id}</code></Link>
           <span>Ready{job.created_at && `, trained ${day(job.created_at)}`}</span>

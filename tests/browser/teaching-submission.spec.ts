@@ -116,9 +116,7 @@ test('saved text uploads recover from the run page without classic setup', async
 
 for (const recover of [false, true]) test(`reviewed examples submit without leaking metadata, with recovery (${recover})`, async ({ page }) => {
   const { state, created } = await workspace(page, { failUpload: recover });
-  await page.goto('/train');
-  await page.getByRole('link', { name: 'Train a model', exact: true }).click();
-  await expect(page).toHaveURL(/\/train\/teach$/);
+  await page.goto('/train/teach');  // teach by example; "Train a model" opens the table page (/train/new)
   await page.getByRole('button', { name: 'Sort or make a decision', exact: false }).click();
   await page.getByRole('button', { name: 'Bring my first example', exact: true }).click();
   await page.getByRole('button', { name: 'Add sample examples', exact: true }).click();

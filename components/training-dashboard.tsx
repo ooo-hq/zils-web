@@ -340,7 +340,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     <div className={styles.workspaceHeading}>
       <div><h1>{runId ? 'Training run' : 'Training'}</h1><p>{runId ? 'The progress, evaluation, and files for this run.' : 'Start a training run and follow it until your model is ready.'}</p></div>
       <div className={styles.workspaceActions}>
-        {!runId && <Link className={styles.button} href="/train/teach"><Plus size={16} aria-hidden="true" />Train a model</Link>}
+        {!runId && <Link className={styles.button} href="/train/new"><Plus size={16} aria-hidden="true" />Train a model</Link>}
       </div>
     </div>
     {bulkImport && <p className={styles.notice}><SheetTrigger asChild><button className={styles.textButton} disabled={busy}>Continue bulk import</button></SheetTrigger> · Import a spreadsheet, prepared datasets, or labeled photos.</p>}

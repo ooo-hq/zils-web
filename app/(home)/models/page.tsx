@@ -17,7 +17,7 @@ export default function ModelsPage() {
   return <ConsoleShell className={styles.page}>
     <div className={styles.workspaceHeading}>
       <div><h1>Models</h1><p>Models trained on your examples. Call them by API name from your app.</p></div>
-      <Link className={styles.button} href="/train/teach"><Plus size={16} aria-hidden="true" />Train a model</Link>
+      <Link className={styles.button} href="/train/new"><Plus size={16} aria-hidden="true" />Train a model</Link>
     </div>
     {config ? <WorkspaceModels config={config} /> : <section className={styles.panel}><h2>Models are not available here.</h2><p>This environment is not connected to the training service.</p></section>}
   </ConsoleShell>;

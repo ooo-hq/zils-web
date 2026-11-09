@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import styles from './console-shell.module.css';
 
 const LABELS: [string, string][] = [
-  ['/dashboard', 'Home'], ['/train/teach', 'Train a model'], ['/train', 'Train'], ['/models', 'Models'],
+  ['/dashboard', 'Home'], ['/train/teach', 'Teach by example'], ['/train/new', 'Train a model'], ['/train', 'Train'], ['/models', 'Models'],
   ['/playground', 'Playground'], ['/usage', 'Usage'], ['/billing', 'Billing'], ['/keys', 'API keys'],
 ];
 

@@ -19,7 +19,7 @@ export function WorkspaceHero({ email }: { email?: string }) {
       <p>Ask Zils anything about one input. Every answer comes back as a probability your code can act on.</p>
       <div className={s.actions}>
         <Link href="/playground" className={s.primary}>Open the playground</Link>
-        <Link href="/train/teach" className={s.secondary}>Train a model</Link>
+        <Link href="/train/new" className={s.secondary}>Train a model</Link>
       </div>
     </div>
     <ul className={s.specimens} aria-label="The three kinds of answer">
