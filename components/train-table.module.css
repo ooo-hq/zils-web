@@ -113,3 +113,10 @@
 /* Body cells carry view-transition names, which give each its own layer: keep the header (and an open menu) above them. */
 .table thead th { z-index:3; }
 .menu { background:var(--zils-page); border-color:var(--zils-edge); }
+
+/* Empty page: two starting points of equal weight. Titles sit above each column so both read as choices. */
+.paths { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:auto 1fr; grid-auto-flow:column; column-gap:24px; row-gap:12px; }
+.pathTitle { margin:0; font-size:20px; font-weight:400; letter-spacing:-.01em; }
+.codePath { border:1px solid var(--zils-edge); border-radius:14px; padding:24px 22px; display:grid; gap:18px; align-content:start; }
+.codeLede { margin:0; font-size:14px; line-height:1.55; color:var(--zils-muted); max-width:52ch; }
+@media (max-width:860px) { .paths { grid-template-columns:minmax(0,1fr); grid-template-rows:none; grid-auto-flow:row; } }

@@ -9,6 +9,7 @@ import { prepareTraining, type CsvData } from '@/lib/training-csv';
 import { leaks } from '@/lib/training-review';
 import { answerLabel, guessColumns, readiness, type Columns } from '@/lib/train-table';
 import { TeachingSubmission } from '@/components/teaching-submission';
+import { AgentSteps } from '@/components/agent-training-card';
 import type { TrainingConfig } from '@/lib/training-config';
 import css from './train-table.module.css';
 
@@ -113,8 +114,10 @@ export function TrainTable({ config }: { config: TrainingConfig | null }) {
 
   return <main className={css.page}>
     <h1 className={css.title}>Train a model</h1>
-    <p className={css.lede}>Drop your examples, then put what it should decide on the right of the line.</p>
+    <p className={css.lede}>{data ? 'Put what it should decide on the right of the line.' : 'Start from past decisions in a file, or from the decisions your code already makes.'}</p>
 
+    <div className={data ? undefined : css.paths}>
+    {!data && <h2 className={css.pathTitle} id="path-file">Past decisions in a file</h2>}
     <section className={css.sheet} data-over={over} data-empty={!data} onDragOver={e => { e.preventDefault(); if (!locked) setOver(true); }} onDragLeave={() => setOver(false)} onDrop={drop} aria-label="Your examples" aria-busy={working}>
       {!data ? <div className={css.drop}>
         <Upload size={24} aria-hidden="true" />
@@ -151,8 +154,16 @@ export function TrainTable({ config }: { config: TrainingConfig | null }) {
       </>}
       {error && <p role="alert" className={css.error}>{error}</p>}
     </section>
+    {!data && <>
+      <h2 className={css.pathTitle} id="path-code">Decisions your code makes</h2>
+      <section className={css.codePath} aria-labelledby="path-code">
+        <p className={css.codeLede}>An LLM call that picks a label, a rule, a game or an agent choosing its next move. Your coding agent finds those decisions in your repository, logs real examples, measures Zils on them and trains a model where it falls short. It asks you before spending anything.</p>
+        <AgentSteps ask="Find the decisions in this repo that Zils could make, measure Zils on them, and train a model for any it misses." />
+      </section>
+    </>}
+    </div>
 
-    {!data && <p className={css.elsewhere}><Link href="/train/teach">No examples yet? Teach it by example</Link><Link href="/train/teach">Train on photos</Link><Link href="/train#train-with-your-agent">Decisions made in your code? Train with your coding agent</Link></p>}
+    {!data && <p className={css.elsewhere}><Link href="/train/teach">No examples yet? Teach it by example</Link><Link href="/train/teach">Train on photos</Link></p>}
 
     {data && ready && stage === 'edit' && <div className={css.bar}>
       <p className={css.summary} aria-live="polite">{ready.problem || <>Learns {columns.decide} ({answerLabel(ready.answer)}) from {list(columns.reads)}, using {examples(used)}.{ready.left > 0 && <> {fmt(ready.left)} left out: repeated, conflicting or empty.</>}</>}</p>
