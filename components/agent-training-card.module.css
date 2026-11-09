@@ -7,7 +7,7 @@
 .agents button { border: 0; background: transparent; color: var(--zs-t2); font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding: 10px 14px; cursor: pointer; }
 .agents button[aria-pressed=true] { background: var(--zs-fg); color: var(--zs-panel); }
 .agents button:focus-visible { outline: 2px solid var(--zs-peach); outline-offset: 2px; }
-.steps { display: grid; gap: 22px; }
+.steps { display: grid; gap: 22px; margin-top: 22px; }
 .step { display: grid; gap: 8px; min-width: 0; }
 .step > span { font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--zs-t3); }
 .ask { margin: 0; padding: 14px 18px; border: 1px solid var(--zs-line); background: var(--zs-raised); font-size: 16px; line-height: 1.5; color: var(--zs-fg); }

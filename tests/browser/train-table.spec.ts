@@ -96,3 +96,16 @@ test('photos and PDFs say where they go instead of failing', async ({ page }) =>
   await expect(examples.getByRole('alert')).toContainText('photo setup');
   await expect(page.getByRole('link', { name: 'Train on photos' })).toHaveAttribute('href', '/train/teach');
 });
+
+test('decisions made in code are a starting point of their own, through the coding agent', async ({ page }) => {
+  await workspace(page);
+  const code = page.getByRole('region', { name: 'Decisions your code makes' });
+  await expect(page.getByRole('heading', { name: 'Past decisions in a file' })).toBeVisible();
+  await expect(code).toContainText('claude mcp add zils -- npx -y @zils/cli mcp');
+  await expect(code).toContainText('Find the decisions in this repo that Zils could make, measure Zils on them, and train a model for any it misses.');
+  await code.getByRole('button', { name: 'Codex' }).click();
+  await expect(code).toContainText('codex mcp add zils -- npx -y @zils/cli mcp');
+  // Once a file is chosen, the page is about that file.
+  await page.getByLabel('Choose a file of examples').setInputFiles({ name: 'tickets.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
+  await expect(code).toHaveCount(0);
+});
