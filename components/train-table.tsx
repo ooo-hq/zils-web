@@ -11,6 +11,8 @@ import { answerLabel, guessColumns, readiness, type Columns } from '@/lib/train-
 import { TeachingSubmission } from '@/components/teaching-submission';
 import { AgentSteps } from '@/components/agent-training-card';
 import type { TrainingConfig } from '@/lib/training-config';
+import { PageHero, Section, workspacePage } from '@/components/workspace-page';
+import button from '@/components/site/site-button.module.css';
 import css from './train-table.module.css';
 
 const SHOWN = 6;
@@ -112,75 +114,86 @@ export function TrainTable({ config }: { config: TrainingConfig | null }) {
   };
   const used = ready ? ready.report.included : 0;
 
-  return <main className={css.page}>
-    <h1 className={css.title}>Train a model</h1>
-    <p className={css.lede}>{data ? 'Put what it should decide on the right of the line.' : 'Start from past decisions in a file, or from the decisions your code already makes.'}</p>
+  const pick = <>
+    <button type="button" className={`${button.b} ${button.primary}`} disabled={working} onClick={() => picker.current?.click()}>Choose a file</button>
+    <input ref={picker} type="file" hidden accept=".csv,.xlsx,.json,.jsonl,.ndjson" aria-label="Choose a file of examples" onChange={e => void read([...(e.target.files ?? [])])} />
+  </>;
+  const dropping = { onDragOver: (e: DragEvent) => { e.preventDefault(); if (!locked) setOver(true); }, onDragLeave: () => setOver(false), onDrop: drop };
 
-    <div className={data ? undefined : css.paths}>
-    {!data && <h2 className={css.pathTitle} id="path-file">Past decisions in a file</h2>}
-    <section className={css.sheet} data-over={over} data-empty={!data} onDragOver={e => { e.preventDefault(); if (!locked) setOver(true); }} onDragLeave={() => setOver(false)} onDrop={drop} aria-label="Your examples" aria-busy={working}>
-      {!data ? <div className={css.drop}>
-        <Upload size={24} aria-hidden="true" />
-        <p className={css.dropTitle}>Drop your examples here</p>
-        <p className={css.dropText}>A spreadsheet (CSV or Excel), JSON or JSON Lines: one example per row, with the right answer in one column.</p>
-        <div className={css.dropActions}><button className={css.secondary} disabled={working} onClick={() => picker.current?.click()}>Choose a file</button></div>
-        <input ref={picker} type="file" hidden accept=".csv,.xlsx,.json,.jsonl,.ndjson" aria-label="Choose a file of examples" onChange={e => void read([...(e.target.files ?? [])])} />
-        <p className={css.tryLine}>Or start from an example: <button className={css.inline} disabled={working} onClick={() => void example()}>Support tickets</button></p>
-      </div> : <>
-        <div className={css.sheetTop}>
-          <span className={css.fileName}>{file}</span>
-          {sheets.length > 1 && <select className={css.sheetPick} aria-label="Sheet" disabled={locked} onChange={e => show(sheets[Number(e.target.value)]?.data)}>{sheets.map((sheet, i) => <option key={sheet.name} value={i} disabled={!sheet.data}>{sheet.name}</option>)}</select>}
-          <span className={css.count}>{examples(data.rows.length)}</span>
-          {!locked && <button className={css.inline} onClick={() => { setData(null); setFile(''); setSheets([]); setStage('edit'); }}>Use other examples</button>}
-        </div>
-        <div className={css.tableWrap}>
-          <table className={css.table}>
-            <thead>
-              <tr className={css.sides}><th colSpan={Math.max(1, columns.reads.length)} scope="colgroup">It reads</th><th aria-hidden="true" className={css.seam} /><th scope="colgroup" className={css.decideHead}>It decides</th></tr>
-              <tr>{columns.reads.length ? columns.reads.map(header) : <th />}<th aria-hidden="true" className={css.seam} />{columns.decide ? header(columns.decide) : <th className={css.decideHead}><span className={css.colRole}>Choose a column</span></th>}</tr>
-            </thead>
-            <tbody>{data.rows.slice(0, SHOWN).map((row, i) => <tr key={i}>
-              {columns.reads.length ? columns.reads.map(c => <td key={c} className={css.seeCell} style={{ viewTransitionName: `c${i}-${slug(c) || 'col'}` }}><span className={css.clamp}>{value(row, c)}</span></td>) : <td />}
-              <td aria-hidden="true" className={css.seam} />
-              <td className={css.decideCell} style={columns.decide ? { viewTransitionName: `c${i}-${slug(columns.decide) || 'col'}` } : undefined}>{columns.decide ? value(row, columns.decide) : ''}</td>
-            </tr>)}</tbody>
-          </table>
-        </div>
-        {data.rows.length > SHOWN && <p className={css.more}>{fmt(data.rows.length - SHOWN)} more {data.rows.length - SHOWN === 1 ? 'example' : 'examples'}</p>}
-        <p className={css.unused}>{columns.group ? <>Rows with the same <button className={css.inline} disabled={locked} onClick={() => setMenu(m => m === columns.group ? null : columns.group)}>{columns.group}</button> stay together when testing.</> : 'Each row is a separate case.'}</p>
-        {menu === columns.group && columns.group && <div role="menu" className={css.menu} style={{ margin: '8px 20px 0' }}><button role="menuitem" onClick={() => assign(columns.group, 'reads')}>It reads this</button><button role="menuitem" onClick={() => assign(columns.group, 'unused')}>Don’t use it</button></div>}
-        {columns.unused.length > 0 && <p className={css.unused}>Not used: {columns.unused.map(c => <button key={c} className={css.inline} disabled={locked} onClick={() => assign(c, 'reads')}>{c}</button>)}</p>}
-        <p className={css.hint}>Click a column’s name to move it across the line, keep related rows together, or leave it out.</p>
-      </>}
-      {error && <p role="alert" className={css.error}>{error}</p>}
-    </section>
+  return <>
+    <PageHero title="Train a model" intro={data ? 'Put what it should decide on the right of the line.' : 'Start from past decisions in a file, or from the decisions your code already makes.'} />
+
     {!data && <>
-      <h2 className={css.pathTitle} id="path-code">Decisions your code makes</h2>
-      <section className={css.codePath} aria-labelledby="path-code">
-        <p className={css.codeLede}>An LLM call that picks a label, a rule, a game or an agent choosing its next move. Your coding agent finds those decisions in your repository, logs real examples, measures Zils on them and trains a model where it falls short. It asks you before spending anything.</p>
-        <AgentSteps ask="Find the decisions in this repo that Zils could make, measure Zils on them, and train a model for any it misses." />
-      </section>
+      <Section label="Start training" />
+      <div className={`${workspacePage.split} ${css.even}`}>
+        <div className={css.path}>
+          <h3 id="path-file">Past decisions in a file</h3>
+          <p className={css.sub}>A spreadsheet (CSV or Excel), JSON or JSON Lines, one example per row with the right answer in one column. You check what it reads and decides, then train.</p>
+          <section className={css.drop} data-over={over} aria-label="Your examples" aria-busy={working} {...dropping}>
+            <Upload size={22} strokeWidth={1.5} aria-hidden="true" />
+            <p className={css.dropTitle}>Drop the file here</p>
+            {pick}
+            <p className={css.try}>Or try it with <button type="button" className={css.inline} disabled={working} onClick={() => void example()}>support tickets</button>.</p>
+            {error && <p role="alert" className={css.error}>{error}</p>}
+          </section>
+        </div>
+        <section className={css.path} aria-labelledby="path-code">
+          <h3 id="path-code">Decisions your code makes</h3>
+          <p className={css.sub}>An LLM call that picks a label, a rule, a game or an agent choosing its next move. Your coding agent finds those decisions in your repository, logs real examples, measures Zils on them and trains a model where it falls short. It asks you before spending anything.</p>
+          <AgentSteps ask="Find the decisions in this repo that Zils could make, measure Zils on them, and train a model for any it misses." />
+        </section>
+      </div>
+      <Section label="Other ways in" />
+      <p className={css.ways}><Link href="/train/teach">No examples yet? Teach it by example</Link><Link href="/train/teach">Train on photos</Link></p>
     </>}
-    </div>
 
-    {!data && <p className={css.elsewhere}><Link href="/train/teach">No examples yet? Teach it by example</Link><Link href="/train/teach">Train on photos</Link></p>}
+    {data && <section aria-label="Your examples" aria-busy={working} {...dropping}>
+      <Section label="Your examples" action={!locked ? <button type="button" onClick={() => { setData(null); setFile(''); setSheets([]); setStage('edit'); }}>Use other examples</button> : undefined} />
+      <div className={css.fileLine}>
+        <span className={css.fileName}>{file}</span>
+        {sheets.length > 1 && <select className={css.sheetPick} aria-label="Sheet" disabled={locked} onChange={e => show(sheets[Number(e.target.value)]?.data)}>{sheets.map((sheet, i) => <option key={sheet.name} value={i} disabled={!sheet.data}>{sheet.name}</option>)}</select>}
+        <span className={css.count}>{examples(data.rows.length)}</span>
+      </div>
+      <div className={css.tableWrap}>
+        <table className={css.table}>
+          <thead>
+            <tr className={css.sides}><th colSpan={Math.max(1, columns.reads.length)} scope="colgroup">It reads</th><th aria-hidden="true" className={css.seam} /><th scope="colgroup" className={css.decideHead}>It decides</th></tr>
+            <tr>{columns.reads.length ? columns.reads.map(header) : <th />}<th aria-hidden="true" className={css.seam} />{columns.decide ? header(columns.decide) : <th className={css.decideHead}><span className={css.colRole}>Choose a column</span></th>}</tr>
+          </thead>
+          <tbody>{data.rows.slice(0, SHOWN).map((row, i) => <tr key={i}>
+            {columns.reads.length ? columns.reads.map(c => <td key={c} className={css.seeCell} style={{ viewTransitionName: `c${i}-${slug(c) || 'col'}` }}><span className={css.clamp}>{value(row, c)}</span></td>) : <td />}
+            <td aria-hidden="true" className={css.seam} />
+            <td className={css.decideCell} style={columns.decide ? { viewTransitionName: `c${i}-${slug(columns.decide) || 'col'}` } : undefined}>{columns.decide ? value(row, columns.decide) : ''}</td>
+          </tr>)}</tbody>
+        </table>
+      </div>
+      {data.rows.length > SHOWN && <p className={css.notes}>{fmt(data.rows.length - SHOWN)} more {data.rows.length - SHOWN === 1 ? 'example' : 'examples'}</p>}
+      <p className={css.notes}>{columns.group ? <>Rows with the same <button type="button" className={css.inline} disabled={locked} onClick={() => setMenu(m => m === columns.group ? null : columns.group)}>{columns.group}</button> stay together when testing.</> : 'Each row is a separate case.'}</p>
+      {menu === columns.group && columns.group && <div role="menu" className={css.menu}><button role="menuitem" onClick={() => assign(columns.group, 'reads')}>It reads this</button><button role="menuitem" onClick={() => assign(columns.group, 'unused')}>Don’t use it</button></div>}
+      {columns.unused.length > 0 && <p className={css.notes}>Not used: {columns.unused.map(c => <button type="button" key={c} className={css.inline} disabled={locked} onClick={() => assign(c, 'reads')}>{c}</button>)}</p>}
+      <p className={css.hint}>Click a column’s name to move it across the line, keep related rows together, or leave it out.</p>
+      {error && <p role="alert" className={css.error}>{error}</p>}
+    </section>}
 
     {data && ready && stage === 'edit' && <div className={css.bar}>
       <p className={css.summary} aria-live="polite">{ready.problem || <>Learns {columns.decide} ({answerLabel(ready.answer)}) from {list(columns.reads)}, using {examples(used)}.{ready.left > 0 && <> {fmt(ready.left)} left out: repeated, conflicting or empty.</>}</>}</p>
-      <button className={css.primary} disabled={Boolean(ready.problem)} onClick={train}>Train</button>
+      <button type="button" className={`${button.b} ${button.primary} ${css.train}`} disabled={Boolean(ready.problem)} onClick={train}>Train</button>
     </div>}
 
-    {data && ready && stage === 'review' && <section className={css.review} aria-label="Before training">
-      <h2>Train on {examples(used)}?</h2>
-      <p>It learns {columns.decide} ({answerLabel(ready.answer)}: {list(ready.outcomes.map(o => `“${o}”`))}) from {list(columns.reads)}.{ready.left > 0 && ` ${examples(ready.left)} are left out because they repeat, conflict or are empty.`}</p>
-      {used < 50 && <p>That’s a small set. A few hundred examples usually make a model you can rely on.</p>}
-      <label className={css.question}><span>The question it answers, shown to the model with each example</span><textarea rows={2} maxLength={1000} value={question} disabled={locked} onChange={e => setQuestion(e.target.value)} /></label>
-      {!locked && <div className={css.reviewActions}><button className={css.secondary} onClick={() => setStage('edit')}>Back</button></div>}
-      <TeachingSubmission config={config} onLock={setLocked} initialName={slug(`${file.replace(/\.[a-z]+$/i, '')}-${columns.decide}`).slice(0, 64)} prepare={async name => {
-        if (!question.trim()) throw new Error('Write the question it answers.');
-        const prepared = await prepareTraining(ready.report.data, ready.mapping, { name, question: question.trim(), outcomes: ready.outcomes }, ready.independent);
-        return { kind: 'text', files: prepared.files };
-      }} />
+    {data && ready && stage === 'review' && <section aria-label="Before training">
+      <Section label="Before training" />
+      <div className={css.review}>
+        <h3>Train on {examples(used)}?</h3>
+        <p>It learns {columns.decide} ({answerLabel(ready.answer)}: {list(ready.outcomes.map(o => `“${o}”`))}) from {list(columns.reads)}.{ready.left > 0 && ` ${examples(ready.left)} are left out because they repeat, conflict or are empty.`}</p>
+        {used < 50 && <p>That’s a small set. A few hundred examples usually make a model you can rely on.</p>}
+        <label className={css.question}><span>The question it answers, shown to the model with each example</span><textarea rows={2} maxLength={1000} value={question} disabled={locked} onChange={e => setQuestion(e.target.value)} /></label>
+        {!locked && <div className={css.back}><button type="button" className={`${button.b} ${button.secondary}`} onClick={() => setStage('edit')}>Back</button></div>}
+        <TeachingSubmission config={config} onLock={setLocked} initialName={slug(`${file.replace(/\.[a-z]+$/i, '')}-${columns.decide}`).slice(0, 64)} prepare={async name => {
+          if (!question.trim()) throw new Error('Write the question it answers.');
+          const prepared = await prepareTraining(ready.report.data, ready.mapping, { name, question: question.trim(), outcomes: ready.outcomes }, ready.independent);
+          return { kind: 'text', files: prepared.files };
+        }} />
+      </div>
     </section>}
-  </main>;
+  </>;
 }

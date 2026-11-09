@@ -10,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function NewTrainingPage() {
-  return <ConsoleShell><TrainTable config={trainingConfig()} /></ConsoleShell>;
+  return <ConsoleShell bleed><TrainTable config={trainingConfig()} /></ConsoleShell>;
 }
