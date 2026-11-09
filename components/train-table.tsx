@@ -152,7 +152,7 @@ export function TrainTable({ config }: { config: TrainingConfig | null }) {
       {error && <p role="alert" className={css.error}>{error}</p>}
     </section>
 
-    {!data && <p className={css.elsewhere}><Link href="/train/teach">No examples yet? Teach it by example</Link><Link href="/train/teach">Train on photos</Link></p>}
+    {!data && <p className={css.elsewhere}><Link href="/train/teach">No examples yet? Teach it by example</Link><Link href="/train/teach">Train on photos</Link><Link href="/train#train-with-your-agent">Decisions made in your code? Train with your coding agent</Link></p>}
 
     {data && ready && stage === 'edit' && <div className={css.bar}>
       <p className={css.summary} aria-live="polite">{ready.problem || <>Learns {columns.decide} ({answerLabel(ready.answer)}) from {list(columns.reads)}, using {examples(used)}.{ready.left > 0 && <> {fmt(ready.left)} left out: repeated, conflicting or empty.</>}</>}</p>

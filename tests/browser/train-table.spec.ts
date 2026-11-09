@@ -95,4 +95,8 @@ test('photos and PDFs say where they go instead of failing', async ({ page }) =>
   await page.getByLabel('Choose a file of examples').setInputFiles({ name: 'part.png', mimeType: 'image/png', buffer: Buffer.from('png') });
   await expect(examples.getByRole('alert')).toContainText('photo setup');
   await expect(page.getByRole('link', { name: 'Train on photos' })).toHaveAttribute('href', '/train/teach');
+  // Decisions made inside a program (a game, an agent) go through the user's coding agent, not a file upload.
+  await expect(page.getByRole('link', { name: 'Decisions made in your code? Train with your coding agent' })).toHaveAttribute('href', '/train#train-with-your-agent');
+  await page.goto('/train');
+  await expect(page.locator('#train-with-your-agent')).toContainText('Ask your coding agent to train it.');
 });

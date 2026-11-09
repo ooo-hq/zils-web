@@ -11,7 +11,7 @@ type Agent = keyof typeof AGENTS;
 /** The MCP path to training: one line adds Zils to the customer's agent, which then prepares the file and starts the run. */
 export function AgentTrainingCard() {
   const [agent, setAgent] = useState<Agent>('Claude Code');
-  return <section aria-label="Train with your agent">
+  return <section id="train-with-your-agent" aria-label="Train with your agent">
     <Section label="Train with your agent" />
     <div className={workspacePage.split}>
       <div className={css.head}>
