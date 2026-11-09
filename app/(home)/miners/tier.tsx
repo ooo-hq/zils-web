@@ -97,7 +97,7 @@ export function TierSoup({ tier, view, feed, queue, live }: { tier: Tier; view: 
   const tonight = view?.tonight ?? null;
   const serving = view?.serving;
   const served = later ? 'Opens later' : !view ? null : serving ? `Served by ${serving.served_by === 'zils' ? 'Zils' : 'miners'} as ${serving.release}` : 'Not served yet';
-  const note = later ? 'Its 25% share burns until it opens.' : feed ? 'Waiting for its first round.' : null;
+  const note = later ? 'Its 15% share burns until it opens.' : feed ? 'Waiting for its first round.' : null;
   return <article className={s.tier} aria-label={tier} data-state={later ? 'later' : tonight ? 'cooked' : 'waiting'}>
     <header className={s.head}>
       <div>

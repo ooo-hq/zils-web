@@ -121,15 +121,15 @@ export default async function MinersPage({ searchParams }: { searchParams: Promi
       <section aria-labelledby="earn-heading" className={b.earn}>
         <div className={b.earnHead}>
           <h2 id="earn-heading">How miners earn</h2>
-          <p>The four tiers share emissions equally, 25% each. Every tier pays five seats of 4% and a crown of 5%: 24 paid spots in all. Whatever nobody earns burns, including the whole share of a tier that has not opened.</p>
+          <p>Lite and mini get 25% of emissions each, flash and z3 15% each. In lite and mini a seat is 4% and a crown 5%; in flash and z3, 2.4% and 3%. Every tier pays five seats and a crown: 24 paid spots in all. Whatever nobody earns burns, including the whole share of a tier that has not opened.</p>
         </div>
         <ol className={s.roundSteps} aria-label="A round">
           <li><FoodIcon name="bowl" className={s.stepIcon} /><b>In the pot</b>The tier’s house models, the current members and the best new bodies, at most 20.</li>
           <li><FoodIcon name="ladle" className={s.stepIcon} /><b>Greedy</b>Start from the best single body. Add the next only if the soup scores 0.5 higher. Stop at five.</li>
-          <li><FoodIcon name="ticket" className={s.stepIcon} /><b>Pay</b>A seat (4%) for each miner body that lifts the soup by 0.8 or more; scouts re-uploading public models earn a quarter. The crown (5%) goes to a body that beats every house model and the soup alone by 1.2.</li>
+          <li><FoodIcon name="ticket" className={s.stepIcon} /><b>Pay</b>A seat for each miner body that lifts the soup by 0.8 or more; scouts re-uploading public models earn a quarter. The crown goes to a body that beats every house model and the soup alone by 1.2.</li>
           <li><FoodIcon name="flame" className={s.stepIcon} /><b>Burn</b>Anything unearned burns. House models are never paid.</li>
         </ol>
-        <p className={b.later}>Feature tracks and customer adapters do not pay yet. The <Link href="/miners/tracks/box">box track</Link> runs as a synthetic-only pilot.</p>
+        <p className={b.later}>Customer models pay from the other 20% of emissions: a miner who trains a customer’s open-tier model earns from what the customer pays to use it through the API, up to half of that spend. Until customers pay for that use, this share burns too. Feature tracks do not pay yet. The <Link href="/miners/tracks/box">box track</Link> runs as a synthetic-only pilot.</p>
         <div className={b.guide}>
           <p>The installer adds the <code>zils-miner</code> and <code>btcli</code> commands. <code>zils-miner setup</code> asks for your wallet and Hugging Face repo, then <code>zils-miner doctor</code> checks each step and prints the next command: register, train a body, then commit it with <code>zils-miner commit-body</code>. Training needs Linux x86_64 with an NVIDIA GPU. Rerun the installer to update.</p>
           <p><a href="https://docs.zils.ai/operations/soup">Soup guide</a>: what a body must be, how to commit it and how seats are paid. <a href="https://docs.zils.ai/operations/miner-tuning">Tune your miner</a>: prepare training data, change the recipe, and compare your body with the base before committing.</p>
