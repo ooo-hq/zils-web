@@ -71,6 +71,12 @@ button.train:disabled { opacity: .35; cursor: not-allowed; }
 .question textarea { font: inherit; font-size: 16px; padding: 12px 14px; border: 1px solid var(--zs-line); background: var(--zs-raised); color: var(--zs-fg); resize: vertical; }
 .question textarea:focus-visible { outline: 2px solid var(--zs-peach); outline-offset: 2px; }
 .back { margin: 8px 0 20px; }
+/* The run form's field styles sit under the older page's wrapper, which this page does not use. Low specificity, so
+   the tier cards keep their own layout. */
+:where(.review form) fieldset { border: 0; min-width: 0; padding: 0; margin: 0; }
+:where(.review form) label { display: block; margin: 0 0 8px; font-size: 13px; font-weight: 500; }
+:where(.review form) input:not([type=checkbox]):not([type=radio]), :where(.review form) select { display: block; width: 100%; min-width: 0; margin-bottom: 18px; font: inherit; font-size: 15px; padding: 10px 14px; border: 1px solid var(--zs-line); background: var(--zs-raised); color: var(--zs-fg); }
+:where(.review form) label:has(> input[type=checkbox]) { display: flex; align-items: flex-start; gap: 10px; margin: 10px 0; font-weight: 400; line-height: 1.5; }
 
 ::view-transition-group(*) { animation-duration: .32s; animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
 
