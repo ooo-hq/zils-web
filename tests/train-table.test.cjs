@@ -51,3 +51,10 @@ test('readiness builds the mapping, leaves out flagged rows and names the first 
   assert.match(readiness(few, { ...guess, group: '' }).problem, /needs at least 3 separate cases/);
   assert.equal(readiness(tickets, { ...guess, group: '' }).independent, true);
 });
+
+test('the run form on the table page lays out its fields', () => {
+  // The submission form's field styles live under the older page's wrapper, which the table page does not use.
+  const css = require('node:fs').readFileSync('components/train-table.module.css', 'utf8');
+  assert.match(css, /:where\(\.review form\) label[^{]*\{[^}]*display: block/);
+  assert.match(css, /:where\(\.review form\) input:not\(\[type=checkbox\]\):not\(\[type=radio\]\)[^{]*\{[^}]*display: block[^}]*border: 1px solid/);
+});
