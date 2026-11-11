@@ -43,7 +43,9 @@ function ModelRow({ job, bases }: { job: Job; bases?: BaseConfig | null }) {
   </li>;
 }
 
-export const readyModels = (jobs: Job[]) => jobs.filter(job => canDownload(job) && job.workflow?.state === 'ready' && job.workflow.model_id);
+/** The account's usable models, newest first. */
+export const readyModels = (jobs: Job[]) => jobs.filter(job => canDownload(job) && job.workflow?.state === 'ready' && job.workflow.model_id)
+  .sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''));
 
 export function TrainedModelLibrary({ jobs, bare = false, bases }: { jobs: Job[]; bare?: boolean; bases?: BaseConfig | null }) {
   const models = readyModels(jobs);

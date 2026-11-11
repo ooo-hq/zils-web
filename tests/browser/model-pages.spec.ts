@@ -324,3 +324,13 @@ test('long model names keep results and access controls readable on mobile', asy
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: '.private/model-page-long-mobile.png', fullPage: true });
 });
+
+test('the models list shows the newest model first', async ({ page }) => {
+  await fixture(page);
+  const older = { ...job, jev_comparison: null }, newer = { ...older, id: '00000000-0000-4000-8000-000000000003', name: 'refund-check', created_at: '2026-11-10T12:00:00Z', workflow: { ...job.workflow, model_id: 'refund-version', model_name: 'refund-check-v1' } };
+  await page.route('**/v1/jobs', route => route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: { jobs: [], models: [older, newer] } }));
+  await page.goto('/models');
+  const rows = page.getByRole('region', { name: 'Your models' }).getByRole('listitem');
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toContainText('refund-check');
+});
