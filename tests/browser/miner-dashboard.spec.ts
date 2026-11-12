@@ -71,6 +71,9 @@ test('a private link shows the miner where it stands, its report, its seats and 
   // The token leaves the address bar once read, and a reload still opens the page.
   expect(new URL(page.url()).hash).toBe('');
 
+  // The command for a fresh link sits in the header.
+  await expect(page.getByLabel('Dashboard command')).toHaveText('$ zils-miner dashboard');
+
   const now = page.getByRole('region', { name: 'Right now' });
   await expect(now).toContainText('UID 12');
   await expect(now).toContainText('z3-mini');
@@ -78,6 +81,7 @@ test('a private link shows the miner where it stands, its report, its seats and 
   await expect(now).toContainText('Paid seat');
 
   const report = page.getByRole('region', { name: 'Latest round report' });
+  await expect(report.getByRole('heading', { level: 2 })).toContainText('z3-mini');
   await expect(report).toContainText('d3-mini-2026-11-11');
   const seated = report.getByRole('article').filter({ hasText: sha('b').slice(0, 12) });
   await expect(seated).toContainText('Seated');
@@ -88,7 +92,6 @@ test('a private link shows the miner where it stands, its report, its seats and 
   await expect(missed).toContainText('Not selected');
   await expect(missed).toContainText('Next: Train where the soup is weak');
   await expect(missed.getByRole('row', { name: /Soup gain/ })).toContainText('needed +0.5');
-  await expect(report).toContainText('zils-miner dashboard');
 
   const seats = page.getByRole('region', { name: 'Seats and pay' });
   await expect(seats.getByRole('row').nth(1)).toContainText('2026-11-11');
