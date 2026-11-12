@@ -16,6 +16,9 @@ test('Training offers the commands to train with Claude Code or Codex', async ({
 
   const card = page.getByRole('region', { name: 'Train with your agent' });
   await expect(card).toBeVisible();
+  // It leads the page, above the first-run prompt and any runs.
+  const below = (await page.getByRole('heading', { name: 'Train your first model.' }).boundingBox())!.y;
+  expect((await card.boundingBox())!.y).toBeLessThan(below);
   await expect(card.getByRole('button', { name: 'Claude Code' })).toHaveAttribute('aria-pressed', 'true');
   await expect(card.getByLabel('Add Zils to your agent')).toHaveText('$ claude mcp add zils -- npx -y @zils/cli mcp');
   await expect(card.getByLabel('Sign in once')).toHaveText('$ npx -y @zils/cli login');
