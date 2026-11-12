@@ -8,7 +8,8 @@ const PORT = Number(process.env.ZILS_MINERS_TEST_PORT ?? 8999);
 let mode: 'ok' | 'fail' = 'ok';
 let server: Server;
 // GET /v1/network/bodies (ZIL-109): every uid with a soup body or a serving endpoint on chain.
-const chainBody = (pool: string, c: string, repo: string) => ({ pool, sha256: c.repeat(64), revision: 'f'.repeat(40), repo, block: 8300000 });
+// The commit block is years behind the head, so every body was committed before the dated rounds' deadlines on any run date.
+const chainBody = (pool: string, c: string, repo: string) => ({ pool, sha256: c.repeat(64), revision: 'f'.repeat(40), repo, block: 1000000 });
 const CHAIN = () => ({
   network: 'test', netuid: 579, block: 8351998, as_of: new Date().toISOString(),
   miners: [

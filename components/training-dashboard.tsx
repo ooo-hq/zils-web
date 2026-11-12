@@ -348,6 +348,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     {busy && cancellable && <button type="button" className={styles.secondary} onClick={() => operation.current?.abort()}>Stop upload</button>}
     {refreshError && !runId && history.length > 0 && !selected && <p role="status" className={workspacePage.notice}>Connection interrupted. Showing your last loaded runs; we’ll retry automatically.</p>}
     <div className={`${styles.workspace} ${workspacePage.stack}`}>
+      {!runId && !loading && <AgentTrainingCard />}
       {loading ? <WorkspaceLoading label={runId ? "Loading your training run" : "Loading your models and runs"} /> : !selected && (runId || !history.length) ? <section className={workspacePage.empty}>
         <Section label={runId ? 'Run details' : 'Get started'} />
         <h2>{runId ? 'Run unavailable' : refreshError ? 'Your runs could not be loaded.' : 'Train your first model.'}</h2>
@@ -378,7 +379,6 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
       </div> : null}
       {!runId && runRows(jobs.filter(job => job.id !== selected?.id && !terminal(job)), 'Other active runs')}
       {!runId && runRows(history.filter(job => terminal(job)), 'Run history')}
-      {!runId && !loading && <AgentTrainingCard />}
     </div>
     {!runId && imagesAvailable && config.decisionApiUrl && <details className={imageStyles.stockTest}><summary>Test images with the starting model</summary><p>Try a batch or a single photo. For a trained model, choose View model above.</p><ImageDecisionPanel owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storage={config.storage} /></details>}
     {intakeMode === 'choose' && <SheetContent className={`${styles.page} ${styles.trainingSheet}`}>

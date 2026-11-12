@@ -35,7 +35,8 @@ test('the bodies feed accepts chain rows and refuses anything malformed', () => 
 });
 
 test('each miner row says its tier and where its body stands in tonight’s soup', () => {
-  const rows = minerRows(valid(), soup);
+  // A fixed chain time: read at the current time, uid 5's commit drifts past the 4 Nov deadline and turns pending.
+  const rows = minerRows({ ...valid(), as_of: '2026-11-04T12:00:00Z' }, soup);
   assert.deepEqual(rows.map(r => [r.uid, r.tier, r.standing, r.serving]), [
     [1, 'z3-mini', 'crown', true],
     [5, 'z3-mini', 'out', false],
