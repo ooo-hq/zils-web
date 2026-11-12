@@ -1,0 +1,123 @@
+/* /miners/dashboard: one miner's private page, in the Zils system (zils-brand SYSTEM.md). Cells divided by 1 px
+   lines, headings and key numbers in text-1, everything else text-2 or text-3. The spectrum appears only on the
+   miner's own bars, the paid chip and the two large numerals; hatching is the soup it is compared with. */
+.hero code, .gate code, .now code, .codes, .table code, .notes code { font-family: var(--font-plex-mono), ui-monospace, monospace; }
+.now dt, .counts dt, .table th, .numbers th, .categories thead th, .codes, .links, .tag, .categories small, .pool h2 span {
+  font-family: var(--font-plex-mono), ui-monospace, monospace; font-weight: 400; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--zs-t3);
+}
+.loading { margin: 0; padding: 72px 40px; font-size: 15px; color: var(--zs-t2); }
+
+/* Headline, then the one action. */
+.hero { display: flex; justify-content: space-between; align-items: end; gap: 32px 48px; padding: 72px 40px 44px; border-bottom: 1px solid var(--zs-line); }
+.hero h1, .gate h1 { margin: 0; font-weight: 300; font-size: clamp(44px, 6vw, 84px); letter-spacing: -0.03em; line-height: .98; }
+.hotkey { margin: 16px 0 0; }
+.hotkey code { font-size: 13px; letter-spacing: .04em; color: var(--zs-t3); }
+.fresh { display: grid; gap: 14px; width: min(100%, 420px); flex: none; }
+.fresh p, .gate p { margin: 0; font-size: 15.5px; line-height: 1.55; color: var(--zs-t2); }
+.gate { display: grid; gap: 20px; max-width: 760px; padding: 72px 40px 80px; }
+.gate h1 { font-size: clamp(40px, 5.2vw, 68px); }
+.gate code { font-size: 13.5px; color: var(--zs-fg); }
+.links { display: flex; gap: 24px; }
+:is(.links, .quiet, .now, .notes) a { color: var(--zs-t2); text-decoration: underline; text-decoration-color: rgba(var(--zs-fg-rgb), .3); text-underline-offset: 3px; }
+:is(.links, .quiet, .now, .notes) a:hover { color: var(--zs-fg); }
+:is(.links, .quiet, .now, .notes) a:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 3px; }
+.quiet { margin: 0; padding: 28px 40px 32px; font-size: 15px; line-height: 1.55; color: var(--zs-t2); }
+
+/* Right now: one strip of cells; the standing is the key fact. */
+.now { display: grid; grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr)); margin: 0; border-bottom: 1px solid var(--zs-line); }
+.now > div { padding: 24px 24px 26px; border-left: 1px solid var(--zs-line); min-width: 0; }
+.now > div:first-child { padding-left: 40px; border-left: 0; }
+.now dd { margin: 10px 0 0; font-size: 15px; line-height: 1.4; color: var(--zs-t2); overflow-wrap: anywhere; }
+.now [data-key] dd { font-weight: 300; font-size: clamp(22px, 2.2vw, 30px); letter-spacing: -0.02em; line-height: 1.1; color: var(--zs-fg); }
+.now code { font-size: 12px; color: var(--zs-t3); }
+
+/* The report: per body, the verdict on the left and its evidence on the right. */
+.pool h2 { display: flex; align-items: baseline; gap: 14px; margin: 0; padding: 30px 40px 22px; font-weight: 300; font-size: clamp(28px, 3.2vw, 44px); letter-spacing: -0.025em; line-height: 1; border-bottom: 1px solid var(--zs-line); }
+.pool h2 span { letter-spacing: .08em; }
+.body { display: grid; grid-template-columns: 1fr 1.25fr; border-bottom: 1px solid var(--zs-line); }
+.verdict, .evidence { display: grid; gap: 14px; align-content: start; padding: 30px 40px 34px; min-width: 0; }
+.verdict { border-right: 1px solid var(--zs-line); }
+.body h3 { margin: 0; max-width: 24ch; font-weight: 300; font-size: clamp(22px, 2.3vw, 30px); letter-spacing: -0.02em; line-height: 1.15; color: var(--zs-fg); }
+.next { margin: 0; max-width: 46ch; font-size: 14.5px; line-height: 1.55; color: var(--zs-t2); }
+.codes { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 6px 0 0; letter-spacing: .06em; text-transform: none; font-size: 11px; }
+/* The answer tag: a square that fills with the spectrum when the body is seated, stays hatched while it waits or
+   sits unpaid or was left out, and takes the error colour when the body was refused. */
+.tag { display: inline-flex; align-items: center; gap: 10px; width: fit-content; margin: 0; padding: 6px 12px 6px 6px; border: 1px solid rgba(var(--zs-fg-rgb), .2); color: var(--zs-fg); }
+.tag i { width: 18px; height: 18px; border: 1px solid rgba(var(--zs-fg-rgb), .3); background: repeating-linear-gradient(135deg, rgba(var(--zs-fg-rgb), .3) 0 1px, transparent 1px 5px); }
+.tag[data-tone="good"] i { border: 0; background: var(--zs-spectrum); }
+.tag[data-stage="refused"] i { border-color: var(--zs-bad); background: var(--zs-bad); }
+.tag[data-stage="refused"] { color: var(--zs-bad); }
+
+.numbers, .categories { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.numbers :is(th, td), .categories :is(th, td) { padding: 12px 20px 12px 0; text-align: left; vertical-align: baseline; border-bottom: 1px solid var(--zs-line); }
+.numbers tbody th { letter-spacing: .08em; }
+.categories tbody th { font-weight: 400; font-size: 15px; color: var(--zs-t2); }
+.categories tr[data-behind] th { color: var(--zs-fg); }
+.numbers td { font-weight: 300; font-size: 24px; letter-spacing: -0.02em; color: var(--zs-fg); }
+.numbers td:last-child { padding-right: 0; text-align: right; font-family: var(--font-plex-mono), ui-monospace, monospace; font-weight: 400; font-size: 11.5px; letter-spacing: .04em; color: var(--zs-t3); }
+.categories thead th { padding-top: 6px; }
+.categories td { width: 34%; color: var(--zs-fg); }
+.categories td:last-child { padding-right: 0; }
+.categories small { display: block; margin-top: 4px; font-size: 9.5px; color: var(--zs-peach); }
+.score { display: grid; gap: 7px; font-weight: 300; font-size: 20px; letter-spacing: -0.02em; }
+.track { display: block; height: 6px; background: rgba(var(--zs-fg-rgb), .05); }
+.track i { display: block; height: 100%; transform-origin: left; }
+/* The bar is a window onto one spectrum laid across the whole track, so a longer bar reaches further into the cool end. */
+.track i[data-kind="yours"] { background: var(--zs-spectrum); background-size: calc(10000% / var(--score)) 100%; }
+.track i[data-kind="soup"] { background: repeating-linear-gradient(135deg, rgba(var(--zs-fg-rgb), .34) 0 1px, transparent 1px 5px); border-right: 1px solid rgba(var(--zs-fg-rgb), .4); }
+.categories td:last-child .score span { color: var(--zs-t2); }
+
+/* Seats and jobs: the key number on the left, the rows on the right. */
+.split { display: grid; grid-template-columns: 1fr 1.25fr; border-bottom: 1px solid var(--zs-line); }
+.split > .quiet { grid-column: 1 / -1; }
+.lead { display: grid; gap: 22px; align-content: start; padding: 34px 40px 38px; border-right: 1px solid var(--zs-line); min-width: 0; }
+.figure { margin: 0; font-size: 15px; line-height: 1.4; color: var(--zs-t2); }
+.figure b { display: block; width: fit-content; margin-bottom: 8px; font-weight: 200; font-size: clamp(88px, 10vw, 140px); letter-spacing: -0.05em; line-height: .85; font-variant-numeric: tabular-nums;
+  background: var(--zs-spectrum-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.counts { margin: 0; }
+.counts > div { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 14px 0; border-top: 1px solid var(--zs-line); }
+.counts dd { margin: 0; font-weight: 300; font-size: 24px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--zs-fg); }
+.table { width: 100%; align-self: start; border-collapse: collapse; font-size: 14.5px; font-variant-numeric: tabular-nums; }
+.table th { padding: 18px 20px 14px 0; text-align: left; border-bottom: 1px solid var(--zs-line); white-space: nowrap; }
+.table td { padding: 18px 20px 18px 0; border-bottom: 1px solid var(--zs-line); color: var(--zs-t2); }
+.table :is(th, td):first-child { padding-left: 40px; }
+.table :is(th, td):last-child { padding-right: 40px; }
+.table tbody tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover td { background: var(--zs-raised); }
+.table tr[data-paid] td { color: var(--zs-fg); }
+.table code { font-size: 12.5px; }
+.chip { display: inline-block; width: 10px; height: 10px; margin-right: 8px; background: var(--zs-spectrum); vertical-align: -1px; }
+
+.notes { display: grid; gap: 12px; max-width: 760px; }
+.notes p { margin: 0; font-size: 14.5px; line-height: 1.65; color: var(--zs-t2); }
+.notes b { font-weight: 500; color: var(--zs-fg); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .track i { animation: fill 1.2s cubic-bezier(.2, .7, .2, 1) both; }
+  @keyframes fill { from { transform: scaleX(0); } }
+}
+@media (max-width: 899px) {
+  .hero { flex-direction: column; align-items: flex-start; padding: 48px 4px 32px; }
+  .gate { padding: 48px 4px 56px; }
+  .loading, .quiet { padding-left: 4px; padding-right: 4px; }
+  .now { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .now > div, .now > div:first-child { padding: 18px 12px 20px 4px; border-left: 0; border-top: 1px solid var(--zs-line); }
+  .now > div:first-child { grid-column: 1 / -1; border-top: 0; }
+  .pool h2 { flex-wrap: wrap; padding: 26px 4px 18px; }
+  .body, .split { grid-template-columns: 1fr; }
+  .verdict, .evidence, .lead { padding: 26px 4px 28px; }
+  .verdict, .lead { border-right: 0; border-bottom: 1px solid var(--zs-line); }
+  .table :is(th, td):first-child { padding-left: 4px; }
+  .table :is(th, td):last-child { padding-right: 4px; }
+}
+@media (max-width: 699px) {
+  /* Rows stack as labelled cards, as on /miners. */
+  .table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .table, .table tbody, .table tr, .table td { display: block; }
+  .table tr { padding: 12px 4px; border-bottom: 1px solid var(--zs-line); }
+  .table tbody tr:last-child { border-bottom: 0; }
+  .table td, .table :is(th, td):first-child, .table :is(th, td):last-child { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: baseline; padding: 4px 0; border: 0; }
+  .table td::before { content: attr(data-label); font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-t3); }
+  .table tbody tr:hover td { background: none; }
+  .categories :is(th, td) { padding-right: 12px; }
+}
