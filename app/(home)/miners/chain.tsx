@@ -5,7 +5,7 @@ import { sortHref, type Line, type MinerRow, type MinerSort, type NetworkBodies,
 type Page = { rows: MinerRow[]; page: number; pages: number; total: number; from: number; to: number };
 import s from './board.module.css';
 
-const STANDING: Record<Standing, string> = {
+export const STANDING: Record<Standing, string> = {
   crown: 'Crown', seat: 'Paid seat', unpaid: 'In the soup, unpaid', out: 'Not in tonight’s soup',
   pending: 'Committed after the deadline, graded in the next round', waiting: 'Waiting for the first round',
   unknown: '—', none: 'No body committed',

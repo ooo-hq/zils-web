@@ -1,0 +1,70 @@
+/* /miners/dashboard: one miner's private page. Site tokens, hairlines and plain type, like /miners; the only colour
+   is the mark on a report body's stage and the spectrum chip on a paid row. */
+.mono, .fine code, .hero code, .gate code, .body code, .table code, .now code { font-family: var(--font-plex-mono), ui-monospace, monospace; }
+.loading { margin: 0; padding: 60px 40px; font-size: 15px; color: var(--zs-t2); }
+
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: 24px 48px; align-items: end; padding: 44px 40px 36px; border-bottom: 1px solid var(--zs-line); }
+.hero h1, .gate h1 { margin: 0; font-weight: 300; font-size: clamp(36px, 4.6vw, 60px); letter-spacing: -0.035em; line-height: 1; }
+.hero p { margin: 14px 0 0; }
+.hero code { font-size: 14px; color: var(--zs-t2); }
+.gate { display: grid; gap: 16px; max-width: 720px; padding: 56px 40px 64px; }
+.gate p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--zs-t2); }
+.gate code { font-size: 13.5px; color: var(--zs-fg); }
+
+.section { display: grid; gap: 18px; padding: 28px 40px 34px; border-bottom: 1px solid var(--zs-line); }
+.fine { margin: 0; max-width: 92ch; font-size: 12.5px; line-height: 1.6; color: var(--zs-t2); }
+.hero .fine { margin: 0; }
+.fine code { font-size: 12px; color: var(--zs-fg); }
+.quiet { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--zs-fg); }
+:is(.fine, .quiet, .now, .gate) a { color: var(--zs-fg); text-decoration: underline; text-decoration-color: rgba(var(--zs-fg-rgb), .3); text-underline-offset: 3px; }
+:is(.fine, .quiet, .now, .gate) a:hover { text-decoration-color: currentColor; }
+:is(.fine, .quiet, .now, .gate) a:focus-visible { outline: 2px solid var(--zs-orange); outline-offset: 3px; }
+.total { margin: 0; font-weight: 300; font-size: clamp(20px, 2.2vw, 26px); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+
+/* Right now: one line of facts per uid. */
+.now { display: grid; grid-template-columns: repeat(5, minmax(0, auto)); justify-content: start; gap: 14px 44px; margin: 0; }
+.now dt, .numbers th, .table th, .codes { font-family: var(--font-plex-mono), ui-monospace, monospace; font-weight: 400; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--zs-t3); }
+.now dd { margin: 6px 0 0; font-size: 15px; color: var(--zs-fg); overflow-wrap: anywhere; }
+.now code { font-size: 12.5px; color: var(--zs-t2); }
+
+/* The report: one card per body, its stage marked on the left edge. */
+.pool { display: grid; gap: 12px; }
+.pool h2 { margin: 0; font-weight: 300; font-size: 24px; letter-spacing: -0.02em; }
+.pool h2 span { margin-left: 8px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; letter-spacing: 0; color: var(--zs-t2); }
+.body { display: grid; gap: 10px; padding: 18px 20px; border: 1px solid var(--zs-line); border-left: 3px solid var(--zs-t3); background: var(--zs-raised); }
+.body[data-tone="good"] { border-left-color: #4fb37a; }
+.body[data-tone="warn"] { border-left-color: var(--zs-orange); }
+.body[data-tone="bad"] { border-left-color: #e0606b; }
+.body h3 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin: 0; font-weight: 400; font-size: 17px; }
+.body h3 code { font-size: 12.5px; color: var(--zs-t2); }
+.body p { margin: 0; max-width: 78ch; font-size: 14.5px; line-height: 1.55; color: var(--zs-fg); }
+.body .next { color: var(--zs-t2); }
+.body .codes { letter-spacing: .06em; text-transform: none; font-size: 11.5px; color: var(--zs-t3); }
+.numbers { border-collapse: collapse; width: max-content; max-width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+.numbers :is(th, td) { padding: 5px 28px 5px 0; text-align: left; vertical-align: baseline; }
+.numbers td { color: var(--zs-fg); }
+.numbers td:last-child { color: var(--zs-t2); padding-right: 0; }
+.numbers tbody th { text-transform: none; letter-spacing: 0; font-family: inherit; font-size: 14px; color: var(--zs-t2); }
+.numbers tr[data-behind] :is(th, td) { color: var(--zs-fg); }
+.behind { margin-left: 12px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-orange); }
+
+/* Seats and jobs: plain tables. */
+.scroll { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.table th { padding: 10px 24px 10px 0; text-align: left; border-bottom: 1px solid var(--zs-line); white-space: nowrap; }
+.table td { padding: 12px 24px 12px 0; border-bottom: 1px solid var(--zs-line); color: var(--zs-t2); white-space: nowrap; }
+.table tr[data-paid] td { color: var(--zs-fg); }
+.table tr[data-paid] td:first-child::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 8px; background: var(--zs-spectrum); }
+.table code { font-size: 12.5px; }
+
+@media (max-width: 899px) {
+  .hero { grid-template-columns: 1fr; padding: 32px 4px 26px; }
+  .gate { padding: 40px 4px 48px; }
+  .section { padding: 24px 4px 28px; }
+  .loading { padding: 40px 4px; }
+  .now { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 20px; }
+}
+@media (max-width: 499px) {
+  .body { padding: 14px; }
+  .numbers :is(th, td) { padding-right: 14px; }
+}
