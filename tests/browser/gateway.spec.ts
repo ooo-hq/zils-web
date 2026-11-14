@@ -120,23 +120,39 @@ test('an account without a relay sees no address and no switch', async ({ page }
   await expect(page.getByRole('region', { name: 'Setup' })).toHaveCount(0);
 });
 
-test('shows whether requests have come through, and ready-made setup lines', async ({ page }) => {
+test('shows whether requests have come through, and a card for each tool that opens into copy-ready steps', async ({ page }) => {
   await signIn(page);
   await answer(page, 200, { relay: true, saving_since: null, questions_total: 0, questions: [] });
   await relay(page, null, relayId, { requests: 0, last_request_at: null });
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('/gateway');
   const setup = page.getByRole('region', { name: 'Setup' });
   await expect(setup.getByText('No request has come through this address yet.')).toBeVisible();
   const address = `http://127.0.0.1:8999/relay/${relayId}/v1`;
-  await expect(setup.getByText(`OPENAI_BASE_URL=${address}`)).toBeVisible();
-  await setup.getByRole('tab', { name: 'Python' }).click();
-  await expect(setup.getByText(`OpenAI(base_url="${address}")`)).toBeVisible();
-  // Highlighted: the address is marked as a string and the import as a keyword, and the text is unchanged.
-  await expect(setup.locator('pre .token.string')).toHaveText(`"${address}"`);
-  await expect(setup.locator('pre .token.keyword').first()).toHaveText('from');
-  await expect(setup.locator('pre')).toHaveText(`from openai import OpenAI\n\nclient = OpenAI(base_url="${address}")`);
-  await setup.getByRole('tab', { name: 'TypeScript' }).click();
-  await expect(setup.getByText(`new OpenAI({ baseURL: '${address}' })`)).toBeVisible();
+  for (const name of ['OpenAI Python', 'OpenAI Node', 'cURL', 'LangChain', 'Vercel AI SDK', 'LlamaIndex', 'Instructor']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
+  // Closed until asked for: no code on the page yet.
+  await expect(setup.locator('pre')).toHaveCount(0);
+
+  const python = setup.getByRole('button', { name: /^OpenAI Python/ });
+  await python.click();
+  await expect(python).toHaveAttribute('aria-expanded', 'true');
+  const steps = setup.getByRole('region', { name: 'OpenAI Python setup' });
+  await expect(steps.getByText('Point the client at your gateway')).toBeVisible();
+  await expect(steps.getByText('Ask for an answer from a fixed list')).toBeVisible();
+  await expect(steps.locator('pre')).toHaveCount(2);
+  // Highlighted: the address is marked as a string and the import as a keyword.
+  await expect(steps.locator('pre').first().locator('.token.string')).toHaveText(`"${address}"`);
+  await expect(steps.locator('pre').first().locator('.token.keyword').first()).toHaveText('from');
+  await steps.getByRole('button', { name: 'Copy step 1' }).click();
+  await expect(steps.getByRole('button', { name: 'Copy step 1' })).toHaveText(/Copied/);
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(`client = OpenAI(base_url="${address}")`);
+
+  // One card open at a time; a tool whose default call is not collected says so.
+  await setup.getByRole('button', { name: /^Instructor/ }).click();
+  await expect(python).toHaveAttribute('aria-expanded', 'false');
+  await expect(setup.getByRole('region', { name: 'Instructor setup' }).getByText(/default mode sends a tool call/)).toBeVisible();
+  await setup.getByRole('button', { name: /^Instructor/ }).click();
+  await expect(setup.locator('pre')).toHaveCount(0);
 
   await relay(page, null, relayId, { requests: 3026, last_request_at: '2026-11-14T20:00:00+00:00' });
   await page.reload();
