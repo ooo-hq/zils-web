@@ -1,0 +1,11 @@
+/* /gateway: one section per question; saved messages on the left, the shadow model's comparison on the right. */
+.quote { margin: 16px 0 0; max-width: 44ch; font-size: 15px; line-height: 1.5; color: var(--zs-t2); overflow-wrap: anywhere; }
+.model { display: block; margin-top: 10px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12px; color: var(--zs-t2); overflow-wrap: anywhere; }
+.tableWrap { overflow-x: auto; margin-top: 20px; }
+.table { width: 100%; min-width: 330px; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
+.table th, .table td { padding: 14px 12px 14px 0; border-bottom: 1px solid var(--zs-line); text-align: right; white-space: nowrap; }
+.table th:first-child { text-align: left; font-weight: 400; }
+.table td:last-child, .table th:last-child { padding-right: 0; }
+.table thead th { padding-top: 0; padding-bottom: 12px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; font-weight: 400; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-t3); white-space: normal; }
+.shadow + .shadow { margin-top: 40px; }
+.message { padding: 36px 0 48px; max-width: 56ch; font-size: 15px; line-height: 1.55; color: var(--zs-t2); }
