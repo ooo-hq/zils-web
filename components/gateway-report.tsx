@@ -24,7 +24,7 @@ function Question({ question, number }: { question: RelayQuestion; number: numbe
       <div>
         <p className={workspacePage.label}>Saved messages</p>
         <span className={workspacePage.amount}>{question.rows.toLocaleString()}</span>
-        <p className={styles.quote}>“{question.instructions}”</p>
+        <p className={styles.quote}>“{question.instructions || Object.keys(question.fields).join(', ')}”</p>
         <p className={workspacePage.fine}>{Object.entries(question.fields).map(([name, values]) => answers(name, values)).join(' · ')}</p>
         {question.last_at && <p className={workspacePage.fine}>Last saved {when(question.last_at)}</p>}
       </div>
@@ -65,12 +65,14 @@ function ToolSteps({ tool, address }: { tool: GatewayTool; address: string }) {
 
 type Collect = (on: boolean, termsVersion?: string) => Promise<void>;
 
-/** The address to point an OpenAI client at, and the account's own switch for saving what passes through. */
+/** The address to point the provider's client at, and the account's own switch for saving what passes through. */
 function Setup({ status, address, collect }: { status: RelayStatus; address: string; collect: Collect }) {
   const [agreed, setAgreed] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState('');
+  const provider = gatewayProviders.find(known => known.id === status.provider) ?? gatewayProviders[0];
+  const jev = provider.id === 'jev';
   const change = (on: boolean) => { setBusy(true); void collect(on, on ? status.terms_version : undefined).finally(() => { setBusy(false); setConfirming(false); setAgreed(false); }); };
   return <section aria-labelledby="gateway-setup">
     <Section label="Setup" id="gateway-setup" />
@@ -78,7 +80,7 @@ function Setup({ status, address, collect }: { status: RelayStatus; address: str
       <div>
         <p className={workspacePage.label}>Your gateway address</p>
         <code className={styles.address}>{address}</code>
-        <p className={workspacePage.sub}>Set it as the base URL of your OpenAI client. Your app keeps its own provider key and always gets your provider’s answer.</p>
+        <p className={workspacePage.sub}>Set it as the base URL of your {provider.name} client. Your app keeps its own provider key and always gets your provider’s answer.</p>
         <p className={`${workspacePage.label} ${styles.requests}`}>Requests</p>
         <p className={workspacePage.sub}>{status.requests === 0 ? 'No request has come through this address yet.' : `${status.requests.toLocaleString()} ${status.requests === 1 ? 'request has' : 'requests have'} passed through.`}{status.requests > 0 && status.last_request_at && ` Last one around ${when(status.last_request_at)}.`}</p>
         {status.requests === 0 && <p className={workspacePage.fine}>Send any request from your app, wait a few seconds, then refresh. Only requests your provider answered are counted.</p>}
@@ -95,7 +97,7 @@ function Setup({ status, address, collect }: { status: RelayStatus; address: str
         </> : <>
           <p className={workspacePage.sub}>Collection is off. Requests pass through and only their number is kept.</p>
           <ul className={styles.terms}>
-            <li>When collection is on, Zils saves each request that asks for an answer from a fixed list, together with your provider’s answer. Other requests are not saved.</li>
+            <li>{jev ? 'When collection is on, Zils saves each yes/no and choice question your app asks, with the content it was asked about, your provider’s answer and how sure your provider was of each answer. Score and box questions and requests with images are not saved.' : 'When collection is on, Zils saves each request that asks for an answer from a fixed list, together with your provider’s answer. Other requests are not saved.'}</li>
             <li>Your provider key is used to pass the request on and is never saved.</li>
             <li>Saved messages are used to train and measure models for this account only.</li>
             <li>A saved message is deleted 90 days after it was last sent. Stopping collection deletes all of them at once.</li>
@@ -107,9 +109,9 @@ function Setup({ status, address, collect }: { status: RelayStatus; address: str
     </div>
     <div className={styles.connect}>
       <p className={workspacePage.label}>Connect your app</p>
-      <div role="group" aria-label="Provider" className={styles.providers}>{gatewayProviders.map(provider => <button key={provider.id} className={styles.provider} aria-pressed={provider.supported} disabled={!provider.supported}>{provider.name}{!provider.supported && <span className={styles.tag}>Not yet</span>}</button>)}</div>
-      <p className={workspacePage.sub}>The gateway passes requests on to OpenAI today. Choose what your app uses to call it. Each one shows where the address goes and how to ask for an answer from a fixed list, which is what the gateway collects.</p>
-      {gatewayTools(address).map(group => {
+      <div role="group" aria-label="Provider" className={styles.providers}>{gatewayProviders.map(known => <button key={known.id} className={styles.provider} aria-pressed={known.id === provider.id} disabled={known.id !== provider.id}>{known.name}{known.id !== provider.id && <span className={styles.tag}>On request</span>}</button>)}</div>
+      <p className={workspacePage.sub}>This address passes requests on to {provider.name}. Ask us if it should go to another provider. Choose what your app uses to call {provider.name}. {jev ? 'Each one shows where the address goes. A Jev question already has fixed answers, so every yes/no and choice question is collected.' : 'Each one shows where the address goes and how to ask for an answer from a fixed list, which is what the gateway collects.'}</p>
+      {gatewayTools(address, provider.id).map(group => {
         const shown = group.tools.find(tool => tool.id === open);
         return <div key={group.label} className={styles.group}>
           <div className={styles.groupHead}><h3>{group.label}</h3><p>{group.intro}</p></div>
@@ -163,7 +165,7 @@ function Report({ client, apiUrl, relayUrl, onExpired }: { client: SupabaseClien
   return <div>
     <PageHero title="Gateway" intro={INTRO} />
     {error && <p className={workspacePage.notice} role="alert">{error}</p>}
-    {status?.relay_id && <Setup status={status} address={relayAddress(relayUrl, status.relay_id)} collect={collect} />}
+    {status?.relay_id && <Setup status={status} address={relayAddress(relayUrl, status.relay_id, status.provider)} collect={collect} />}
     {!report ? <><Section label="Report" action={!loading && refresh} /><p className={styles.message} role="status">{loading ? 'Loading your report…' : 'Refresh to try again.'}</p></>
       : !report.relay ? <><Section label="Not set up" /><p className={styles.message}>The gateway is not set up for this account yet.</p></>
       : report.questions.length === 0 ? <><Section label="Questions" action={refresh} /><p className={styles.message}>No questions yet. {report.saving_since

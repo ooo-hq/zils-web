@@ -2,10 +2,13 @@ export type ToolLanguage = 'python' | 'javascript' | 'bash';
 export type GatewayToolStep = { title: string; label: string; language: ToolLanguage; code: string };
 export type GatewayTool = { id: string; name: string; tag: string; blurb: string; steps: GatewayToolStep[]; note?: string; checked: string };
 
-/** The providers the gateway can forward to. Every tool card below is a way of calling the supported one. */
-export const gatewayProviders = [
-  { id: 'openai', name: 'OpenAI', supported: true },
-  { id: 'jev', name: 'Jev', supported: false },
+export type GatewayProvider = 'openai' | 'jev';
+type GatewayToolGroup = { label: string; intro: string; tools: GatewayTool[] };
+
+/** The providers a gateway address can pass requests on to. An address goes to one of them. */
+export const gatewayProviders: { id: GatewayProvider; name: string }[] = [
+  { id: 'openai', name: 'OpenAI' },
+  { id: 'jev', name: 'Jev' },
 ];
 
 // The example question every card asks. The model is the caller's own: any name their provider accepts.
@@ -21,9 +24,10 @@ const ZOD_TICKET = `z.object({ intent: z.enum(['refund', 'shipping', 'other']) }
  * How to send an app's fixed-answer questions through the gateway, per tool. Each tool's steps, joined
  * in order, are one program that was run against the relay's own decision reader with the package
  * versions in `checked`: the request it sends is one the gateway collects. The provider key is left
- * to the app's environment, as it is today.
+ * to the app's environment, as it is today. For Jev the address is the API root, without /v1.
  */
-export function gatewayTools(address: string): { label: string; intro: string; tools: GatewayTool[] }[] {
+export function gatewayTools(address: string, provider: GatewayProvider = 'openai'): GatewayToolGroup[] {
+  if (provider === 'jev') return jevTools(address);
   const point = 'Point the client at your gateway';
   const ask = 'Ask for an answer from a fixed list';
   return [
@@ -150,6 +154,69 @@ reply = client.chat.completions.create(
     ],
 )
 print(reply.intent)` },
+      ] },
+    ] },
+  ];
+}
+
+// The Jev libraries compress a request of 1 KB or more unless told not to.
+const UNCOMPRESSED = 'Jev’s library compresses larger requests by default. A compressed request passes through the gateway but is not collected. Turn compression off as shown.';
+
+/** The same for an app that calls Jev: its questions already have fixed answers, so every yes/no and choice question is collected. */
+function jevTools(address: string): GatewayToolGroup[] {
+  const point = 'Point the client at your gateway';
+  const ask = 'Ask a question as you do today';
+  return [
+    { label: 'SDKs', intro: 'Call Jev as you do today, through the gateway.', tools: [
+      { id: 'jev-python', name: 'Jev Python', tag: 'System One', blurb: 'The official Python library.', checked: 'typesafe-sdk 0.7', note: UNCOMPRESSED, steps: [
+        { title: point, label: 'Python', language: 'python', code: `from typesafe_sdk import Choice, TypeSafeClient
+
+client = TypeSafeClient(
+    base_url="${address}",
+    compression=False,
+)` },
+        { title: ask, label: 'Python', language: 'python', code: `response = client.system_one(
+    state="${SAID}",
+    questions={
+        "intent": Choice(
+            instructions="${ASK}",
+            criteria={"refund": None, "shipping": None, "other": None},
+        ),
+    },
+)
+print(response.answers["intent"].choice)` },
+      ] },
+      { id: 'jev-javascript', name: 'Jev JavaScript', tag: 'System One', blurb: 'The official JavaScript and TypeScript library.', checked: '@typesafe-ai/sdk 0.7', note: UNCOMPRESSED, steps: [
+        { title: point, label: 'TypeScript', language: 'javascript', code: `import { choice, TypeSafeClient } from '@typesafe-ai/sdk';
+
+const client = new TypeSafeClient({
+  baseURL: '${address}',
+  compression: false,
+});` },
+        { title: ask, label: 'TypeScript', language: 'javascript', code: `const response = await client.systemOne({
+  state: '${SAID}',
+  questions: {
+    intent: choice('${ASK}', { refund: null, shipping: null, other: null }),
+  },
+});
+console.log(response.answers.intent.choice);` },
+      ] },
+      { id: 'jev-curl', name: 'cURL', tag: 'System One', blurb: 'The raw request, for any language or a quick test from a terminal.', checked: 'curl 8', steps: [
+        { title: 'Set your gateway address', label: 'Bash', language: 'bash', code: `export ZILS_GATEWAY="${address}"` },
+        { title: ask, label: 'Bash', language: 'bash', code: `curl -s "$ZILS_GATEWAY/v1/systemone" \\
+  -H "Authorization: Bearer $TYPESAFE_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "jev-latest",
+    "state": "${SAID}",
+    "questions": {
+      "intent": {
+        "type": "choice",
+        "instructions": "${ASK}",
+        "criteria": {"refund": null, "shipping": null, "other": null}
+      }
+    }
+  }'` },
       ] },
     ] },
   ];
