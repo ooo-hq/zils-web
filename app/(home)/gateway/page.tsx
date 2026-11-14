@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default function GatewayPage() {
   const config = trainingConfig();
   return <ConsoleShell bleed className={styles.page}>
-    {config?.decisionApiUrl ? <GatewayReportPage auth={{ url: config.url, key: config.key }} apiUrl={config.decisionApiUrl} />
+    {config?.decisionApiUrl ? <GatewayReportPage auth={{ url: config.url, key: config.key }} apiUrl={config.decisionApiUrl} relayUrl={config.apiUrl} />
       : <PageHero title="Gateway" intro="The gateway report is not configured here yet. This environment is not connected to the Zils API." />}
   </ConsoleShell>;
 }

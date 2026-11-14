@@ -9,3 +9,10 @@
 .table thead th { padding-top: 0; padding-bottom: 12px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; font-weight: 400; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-t3); white-space: normal; }
 .shadow + .shadow { margin-top: 40px; }
 .message { padding: 36px 0 48px; max-width: 56ch; font-size: 15px; line-height: 1.55; color: var(--zs-t2); }
+.address { display: block; margin: 18px 0 16px; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; user-select: all; }
+.terms { margin: 18px 0 0; padding-left: 18px; list-style: disc; max-width: 56ch; font-size: 14px; line-height: 1.55; color: var(--zs-t2); }
+.terms li + li { margin-top: 8px; }
+.agree { display: flex; align-items: flex-start; gap: 10px; margin-top: 20px; max-width: 56ch; font-size: 14px; line-height: 1.5; }
+.agree input { flex: 0 0 16px; width: 16px; height: 16px; margin: 3px 0 0; }
+.agree span { min-width: 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
