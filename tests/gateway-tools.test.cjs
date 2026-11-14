@@ -36,7 +36,7 @@ test('providers: the gateway passes requests on to OpenAI or Jev', () => {
   assert.deepEqual(gatewayProviders.map(provider => [provider.id, provider.name]), [['openai', 'OpenAI'], ['jev', 'Jev']]);
 });
 
-test('a Jev account gets the Jev libraries, pointed at the gateway root with compression off', () => {
+test('a Jev account gets the Jev libraries, pointed at the gateway root and otherwise left alone', () => {
   const root = 'https://training.example/relay/' + 'r'.repeat(40);
   const jev = gatewayTools(root, 'jev');
   assert.deepEqual(jev.map(group => [group.label, group.tools.map(tool => tool.name)]), [['SDKs', ['Jev Python', 'Jev JavaScript', 'cURL']]]);
@@ -46,8 +46,9 @@ test('a Jev account gets the Jev libraries, pointed at the gateway root with com
     assert.ok(code.includes(root) && !code.includes(root + '/v1"') && !code.includes(root + "/v1'"), tool.name);
     assert.match(code, /refund.*shipping.*other/s, tool.name);
     assert.doesNotMatch(code, /apikey_|api_key\s*=|apiKey\s*:/, tool.name);
-    // The libraries compress larger requests unless told not to, and a compressed request is not collected.
-    if (tool.id !== 'jev-curl') { assert.match(code, /compression\s*[=:]\s*[Ff]alse/, tool.name); assert.match(tool.note, /compress/, tool.name); }
+    // The gateway reads the compressed requests the libraries send by default: nothing else to set.
+    assert.doesNotMatch(code, /compression/, tool.name);
+    assert.equal(tool.note, undefined, tool.name);
   }
   assert.match(jev[0].tools[2].steps[1].code, /\$ZILS_GATEWAY\/v1\/systemone/);
   assert.equal(new Set([...tools, ...jev.flatMap(group => group.tools)].map(tool => tool.id)).size, tools.length + 3);
