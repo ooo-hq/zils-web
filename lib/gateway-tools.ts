@@ -159,22 +159,16 @@ print(reply.intent)` },
   ];
 }
 
-// The Jev libraries compress a request of 1 KB or more unless told not to.
-const UNCOMPRESSED = 'Jev’s library compresses larger requests by default. A compressed request passes through the gateway but is not collected. Turn compression off as shown.';
-
 /** The same for an app that calls Jev: its questions already have fixed answers, so every yes/no and choice question is collected. */
 function jevTools(address: string): GatewayToolGroup[] {
   const point = 'Point the client at your gateway';
   const ask = 'Ask a question as you do today';
   return [
     { label: 'SDKs', intro: 'Call Jev as you do today, through the gateway.', tools: [
-      { id: 'jev-python', name: 'Jev Python', tag: 'System One', blurb: 'The official Python library.', checked: 'typesafe-sdk 0.7', note: UNCOMPRESSED, steps: [
+      { id: 'jev-python', name: 'Jev Python', tag: 'System One', blurb: 'The official Python library.', checked: 'typesafe-sdk 0.7', steps: [
         { title: point, label: 'Python', language: 'python', code: `from typesafe_sdk import Choice, TypeSafeClient
 
-client = TypeSafeClient(
-    base_url="${address}",
-    compression=False,
-)` },
+client = TypeSafeClient(base_url="${address}")` },
         { title: ask, label: 'Python', language: 'python', code: `response = client.system_one(
     state="${SAID}",
     questions={
@@ -186,13 +180,10 @@ client = TypeSafeClient(
 )
 print(response.answers["intent"].choice)` },
       ] },
-      { id: 'jev-javascript', name: 'Jev JavaScript', tag: 'System One', blurb: 'The official JavaScript and TypeScript library.', checked: '@typesafe-ai/sdk 0.7', note: UNCOMPRESSED, steps: [
+      { id: 'jev-javascript', name: 'Jev JavaScript', tag: 'System One', blurb: 'The official JavaScript and TypeScript library.', checked: '@typesafe-ai/sdk 0.7', steps: [
         { title: point, label: 'TypeScript', language: 'javascript', code: `import { choice, TypeSafeClient } from '@typesafe-ai/sdk';
 
-const client = new TypeSafeClient({
-  baseURL: '${address}',
-  compression: false,
-});` },
+const client = new TypeSafeClient({ baseURL: '${address}' });` },
         { title: ask, label: 'TypeScript', language: 'javascript', code: `const response = await client.systemOne({
   state: '${SAID}',
   questions: {

@@ -101,11 +101,10 @@ test('a Jev gateway shows the Jev address, cards and what is collected', async (
 
   await setup.getByRole('button', { name: /^Jev Python/ }).click();
   const steps = setup.getByRole('region', { name: 'Jev Python setup' });
-  await expect(steps.locator('pre').first()).toContainText(`base_url="${address}",`);
-  // On its own line, so it is not cut off at the edge of the code block.
-  await expect(steps.locator('pre').first()).toContainText(/\n {4}compression=False,\n/);
+  // The address is the only change to the app: no other client setting, no warning.
+  await expect(steps.locator('pre').first()).toContainText(`client = TypeSafeClient(base_url="${address}")`);
   await expect(steps.locator('pre mark')).toHaveText(address);
-  await expect(steps.getByText(/compresses larger requests by default/)).toBeVisible();
+  await expect(steps.getByText(/compress/)).toHaveCount(0);
 });
 
 test('shows the gateway address and starts collecting only after the terms are agreed to', async ({ page }) => {
