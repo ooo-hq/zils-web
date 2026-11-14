@@ -63,10 +63,10 @@ const relayId = 'r'.repeat(40);
 const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' };
 
 /** Answers the relay status and remembers each collection switch the page sends. */
-async function relay(page: Page, collecting: string | null, id: string | null = relayId) {
+async function relay(page: Page, collecting: string | null, id: string | null = relayId, seen: { requests?: number; last_request_at?: string | null } = {}) {
   const sent: unknown[] = [];
   let since = collecting;
-  await page.route('http://127.0.0.1:8999/v1/relay', route => route.fulfill({ json: { relay_id: id, collecting_since: since, terms_version: 't-1' }, headers: cors }));
+  await page.route('http://127.0.0.1:8999/v1/relay', route => route.fulfill({ json: { relay_id: id, collecting_since: since, terms_version: 't-1', ...seen }, headers: cors }));
   await page.route('http://127.0.0.1:8999/v1/relay/collection', route => {
     if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { ...cors, 'access-control-allow-methods': 'POST' } });
     const body = route.request().postDataJSON();
@@ -83,7 +83,7 @@ test('shows the gateway address and starts collecting only after the terms are a
   const sent = await relay(page, null);
   await page.goto('/gateway');
   const setup = page.getByRole('region', { name: 'Setup' });
-  await expect(setup.getByText(`http://127.0.0.1:8999/relay/${relayId}/v1`)).toBeVisible();
+  await expect(setup.getByText(`http://127.0.0.1:8999/relay/${relayId}/v1`, { exact: true })).toBeVisible();
   await expect(setup.getByText('Collection is off')).toBeVisible();
   const start = setup.getByRole('button', { name: 'Start collecting' });
   await expect(start).toBeDisabled();
@@ -118,4 +118,24 @@ test('an account without a relay sees no address and no switch', async ({ page }
   await page.goto('/gateway');
   await expect(page.getByText('The gateway is not set up for this account yet.')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Setup' })).toHaveCount(0);
+});
+
+test('shows whether requests have come through, and ready-made setup lines', async ({ page }) => {
+  await signIn(page);
+  await answer(page, 200, { relay: true, saving_since: null, questions_total: 0, questions: [] });
+  await relay(page, null, relayId, { requests: 0, last_request_at: null });
+  await page.goto('/gateway');
+  const setup = page.getByRole('region', { name: 'Setup' });
+  await expect(setup.getByText('No request has come through this address yet.')).toBeVisible();
+  const address = `http://127.0.0.1:8999/relay/${relayId}/v1`;
+  await expect(setup.getByText(`OPENAI_BASE_URL=${address}`)).toBeVisible();
+  await setup.getByRole('tab', { name: 'Python' }).click();
+  await expect(setup.getByText(`OpenAI(base_url="${address}")`)).toBeVisible();
+  await setup.getByRole('tab', { name: 'TypeScript' }).click();
+  await expect(setup.getByText(`new OpenAI({ baseURL: '${address}' })`)).toBeVisible();
+
+  await relay(page, null, relayId, { requests: 3026, last_request_at: '2026-11-14T20:00:00+00:00' });
+  await page.reload();
+  await expect(setup.getByText('3,026 requests have passed through.')).toBeVisible();
+  await expect(setup.getByText(/Last one around Nov 14, 2026/)).toBeVisible();
 });
