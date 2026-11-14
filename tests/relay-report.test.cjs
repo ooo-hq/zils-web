@@ -71,8 +71,8 @@ test('the relay address is the id under the training service, ready to paste as 
 });
 
 test('parses a relay status, with and without a relay', () => {
-  assert.deepEqual(parseRelayStatus(status), status);
-  assert.deepEqual(parseRelayStatus({ ...status, relay_id: null }), { ...status, relay_id: null });
+  assert.equal(parseRelayStatus(status).relay_id, status.relay_id);
+  assert.equal(parseRelayStatus({ ...status, relay_id: null }).relay_id, null);
   assert.equal(parseRelayStatus({ ...status, terms_version: '' }), null);
   assert.equal(parseRelayStatus({ relay_id: 'x' }), null);
 });
@@ -84,8 +84,8 @@ test('the status is read and collection switched with the session token', async 
     calls.push([url, o.method, o.headers.Authorization, o.body]);
     return reply(o.method === 'GET' ? status : on);
   });
-  assert.deepEqual(await api.status(), status);
-  assert.deepEqual(await api.collect(true, 't-1'), on);
+  assert.equal((await api.status()).collecting_since, null);
+  assert.equal((await api.collect(true, 't-1')).collecting_since, on.collecting_since);
   await api.collect(false);
   assert.deepEqual(calls, [
     ['https://api.example/decision/v1/relay', 'GET', 'Bearer tok', undefined],
@@ -98,4 +98,23 @@ test('the status is read and collection switched with the session token', async 
   await assert.rejects(failing(404, 'no_relay').collect(true, 't-1'), e => e.status === 404 && /not set up/.test(e.message));
   await assert.rejects(failing(500, 'internal').collect(false), e => e.status === 500 && /could not be changed/.test(e.message));
   await assert.rejects(failing(401, 'x').status(), e => e.status === 401);
+});
+
+const { relaySnippets } = require('../.private/test-build/relay-report.js');
+
+test('a status from before request counts reads as no requests yet', () => {
+  assert.deepEqual(parseRelayStatus(status), { ...status, requests: 0, last_request_at: null });
+  const busy = { ...status, requests: 3026, last_request_at: '2026-11-14T20:00:00+00:00' };
+  assert.deepEqual(parseRelayStatus(busy), busy);
+  assert.equal(parseRelayStatus({ ...status, requests: -1 }), null);
+});
+
+test('setup snippets carry the address and never a key', () => {
+  const address = relayAddress('https://training.example', 'r'.repeat(40));
+  const snippets = relaySnippets(address);
+  assert.deepEqual(snippets.map(snippet => snippet.label), ['Environment', 'Python', 'TypeScript']);
+  assert.equal(snippets[0].code, `OPENAI_BASE_URL=${address}`);
+  assert.match(snippets[1].code, new RegExp(`OpenAI\\(base_url="${address}"\\)`));
+  assert.match(snippets[2].code, new RegExp(`new OpenAI\\(\\{ baseURL: '${address}' \\}\\)`));
+  for (const snippet of snippets) assert.doesNotMatch(snippet.code, /api_key|apiKey|sk-/);
 });

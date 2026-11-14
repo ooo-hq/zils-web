@@ -16,3 +16,8 @@
 .agree input { flex: 0 0 16px; width: 16px; height: 16px; margin: 3px 0 0; }
 .agree span { min-width: 0; }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.tabs { display: flex; gap: 18px; margin-top: 24px; }
+.tabs button { padding: 0 0 6px; border: 0; border-bottom: 1px solid transparent; background: none; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--zs-t3); cursor: pointer; }
+.tabs button[aria-selected="true"] { color: inherit; border-bottom-color: var(--zs-peach); }
+.snippet { margin: 12px 0 16px; padding: 14px 16px; border: 1px solid var(--zs-line); overflow-x: auto; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.snippet + button + p + p { margin-top: 28px; }

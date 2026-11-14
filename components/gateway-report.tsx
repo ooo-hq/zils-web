@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuthSession } from '@/components/auth-session';
 import { WorkspaceLoading } from '@/components/workspace-loading';
 import { PageHero, Section, workspacePage } from '@/components/workspace-page';
-import { relayAddress, relayReportApi, RelayReportError, shadowRows, type RelayQuestion, type RelayReport, type RelayStatus } from '@/lib/relay-report';
+import { relayAddress, relayReportApi, relaySnippets, RelayReportError, shadowRows, type RelayQuestion, type RelayReport, type RelayStatus } from '@/lib/relay-report';
 import training from '@/app/(home)/train/train.module.css';
 import styles from './gateway-report.module.css';
 
@@ -49,17 +49,24 @@ function Setup({ status, address, collect }: { status: RelayStatus; address: str
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState<boolean | null>(null);
+  const [language, setLanguage] = useState(0);
+  const snippets = relaySnippets(address);
   const change = (on: boolean) => { setBusy(true); void collect(on, on ? status.terms_version : undefined).finally(() => { setBusy(false); setConfirming(false); setAgreed(false); }); };
-  const copy = () => navigator.clipboard.writeText(address).then(() => setCopied(true), () => setCopied(false));
+  const copy = () => navigator.clipboard.writeText(snippets[language].code).then(() => setCopied(true), () => setCopied(false));
   return <section aria-labelledby="gateway-setup">
     <Section label="Setup" id="gateway-setup" />
     <div className={workspacePage.split}>
       <div>
         <p className={workspacePage.label}>Your gateway address</p>
         <code className={styles.address}>{address}</code>
-        <button className={training.secondary} onClick={() => void copy()}>{copied ? 'Copied' : 'Copy address'}</button>
-        <p role="status" className={workspacePage.fine}>{copied === false ? 'Copy was blocked. Select the address above and copy it manually.' : ''}</p>
         <p className={workspacePage.sub}>Set it as the base URL of your OpenAI client. Your app keeps its own provider key and always gets your provider’s answer.</p>
+        <div role="tablist" aria-label="Setup example" className={styles.tabs}>{snippets.map((snippet, index) => <button key={snippet.label} role="tab" id={`gateway-tab-${index}`} aria-selected={index === language} aria-controls="gateway-snippet" onClick={() => { setLanguage(index); setCopied(null); }}>{snippet.label}</button>)}</div>
+        <pre id="gateway-snippet" role="tabpanel" aria-labelledby={`gateway-tab-${language}`} tabIndex={0} className={styles.snippet}><code>{snippets[language].code}</code></pre>
+        <button className={training.secondary} onClick={() => void copy()}>{copied ? 'Copied' : 'Copy'}</button>
+        <p role="status" className={workspacePage.fine}>{copied === false ? 'Copy was blocked. Select the text above and copy it manually.' : ''}</p>
+        <p className={workspacePage.label}>Requests</p>
+        <p className={workspacePage.sub}>{status.requests === 0 ? 'No request has come through this address yet.' : `${status.requests.toLocaleString()} ${status.requests === 1 ? 'request has' : 'requests have'} passed through.`}{status.requests > 0 && status.last_request_at && ` Last one around ${when(status.last_request_at)}.`}</p>
+        {status.requests === 0 && <p className={workspacePage.fine}>Send any request from your app, wait a few seconds, then refresh. Only requests your provider answered are counted.</p>}
         <p className={workspacePage.fine}>Treat the address as private: anyone who has it can send requests that are saved to this account.</p>
       </div>
       <div>
@@ -71,7 +78,7 @@ function Setup({ status, address, collect }: { status: RelayStatus; address: str
             <div className={styles.actions}><button className={training.secondary} disabled={busy} onClick={() => setConfirming(false)}>Keep collecting</button><button className={training.button} disabled={busy} onClick={() => change(false)}>{busy ? 'Stopping…' : 'Stop and delete'}</button></div>
           </div> : <div className={styles.actions}><button className={training.secondary} onClick={() => setConfirming(true)}>Stop collecting</button></div>}
         </> : <>
-          <p className={workspacePage.sub}>Collection is off. Requests pass through and nothing is kept.</p>
+          <p className={workspacePage.sub}>Collection is off. Requests pass through and only their number is kept.</p>
           <ul className={styles.terms}>
             <li>When collection is on, Zils saves each request that asks for an answer from a fixed list, together with your provider’s answer. Other requests are not saved.</li>
             <li>Your provider key is used to pass the request on and is never saved.</li>

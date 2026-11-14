@@ -33,7 +33,8 @@ export function shadowRows(shadow: RelayShadow) {
   return [row('Any', shadow.asked, shadow.agreed), ...shadow.by_confidence.map(level => row(`${Math.round(level.confidence_at_least * 100)}% or more`, level.asked, level.agreed))];
 }
 
-const statusSchema = z.object({ relay_id: z.string().min(1).nullable(), collecting_since: z.string().nullable(), terms_version: z.string().min(1) });
+// A service from before request counts sends neither count field: that reads as no requests yet.
+const statusSchema = z.object({ relay_id: z.string().min(1).nullable(), collecting_since: z.string().nullable(), terms_version: z.string().min(1), requests: count.default(0), last_request_at: z.string().nullable().default(null) });
 export type RelayStatus = z.infer<typeof statusSchema>;
 
 export const parseRelayStatus = (value: unknown): RelayStatus | null => {
@@ -43,6 +44,13 @@ export const parseRelayStatus = (value: unknown): RelayStatus | null => {
 
 /** The base URL an OpenAI client is pointed at: the account's relay id under the training service. */
 export const relayAddress = (trainingUrl: string, relayId: string): string => `${serviceUrl(trainingUrl)}/relay/${relayId}/v1`;
+
+/** Ready-made ways to point an OpenAI client at the address. The provider key is left to the app, as it is today. */
+export const relaySnippets = (address: string) => [
+  { label: 'Environment', code: `OPENAI_BASE_URL=${address}` },
+  { label: 'Python', code: `from openai import OpenAI\n\nclient = OpenAI(base_url="${address}")` },
+  { label: 'TypeScript', code: `import OpenAI from 'openai';\n\nconst client = new OpenAI({ baseURL: '${address}' });` },
+];
 
 export function relayReportApi(rawUrl: string, token: () => Promise<string>, request: typeof fetch = fetch) {
   const base = serviceUrl(rawUrl);
