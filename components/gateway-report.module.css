@@ -52,3 +52,7 @@
 :global([data-theme=dark]) .snippet :global(.token.function),:global([data-theme=dark]) .snippet :global(.token.class-name),:global([data-theme=dark]) .snippet :global(.token.builtin) { color:#9fc7ff; }
 :global([data-theme=dark]) .snippet :global(.token.number),:global([data-theme=dark]) .snippet :global(.token.constant) { color:#f2bd94; }
 .requests { margin-top: 28px; }
+.providers { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+.provider { display: inline-flex; align-items: center; gap: 10px; min-height: 42px; padding: 8px 16px; border: 1px solid var(--zs-line); background: none; color: inherit; font: inherit; font-size: 15px; }
+.provider[aria-pressed="true"] { border-color: var(--zs-peach); }
+.provider:disabled { color: var(--zs-t3); cursor: not-allowed; }

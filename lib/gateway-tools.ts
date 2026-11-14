@@ -2,6 +2,12 @@ export type ToolLanguage = 'python' | 'javascript' | 'bash';
 export type GatewayToolStep = { title: string; label: string; language: ToolLanguage; code: string };
 export type GatewayTool = { id: string; name: string; tag: string; blurb: string; steps: GatewayToolStep[]; note?: string; checked: string };
 
+/** The providers the gateway can forward to. Every tool card below is a way of calling the supported one. */
+export const gatewayProviders = [
+  { id: 'openai', name: 'OpenAI', supported: true },
+  { id: 'jev', name: 'Jev', supported: false },
+];
+
 // The example question every card asks. The model is the caller's own: any name their provider accepts.
 const MODEL = 'gpt-6.1-sol';
 const ASK = 'Pick the intent of the customer message.';

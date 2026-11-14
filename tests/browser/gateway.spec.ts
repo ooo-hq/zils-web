@@ -130,6 +130,10 @@ test('shows whether requests have come through, and a card for each tool that op
   await expect(setup.getByText('No request has come through this address yet.')).toBeVisible();
   const address = `http://127.0.0.1:8999/relay/${relayId}/v1`;
   for (const name of ['OpenAI Python', 'OpenAI Node', 'cURL', 'LangChain', 'Vercel AI SDK', 'LlamaIndex', 'Instructor']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
+  // Providers: the one that works is marked as chosen; the one that does not cannot be picked.
+  const providers = setup.getByRole('group', { name: 'Provider' });
+  await expect(providers.getByRole('button', { name: /OpenAI/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(providers.getByRole('button', { name: /Jev.*Not yet/ })).toBeDisabled();
   // Closed until asked for: no code on the page yet.
   await expect(setup.locator('pre')).toHaveCount(0);
 

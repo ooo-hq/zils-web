@@ -30,3 +30,8 @@ test('a tool whose default call is not collected says so', () => {
   assert.match(instructor.note, /default mode/);
   assert.match(instructor.steps.map(step => step.code).join('\n'), /Mode\.JSON_SCHEMA/);
 });
+
+test('providers: OpenAI works today, Jev is named as not yet', () => {
+  const { gatewayProviders } = require('../.private/test-build/gateway-tools.js');
+  assert.deepEqual(gatewayProviders.map(provider => [provider.name, provider.supported]), [['OpenAI', true], ['Jev', false]]);
+});

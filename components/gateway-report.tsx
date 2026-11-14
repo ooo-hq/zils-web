@@ -7,7 +7,7 @@ import { useAuthSession } from '@/components/auth-session';
 import { HighlightedCode } from '@/components/highlighted-code';
 import { WorkspaceLoading } from '@/components/workspace-loading';
 import { PageHero, Section, workspacePage } from '@/components/workspace-page';
-import { gatewayTools, type GatewayTool } from '@/lib/gateway-tools';
+import { gatewayProviders, gatewayTools, type GatewayTool } from '@/lib/gateway-tools';
 import { relayAddress, relayReportApi, RelayReportError, shadowRows, type RelayQuestion, type RelayReport, type RelayStatus } from '@/lib/relay-report';
 import training from '@/app/(home)/train/train.module.css';
 import styles from './gateway-report.module.css';
@@ -105,7 +105,8 @@ function Setup({ status, address, collect }: { status: RelayStatus; address: str
     </div>
     <div className={styles.connect}>
       <p className={workspacePage.label}>Connect your app</p>
-      <p className={workspacePage.sub}>Choose what your app uses to call OpenAI. Each one shows where the address goes and how to ask for an answer from a fixed list, which is what the gateway collects.</p>
+      <div role="group" aria-label="Provider" className={styles.providers}>{gatewayProviders.map(provider => <button key={provider.id} className={styles.provider} aria-pressed={provider.supported} disabled={!provider.supported}>{provider.name}{!provider.supported && <span className={styles.tag}>Not yet</span>}</button>)}</div>
+      <p className={workspacePage.sub}>The gateway passes requests on to OpenAI today. Choose what your app uses to call it. Each one shows where the address goes and how to ask for an answer from a fixed list, which is what the gateway collects.</p>
       {gatewayTools(address).map(group => {
         const shown = group.tools.find(tool => tool.id === open);
         return <div key={group.label} className={styles.group}>
