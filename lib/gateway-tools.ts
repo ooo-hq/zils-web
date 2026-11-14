@@ -1,0 +1,156 @@
+export type ToolLanguage = 'python' | 'javascript' | 'bash';
+export type GatewayToolStep = { title: string; label: string; language: ToolLanguage; code: string };
+export type GatewayTool = { id: string; name: string; tag: string; blurb: string; steps: GatewayToolStep[]; note?: string; checked: string };
+
+/** The providers the gateway can forward to. Every tool card below is a way of calling the supported one. */
+export const gatewayProviders = [
+  { id: 'openai', name: 'OpenAI', supported: true },
+  { id: 'jev', name: 'Jev', supported: false },
+];
+
+// The example question every card asks. The model is the caller's own: any name their provider accepts.
+const MODEL = 'gpt-6.1-sol';
+const ASK = 'Pick the intent of the customer message.';
+const SAID = 'Where is my order?';
+
+const PYTHON_TICKET = `class Ticket(BaseModel):
+    intent: Literal["refund", "shipping", "other"]`;
+const ZOD_TICKET = `z.object({ intent: z.enum(['refund', 'shipping', 'other']) })`;
+
+/**
+ * How to send an app's fixed-answer questions through the gateway, per tool. Each tool's steps, joined
+ * in order, are one program that was run against the relay's own decision reader with the package
+ * versions in `checked`: the request it sends is one the gateway collects. The provider key is left
+ * to the app's environment, as it is today.
+ */
+export function gatewayTools(address: string): { label: string; intro: string; tools: GatewayTool[] }[] {
+  const point = 'Point the client at your gateway';
+  const ask = 'Ask for an answer from a fixed list';
+  return [
+    { label: 'SDKs', intro: 'Call your provider directly, through the gateway.', tools: [
+      { id: 'openai-python', name: 'OpenAI Python', tag: 'Responses API', blurb: 'The official Python library, with a typed answer.', checked: 'openai 1.109 and 3.3', steps: [
+        { title: point, label: 'Python', language: 'python', code: `from typing import Literal
+
+from openai import OpenAI
+from pydantic import BaseModel
+
+client = OpenAI(base_url="${address}")` },
+        { title: ask, label: 'Python', language: 'python', code: `${PYTHON_TICKET}
+
+reply = client.responses.parse(
+    model="${MODEL}",  # the model you already use
+    instructions="${ASK}",
+    input="${SAID}",
+    text_format=Ticket,
+)
+print(reply.output_parsed.intent)` },
+      ] },
+      { id: 'openai-node', name: 'OpenAI Node', tag: 'Responses API', blurb: 'The official TypeScript and JavaScript library, with a Zod schema.', checked: 'openai 7.57, zod 4.6', steps: [
+        { title: point, label: 'TypeScript', language: 'javascript', code: `import OpenAI from 'openai';
+import { zodTextFormat } from 'openai/helpers/zod';
+import { z } from 'zod';
+
+const client = new OpenAI({ baseURL: '${address}' });` },
+        { title: ask, label: 'TypeScript', language: 'javascript', code: `const Ticket = ${ZOD_TICKET};
+
+const reply = await client.responses.parse({
+  model: '${MODEL}', // the model you already use
+  instructions: '${ASK}',
+  input: '${SAID}',
+  text: { format: zodTextFormat(Ticket, 'ticket') },
+});
+console.log(reply.output_parsed.intent);` },
+      ] },
+      { id: 'curl', name: 'cURL', tag: 'Chat Completions', blurb: 'The raw request, for any language or a quick test from a terminal.', checked: 'curl 8', steps: [
+        { title: 'Set your gateway address', label: 'Bash', language: 'bash', code: `export ZILS_GATEWAY="${address}"` },
+        { title: ask, label: 'Bash', language: 'bash', code: `curl -s "$ZILS_GATEWAY/chat/completions" \\
+  -H "Authorization: Bearer $OPENAI_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "${MODEL}",
+    "messages": [
+      {"role": "system", "content": "${ASK}"},
+      {"role": "user", "content": "${SAID}"}
+    ],
+    "response_format": {"type": "json_schema", "json_schema": {
+      "name": "ticket", "strict": true, "schema": {
+        "type": "object",
+        "properties": {"intent": {"type": "string", "enum": ["refund", "shipping", "other"]}},
+        "required": ["intent"],
+        "additionalProperties": false
+      }
+    }}
+  }'` },
+      ] },
+    ] },
+    { label: 'Frameworks', intro: 'Keep your framework; change where its OpenAI model points.', tools: [
+      { id: 'langchain', name: 'LangChain', tag: 'Chat Completions', blurb: 'ChatOpenAI with structured output.', checked: 'langchain-openai 1.1', steps: [
+        { title: point, label: 'Python', language: 'python', code: `from typing import Literal
+
+from langchain_openai import ChatOpenAI
+from pydantic import BaseModel
+
+llm = ChatOpenAI(model="${MODEL}", base_url="${address}")` },
+        { title: ask, label: 'Python', language: 'python', code: `${PYTHON_TICKET}
+
+classify = llm.with_structured_output(Ticket, method="json_schema", strict=True)
+reply = classify.invoke([("system", "${ASK}"), ("user", "${SAID}")])
+print(reply.intent)` },
+      ] },
+      { id: 'vercel-ai-sdk', name: 'Vercel AI SDK', tag: 'Responses API', blurb: 'generateText with an object output.', checked: 'ai 7.0, @ai-sdk/openai 4.0', steps: [
+        { title: point, label: 'TypeScript', language: 'javascript', code: `import { createOpenAI } from '@ai-sdk/openai';
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+
+const openai = createOpenAI({ baseURL: '${address}' });` },
+        { title: ask, label: 'TypeScript', language: 'javascript', code: `const { output } = await generateText({
+  model: openai('${MODEL}'), // the model you already use
+  output: Output.object({ schema: ${ZOD_TICKET} }),
+  system: '${ASK}',
+  prompt: '${SAID}',
+});
+console.log(output.intent);` },
+      ] },
+      { id: 'llamaindex', name: 'LlamaIndex', tag: 'Chat Completions', blurb: 'The OpenAI LLM as a structured LLM.', checked: 'llama-index-llms-openai 0.9', steps: [
+        { title: point, label: 'Python', language: 'python', code: `from typing import Literal
+
+from llama_index.core.llms import ChatMessage
+from llama_index.llms.openai import OpenAI
+from pydantic import BaseModel
+
+llm = OpenAI(model="${MODEL}", api_base="${address}")` },
+        { title: ask, label: 'Python', language: 'python', code: `${PYTHON_TICKET}
+
+classify = llm.as_structured_llm(Ticket)
+reply = classify.chat([
+    ChatMessage(role="system", content="${ASK}"),
+    ChatMessage(role="user", content="${SAID}"),
+])
+print(reply.raw.intent)` },
+      ] },
+      { id: 'instructor', name: 'Instructor', tag: 'Chat Completions', blurb: 'Typed answers from the OpenAI client, in JSON schema mode.', checked: 'instructor 1.17', note: 'Instructor’s default mode sends a tool call, which passes through the gateway but is not collected. Set the mode as shown.', steps: [
+        { title: point, label: 'Python', language: 'python', code: `from typing import Literal
+
+import instructor
+from openai import OpenAI
+from pydantic import BaseModel
+
+client = instructor.from_openai(
+    OpenAI(base_url="${address}"),
+    mode=instructor.Mode.JSON_SCHEMA,
+)` },
+        { title: ask, label: 'Python', language: 'python', code: `${PYTHON_TICKET}
+
+reply = client.chat.completions.create(
+    model="${MODEL}",  # the model you already use
+    response_model=Ticket,
+    messages=[
+        {"role": "system", "content": "${ASK}"},
+        {"role": "user", "content": "${SAID}"},
+    ],
+)
+print(reply.intent)` },
+      ] },
+    ] },
+  ];
+}

@@ -45,13 +45,6 @@ export const parseRelayStatus = (value: unknown): RelayStatus | null => {
 /** The base URL an OpenAI client is pointed at: the account's relay id under the training service. */
 export const relayAddress = (trainingUrl: string, relayId: string): string => `${serviceUrl(trainingUrl)}/relay/${relayId}/v1`;
 
-/** Ready-made ways to point an OpenAI client at the address. The provider key is left to the app, as it is today. */
-export const relaySnippets = (address: string) => [
-  { label: 'Environment', language: 'bash' as const, code: `OPENAI_BASE_URL=${address}` },
-  { label: 'Python', language: 'python' as const, code: `from openai import OpenAI\n\nclient = OpenAI(base_url="${address}")` },
-  { label: 'TypeScript', language: 'javascript' as const, code: `import OpenAI from 'openai';\n\nconst client = new OpenAI({ baseURL: '${address}' });` },
-];
-
 export function relayReportApi(rawUrl: string, token: () => Promise<string>, request: typeof fetch = fetch) {
   const base = serviceUrl(rawUrl);
   async function send<T>(path: string, parse: (value: unknown) => T | null, failed: string, body?: object, signal?: AbortSignal): Promise<T> {
