@@ -113,6 +113,7 @@ test('setup snippets carry the address and never a key', () => {
   const address = relayAddress('https://training.example', 'r'.repeat(40));
   const snippets = relaySnippets(address);
   assert.deepEqual(snippets.map(snippet => snippet.label), ['Environment', 'Python', 'TypeScript']);
+  assert.deepEqual(snippets.map(snippet => snippet.language), ['bash', 'python', 'javascript']);
   assert.equal(snippets[0].code, `OPENAI_BASE_URL=${address}`);
   assert.match(snippets[1].code, new RegExp(`OpenAI\\(base_url="${address}"\\)`));
   assert.match(snippets[2].code, new RegExp(`new OpenAI\\(\\{ baseURL: '${address}' \\}\\)`));

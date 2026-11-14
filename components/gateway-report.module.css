@@ -21,3 +21,15 @@
 .tabs button[aria-selected="true"] { color: inherit; border-bottom-color: var(--zs-peach); }
 .snippet { margin: 12px 0 16px; padding: 14px 16px; border: 1px solid var(--zs-line); overflow-x: auto; font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 12.5px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
 .snippet + button + p + p { margin-top: 28px; }
+/* Same token colors as the model quickstart's code. */
+.snippet :global(.token.comment) { color:#626875; }
+.snippet :global(.token.keyword),.snippet :global(.token.boolean) { color:#7c3aa6; }
+.snippet :global(.token.string),.snippet :global(.token.attr-value) { color:#17664a; }
+.snippet :global(.token.function),.snippet :global(.token.class-name),.snippet :global(.token.builtin) { color:#215c9c; }
+.snippet :global(.token.number),.snippet :global(.token.constant) { color:#9c421c; }
+.snippet :global(.token.operator),.snippet :global(.token.punctuation) { color:var(--zils-muted); }
+:global([data-theme=dark]) .snippet :global(.token.comment) { color:#999daf; }
+:global([data-theme=dark]) .snippet :global(.token.keyword),:global([data-theme=dark]) .snippet :global(.token.boolean) { color:#cfafff; }
+:global([data-theme=dark]) .snippet :global(.token.string),:global([data-theme=dark]) .snippet :global(.token.attr-value) { color:#9ad9ac; }
+:global([data-theme=dark]) .snippet :global(.token.function),:global([data-theme=dark]) .snippet :global(.token.class-name),:global([data-theme=dark]) .snippet :global(.token.builtin) { color:#9fc7ff; }
+:global([data-theme=dark]) .snippet :global(.token.number),:global([data-theme=dark]) .snippet :global(.token.constant) { color:#f2bd94; }
