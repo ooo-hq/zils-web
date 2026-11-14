@@ -68,6 +68,8 @@ const status = { relay_id: 'r'.repeat(40), collecting_since: null, terms_version
 
 test('the relay address is the id under the training service, ready to paste as a base URL', () => {
   assert.equal(relayAddress('https://training.example/', 'r'.repeat(40)), `https://training.example/relay/${'r'.repeat(40)}/v1`);
+  // A Jev client is given the API root and adds /v1 itself.
+  assert.equal(relayAddress('https://training.example/', 'r'.repeat(40), 'jev'), `https://training.example/relay/${'r'.repeat(40)}`);
 });
 
 test('parses a relay status, with and without a relay', () => {
@@ -101,8 +103,11 @@ test('the status is read and collection switched with the session token', async 
 });
 
 test('a status from before request counts reads as no requests yet', () => {
-  assert.deepEqual(parseRelayStatus(status), { ...status, requests: 0, last_request_at: null });
+  // A service from before providers sends none: that is an OpenAI gateway.
+  assert.deepEqual(parseRelayStatus(status), { ...status, requests: 0, last_request_at: null, provider: 'openai' });
+  assert.equal(parseRelayStatus({ ...status, provider: 'jev' }).provider, 'jev');
+  assert.equal(parseRelayStatus({ ...status, provider: 'other' }), null);
   const busy = { ...status, requests: 3026, last_request_at: '2026-11-14T20:00:00+00:00' };
-  assert.deepEqual(parseRelayStatus(busy), busy);
+  assert.deepEqual(parseRelayStatus(busy), { ...busy, provider: 'openai' });
   assert.equal(parseRelayStatus({ ...status, requests: -1 }), null);
 });

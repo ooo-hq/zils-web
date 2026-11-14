@@ -31,7 +31,24 @@ test('a tool whose default call is not collected says so', () => {
   assert.match(instructor.steps.map(step => step.code).join('\n'), /Mode\.JSON_SCHEMA/);
 });
 
-test('providers: OpenAI works today, Jev is named as not yet', () => {
+test('providers: the gateway passes requests on to OpenAI or Jev', () => {
   const { gatewayProviders } = require('../.private/test-build/gateway-tools.js');
-  assert.deepEqual(gatewayProviders.map(provider => [provider.name, provider.supported]), [['OpenAI', true], ['Jev', false]]);
+  assert.deepEqual(gatewayProviders.map(provider => [provider.id, provider.name]), [['openai', 'OpenAI'], ['jev', 'Jev']]);
+});
+
+test('a Jev account gets the Jev libraries, pointed at the gateway root with compression off', () => {
+  const root = 'https://training.example/relay/' + 'r'.repeat(40);
+  const jev = gatewayTools(root, 'jev');
+  assert.deepEqual(jev.map(group => [group.label, group.tools.map(tool => tool.name)]), [['SDKs', ['Jev Python', 'Jev JavaScript', 'cURL']]]);
+  for (const tool of jev.flatMap(group => group.tools)) {
+    const code = tool.steps.map(step => step.code).join('\n');
+    assert.ok(tool.steps.length >= 2 && tool.checked, tool.name);
+    assert.ok(code.includes(root) && !code.includes(root + '/v1"') && !code.includes(root + "/v1'"), tool.name);
+    assert.match(code, /refund.*shipping.*other/s, tool.name);
+    assert.doesNotMatch(code, /apikey_|api_key\s*=|apiKey\s*:/, tool.name);
+    // The libraries compress larger requests unless told not to, and a compressed request is not collected.
+    if (tool.id !== 'jev-curl') { assert.match(code, /compression\s*[=:]\s*[Ff]alse/, tool.name); assert.match(tool.note, /compress/, tool.name); }
+  }
+  assert.match(jev[0].tools[2].steps[1].code, /\$ZILS_GATEWAY\/v1\/systemone/);
+  assert.equal(new Set([...tools, ...jev.flatMap(group => group.tools)].map(tool => tool.id)).size, tools.length + 3);
 });

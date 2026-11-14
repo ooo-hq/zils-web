@@ -63,7 +63,7 @@ const relayId = 'r'.repeat(40);
 const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' };
 
 /** Answers the relay status and remembers each collection switch the page sends. */
-async function relay(page: Page, collecting: string | null, id: string | null = relayId, seen: { requests?: number; last_request_at?: string | null } = {}) {
+async function relay(page: Page, collecting: string | null, id: string | null = relayId, seen: { requests?: number; last_request_at?: string | null; provider?: string } = {}) {
   const sent: unknown[] = [];
   let since = collecting;
   await page.route('http://127.0.0.1:8999/v1/relay', route => route.fulfill({ json: { relay_id: id, collecting_since: since, terms_version: 't-1', ...seen }, headers: cors }));
@@ -76,6 +76,37 @@ async function relay(page: Page, collecting: string | null, id: string | null = 
   });
   return sent;
 }
+
+test('a Jev gateway shows the Jev address, cards and what is collected', async ({ page }) => {
+  await signIn(page);
+  // A Jev question may have no instructions: it is then shown by its name, never as empty quotes.
+  const spam = { id: 'a'.repeat(64), instructions: '', fields: { spam: [true, false] }, first_at: '2026-11-14T15:39:00+00:00', rows: 2, last_at: null, shadows: [] };
+  await answer(page, 200, { relay: true, saving_since: '2026-11-14T15:38:32+00:00', questions_total: 1, questions: [spam] });
+  await relay(page, null, relayId, { requests: 0, last_request_at: null, provider: 'jev' });
+  await page.goto('/gateway');
+  await expect(page.getByRole('region', { name: 'Question 1' }).getByText('“spam”')).toBeVisible();
+  const setup = page.getByRole('region', { name: 'Setup' });
+  // A Jev client is given the API root: no /v1 on the end.
+  const address = `http://127.0.0.1:8999/relay/${relayId}`;
+  await expect(setup.locator('code').first()).toHaveText(address);
+  await expect(setup.getByText('Set it as the base URL of your Jev client.', { exact: false })).toBeVisible();
+  const providers = setup.getByRole('group', { name: 'Provider' });
+  await expect(providers.getByRole('button', { name: /Jev/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(providers.getByRole('button', { name: /OpenAI.*On request/ })).toBeDisabled();
+  for (const name of ['Jev Python', 'Jev JavaScript', 'cURL']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
+  await expect(setup.getByRole('button', { name: /^(OpenAI Python|LangChain)/ })).toHaveCount(0);
+  // What is saved differs for Jev, and the terms say so before anyone agrees.
+  await expect(setup.getByText(/each yes\/no and choice question/)).toBeVisible();
+  await expect(setup.getByText(/how sure your provider was/)).toBeVisible();
+
+  await setup.getByRole('button', { name: /^Jev Python/ }).click();
+  const steps = setup.getByRole('region', { name: 'Jev Python setup' });
+  await expect(steps.locator('pre').first()).toContainText(`base_url="${address}",`);
+  // On its own line, so it is not cut off at the edge of the code block.
+  await expect(steps.locator('pre').first()).toContainText(/\n {4}compression=False,\n/);
+  await expect(steps.locator('pre mark')).toHaveText(address);
+  await expect(steps.getByText(/compresses larger requests by default/)).toBeVisible();
+});
 
 test('shows the gateway address and starts collecting only after the terms are agreed to', async ({ page }) => {
   await signIn(page);
@@ -130,10 +161,11 @@ test('shows whether requests have come through, and a card for each tool that op
   await expect(setup.getByText('No request has come through this address yet.')).toBeVisible();
   const address = `http://127.0.0.1:8999/relay/${relayId}/v1`;
   for (const name of ['OpenAI Python', 'OpenAI Node', 'cURL', 'LangChain', 'Vercel AI SDK', 'LlamaIndex', 'Instructor']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
-  // Providers: the one that works is marked as chosen; the one that does not cannot be picked.
+  // Providers: an address goes to one of them. The other cannot be picked here.
   const providers = setup.getByRole('group', { name: 'Provider' });
   await expect(providers.getByRole('button', { name: /OpenAI/ })).toHaveAttribute('aria-pressed', 'true');
-  await expect(providers.getByRole('button', { name: /Jev.*Not yet/ })).toBeDisabled();
+  await expect(providers.getByRole('button', { name: /Jev.*On request/ })).toBeDisabled();
+  await expect(setup.getByText('Set it as the base URL of your OpenAI client.', { exact: false })).toBeVisible();
   // Closed until asked for: no code on the page yet.
   await expect(setup.locator('pre')).toHaveCount(0);
 

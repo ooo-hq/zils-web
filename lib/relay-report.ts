@@ -34,7 +34,8 @@ export function shadowRows(shadow: RelayShadow) {
 }
 
 // A service from before request counts sends neither count field: that reads as no requests yet.
-const statusSchema = z.object({ relay_id: z.string().min(1).nullable(), collecting_since: z.string().nullable(), terms_version: z.string().min(1), requests: count.default(0), last_request_at: z.string().nullable().default(null) });
+// One from before providers sends none: that is an OpenAI gateway.
+const statusSchema = z.object({ relay_id: z.string().min(1).nullable(), collecting_since: z.string().nullable(), terms_version: z.string().min(1), requests: count.default(0), last_request_at: z.string().nullable().default(null), provider: z.enum(['openai', 'jev']).default('openai') });
 export type RelayStatus = z.infer<typeof statusSchema>;
 
 export const parseRelayStatus = (value: unknown): RelayStatus | null => {
@@ -42,8 +43,8 @@ export const parseRelayStatus = (value: unknown): RelayStatus | null => {
   return result.success ? result.data : null;
 };
 
-/** The base URL an OpenAI client is pointed at: the account's relay id under the training service. */
-export const relayAddress = (trainingUrl: string, relayId: string): string => `${serviceUrl(trainingUrl)}/relay/${relayId}/v1`;
+/** The base URL a client is pointed at: the account's relay id under the training service. An OpenAI client is given the /v1 root; a Jev client the API root, and adds /v1 itself. */
+export const relayAddress = (trainingUrl: string, relayId: string, provider: RelayStatus['provider'] = 'openai'): string => `${serviceUrl(trainingUrl)}/relay/${relayId}${provider === 'jev' ? '' : '/v1'}`;
 
 export function relayReportApi(rawUrl: string, token: () => Promise<string>, request: typeof fetch = fetch) {
   const base = serviceUrl(rawUrl);
