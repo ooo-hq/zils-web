@@ -83,7 +83,7 @@ test('shows the gateway address and starts collecting only after the terms are a
   const sent = await relay(page, null);
   await page.goto('/gateway');
   const setup = page.getByRole('region', { name: 'Setup' });
-  await expect(setup.getByText(`http://127.0.0.1:8999/relay/${relayId}/v1`, { exact: true })).toBeVisible();
+  await expect(setup.locator('code').first()).toHaveText(`http://127.0.0.1:8999/relay/${relayId}/v1`);
   await expect(setup.getByText('Collection is off')).toBeVisible();
   const start = setup.getByRole('button', { name: 'Start collecting' });
   await expect(start).toBeDisabled();
@@ -131,6 +131,10 @@ test('shows whether requests have come through, and ready-made setup lines', asy
   await expect(setup.getByText(`OPENAI_BASE_URL=${address}`)).toBeVisible();
   await setup.getByRole('tab', { name: 'Python' }).click();
   await expect(setup.getByText(`OpenAI(base_url="${address}")`)).toBeVisible();
+  // Highlighted: the address is marked as a string and the import as a keyword, and the text is unchanged.
+  await expect(setup.locator('pre .token.string')).toHaveText(`"${address}"`);
+  await expect(setup.locator('pre .token.keyword').first()).toHaveText('from');
+  await expect(setup.locator('pre')).toHaveText(`from openai import OpenAI\n\nclient = OpenAI(base_url="${address}")`);
   await setup.getByRole('tab', { name: 'TypeScript' }).click();
   await expect(setup.getByText(`new OpenAI({ baseURL: '${address}' })`)).toBeVisible();
 

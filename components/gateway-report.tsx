@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useAuthSession } from '@/components/auth-session';
+import { HighlightedCode } from '@/components/highlighted-code';
 import { WorkspaceLoading } from '@/components/workspace-loading';
 import { PageHero, Section, workspacePage } from '@/components/workspace-page';
 import { relayAddress, relayReportApi, relaySnippets, RelayReportError, shadowRows, type RelayQuestion, type RelayReport, type RelayStatus } from '@/lib/relay-report';
@@ -61,7 +62,7 @@ function Setup({ status, address, collect }: { status: RelayStatus; address: str
         <code className={styles.address}>{address}</code>
         <p className={workspacePage.sub}>Set it as the base URL of your OpenAI client. Your app keeps its own provider key and always gets your provider’s answer.</p>
         <div role="tablist" aria-label="Setup example" className={styles.tabs}>{snippets.map((snippet, index) => <button key={snippet.label} role="tab" id={`gateway-tab-${index}`} aria-selected={index === language} aria-controls="gateway-snippet" onClick={() => { setLanguage(index); setCopied(null); }}>{snippet.label}</button>)}</div>
-        <pre id="gateway-snippet" role="tabpanel" aria-labelledby={`gateway-tab-${language}`} tabIndex={0} className={styles.snippet}><code>{snippets[language].code}</code></pre>
+        <pre id="gateway-snippet" role="tabpanel" aria-labelledby={`gateway-tab-${language}`} tabIndex={0} className={styles.snippet}><code><HighlightedCode code={snippets[language].code} language={snippets[language].language} /></code></pre>
         <button className={training.secondary} onClick={() => void copy()}>{copied ? 'Copied' : 'Copy'}</button>
         <p role="status" className={workspacePage.fine}>{copied === false ? 'Copy was blocked. Select the text above and copy it manually.' : ''}</p>
         <p className={workspacePage.label}>Requests</p>
