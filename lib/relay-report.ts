@@ -33,30 +33,53 @@ export function shadowRows(shadow: RelayShadow) {
   return [row('Any', shadow.asked, shadow.agreed), ...shadow.by_confidence.map(level => row(`${Math.round(level.confidence_at_least * 100)}% or more`, level.asked, level.agreed))];
 }
 
+const statusSchema = z.object({ relay_id: z.string().min(1).nullable(), collecting_since: z.string().nullable(), terms_version: z.string().min(1) });
+export type RelayStatus = z.infer<typeof statusSchema>;
+
+export const parseRelayStatus = (value: unknown): RelayStatus | null => {
+  const result = statusSchema.safeParse(value);
+  return result.success ? result.data : null;
+};
+
+/** The base URL an OpenAI client is pointed at: the account's relay id under the training service. */
+export const relayAddress = (trainingUrl: string, relayId: string): string => `${serviceUrl(trainingUrl)}/relay/${relayId}/v1`;
+
 export function relayReportApi(rawUrl: string, token: () => Promise<string>, request: typeof fetch = fetch) {
   const base = serviceUrl(rawUrl);
-  return {
-    async get(signal?: AbortSignal): Promise<RelayReport> {
-      let accessToken: string;
-      try { accessToken = await token(); }
-      catch { throw new RelayReportError('Your sign-in session could not be checked. Please try again.', 0); }
-      if (!accessToken) throw new RelayReportError('Your session has expired. Please sign in again.', 401);
-      const timeout = AbortSignal.timeout(30_000);
-      let response: Response;
-      try {
-        response = await request(`${base}/v1/relay/report`, {
-          method: 'GET', headers: { Authorization: `Bearer ${accessToken}` },
-          signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
-          cache: 'no-store', credentials: 'omit', redirect: 'error',
-        });
-      } catch { throw new RelayReportError('The service could not be reached. Check your connection and try again.', 0); }
-      if (!response.ok) throw new RelayReportError(
+  async function send<T>(path: string, parse: (value: unknown) => T | null, failed: string, body?: object, signal?: AbortSignal): Promise<T> {
+    let accessToken: string;
+    try { accessToken = await token(); }
+    catch { throw new RelayReportError('Your sign-in session could not be checked. Please try again.', 0); }
+    if (!accessToken) throw new RelayReportError('Your session has expired. Please sign in again.', 401);
+    const timeout = AbortSignal.timeout(30_000);
+    let response: Response;
+    try {
+      response = await request(`${base}${path}`, {
+        method: body === undefined ? 'GET' : 'POST',
+        headers: { Authorization: `Bearer ${accessToken}`, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+        cache: 'no-store', credentials: 'omit', redirect: 'error',
+      });
+    } catch { throw new RelayReportError('The service could not be reached. Check your connection and try again.', 0); }
+    if (!response.ok) {
+      const failure = z.object({ error: z.object({ code: z.string() }) }).safeParse(await response.json().catch(() => null));
+      const code = failure.success ? failure.data.error.code : '';
+      throw new RelayReportError(
         response.status === 401 ? 'Your session has expired. Please sign in again.'
+          : code === 'terms_changed' ? 'The collection terms changed. Read them and agree again.'
+          : code === 'no_relay' ? 'The gateway is not set up for this account yet.'
           : response.status === 404 ? 'The gateway report is not available here yet.'
-          : 'The report could not be loaded. Please try again.', response.status);
-      const report = parseRelayReport(await response.json().catch(() => null));
-      if (!report) throw new RelayReportError('The service returned an unexpected response.', 502);
-      return report;
-    },
+          : failed, response.status);
+    }
+    const result = parse(await response.json().catch(() => null));
+    if (!result) throw new RelayReportError('The service returned an unexpected response.', 502);
+    return result;
+  }
+  const unchanged = 'Collection could not be changed. Please try again.';
+  return {
+    get: (signal?: AbortSignal) => send('/v1/relay/report', parseRelayReport, 'The report could not be loaded. Please try again.', undefined, signal),
+    status: (signal?: AbortSignal) => send('/v1/relay', parseRelayStatus, 'The report could not be loaded. Please try again.', undefined, signal),
+    collect: (on: boolean, termsVersion?: string) => send('/v1/relay/collection', parseRelayStatus, unchanged, on ? { collect: true, terms_version: termsVersion } : { collect: false }),
   };
 }

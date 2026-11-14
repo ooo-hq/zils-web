@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuthSession } from '@/components/auth-session';
 import { WorkspaceLoading } from '@/components/workspace-loading';
 import { PageHero, Section, workspacePage } from '@/components/workspace-page';
-import { relayReportApi, RelayReportError, shadowRows, type RelayQuestion, type RelayReport } from '@/lib/relay-report';
+import { relayAddress, relayReportApi, RelayReportError, shadowRows, type RelayQuestion, type RelayReport, type RelayStatus } from '@/lib/relay-report';
 import training from '@/app/(home)/train/train.module.css';
 import styles from './gateway-report.module.css';
 
@@ -41,8 +41,54 @@ function Question({ question, number }: { question: RelayQuestion; number: numbe
   </section>;
 }
 
-function Report({ client, apiUrl, onExpired }: { client: SupabaseClient; apiUrl: string; onExpired: () => Promise<void> }) {
+type Collect = (on: boolean, termsVersion?: string) => Promise<void>;
+
+/** The address to point an OpenAI client at, and the account's own switch for saving what passes through. */
+function Setup({ status, address, collect }: { status: RelayStatus; address: string; collect: Collect }) {
+  const [agreed, setAgreed] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState<boolean | null>(null);
+  const change = (on: boolean) => { setBusy(true); void collect(on, on ? status.terms_version : undefined).finally(() => { setBusy(false); setConfirming(false); setAgreed(false); }); };
+  const copy = () => navigator.clipboard.writeText(address).then(() => setCopied(true), () => setCopied(false));
+  return <section aria-labelledby="gateway-setup">
+    <Section label="Setup" id="gateway-setup" />
+    <div className={workspacePage.split}>
+      <div>
+        <p className={workspacePage.label}>Your gateway address</p>
+        <code className={styles.address}>{address}</code>
+        <button className={training.secondary} onClick={() => void copy()}>{copied ? 'Copied' : 'Copy address'}</button>
+        <p role="status" className={workspacePage.fine}>{copied === false ? 'Copy was blocked. Select the address above and copy it manually.' : ''}</p>
+        <p className={workspacePage.sub}>Set it as the base URL of your OpenAI client. Your app keeps its own provider key and always gets your provider’s answer.</p>
+        <p className={workspacePage.fine}>Treat the address as private: anyone who has it can send requests that are saved to this account.</p>
+      </div>
+      <div>
+        <p className={workspacePage.label}>Collection</p>
+        {status.collecting_since ? <>
+          <p className={workspacePage.sub}>Collecting since {when(status.collecting_since)}.</p>
+          {confirming ? <div role="group" aria-label="Confirm stopping collection">
+            <p className={workspacePage.sub}>Stopping deletes every saved message and comparison for this account now. Models already trained are kept. This can’t be undone.</p>
+            <div className={styles.actions}><button className={training.secondary} disabled={busy} onClick={() => setConfirming(false)}>Keep collecting</button><button className={training.button} disabled={busy} onClick={() => change(false)}>{busy ? 'Stopping…' : 'Stop and delete'}</button></div>
+          </div> : <div className={styles.actions}><button className={training.secondary} onClick={() => setConfirming(true)}>Stop collecting</button></div>}
+        </> : <>
+          <p className={workspacePage.sub}>Collection is off. Requests pass through and nothing is kept.</p>
+          <ul className={styles.terms}>
+            <li>When collection is on, Zils saves each request that asks for an answer from a fixed list, together with your provider’s answer. Other requests are not saved.</li>
+            <li>Your provider key is used to pass the request on and is never saved.</li>
+            <li>Saved messages are used to train and measure models for this account only.</li>
+            <li>A saved message is deleted 90 days after it was last sent. Stopping collection deletes all of them at once.</li>
+          </ul>
+          <label className={styles.agree}><input type="checkbox" checked={agreed} onChange={event => setAgreed(event.target.checked)} /><span>I agree to this, and I have the right to share these messages and answers with Zils.</span></label>
+          <div className={styles.actions}><button className={training.button} disabled={!agreed || busy} onClick={() => change(true)}>{busy ? 'Starting…' : 'Start collecting'}</button></div>
+        </>}
+      </div>
+    </div>
+  </section>;
+}
+
+function Report({ client, apiUrl, relayUrl, onExpired }: { client: SupabaseClient; apiUrl: string; relayUrl: string; onExpired: () => Promise<void> }) {
   const [report, setReport] = useState<RelayReport | null>(null);
+  const [status, setStatus] = useState<RelayStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const api = useMemo(() => relayReportApi(apiUrl, async () => {
@@ -50,8 +96,9 @@ function Report({ client, apiUrl, onExpired }: { client: SupabaseClient; apiUrl:
     if (error) throw error;
     return data.session?.access_token || '';
   }), [apiUrl, client]);
-  const load = useCallback((signal: AbortSignal) => api.get(signal)
-    .then(result => { if (!signal.aborted) { setReport(result); setError(''); } })
+  // A service from before the setup routes answers 404 for the status: the report still shows.
+  const load = useCallback((signal: AbortSignal) => Promise.all([api.get(signal), api.status(signal).catch(error => { if (error instanceof RelayReportError && error.status === 404) return null; throw error; })])
+    .then(([result, relay]) => { if (!signal.aborted) { setReport(result); setStatus(relay); setError(''); } })
     .catch(error => {
       if (signal.aborted) return;
       if (error instanceof RelayReportError && error.status === 401) { void onExpired(); return; }
@@ -63,11 +110,19 @@ function Report({ client, apiUrl, onExpired }: { client: SupabaseClient; apiUrl:
     void load(controller.signal);
     return () => controller.abort();
   }, [load]);
+  const collect: Collect = (on, termsVersion) => api.collect(on, termsVersion)
+    .then(async relay => { setStatus(relay); setError(''); await load(new AbortController().signal); })
+    .catch(error => {
+      if (error instanceof RelayReportError && error.status === 401) { void onExpired(); return; }
+      setError(error instanceof RelayReportError ? error.message : 'Collection could not be changed. Please try again.');
+      if (error instanceof RelayReportError && error.status === 409) return load(new AbortController().signal);
+    });
   const refresh = <button disabled={loading} onClick={() => { setLoading(true); void load(new AbortController().signal); }}>{loading ? 'Refreshing…' : 'Refresh'}</button>;
 
   return <div>
     <PageHero title="Gateway" intro={INTRO} />
     {error && <p className={workspacePage.notice} role="alert">{error}</p>}
+    {status?.relay_id && <Setup status={status} address={relayAddress(relayUrl, status.relay_id)} collect={collect} />}
     {!report ? <><Section label="Report" action={!loading && refresh} /><p className={styles.message} role="status">{loading ? 'Loading your report…' : 'Refresh to try again.'}</p></>
       : !report.relay ? <><Section label="Not set up" /><p className={styles.message}>The gateway is not set up for this account yet.</p></>
       : report.questions.length === 0 ? <><Section label="Questions" action={refresh} /><p className={styles.message}>No questions yet. {report.saving_since
@@ -81,10 +136,10 @@ function Report({ client, apiUrl, onExpired }: { client: SupabaseClient; apiUrl:
   </div>;
 }
 
-/** The /gateway page: what the account's relay has saved and how its shadow models compare. */
-export function GatewayReportPage({ auth, apiUrl }: { auth: { url: string; key: string }; apiUrl: string }) {
+/** The /gateway page: the relay's address and collection switch, what it has saved and how its shadow models compare. */
+export function GatewayReportPage({ auth, apiUrl, relayUrl }: { auth: { url: string; key: string }; apiUrl: string; relayUrl: string }) {
   const { client, session } = useAuthSession(auth);
   if (session === undefined) return <WorkspaceLoading label="Loading your report" />;
   if (!session || !client) return <PageHero title="Gateway" intro="Sign in to see what your app has sent through the Zils gateway." action={<Link href="/train" className={training.button}>Sign in to Zils</Link>} />;
-  return <Report key={session.user.id} client={client} apiUrl={apiUrl} onExpired={async () => { await client.auth.signOut({ scope: 'local' }); }} />;
+  return <Report key={session.user.id} client={client} apiUrl={apiUrl} relayUrl={relayUrl} onExpired={async () => { await client.auth.signOut({ scope: 'local' }); }} />;
 }

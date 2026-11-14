@@ -62,3 +62,40 @@ test('the report is read with the session token and failures are told apart', as
   const signedOut = relayReportApi('https://api.example/decision', async () => '', async () => reply(report));
   await assert.rejects(signedOut.get(), e => e.status === 401);
 });
+
+const { parseRelayStatus, relayAddress } = require('../.private/test-build/relay-report.js');
+const status = { relay_id: 'r'.repeat(40), collecting_since: null, terms_version: 't-1' };
+
+test('the relay address is the id under the training service, ready to paste as a base URL', () => {
+  assert.equal(relayAddress('https://training.example/', 'r'.repeat(40)), `https://training.example/relay/${'r'.repeat(40)}/v1`);
+});
+
+test('parses a relay status, with and without a relay', () => {
+  assert.deepEqual(parseRelayStatus(status), status);
+  assert.deepEqual(parseRelayStatus({ ...status, relay_id: null }), { ...status, relay_id: null });
+  assert.equal(parseRelayStatus({ ...status, terms_version: '' }), null);
+  assert.equal(parseRelayStatus({ relay_id: 'x' }), null);
+});
+
+test('the status is read and collection switched with the session token', async () => {
+  const calls = [];
+  const on = { ...status, collecting_since: '2026-11-14T20:00:00+00:00' };
+  const api = relayReportApi('https://api.example/decision', async () => 'tok', async (url, o) => {
+    calls.push([url, o.method, o.headers.Authorization, o.body]);
+    return reply(o.method === 'GET' ? status : on);
+  });
+  assert.deepEqual(await api.status(), status);
+  assert.deepEqual(await api.collect(true, 't-1'), on);
+  await api.collect(false);
+  assert.deepEqual(calls, [
+    ['https://api.example/decision/v1/relay', 'GET', 'Bearer tok', undefined],
+    ['https://api.example/decision/v1/relay/collection', 'POST', 'Bearer tok', '{"collect":true,"terms_version":"t-1"}'],
+    ['https://api.example/decision/v1/relay/collection', 'POST', 'Bearer tok', '{"collect":false}'],
+  ]);
+  const failing = (httpStatus, code) => relayReportApi('https://api.example/decision', async () => 'tok', async () => reply({ error: { code } }, httpStatus));
+  // The terms changed between showing them and agreeing: say so, do not record anything.
+  await assert.rejects(failing(409, 'terms_changed').collect(true, 't-0'), e => e.status === 409 && /terms changed/.test(e.message));
+  await assert.rejects(failing(404, 'no_relay').collect(true, 't-1'), e => e.status === 404 && /not set up/.test(e.message));
+  await assert.rejects(failing(500, 'internal').collect(false), e => e.status === 500 && /could not be changed/.test(e.message));
+  await assert.rejects(failing(401, 'x').status(), e => e.status === 401);
+});

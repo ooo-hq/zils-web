@@ -58,3 +58,64 @@ test('asks a signed-out visitor to sign in', async ({ page }) => {
   await page.goto('/gateway');
   await expect(page.getByRole('link', { name: 'Sign in to Zils' })).toBeVisible();
 });
+
+const relayId = 'r'.repeat(40);
+const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' };
+
+/** Answers the relay status and remembers each collection switch the page sends. */
+async function relay(page: Page, collecting: string | null, id: string | null = relayId) {
+  const sent: unknown[] = [];
+  let since = collecting;
+  await page.route('http://127.0.0.1:8999/v1/relay', route => route.fulfill({ json: { relay_id: id, collecting_since: since, terms_version: 't-1' }, headers: cors }));
+  await page.route('http://127.0.0.1:8999/v1/relay/collection', route => {
+    if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { ...cors, 'access-control-allow-methods': 'POST' } });
+    const body = route.request().postDataJSON();
+    sent.push(body);
+    since = body.collect ? '2026-11-14T20:00:00+00:00' : null;
+    return route.fulfill({ json: { relay_id: id, collecting_since: since, terms_version: 't-1' }, headers: cors });
+  });
+  return sent;
+}
+
+test('shows the gateway address and starts collecting only after the terms are agreed to', async ({ page }) => {
+  await signIn(page);
+  await answer(page, 200, { relay: true, saving_since: null, questions_total: 0, questions: [] });
+  const sent = await relay(page, null);
+  await page.goto('/gateway');
+  const setup = page.getByRole('region', { name: 'Setup' });
+  await expect(setup.getByText(`http://127.0.0.1:8999/relay/${relayId}/v1`)).toBeVisible();
+  await expect(setup.getByText('Collection is off')).toBeVisible();
+  const start = setup.getByRole('button', { name: 'Start collecting' });
+  await expect(start).toBeDisabled();
+  await setup.getByRole('checkbox', { name: /I agree/ }).check();
+  await start.click();
+  await expect(setup.getByText(/Collecting since/)).toBeVisible();
+  expect(sent).toEqual([{ collect: true, terms_version: 't-1' }]);
+});
+
+test('stopping collection asks first, because it deletes what was saved', async ({ page }) => {
+  await signIn(page);
+  await answer(page, 200, report);
+  const sent = await relay(page, '2026-11-14T15:38:32+00:00');
+  await page.goto('/gateway');
+  const setup = page.getByRole('region', { name: 'Setup' });
+  await setup.getByRole('button', { name: 'Stop collecting' }).click();
+  expect(sent).toEqual([]);
+  const confirm = setup.getByRole('group', { name: 'Confirm stopping collection' });
+  await expect(confirm.getByText(/deletes every saved message/)).toBeVisible();
+  await confirm.getByRole('button', { name: 'Keep collecting' }).click();
+  await expect(confirm).toHaveCount(0);
+  await setup.getByRole('button', { name: 'Stop collecting' }).click();
+  await setup.getByRole('button', { name: 'Stop and delete' }).click();
+  await expect(setup.getByText('Collection is off')).toBeVisible();
+  expect(sent).toEqual([{ collect: false }]);
+});
+
+test('an account without a relay sees no address and no switch', async ({ page }) => {
+  await signIn(page);
+  await answer(page, 200, { relay: false, saving_since: null, questions_total: 0, questions: [] });
+  await relay(page, null, null);
+  await page.goto('/gateway');
+  await expect(page.getByText('The gateway is not set up for this account yet.')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Setup' })).toHaveCount(0);
+});
