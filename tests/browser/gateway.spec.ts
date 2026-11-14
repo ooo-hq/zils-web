@@ -147,6 +147,8 @@ test('shows whether requests have come through, and a card for each tool that op
   // Highlighted: the address is marked as a string and the import as a keyword.
   await expect(steps.locator('pre').first().locator('.token.string')).toHaveText(`"${address}"`);
   await expect(steps.locator('pre').first().locator('.token.keyword').first()).toHaveText('from');
+  // The one thing that is the account's own, its address, is marked inside the code.
+  await expect(steps.locator('pre mark')).toHaveText(address);
   await steps.getByRole('button', { name: 'Copy step 1' }).click();
   await expect(steps.getByRole('button', { name: 'Copy step 1' })).toHaveText(/Copied/);
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(`client = OpenAI(base_url="${address}")`);

@@ -44,15 +44,17 @@ function Question({ question, number }: { question: RelayQuestion; number: numbe
 }
 
 /** One tool's setup: numbered steps, each a highlighted block with its own copy button. */
-function ToolSteps({ tool }: { tool: GatewayTool }) {
+const MONOGRAM = { python: 'Py', javascript: 'TS', bash: 'sh' } as const;
+
+function ToolSteps({ tool, address }: { tool: GatewayTool; address: string }) {
   const [copied, setCopied] = useState<{ step: number; ok: boolean } | null>(null);
   const copy = (step: number) => navigator.clipboard.writeText(tool.steps[step].code).then(() => setCopied({ step, ok: true }), () => setCopied({ step, ok: false }));
   return <div id={`gateway-tool-${tool.id}`} role="region" aria-label={`${tool.name} setup`} className={styles.panel}>
     <ol className={styles.steps}>{tool.steps.map((step, index) => <li key={step.title}>
-      <p className={styles.stepTitle}><span>{index + 1}</span>{step.title}</p>
-      <div className={styles.block}>
+      <p className={styles.stepTitle}><span aria-hidden="true">{index + 1}</span>{step.title}</p>
+      <div className={styles.block} data-lang={step.language}>
         <div className={styles.blockHead}><span>{step.label}</span><button aria-label={`Copy step ${index + 1}`} onClick={() => void copy(index)}>{copied?.step === index && copied.ok ? 'Copied' : 'Copy'}</button></div>
-        <pre tabIndex={0} className={styles.snippet}><code><HighlightedCode code={step.code} language={step.language} /></code></pre>
+        <pre tabIndex={0} className={styles.snippet}><code><HighlightedCode code={step.code} language={step.language} mark={address} /></code></pre>
       </div>
     </li>)}</ol>
     <p role="status" className={workspacePage.fine}>{copied && !copied.ok ? 'Copy was blocked. Select the text and copy it manually.' : ''}</p>
@@ -112,10 +114,13 @@ function Setup({ status, address, collect }: { status: RelayStatus; address: str
         return <div key={group.label} className={styles.group}>
           <div className={styles.groupHead}><h3>{group.label}</h3><p>{group.intro}</p></div>
           <div className={styles.cards}>{group.tools.map(tool => <button key={tool.id} className={styles.card} aria-expanded={tool.id === open} aria-controls={`gateway-tool-${tool.id}`} onClick={() => setOpen(tool.id === open ? '' : tool.id)}>
-            <span className={styles.cardName}>{tool.name}<span className={styles.tag}>{tool.tag}</span></span>
-            <span className={styles.blurb}>{tool.blurb}</span>
+            <span className={styles.monogram} data-lang={tool.steps[1].language} aria-hidden="true">{MONOGRAM[tool.steps[1].language]}</span>
+            <span className={styles.cardText}>
+              <span className={styles.cardName}>{tool.name}<span className={styles.tag}>{tool.tag}</span></span>
+              <span className={styles.blurb}>{tool.blurb}</span>
+            </span>
           </button>)}</div>
-          {shown && <ToolSteps key={shown.id} tool={shown} />}
+          {shown && <ToolSteps key={shown.id} tool={shown} address={address} />}
         </div>;
       })}
     </div>
