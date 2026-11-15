@@ -105,7 +105,8 @@ function ToolSteps({ tool, address }: { tool: GatewayTool; address: string }) {
 type Collect = (on: boolean, termsVersion?: string) => Promise<void>;
 type Choose = (provider: 'openai' | 'anthropic') => Promise<void>;
 
-/** The address to point the provider's client at, and the account's own switch for saving what passes through. */
+/** Setup in the order it has to happen: the provider, then the address in the app, then collecting. The provider comes first
+    because the address and every saved answer follow from it; it is locked while collecting, and unlocking means stopping, which deletes. */
 function Setup({ status, address, collect, choose }: { status: RelayStatus; address: string; collect: Collect; choose: Choose }) {
   const [agreed, setAgreed] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -113,28 +114,55 @@ function Setup({ status, address, collect, choose }: { status: RelayStatus; addr
   const [open, setOpen] = useState('');
   const [switching, setSwitching] = useState(false);
   const provider = gatewayProviders.find(known => known.id === status.provider) ?? gatewayProviders[0];
-  const jev = provider.id === 'jev';
+  const jev = provider.id === 'jev', locked = !!status.collecting_since;
   const outcomes = status.collecting_since ? outcomeRows(status.outcomes) : [];
   const counted = outcomes.reduce((sum, row) => sum + row.count, 0);
   const change = (on: boolean) => { setBusy(true); void collect(on, on ? status.terms_version : undefined).finally(() => { setBusy(false); setConfirming(false); setAgreed(false); }); };
   return <section aria-labelledby="gateway-setup">
     <Section label="Setup" id="gateway-setup" />
-    <div className={workspacePage.split}>
-      <div>
-        <p className={workspacePage.label}>Your gateway address</p>
+    <ol className={styles.flow} aria-label="Setup steps">
+      <li data-state={locked ? 'locked' : 'done'}>
+        <div className={styles.flowHead}><span className={styles.flowNumber} aria-hidden="true">1</span><h3>Choose your provider</h3><p>{provider.name}{locked && ', locked'}</p></div>
+        {/* An account chooses OpenAI or Claude itself, while it is not collecting: saved answers are one provider's. Jev is set by us. */}
+        <div role="group" aria-label="Provider" className={styles.providers}>{gatewayProviders.filter(known => jev ? known.id !== 'anthropic' : known.id !== 'jev').map(known => {
+          const other = known.id !== provider.id;
+          return <button key={known.id} className={styles.provider} aria-pressed={!other} disabled={!other || jev || locked || switching} onClick={() => { if (known.id === 'jev') return; setSwitching(true); setOpen(''); void choose(known.id).finally(() => setSwitching(false)); }}>{known.name}{jev && other && <span className={styles.tag}>On request</span>}</button>;
+        })}</div>
+        {jev ? <p className={workspacePage.sub}>Your address sends requests to Jev. Ask us if it should go to another provider.</p>
+          : locked ? <p role="note" className={styles.lock}><strong>Locked while you collect.</strong> Every saved answer is {provider.name}’s. To change provider, stop collecting, which deletes every saved message.</p>
+          : <p className={workspacePage.sub}>Your address sends requests to {provider.name}. You can change it until you start collecting.</p>}
+      </li>
+      <li data-state={status.requests > 0 ? 'done' : 'open'}>
+        <div className={styles.flowHead}><span className={styles.flowNumber} aria-hidden="true">2</span><h3>Point your app at your address</h3><p>{status.requests === 0 ? 'No requests yet' : `${status.requests.toLocaleString()} ${status.requests === 1 ? 'request' : 'requests'}`}</p></div>
         <code className={styles.address}>{address}</code>
         <p className={workspacePage.sub}>Set it as the base URL of your {provider.name} client. Your app keeps its own provider key and always gets your provider’s answer.</p>
-        <p className={`${workspacePage.label} ${styles.requests}`}>Requests</p>
         <p className={workspacePage.sub}>{status.requests === 0 ? 'No request has come through this address yet.' : `${status.requests.toLocaleString()} ${status.requests === 1 ? 'request has' : 'requests have'} passed through.`}{status.requests > 0 && status.last_request_at && ` Last one around ${when(status.last_request_at)}.`}</p>
         {status.requests === 0 && <p className={workspacePage.fine}>Send any request from your app, wait a few seconds, then refresh. Only requests your provider answered are counted.</p>}
         <p className={workspacePage.fine}>Treat the address as private: anyone who has it can send requests that are saved to this account.</p>
-      </div>
-      <div>
-        <p className={workspacePage.label}>Collection</p>
+        <div className={styles.connect}>
+          <p className={workspacePage.sub}>Choose what your app uses to call {provider.name}. {jev ? 'Each one shows where the address goes. A Jev question already has fixed answers, so every yes/no and choice question is collected.' : 'Each one shows where the address goes and how to ask for an answer from a fixed list, which is what the gateway collects.'}</p>
+          {gatewayTools(address, provider.id).map(group => {
+            const shown = group.tools.find(tool => tool.id === open);
+            return <div key={group.label} className={styles.group}>
+              <div className={styles.groupHead}><h4>{group.label}</h4><p>{group.intro}</p></div>
+              <div className={styles.cards}>{group.tools.map(tool => <button key={tool.id} className={styles.card} aria-expanded={tool.id === open} aria-controls={`gateway-tool-${tool.id}`} onClick={() => setOpen(tool.id === open ? '' : tool.id)}>
+                <span className={styles.monogram} data-lang={tool.steps[1].language} aria-hidden="true">{MONOGRAM[tool.steps[1].language]}</span>
+                <span className={styles.cardText}>
+                  <span className={styles.cardName}>{tool.name}<span className={styles.tag}>{tool.tag}</span></span>
+                  <span className={styles.blurb}>{tool.blurb}</span>
+                </span>
+              </button>)}</div>
+              {shown && <ToolSteps key={shown.id} tool={shown} address={address} />}
+            </div>;
+          })}
+        </div>
+      </li>
+      <li data-state={locked ? 'done' : 'open'}>
+        <div className={styles.flowHead}><span className={styles.flowNumber} aria-hidden="true">3</span><h3>Collect your provider’s answers</h3><p>{locked ? 'On' : 'Off'}</p></div>
         {status.collecting_since ? <>
-          <p className={workspacePage.sub}>Collecting since {when(status.collecting_since)}.</p>
+          <p className={workspacePage.sub}>Collecting since {when(status.collecting_since)}. Every answer saved is {provider.name}’s.</p>
           {confirming ? <div role="group" aria-label="Confirm stopping collection">
-            <p className={workspacePage.sub}>Stopping deletes every saved message and comparison for this account now. Models already trained are kept. This can’t be undone.</p>
+            <p className={workspacePage.sub}>Stopping deletes every saved message and comparison for this account now. Models already trained are kept. This can’t be undone. You can change your provider afterwards.</p>
             <div className={styles.actions}><button className={training.secondary} disabled={busy} onClick={() => setConfirming(false)}>Keep collecting</button><button className={training.button} disabled={busy} onClick={() => change(false)}>{busy ? 'Stopping…' : 'Stop and delete'}</button></div>
           </div> : <div className={styles.actions}><button className={training.secondary} onClick={() => setConfirming(true)}>Stop collecting</button></div>}
         </> : <>
@@ -145,11 +173,12 @@ function Setup({ status, address, collect, choose }: { status: RelayStatus; addr
             <li>Saved messages are used to train and measure models for this account only.</li>
             <li>A saved message is deleted 90 days after it was last sent. Stopping collection deletes all of them at once.</li>
           </ul>
+          {!jev && <p className={workspacePage.sub}>Starting locks your provider to {provider.name} until you stop.</p>}
           <label className={styles.agree}><input type="checkbox" checked={agreed} onChange={event => setAgreed(event.target.checked)} /><span>I agree to this, and I have the right to share these messages and answers with Zils.</span></label>
           <div className={styles.actions}><button className={training.button} disabled={!agreed || busy} onClick={() => change(true)}>{busy ? 'Starting…' : 'Start collecting'}</button></div>
         </>}
-      </div>
-    </div>
+      </li>
+    </ol>
     {outcomes.length > 0 && <div className={styles.outcomes} role="region" aria-label="What happened to your requests">
       <p className={workspacePage.label}>What happened to your requests</p>
       <p className={styles.tally}>{`${outcomes[0].count.toLocaleString()} of ${counted.toLocaleString()} ${counted === 1 ? 'request' : 'requests'} saved`}</p>
@@ -160,29 +189,6 @@ function Setup({ status, address, collect, choose }: { status: RelayStatus; addr
       </table></div>
       <p className={workspacePage.fine}>{`${counted === 1 ? 'The request' : 'Requests'} that asked a model for a reply since ${when(status.outcomes_since ?? status.collecting_since ?? '')}. The gateway saves the ones that ask for an answer from a fixed list.`}</p>
     </div>}
-    <div className={styles.connect}>
-      <p className={workspacePage.label}>Connect your app</p>
-      {/* An account chooses OpenAI or Claude itself, while it is not collecting: saved answers are one provider's. Jev is set by us. */}
-      <div role="group" aria-label="Provider" className={styles.providers}>{gatewayProviders.filter(known => jev ? known.id !== 'anthropic' : known.id !== 'jev').map(known => {
-        const other = known.id !== provider.id, held = other && (jev ? 'On request' : status.collecting_since ? 'Collection is on' : '');
-        return <button key={known.id} className={styles.provider} aria-pressed={!other} disabled={!other || !!held || switching} onClick={() => { if (known.id === 'jev') return; setSwitching(true); setOpen(''); void choose(known.id).finally(() => setSwitching(false)); }}>{known.name}{held && <span className={styles.tag}>{held}</span>}</button>;
-      })}</div>
-      <p className={workspacePage.sub}>This address passes requests on to {provider.name}.{jev && ' Ask us if it should go to another provider.'}{!jev && status.collecting_since && ' The provider cannot be changed while collection is on, because the saved answers are this provider’s.'} Choose what your app uses to call {provider.name}. {jev ? 'Each one shows where the address goes. A Jev question already has fixed answers, so every yes/no and choice question is collected.' : 'Each one shows where the address goes and how to ask for an answer from a fixed list, which is what the gateway collects.'}</p>
-      {gatewayTools(address, provider.id).map(group => {
-        const shown = group.tools.find(tool => tool.id === open);
-        return <div key={group.label} className={styles.group}>
-          <div className={styles.groupHead}><h3>{group.label}</h3><p>{group.intro}</p></div>
-          <div className={styles.cards}>{group.tools.map(tool => <button key={tool.id} className={styles.card} aria-expanded={tool.id === open} aria-controls={`gateway-tool-${tool.id}`} onClick={() => setOpen(tool.id === open ? '' : tool.id)}>
-            <span className={styles.monogram} data-lang={tool.steps[1].language} aria-hidden="true">{MONOGRAM[tool.steps[1].language]}</span>
-            <span className={styles.cardText}>
-              <span className={styles.cardName}>{tool.name}<span className={styles.tag}>{tool.tag}</span></span>
-              <span className={styles.blurb}>{tool.blurb}</span>
-            </span>
-          </button>)}</div>
-          {shown && <ToolSteps key={shown.id} tool={shown} address={address} />}
-        </div>;
-      })}
-    </div>
   </section>;
 }
 

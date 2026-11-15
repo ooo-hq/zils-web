@@ -20,13 +20,14 @@
 .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
 /* Connect your app. Three depths: the page, tool cards raised above it, and code wells sunk below it.
    A language keeps one color everywhere: on a card's monogram and on the edge of its code. */
-.connect { margin: 0 -40px; padding: 36px 40px 48px; border-top: 1px solid var(--zs-line); --lang: var(--zs-peach); }
+.connect { margin-top: 28px; --lang: var(--zs-peach); }
+.connect > p { max-width: 64ch; }
 .connect [data-lang="python"] { --lang: var(--zs-lilac); }
 .connect [data-lang="javascript"] { --lang: var(--zs-peri); }
 .connect [data-lang="bash"] { --lang: var(--zs-peach); }
-.group { margin-top: 40px; }
+.group { margin-top: 28px; }
 .groupHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; margin-bottom: 16px; }
-.groupHead h3 { margin: 0; font-size: 20px; font-weight: 400; }
+.groupHead h4 { margin: 0; font-size: 17px; font-weight: 400; }
 .groupHead p { margin: 0; font-size: 14px; color: var(--zs-t3); }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
 .card { position: relative; display: flex; align-items: flex-start; gap: 14px; padding: 16px 40px 18px 16px; border: 1px solid var(--zs-line); border-radius: 6px; background: var(--zs-raised); color: inherit; font: inherit; text-align: left; cursor: pointer; }
@@ -58,7 +59,7 @@
 .snippet mark { padding: 2px 0; border-bottom: 1px solid var(--zs-peach); background: color-mix(in srgb, var(--zs-peach) 16%, transparent); color: inherit; }
 .note { margin: 4px 0 0 44px; padding: 12px 16px; max-width: 70ch; border-left: 3px solid var(--zs-peach); background: var(--zs-gutter); font-size: 14px; line-height: 1.5; color: var(--zs-t2); }
 .panel > .note + p, .panel > p:last-child { margin-left: 44px; }
-@media (max-width: 860px) { .connect { margin: 0 -16px; padding: 28px 16px 36px; }.panel { padding: 20px 16px; }.steps li { padding-left: 38px; }.note, .panel > .note + p, .panel > p:last-child { margin-left: 0; } }
+@media (max-width: 860px) { .panel { padding: 20px 16px; }.steps li { padding-left: 38px; }.note, .panel > .note + p, .panel > p:last-child { margin-left: 0; } }
 /* Same token colors as the model quickstart's code. */
 .snippet :global(.token.comment) { color:#626875; }
 .snippet :global(.token.keyword),.snippet :global(.token.boolean) { color:#7c3aa6; }
@@ -99,3 +100,21 @@
 .provider { display: inline-flex; align-items: center; gap: 10px; min-height: 42px; padding: 8px 16px; border: 1px solid var(--zs-line); background: none; color: inherit; font: inherit; font-size: 15px; }
 .provider[aria-pressed="true"] { border-color: var(--zs-peach); }
 .provider:disabled { color: var(--zs-t3); cursor: not-allowed; }
+.provider[aria-pressed="true"]:disabled { color: inherit; }
+/* Setup is a real sequence: provider, address, collecting. Each step's number sits on a rail and its state is said at the right
+   of its heading. While collecting, the rail from step 1 to step 3 is drawn solid: step 3 is what holds step 1 locked. */
+.flow { margin: 0 -40px; padding: 0; list-style: none; border-bottom: 1px solid var(--zs-line); }
+.flow > li { position: relative; padding: 32px 40px 40px 96px; }
+.flow > li + li { border-top: 1px solid var(--zs-line); }
+.flow > li::before { content: ""; position: absolute; left: 55px; top: 0; bottom: 0; width: 1px; background: var(--zs-line); }
+.flow > li:first-child::before { top: 48px; }
+.flow > li:last-child::before { bottom: auto; height: 32px; }
+.flow > li[data-state="locked"]::before, .flow > li[data-state="locked"] ~ li::before { background: var(--zs-peach); }
+.flowHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; }
+.flowHead h3 { margin: 0; font-weight: 300; font-size: clamp(22px, 2.2vw, 28px); letter-spacing: -0.02em; line-height: 1.15; }
+.flowNumber { position: absolute; left: 40px; top: 30px; display: grid; place-items: center; width: 31px; height: 31px; border: 1px solid var(--zs-line); border-radius: 50%; background: var(--zs-bg, var(--zs-raised)); font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 13px; font-weight: 400; letter-spacing: 0; color: var(--zs-t2); }
+.flow > li[data-state="done"] .flowNumber, .flow > li[data-state="locked"] .flowNumber { border-color: var(--zs-peach); color: var(--zs-peach); }
+.flowHead p { margin: 0; font-size: 15px; color: var(--zs-t2); font-variant-numeric: tabular-nums; }
+.lock { margin: 18px 0 0; padding: 12px 16px; max-width: 60ch; border-left: 3px solid var(--zs-peach); background: var(--zs-gutter); font-size: 14px; line-height: 1.5; color: var(--zs-t2); }
+.lock strong { font-weight: 500; color: var(--zs-fg); }
+@media (max-width: 860px) { .flow { margin: 0 -16px; }.flow > li { padding: 24px 16px 32px 60px; }.flow > li::before { left: 31px; }.flowNumber { left: 16px; top: 22px; }.flow > li:first-child::before { top: 40px; }.flow > li:last-child::before { height: 24px; } }

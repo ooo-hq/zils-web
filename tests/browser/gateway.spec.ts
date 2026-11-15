@@ -179,9 +179,34 @@ test('the provider cannot be switched while the account collects', async ({ page
   await page.goto('/gateway');
   const providers = page.getByRole('region', { name: 'Setup' }).getByRole('group', { name: 'Provider' });
   await expect(providers.getByRole('button', { name: /OpenAI/ })).toHaveAttribute('aria-pressed', 'true');
-  await expect(providers.getByRole('button', { name: /Claude.*Collection is on/ })).toBeDisabled();
-  await expect(page.getByRole('region', { name: 'Setup' }).getByText(/cannot be changed while collection is on/)).toBeVisible();
+  await expect(providers.getByRole('button', { name: 'Claude' })).toBeDisabled();
   expect(sent).toEqual([]);
+});
+
+test('setup is three steps in order, and each says how it depends on the others', async ({ page }) => {
+  await signIn(page);
+  await answer(page, 200, { relay: true, saving_since: null, questions_total: 0, questions: [] });
+  await relay(page, null, relayId, { requests: 0, last_request_at: null });
+  await page.goto('/gateway');
+  const setup = page.getByRole('region', { name: 'Setup' });
+  const steps = setup.locator('ol[aria-label="Setup steps"] > li');
+  await expect(steps.getByRole('heading', { level: 3 })).toHaveText(['Choose your provider', 'Point your app at your address', 'Collect your provider’s answers']);
+  const [choose, point, collect] = [steps.nth(0), steps.nth(1), steps.nth(2)];
+  // The provider is chosen first, because the address and what is saved both follow from it.
+  await expect(choose.getByRole('group', { name: 'Provider' }).getByRole('button', { name: 'OpenAI' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(choose.getByText('You can change it until you start collecting.')).toBeVisible();
+  await expect(point.locator('code')).toHaveText(`http://127.0.0.1:8999/relay/${relayId}/v1`);
+  await expect(collect.getByText('Starting locks your provider to OpenAI', { exact: false })).toBeVisible();
+  await collect.getByRole('checkbox').check();
+  await collect.getByRole('button', { name: 'Start collecting' }).click();
+  // Collecting: the provider is locked, and the lock says what unlocking costs.
+  await expect(collect.getByText(/Every answer saved is OpenAI’s/)).toBeVisible();
+  const locked = choose.getByRole('note');
+  await expect(locked).toContainText('Locked while you collect');
+  await expect(locked).toContainText('stop collecting, which deletes every saved message');
+  await expect(choose.getByRole('button', { name: 'Claude' })).toBeDisabled();
+  await collect.getByRole('button', { name: 'Stop collecting' }).click();
+  await expect(collect.getByRole('group', { name: 'Confirm stopping collection' })).toContainText('You can change your provider afterwards.');
 });
 
 test('a question with enough saved answers can be trained from; one with few says how many it needs', async ({ page }) => {
