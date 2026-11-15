@@ -117,6 +117,37 @@ test('a question with enough saved answers can be trained from; one with few say
   await expect(second.getByText('Training opens at 200 saved messages.')).toBeVisible();
 });
 
+test('runs trained from a question are listed, and a ready one can be compared with the provider', async ({ page }) => {
+  await signIn(page);
+  const job = '50000000-0000-4000-8000-000000000001', other = '50000000-0000-4000-8000-000000000002';
+  const run = (job_id: string, state: string, model: string | null) => ({ job_id, field: 'intent', name: `gateway-intent-${job_id.at(-1)}`, started_at: '2026-11-15T17:00:00+00:00', state, model });
+  let compared = '';
+  const question = (shadows: unknown[]) => ({ ...report.questions[0], rows: 240, shadows, trainings: [run(other, 'training', null), run(job, 'ready', 'zils-task-new')] });
+  await page.route('http://127.0.0.1:8999/v1/relay/report', route => route.fulfill({ json: { ...report, questions: [question(compared ? [{ ...shadow, model: 'zils-task-new', asked: 0, agreed: 0, by_confidence: [] }] : [shadow])] }, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' } }));
+  await page.route('http://127.0.0.1:8999/v1/relay/trainings/*/compare', route => {
+    const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' };
+    if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
+    compared = new URL(route.request().url()).pathname;
+    return route.fulfill({ headers, json: { status: 'ok' } });
+  });
+  await page.goto('/gateway');
+  const runs = page.getByRole('region', { name: 'Question 1' }).getByRole('list', { name: 'Models trained from this question' });
+  await expect(runs.getByRole('listitem')).toHaveCount(2);
+  await expect(runs.getByRole('listitem').nth(0)).toContainText(/gateway-intent-2.*Training/);
+  await expect(runs.getByRole('listitem').nth(0).getByRole('button')).toHaveCount(0);
+  const ready = runs.getByRole('listitem').nth(1);
+  await expect(ready).toContainText(/gateway-intent-1.*Ready/);
+  await expect(ready.getByRole('link', { name: 'gateway-intent-1' })).toHaveAttribute('href', `/train?run=${job}`);
+  // Another model is compared on this field today: replacing it starts its counts again, and says so first.
+  await ready.getByRole('button', { name: 'Compare this model' }).click();
+  await expect(ready.getByText('This replaces zils-task-fixture on “intent” and starts its counts again.')).toBeVisible();
+  expect(compared).toBe('');
+  await ready.getByRole('button', { name: 'Replace it' }).click();
+  await expect(ready.getByText('Being compared')).toBeVisible();
+  expect(compared).toBe(`/v1/relay/trainings/${job}/compare`);
+  await expect(page.getByRole('region', { name: 'Question 1' }).getByText('zils-task-new').first()).toBeVisible();
+});
+
 test('says what became of the requests: how many were saved, and why the others were not', async ({ page }) => {
   await signIn(page);
   await answer(page, 200, { relay: true, saving_since: '2026-11-14T15:38:32+00:00', questions_total: 0, questions: [] });

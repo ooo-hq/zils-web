@@ -16,7 +16,30 @@ const INTRO = 'Your app keeps calling its own provider through Zils. This is wha
 const when = (value: string) => new Date(value).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 const answers = (name: string, values: (string | boolean)[]) => `${name}: ${values.every(value => typeof value === 'boolean') ? 'yes or no' : `${values.length} answers`}`;
 
-function Question({ question, number }: { question: RelayQuestion; number: number }) {
+type Compare = (jobId: string) => Promise<void>;
+
+/** The runs trained from a question. A ready one can become the model compared on its field; replacing another model is confirmed first. */
+function Runs({ question, compare }: { question: RelayQuestion; compare: Compare }) {
+  const [confirming, setConfirming] = useState(''), [busy, setBusy] = useState('');
+  if (!question.trainings.length) return null;
+  const start = (jobId: string) => { setBusy(jobId); void compare(jobId).finally(() => { setBusy(''); setConfirming(''); }); };
+  return <>
+    <p className={`${workspacePage.label} ${styles.requests}`}>Models trained from this question</p>
+    <ul className={styles.runs} aria-label="Models trained from this question">{question.trainings.map(run => {
+      const current = question.shadows.find(shadow => shadow.field === run.field);
+      const compared = run.state === 'ready' && current?.model === run.model;
+      return <li key={run.job_id}>
+        <span className={styles.run}><Link href={`/train?run=${run.job_id}`}>{run.name}</Link><span className={workspacePage.status} data-tone={run.state === 'training' ? 'busy' : undefined}>{compared ? 'Being compared' : run.state === 'ready' ? 'Ready' : run.state === 'training' ? 'Training' : 'Did not pass'}</span></span>
+        {run.state === 'ready' && !compared && (confirming === run.job_id && current ? <div role="group" aria-label="Confirm replacing the compared model">
+          <p className={workspacePage.fine}>This replaces {current.model} on “{run.field}” and starts its counts again.</p>
+          <div className={styles.actions}><button className={training.secondary} disabled={Boolean(busy)} onClick={() => setConfirming('')}>Keep it</button><button className={training.button} disabled={Boolean(busy)} onClick={() => start(run.job_id)}>{busy === run.job_id ? 'Replacing…' : 'Replace it'}</button></div>
+        </div> : <div className={styles.actions}><button className={training.secondary} disabled={Boolean(busy)} onClick={() => current ? setConfirming(run.job_id) : start(run.job_id)}>{busy === run.job_id ? 'Starting…' : 'Compare this model'}</button></div>)}
+      </li>;
+    })}</ul>
+  </>;
+}
+
+function Question({ question, number, compare }: { question: RelayQuestion; number: number; compare: Compare }) {
   const id = `gateway-question-${number}`;
   return <section aria-labelledby={id}>
     <Section label={`Question ${number}`} id={id} />
@@ -28,6 +51,7 @@ function Question({ question, number }: { question: RelayQuestion; number: numbe
         <p className={workspacePage.fine}>{Object.entries(question.fields).map(([name, values]) => answers(name, values)).join(' · ')}</p>
         {question.last_at && <p className={workspacePage.fine}>Last saved {when(question.last_at)}</p>}
         {question.shadows.length > 0 && question.rows >= TRAIN_FROM_ROWS && <div className={styles.actions}><Link className={training.button} href={`/train/new?gateway=${question.id}`}>Train a model from these answers</Link></div>}
+        <Runs question={question} compare={compare} />
       </div>
       <div>
         {question.shadows.length === 0 ? (question.rows >= TRAIN_FROM_ROWS ? <>
@@ -173,6 +197,12 @@ function Report({ client, apiUrl, relayUrl, onExpired }: { client: SupabaseClien
     void load(controller.signal);
     return () => controller.abort();
   }, [load]);
+  const compare: Compare = jobId => api.compare(jobId)
+    .then(async () => { setError(''); await load(new AbortController().signal); })
+    .catch(error => {
+      if (error instanceof RelayReportError && error.status === 401) { void onExpired(); return; }
+      setError(error instanceof RelayReportError ? error.message : 'The model could not be compared. Please try again.');
+    });
   const collect: Collect = (on, termsVersion) => api.collect(on, termsVersion)
     .then(async relay => { setStatus(relay); setError(''); await load(new AbortController().signal); })
     .catch(error => {
@@ -194,7 +224,7 @@ function Report({ client, apiUrl, relayUrl, onExpired }: { client: SupabaseClien
       : <>
         <Section label={`${report.questions_total.toLocaleString()} ${report.questions_total === 1 ? 'question' : 'questions'}`} action={refresh} />
         {report.questions_total > report.questions.length && <p className={workspacePage.notice}>Showing the {report.questions.length} questions with the most recent saved messages.</p>}
-        {report.questions.map((question, index) => <Question key={question.id} question={question} number={index + 1} />)}
+        {report.questions.map((question, index) => <Question key={question.id} question={question} number={index + 1} compare={compare} />)}
       </>}
   </div>;
 }

@@ -92,7 +92,13 @@ test('saved gateway answers load as the table and train privately', async ({ pag
   const id = 'a'.repeat(64), intents = ['refund', 'shipping', 'other'];
   const saved = { question: { id, instructions: 'Pick the intent of the customer message.', fields: { intent: intents } },
     rows: Array.from({ length: 60 }, (_, i) => intents[i % 10 === 0 ? 2 : i % 2]).map((intent, i) => ({ text: `Customer message ${i} about ${intent}`, answers: { intent } })), truncated: false };
-  let asked = '';
+  let asked = '', noted: unknown;
+  await page.route(`**/v1/relay/questions/${id}/trainings`, route => {
+    const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' };
+    if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
+    noted = route.request().postDataJSON();
+    return route.fulfill({ headers, json: { status: 'ok' } });
+  });
   await page.route(`**/v1/relay/questions/${id}/rows`, route => {
     const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' };
     if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
@@ -112,6 +118,8 @@ test('saved gateway answers load as the table and train privately', async ({ pag
   await page.getByRole('button', { name: 'Start training', exact: true }).click();
   await expect(page).toHaveURL(`/train?run=${jobId}`);
   expect(state.created).toMatchObject({ name: 'gateway-intent', tier: 'private' });
+  // The run is noted against its question, with the wording and answers it was trained on.
+  expect(noted).toEqual({ field: 'intent', job_id: jobId, decision: 'Pick the intent of the customer message.', outcomes: ['other', 'refund', 'shipping'] });
   const first = JSON.parse(state.uploads.train.trim().split('\n')[0]);
   expect(first.state.decision).toBe('Pick the intent of the customer message.');
   expect(Object.keys(first.state.information)).toEqual(['text']);
