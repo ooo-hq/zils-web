@@ -160,10 +160,12 @@ test('shows whether requests have come through, and a card for each tool that op
   await expect(setup.getByText('No request has come through this address yet.')).toBeVisible();
   const address = `http://127.0.0.1:8999/relay/${relayId}/v1`;
   for (const name of ['OpenAI Python', 'OpenAI Node', 'cURL', 'LangChain', 'Vercel AI SDK', 'LlamaIndex', 'Instructor']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
-  // Providers: an address goes to one of them. The other cannot be picked here.
+  // Providers: an address goes to one of them. Jev is set up by us and is not offered here.
   const providers = setup.getByRole('group', { name: 'Provider' });
   await expect(providers.getByRole('button', { name: /OpenAI/ })).toHaveAttribute('aria-pressed', 'true');
-  await expect(providers.getByRole('button', { name: /Jev.*On request/ })).toBeDisabled();
+  await expect(providers.getByRole('button')).toHaveCount(1);
+  await expect(setup.getByText(/Jev/)).toHaveCount(0);
+  await expect(setup.getByText(/another provider/)).toHaveCount(0);
   await expect(setup.getByText('Set it as the base URL of your OpenAI client.', { exact: false })).toBeVisible();
   // Closed until asked for: no code on the page yet.
   await expect(setup.locator('pre')).toHaveCount(0);
