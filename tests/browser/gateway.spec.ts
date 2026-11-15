@@ -63,7 +63,7 @@ const relayId = 'r'.repeat(40);
 const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' };
 
 /** Answers the relay status and remembers each collection switch the page sends. */
-async function relay(page: Page, collecting: string | null, id: string | null = relayId, seen: { requests?: number; last_request_at?: string | null; provider?: string } = {}) {
+async function relay(page: Page, collecting: string | null, id: string | null = relayId, seen: { requests?: number; last_request_at?: string | null; provider?: string; outcomes?: Record<string, number>; outcomes_since?: string } = {}) {
   const sent: unknown[] = [];
   let since = collecting;
   await page.route('http://127.0.0.1:8999/v1/relay', route => route.fulfill({ json: { relay_id: id, collecting_since: since, terms_version: 't-1', ...seen }, headers: cors }));
@@ -105,6 +105,31 @@ test('a Jev gateway shows the Jev address, cards and what is collected', async (
   await expect(steps.locator('pre').first()).toContainText(`client = TypeSafeClient(base_url="${address}")`);
   await expect(steps.locator('pre mark')).toHaveText(address);
   await expect(steps.getByText(/compress/)).toHaveCount(0);
+});
+
+test('says what became of the requests: how many were saved, and why the others were not', async ({ page }) => {
+  await signIn(page);
+  await answer(page, 200, { relay: true, saving_since: '2026-11-14T15:38:32+00:00', questions_total: 0, questions: [] });
+  await relay(page, '2026-11-14T15:38:32+00:00', relayId, { requests: 120, last_request_at: '2026-11-14T22:59:00+00:00', outcomes: { saved: 60, no_list: 30, stream: 6, chat_function: 4 }, outcomes_since: '2026-11-14T21:00:00+00:00' });
+  await page.goto('/gateway');
+  const outcomes = page.getByRole('region', { name: 'Setup' }).getByRole('region', { name: 'What happened to your requests' });
+  await expect(outcomes.getByText(/100 requests asked a model for a reply/)).toBeVisible();
+  const rows = outcomes.getByRole('row');
+  await expect(rows.nth(1)).toContainText(/Saved.*60.*60%/);
+  await expect(rows.nth(2)).toContainText(/No fixed list of answers.*30.*30%/);
+  await expect(rows.nth(3)).toContainText(/Streamed.*6.*6%/);
+  await expect(rows.nth(4)).toContainText(/Function call on Chat Completions.*4.*4%/);
+  // Each reason says what to do about it.
+  await expect(rows.nth(3)).toContainText(/Turn streaming off/);
+});
+
+test('says nothing about outcomes before any are counted, or while collection is off', async ({ page }) => {
+  await signIn(page);
+  await answer(page, 200, { relay: true, saving_since: null, questions_total: 0, questions: [] });
+  await relay(page, '2026-11-14T15:38:32+00:00', relayId, { requests: 3 });
+  await page.goto('/gateway');
+  await expect(page.getByRole('region', { name: 'Setup' }).getByText('Collecting since', { exact: false })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'What happened to your requests' })).toHaveCount(0);
 });
 
 test('shows the gateway address and starts collecting only after the terms are agreed to', async ({ page }) => {

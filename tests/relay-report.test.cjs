@@ -104,10 +104,38 @@ test('the status is read and collection switched with the session token', async 
 
 test('a status from before request counts reads as no requests yet', () => {
   // A service from before providers sends none: that is an OpenAI gateway.
-  assert.deepEqual(parseRelayStatus(status), { ...status, requests: 0, last_request_at: null, provider: 'openai' });
+  assert.deepEqual(parseRelayStatus(status), { ...status, requests: 0, last_request_at: null, provider: 'openai', outcomes: {}, outcomes_since: null });
   assert.equal(parseRelayStatus({ ...status, provider: 'jev' }).provider, 'jev');
   assert.equal(parseRelayStatus({ ...status, provider: 'other' }), null);
   const busy = { ...status, requests: 3026, last_request_at: '2026-11-14T20:00:00+00:00' };
-  assert.deepEqual(parseRelayStatus(busy), { ...busy, provider: 'openai' });
+  assert.deepEqual(parseRelayStatus(busy), { ...busy, provider: 'openai', outcomes: {}, outcomes_since: null });
   assert.equal(parseRelayStatus({ ...status, requests: -1 }), null);
+});
+
+const { outcomeRows } = require('../.private/test-build/relay-report.js');
+
+test('a status carries what became of the requests, and one from before that carries none', () => {
+  const status = { relay_id: 'r'.repeat(40), collecting_since: '2026-11-14T20:00:00+00:00', terms_version: 't-1' };
+  const old = parseRelayStatus(status);
+  assert.deepEqual([old.outcomes, old.outcomes_since], [{}, null]);
+  const counted = parseRelayStatus({ ...status, outcomes: { saved: 3, no_list: 2 }, outcomes_since: '2026-11-14T21:00:00+00:00' });
+  assert.deepEqual([counted.outcomes, counted.outcomes_since], [{ saved: 3, no_list: 2 }, '2026-11-14T21:00:00+00:00']);
+  assert.equal(parseRelayStatus({ ...status, outcomes: { saved: -1 } }), null);
+});
+
+test('outcomes read as rows: saved first, then why the others were not, most frequent first', () => {
+  const rows = outcomeRows({ stream: 5, saved: 60, no_list: 30, no_answer: 1, chat_function: 4 });
+  assert.deepEqual(rows.map(row => [row.id, row.count, row.share]), [
+    ['saved', 60, '60%'], ['no_list', 30, '30%'], ['stream', 5, '5%'], ['chat_function', 4, '4%'], ['no_answer', 1, '1%'],
+  ]);
+  // Every outcome the service can send has its own plain label and, unless it was saved, what to do about it.
+  for (const id of ['saved', 'no_answer', 'stream', 'no_list', 'open_field', 'optional_field', 'tools', 'chat_function', 'conversation', 'media', 'unreadable', 'other']) {
+    const row = outcomeRows({ [id]: 1 }).find(found => found.id === id);
+    assert.ok(row.label && !row.label.includes('_'), id);
+    assert.equal(Boolean(row.hint), id !== 'saved', id);
+  }
+  assert.equal(new Set(['saved', 'no_answer', 'stream', 'no_list', 'open_field', 'optional_field', 'tools', 'chat_function', 'conversation', 'media', 'unreadable', 'other'].map(id => outcomeRows({ [id]: 1 }).find(found => found.id === id).label)).size, 12);
+  // Saved is shown even at zero, so "nothing was saved" is said outright; a reason the page does not know joins Other.
+  assert.deepEqual(outcomeRows({ no_list: 2, brand_new: 1, other: 1 }).map(row => [row.id, row.count]), [['saved', 0], ['no_list', 2], ['other', 2]]);
+  assert.deepEqual(outcomeRows({}), []);
 });

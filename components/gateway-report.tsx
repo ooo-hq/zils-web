@@ -8,7 +8,7 @@ import { HighlightedCode } from '@/components/highlighted-code';
 import { WorkspaceLoading } from '@/components/workspace-loading';
 import { PageHero, Section, workspacePage } from '@/components/workspace-page';
 import { gatewayProviders, gatewayTools, type GatewayTool } from '@/lib/gateway-tools';
-import { relayAddress, relayReportApi, RelayReportError, shadowRows, type RelayQuestion, type RelayReport, type RelayStatus } from '@/lib/relay-report';
+import { relayAddress, relayReportApi, RelayReportError, shadowRows, type RelayQuestion, type RelayReport, type RelayStatus, outcomeRows } from '@/lib/relay-report';
 import training from '@/app/(home)/train/train.module.css';
 import styles from './gateway-report.module.css';
 
@@ -73,6 +73,8 @@ function Setup({ status, address, collect }: { status: RelayStatus; address: str
   const [open, setOpen] = useState('');
   const provider = gatewayProviders.find(known => known.id === status.provider) ?? gatewayProviders[0];
   const jev = provider.id === 'jev';
+  const outcomes = status.collecting_since ? outcomeRows(status.outcomes) : [];
+  const counted = outcomes.reduce((sum, row) => sum + row.count, 0);
   const change = (on: boolean) => { setBusy(true); void collect(on, on ? status.terms_version : undefined).finally(() => { setBusy(false); setConfirming(false); setAgreed(false); }); };
   return <section aria-labelledby="gateway-setup">
     <Section label="Setup" id="gateway-setup" />
@@ -107,6 +109,14 @@ function Setup({ status, address, collect }: { status: RelayStatus; address: str
         </>}
       </div>
     </div>
+    {outcomes.length > 0 && <div className={styles.outcomes} role="region" aria-label="What happened to your requests">
+      <p className={workspacePage.label}>What happened to your requests</p>
+      <p className={workspacePage.sub}>{`${counted.toLocaleString()} ${counted === 1 ? 'request' : 'requests'} asked a model for a reply since ${when(status.outcomes_since ?? status.collecting_since ?? '')}. The gateway saves the ones that ask for an answer from a fixed list.`}</p>
+      <div className={styles.tableWrap}><table className={`${styles.table} ${styles.outcomeTable}`}>
+        <thead><tr><th scope="col">What happened</th><th scope="col">Requests</th><th scope="col">Share</th></tr></thead>
+        <tbody>{outcomes.map(row => <tr key={row.id}><th scope="row">{row.label}{row.hint && <span className={styles.why}>{row.hint}</span>}</th><td>{row.count.toLocaleString()}</td><td>{row.share}</td></tr>)}</tbody>
+      </table></div>
+    </div>}
     <div className={styles.connect}>
       <p className={workspacePage.label}>Connect your app</p>
       <div role="group" aria-label="Provider" className={styles.providers}>{gatewayProviders.filter(known => jev || known.id !== 'jev').map(known => <button key={known.id} className={styles.provider} aria-pressed={known.id === provider.id} disabled={known.id !== provider.id}>{known.name}{known.id !== provider.id && <span className={styles.tag}>On request</span>}</button>)}</div>
