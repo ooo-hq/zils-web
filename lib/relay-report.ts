@@ -9,14 +9,19 @@ const shadowSchema = z.object({
   by_confidence: z.array(z.object({ confidence_at_least: z.number().min(0).max(1), asked: count, agreed: count })),
 });
 // A run trained from a question: ready once its model can be called, failed if it ended without one.
-const trainingSchema = z.object({ job_id: z.string().uuid(), field: z.string().min(1), name: z.string().min(1), started_at: z.string(), state: z.enum(['training', 'ready', 'failed']), model: z.string().min(1).nullable() });
+const trainingSchema = z.object({ job_id: z.string().uuid(), field: z.string().min(1), name: z.string().min(1), started_at: z.string(), state: z.enum(['training', 'ready', 'failed']), model: z.string().min(1).nullable(),
+  // The share of examples held back from training answered as the provider answered them, for the trained model and the one it started from.
+  evaluation: z.object({ accuracy: z.number().min(0).max(1), baseline_accuracy: z.number().min(0).max(1) }).nullable().default(null),
+});
 const questionSchema = z.object({
   id: z.string().min(1), instructions: z.string(), fields: z.record(z.string(), z.array(z.union([z.string(), z.boolean()]))),
   first_at: z.string(), rows: count, last_at: z.string().nullable(), shadows: z.array(shadowSchema),
   // A service from before runs were noted sends none.
   trainings: z.array(trainingSchema).default([]),
 });
-const reportSchema = z.object({ relay: z.boolean(), saving_since: z.string().nullable(), questions_total: count, questions: z.array(questionSchema) });
+const reportSchema = z.object({ relay: z.boolean(),
+  // Whether a run's model may be compared with the provider on this account; off for a service from before the switch.
+  compare: z.boolean().default(false), saving_since: z.string().nullable(), questions_total: count, questions: z.array(questionSchema) });
 export type RelayShadow = z.infer<typeof shadowSchema>;
 export type RelayQuestion = z.infer<typeof questionSchema>;
 export type RelayTraining = z.infer<typeof trainingSchema>;
@@ -152,6 +157,8 @@ export function relayReportApi(rawUrl: string, token: () => Promise<string>, req
       if (!/^[0-9a-f]{64}$/.test(question)) throw new RelayReportError('That gateway question has no saved messages for this account.', 404);
       return send(`/v1/relay/questions/${question}/rows`, parseRelayRows, 'The saved messages could not be loaded. Please try again.', undefined, signal);
     },
+    /** Give the account a gateway address unless it has one. It starts as pass-through only. */
+    setup: () => send('/v1/relay', parseRelayStatus, 'The gateway could not be set up. Please try again.', {}),
     /** Note that a run was trained from a question's field, with the wording and answers it was trained on. */
     note: (question: string, note: RelayTrainingNote) => send(`/v1/relay/questions/${question}/trainings`, done, 'The run could not be linked to its gateway question.', note),
     /** Make a finished run's model the one compared on the question it was trained from. */

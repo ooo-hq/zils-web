@@ -14,15 +14,16 @@ import styles from './gateway-report.module.css';
 
 const INTRO = 'Your app keeps calling its own provider through Zils. This is what passed through, and how closely your Zils model matches your provider’s answers.';
 const when = (value: string) => new Date(value).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+const percent = (share: number) => `${(share * 100).toFixed(1)}%`;
 const answers = (name: string, values: (string | boolean)[]) => `${name}: ${values.every(value => typeof value === 'boolean') ? 'yes or no' : `${values.length} answers`}`;
 
 type Compare = (jobId: string) => Promise<void>;
 
-/** The runs trained from a question. A ready one can become the model compared on its field; replacing another model is confirmed first. */
-function Runs({ question, compare }: { question: RelayQuestion; compare: Compare }) {
+/** The runs trained from a question. Where comparison is open to the account, a ready one can become the model compared on its field; replacing another model is confirmed first. */
+function Runs({ question, compare }: { question: RelayQuestion; compare: Compare | null }) {
   const [confirming, setConfirming] = useState(''), [busy, setBusy] = useState('');
   if (!question.trainings.length) return null;
-  const start = (jobId: string) => { setBusy(jobId); void compare(jobId).finally(() => { setBusy(''); setConfirming(''); }); };
+  const start = (jobId: string) => { setBusy(jobId); void compare?.(jobId).finally(() => { setBusy(''); setConfirming(''); }); };
   return <>
     <p className={`${workspacePage.label} ${styles.requests}`}>Models trained from this question</p>
     <ul className={styles.runs} aria-label="Models trained from this question">{question.trainings.map(run => {
@@ -30,7 +31,8 @@ function Runs({ question, compare }: { question: RelayQuestion; compare: Compare
       const compared = run.state === 'ready' && current?.model === run.model;
       return <li key={run.job_id}>
         <span className={styles.run}><Link href={`/train?run=${run.job_id}`}>{run.name}</Link><span className={workspacePage.status} data-tone={run.state === 'training' ? 'busy' : undefined}>{compared ? 'Being compared' : run.state === 'ready' ? 'Ready' : run.state === 'training' ? 'Training' : 'Did not pass'}</span></span>
-        {run.state === 'ready' && !compared && (confirming === run.job_id && current ? <div role="group" aria-label="Confirm replacing the compared model">
+        {run.evaluation && <p className={workspacePage.fine}>Gave your provider’s answer on {percent(run.evaluation.accuracy)} of the test examples held back from training. The model it started from: {percent(run.evaluation.baseline_accuracy)}.</p>}
+        {compare && run.state === 'ready' && !compared && (confirming === run.job_id && current ? <div role="group" aria-label="Confirm replacing the compared model">
           <p className={workspacePage.fine}>This replaces {current.model} on “{run.field}” and starts its counts again.</p>
           <div className={styles.actions}><button className={training.secondary} disabled={Boolean(busy)} onClick={() => setConfirming('')}>Keep it</button><button className={training.button} disabled={Boolean(busy)} onClick={() => start(run.job_id)}>{busy === run.job_id ? 'Replacing…' : 'Replace it'}</button></div>
         </div> : <div className={styles.actions}><button className={training.secondary} disabled={Boolean(busy)} onClick={() => current ? setConfirming(run.job_id) : start(run.job_id)}>{busy === run.job_id ? 'Starting…' : 'Compare this model'}</button></div>)}
@@ -39,8 +41,10 @@ function Runs({ question, compare }: { question: RelayQuestion; compare: Compare
   </>;
 }
 
-function Question({ question, number, compare }: { question: RelayQuestion; number: number; compare: Compare }) {
+function Question({ question, number, compare }: { question: RelayQuestion; number: number; compare: Compare | null }) {
   const id = `gateway-question-${number}`;
+  // The newest finished run that was scored: what the account has to go on before any comparison.
+  const scored = question.trainings.find(run => run.evaluation)?.evaluation;
   return <section aria-labelledby={id}>
     <Section label={`Question ${number}`} id={id} />
     <div className={workspacePage.split}>
@@ -50,11 +54,14 @@ function Question({ question, number, compare }: { question: RelayQuestion; numb
         <p className={styles.quote}>“{question.instructions || Object.keys(question.fields).join(', ')}”</p>
         <p className={workspacePage.fine}>{Object.entries(question.fields).map(([name, values]) => answers(name, values)).join(' · ')}</p>
         {question.last_at && <p className={workspacePage.fine}>Last saved {when(question.last_at)}</p>}
-        {question.shadows.length > 0 && question.rows >= TRAIN_FROM_ROWS && <div className={styles.actions}><Link className={training.button} href={`/train/new?gateway=${question.id}`}>Train a model from these answers</Link></div>}
+        {(question.shadows.length > 0 || scored) && question.rows >= TRAIN_FROM_ROWS && <div className={styles.actions}><Link className={training.button} href={`/train/new?gateway=${question.id}`}>Train a model from these answers</Link></div>}
         <Runs question={question} compare={compare} />
       </div>
       <div>
-        {question.shadows.length === 0 ? (question.rows >= TRAIN_FROM_ROWS ? <>
+        {question.shadows.length === 0 ? (scored ? <>
+          <p className={styles.offer}>Your model gave your provider’s answer on {percent(scored.accuracy)} of test examples.</p>
+          <p className={workspacePage.sub}>The model it started from gave it on {percent(scored.baseline_accuracy)}. Both were measured on examples held back from training.</p>
+        </> : question.rows >= TRAIN_FROM_ROWS ? <>
           <p className={styles.offer}>Train a Zils model on these {question.rows.toLocaleString()} answers.</p>
           <p className={workspacePage.sub}>It learns to give your provider’s answer to this question.</p>
           <div className={styles.actions}><Link className={training.button} href={`/train/new?gateway=${question.id}`}>Train a model from these answers</Link></div>
@@ -178,6 +185,7 @@ function Report({ client, apiUrl, relayUrl, onExpired }: { client: SupabaseClien
   const [status, setStatus] = useState<RelayStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [settingUp, setSettingUp] = useState(false), [fresh, setFresh] = useState(false);
   const api = useMemo(() => relayReportApi(apiUrl, async () => {
     const { data, error } = await client.auth.getSession();
     if (error) throw error;
@@ -203,6 +211,16 @@ function Report({ client, apiUrl, relayUrl, onExpired }: { client: SupabaseClien
       if (error instanceof RelayReportError && error.status === 401) { void onExpired(); return; }
       setError(error instanceof RelayReportError ? error.message : 'The model could not be compared. Please try again.');
     });
+  const setup = () => {
+    setSettingUp(true);
+    void api.setup()
+      .then(async relay => { setStatus(relay); setFresh(true); setError(''); await load(new AbortController().signal); })
+      .catch(error => {
+        if (error instanceof RelayReportError && error.status === 401) { void onExpired(); return; }
+        setError(error instanceof RelayReportError ? error.message : 'The gateway could not be set up. Please try again.');
+      })
+      .finally(() => setSettingUp(false));
+  };
   const collect: Collect = (on, termsVersion) => api.collect(on, termsVersion)
     .then(async relay => { setStatus(relay); setError(''); await load(new AbortController().signal); })
     .catch(error => {
@@ -215,16 +233,21 @@ function Report({ client, apiUrl, relayUrl, onExpired }: { client: SupabaseClien
   return <div>
     <PageHero title="Gateway" intro={INTRO} />
     {error && <p className={workspacePage.notice} role="alert">{error}</p>}
+    {fresh && status?.relay_id && <p className={workspacePage.notice} role="status">Your gateway address is ready. It starts working within a minute.</p>}
     {status?.relay_id && <Setup status={status} address={relayAddress(relayUrl, status.relay_id, status.provider)} collect={collect} />}
     {!report ? <><Section label="Report" action={!loading && refresh} /><p className={styles.message} role="status">{loading ? 'Loading your report…' : 'Refresh to try again.'}</p></>
-      : !report.relay ? <><Section label="Not set up" /><p className={styles.message}>The gateway is not set up for this account yet.</p></>
+      : !report.relay ? <><Section label="Not set up" /><div className={styles.message}>
+        <p>The gateway gives you an address to use in place of your provider’s. Your app keeps its own provider key and gets the same answers.</p>
+        <p>Nothing is saved unless you switch collection on.</p>
+        <div className={styles.actions}><button className={training.button} disabled={settingUp} onClick={setup}>{settingUp ? 'Setting up…' : 'Set up the gateway'}</button></div>
+      </div></>
       : report.questions.length === 0 ? <><Section label="Questions" action={refresh} /><p className={styles.message}>No questions yet. {report.saving_since
         ? 'A question appears here once your app sends a request through the gateway that asks for an answer from a fixed list.'
         : 'Saving is off for this account, so nothing that passes through the gateway is kept.'}</p></>
       : <>
         <Section label={`${report.questions_total.toLocaleString()} ${report.questions_total === 1 ? 'question' : 'questions'}`} action={refresh} />
         {report.questions_total > report.questions.length && <p className={workspacePage.notice}>Showing the {report.questions.length} questions with the most recent saved messages.</p>}
-        {report.questions.map((question, index) => <Question key={question.id} question={question} number={index + 1} compare={compare} />)}
+        {report.questions.map((question, index) => <Question key={question.id} question={question} number={index + 1} compare={report.compare ? compare : null} />)}
       </>}
   </div>;
 }
