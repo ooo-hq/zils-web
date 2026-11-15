@@ -107,6 +107,16 @@ test('a Jev gateway shows the Jev address, cards and what is collected', async (
   await expect(steps.getByText(/compress/)).toHaveCount(0);
 });
 
+test('a question with enough saved answers can be trained from; one with few says how many it needs', async ({ page }) => {
+  await signIn(page);
+  await answer(page, 200, { ...report, questions: [{ ...report.questions[0], rows: 240, shadows: [] }, report.questions[1]] });
+  await page.goto('/gateway');
+  const first = page.getByRole('region', { name: 'Question 1' }), second = page.getByRole('region', { name: 'Question 2' });
+  await expect(first.getByRole('link', { name: 'Train a model from these answers' })).toHaveAttribute('href', `/train/new?gateway=${'e'.repeat(64)}`);
+  await expect(second.getByRole('link', { name: 'Train a model from these answers' })).toHaveCount(0);
+  await expect(second.getByText('Training opens at 200 saved messages.')).toBeVisible();
+});
+
 test('says what became of the requests: how many were saved, and why the others were not', async ({ page }) => {
   await signIn(page);
   await answer(page, 200, { relay: true, saving_since: '2026-11-14T15:38:32+00:00', questions_total: 0, questions: [] });

@@ -8,7 +8,7 @@ import { HighlightedCode } from '@/components/highlighted-code';
 import { WorkspaceLoading } from '@/components/workspace-loading';
 import { PageHero, Section, workspacePage } from '@/components/workspace-page';
 import { gatewayProviders, gatewayTools, type GatewayTool } from '@/lib/gateway-tools';
-import { relayAddress, relayReportApi, RelayReportError, shadowRows, type RelayQuestion, type RelayReport, type RelayStatus, outcomeRows } from '@/lib/relay-report';
+import { relayAddress, relayReportApi, RelayReportError, shadowRows, type RelayQuestion, type RelayReport, type RelayStatus, outcomeRows, TRAIN_FROM_ROWS } from '@/lib/relay-report';
 import training from '@/app/(home)/train/train.module.css';
 import styles from './gateway-report.module.css';
 
@@ -27,6 +27,8 @@ function Question({ question, number }: { question: RelayQuestion; number: numbe
         <p className={styles.quote}>“{question.instructions || Object.keys(question.fields).join(', ')}”</p>
         <p className={workspacePage.fine}>{Object.entries(question.fields).map(([name, values]) => answers(name, values)).join(' · ')}</p>
         {question.last_at && <p className={workspacePage.fine}>Last saved {when(question.last_at)}</p>}
+        {question.rows >= TRAIN_FROM_ROWS ? <div className={styles.actions}><Link className={training.secondary} href={`/train/new?gateway=${question.id}`}>Train a model from these answers</Link></div>
+          : <p className={workspacePage.fine}>Training opens at {TRAIN_FROM_ROWS} saved messages.</p>}
       </div>
       <div>
         {question.shadows.length === 0 ? <p className={workspacePage.sub}>No Zils model is being compared on this question yet.</p> : question.shadows.map(shadow => <div key={shadow.field} className={styles.shadow}>

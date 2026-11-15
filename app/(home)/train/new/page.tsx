@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function NewTrainingPage() {
-  return <ConsoleShell bleed><TrainTable config={trainingConfig()} /></ConsoleShell>;
+export default async function NewTrainingPage({ searchParams }: { searchParams: Promise<{ gateway?: string | string[] }> }) {
+  const { gateway } = await searchParams;
+  return <ConsoleShell bleed><TrainTable config={trainingConfig()} gateway={typeof gateway === 'string' ? gateway : undefined} /></ConsoleShell>;
 }

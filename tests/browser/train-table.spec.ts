@@ -87,6 +87,44 @@ test('a spreadsheet becomes a training run on one screen', async ({ page }) => {
   expect(state.uploads.train).not.toContain('T-1,');
 });
 
+test('saved gateway answers load as the table and train privately', async ({ page }) => {
+  const state = await workspace(page);
+  const id = 'a'.repeat(64), intents = ['refund', 'shipping', 'other'];
+  const saved = { question: { id, instructions: 'Pick the intent of the customer message.', fields: { intent: intents } },
+    rows: Array.from({ length: 60 }, (_, i) => intents[i % 10 === 0 ? 2 : i % 2]).map((intent, i) => ({ text: `Customer message ${i} about ${intent}`, answers: { intent } })), truncated: false };
+  let asked = '';
+  await page.route(`**/v1/relay/questions/${id}/rows`, route => {
+    const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' };
+    if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
+    asked = route.request().headers().authorization || '';
+    return route.fulfill({ headers, json: saved });
+  });
+  await page.goto(`/train/new?gateway=${id}`);
+  await expect(page.getByText('Learns intent (picks 1 of 3) from text, using 60 examples.')).toBeVisible();
+  expect(asked).toMatch(/^Bearer .+/);  // the signed-in account's own rows
+  await page.getByRole('button', { name: 'Train', exact: true }).click();
+  await expect(page.getByLabel('The question it answers', { exact: false })).toHaveValue('Pick the intent of the customer message.');
+  await expect(page.getByText('Fewer than 20 examples of “other”. The model may rarely choose it.')).toBeVisible();
+  // Answers that came from a provider train on Zils workers only: there is no open tier to choose.
+  await expect(page.getByRole('radio', { name: /^Open/ })).toHaveCount(0);
+  await expect(page.getByText('Gateway answers train privately', { exact: false })).toBeVisible();
+  await page.getByLabel('I am authorized to share these examples.', { exact: false }).check();
+  await page.getByRole('button', { name: 'Start training', exact: true }).click();
+  await expect(page).toHaveURL(`/train?run=${jobId}`);
+  expect(state.created).toMatchObject({ name: 'gateway-intent', tier: 'private' });
+  const first = JSON.parse(state.uploads.train.trim().split('\n')[0]);
+  expect(first.state.decision).toBe('Pick the intent of the customer message.');
+  expect(Object.keys(first.state.information)).toEqual(['text']);
+});
+
+test('a gateway question that cannot be loaded says so', async ({ page }) => {
+  await workspace(page);
+  const id = 'b'.repeat(64);
+  await page.route(`**/v1/relay/questions/${id}/rows`, route => route.fulfill({ status: 404, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' }, json: { error: { code: 'no_question', message: 'No such question for this account.' } } }));
+  await page.goto(`/train/new?gateway=${id}`);
+  await expect(page.getByText('That gateway question has no saved messages for this account.')).toBeVisible();
+});
+
 test('photos and PDFs say where they go instead of failing', async ({ page }) => {
   await workspace(page);
   const examples = page.getByRole('region', { name: 'Your examples' });
