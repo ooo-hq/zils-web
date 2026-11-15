@@ -140,6 +140,8 @@ export function relayReportApi(rawUrl: string, token: () => Promise<string>, req
           : code === 'no_question' ? 'That gateway question has no saved messages for this account.'
           : code === 'not_ready' ? 'That run’s model is not ready to compare yet.'
           : code === 'no_training' ? 'That run was not trained from a gateway question of this account.'
+          : code === 'collection_on' ? 'Stop collecting before changing the provider.'
+          : code === 'provider_fixed' ? 'This gateway’s provider is set by Zils. Ask us to change it.'
           : code === 'no_relay' ? 'The gateway is not set up for this account yet.'
           : response.status === 404 ? 'The gateway report is not available here yet.'
           : failed, response.status);
@@ -163,6 +165,8 @@ export function relayReportApi(rawUrl: string, token: () => Promise<string>, req
     note: (question: string, note: RelayTrainingNote) => send(`/v1/relay/questions/${question}/trainings`, done, 'The run could not be linked to its gateway question.', note),
     /** Make a finished run's model the one compared on the question it was trained from. */
     compare: (jobId: string) => send(`/v1/relay/trainings/${z.string().uuid().parse(jobId)}/compare`, done, 'The model could not be compared. Please try again.', {}),
+    /** Point the account's address at another provider it may choose itself. Refused while it collects. */
+    provider: (provider: 'openai' | 'anthropic') => send('/v1/relay/provider', parseRelayStatus, 'The provider could not be changed. Please try again.', { provider }),
     collect: (on: boolean, termsVersion?: string) => send('/v1/relay/collection', parseRelayStatus, unchanged, on ? { collect: true, terms_version: termsVersion } : { collect: false }),
   };
 }

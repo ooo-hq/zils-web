@@ -103,13 +103,15 @@ function ToolSteps({ tool, address }: { tool: GatewayTool; address: string }) {
 }
 
 type Collect = (on: boolean, termsVersion?: string) => Promise<void>;
+type Choose = (provider: 'openai' | 'anthropic') => Promise<void>;
 
 /** The address to point the provider's client at, and the account's own switch for saving what passes through. */
-function Setup({ status, address, collect }: { status: RelayStatus; address: string; collect: Collect }) {
+function Setup({ status, address, collect, choose }: { status: RelayStatus; address: string; collect: Collect; choose: Choose }) {
   const [agreed, setAgreed] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState('');
+  const [switching, setSwitching] = useState(false);
   const provider = gatewayProviders.find(known => known.id === status.provider) ?? gatewayProviders[0];
   const jev = provider.id === 'jev';
   const outcomes = status.collecting_since ? outcomeRows(status.outcomes) : [];
@@ -160,8 +162,12 @@ function Setup({ status, address, collect }: { status: RelayStatus; address: str
     </div>}
     <div className={styles.connect}>
       <p className={workspacePage.label}>Connect your app</p>
-      <div role="group" aria-label="Provider" className={styles.providers}>{gatewayProviders.filter(known => known.id === provider.id || known.id === 'openai').map(known => <button key={known.id} className={styles.provider} aria-pressed={known.id === provider.id} disabled={known.id !== provider.id}>{known.name}{known.id !== provider.id && <span className={styles.tag}>On request</span>}</button>)}</div>
-      <p className={workspacePage.sub}>This address passes requests on to {provider.name}.{provider.id !== 'openai' && ' Ask us if it should go to another provider.'} Choose what your app uses to call {provider.name}. {jev ? 'Each one shows where the address goes. A Jev question already has fixed answers, so every yes/no and choice question is collected.' : 'Each one shows where the address goes and how to ask for an answer from a fixed list, which is what the gateway collects.'}</p>
+      {/* An account chooses OpenAI or Claude itself, while it is not collecting: saved answers are one provider's. Jev is set by us. */}
+      <div role="group" aria-label="Provider" className={styles.providers}>{gatewayProviders.filter(known => jev ? known.id !== 'anthropic' : known.id !== 'jev').map(known => {
+        const other = known.id !== provider.id, held = other && (jev ? 'On request' : status.collecting_since ? 'Collection is on' : '');
+        return <button key={known.id} className={styles.provider} aria-pressed={!other} disabled={!other || !!held || switching} onClick={() => { if (known.id === 'jev') return; setSwitching(true); setOpen(''); void choose(known.id).finally(() => setSwitching(false)); }}>{known.name}{held && <span className={styles.tag}>{held}</span>}</button>;
+      })}</div>
+      <p className={workspacePage.sub}>This address passes requests on to {provider.name}.{jev && ' Ask us if it should go to another provider.'}{!jev && status.collecting_since && ' The provider cannot be changed while collection is on, because the saved answers are this provider’s.'} Choose what your app uses to call {provider.name}. {jev ? 'Each one shows where the address goes. A Jev question already has fixed answers, so every yes/no and choice question is collected.' : 'Each one shows where the address goes and how to ask for an answer from a fixed list, which is what the gateway collects.'}</p>
       {gatewayTools(address, provider.id).map(group => {
         const shown = group.tools.find(tool => tool.id === open);
         return <div key={group.label} className={styles.group}>
@@ -186,6 +192,7 @@ function Report({ client, apiUrl, relayUrl, onExpired }: { client: SupabaseClien
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [settingUp, setSettingUp] = useState(false), [fresh, setFresh] = useState(false);
+  const [switched, setSwitched] = useState('');
   const api = useMemo(() => relayReportApi(apiUrl, async () => {
     const { data, error } = await client.auth.getSession();
     if (error) throw error;
@@ -228,13 +235,22 @@ function Report({ client, apiUrl, relayUrl, onExpired }: { client: SupabaseClien
       setError(error instanceof RelayReportError ? error.message : 'Collection could not be changed. Please try again.');
       if (error instanceof RelayReportError && error.status === 409) return load(new AbortController().signal);
     });
+  const choose: Choose = provider => api.provider(provider)
+    .then(relay => { setStatus(relay); setError(''); setFresh(false); setSwitched(gatewayProviders.find(known => known.id === relay.provider)?.name ?? ''); })
+    .catch(error => {
+      if (error instanceof RelayReportError && error.status === 401) { void onExpired(); return; }
+      setSwitched('');
+      setError(error instanceof RelayReportError && error.status !== 404 ? error.message : 'The provider could not be changed. Please try again.');
+      if (error instanceof RelayReportError && error.status === 409) return load(new AbortController().signal);
+    });
   const refresh = <button disabled={loading} onClick={() => { setLoading(true); void load(new AbortController().signal); }}>{loading ? 'Refreshing…' : 'Refresh'}</button>;
 
   return <div>
     <PageHero title="Gateway" intro={INTRO} />
     {error && <p className={workspacePage.notice} role="alert">{error}</p>}
     {fresh && status?.relay_id && <p className={workspacePage.notice} role="status">Your gateway address is ready. It starts working within a minute.</p>}
-    {status?.relay_id && <Setup status={status} address={relayAddress(relayUrl, status.relay_id, status.provider)} collect={collect} />}
+    {switched && status?.relay_id && <p className={workspacePage.notice} role="status">Your address now goes to {switched}. The address below is the one a {switched} client needs. The switch applies within a minute.</p>}
+    {status?.relay_id && <Setup status={status} address={relayAddress(relayUrl, status.relay_id, status.provider)} collect={collect} choose={choose} />}
     {!report ? <><Section label="Report" action={!loading && refresh} /><p className={styles.message} role="status">{loading ? 'Loading your report…' : 'Refresh to try again.'}</p></>
       : !report.relay ? <><Section label="Not set up" /><div className={styles.message}>
         <p>The gateway gives you an address to use in place of your provider’s. Your app keeps its own provider key and gets the same answers.</p>
