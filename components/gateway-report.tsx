@@ -27,11 +27,17 @@ function Question({ question, number }: { question: RelayQuestion; number: numbe
         <p className={styles.quote}>“{question.instructions || Object.keys(question.fields).join(', ')}”</p>
         <p className={workspacePage.fine}>{Object.entries(question.fields).map(([name, values]) => answers(name, values)).join(' · ')}</p>
         {question.last_at && <p className={workspacePage.fine}>Last saved {when(question.last_at)}</p>}
-        {question.rows >= TRAIN_FROM_ROWS ? <div className={styles.actions}><Link className={training.secondary} href={`/train/new?gateway=${question.id}`}>Train a model from these answers</Link></div>
-          : <p className={workspacePage.fine}>Training opens at {TRAIN_FROM_ROWS} saved messages.</p>}
+        {question.shadows.length > 0 && question.rows >= TRAIN_FROM_ROWS && <div className={styles.actions}><Link className={training.secondary} href={`/train/new?gateway=${question.id}`}>Train a model from these answers</Link></div>}
       </div>
       <div>
-        {question.shadows.length === 0 ? <p className={workspacePage.sub}>No Zils model is being compared on this question yet.</p> : question.shadows.map(shadow => <div key={shadow.field} className={styles.shadow}>
+        {question.shadows.length === 0 ? (question.rows >= TRAIN_FROM_ROWS ? <>
+          <p className={styles.offer}>Train a Zils model on these {question.rows.toLocaleString()} answers.</p>
+          <p className={workspacePage.sub}>It learns to give your provider’s answer to this question.</p>
+          <div className={styles.actions}><Link className={training.button} href={`/train/new?gateway=${question.id}`}>Train a model from these answers</Link></div>
+        </> : <>
+          <p className={workspacePage.sub}>No Zils model is being compared on this question yet.</p>
+          <p className={workspacePage.fine}>Training opens at {TRAIN_FROM_ROWS} saved messages.</p>
+        </>) : question.shadows.map(shadow => <div key={shadow.field} className={styles.shadow}>
           <p className={workspacePage.label}>Zils model on “{shadow.field}”</p>
           <code className={styles.model}>{shadow.model}</code>
           <div className={styles.tableWrap} role="region" aria-label={`Comparison for ${shadow.field}`} tabIndex={0}><table className={styles.table}>

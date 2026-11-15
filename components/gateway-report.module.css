@@ -70,6 +70,7 @@
 :global([data-theme=dark]) .snippet :global(.token.function),:global([data-theme=dark]) .snippet :global(.token.class-name),:global([data-theme=dark]) .snippet :global(.token.builtin) { color:#9fc7ff; }
 :global([data-theme=dark]) .snippet :global(.token.number),:global([data-theme=dark]) .snippet :global(.token.constant) { color:#f2bd94; }
 .requests { margin-top: 28px; }
+.offer { margin: 0; max-width: 18ch; font-weight: 300; font-size: clamp(26px, 2.8vw, 36px); letter-spacing: -0.02em; line-height: 1.1; }
 /* What happened to the requests: one sentence, one strip split by outcome, then the same split as a ledger with the numbers leading. */
 .outcomes { margin: 0 -40px; padding: 36px 40px 40px; border-top: 1px solid var(--zs-line); }
 .tally { margin: 18px 0 0; font-weight: 300; font-size: clamp(28px, 3.4vw, 44px); letter-spacing: -0.025em; line-height: 1.05; font-variant-numeric: tabular-nums; }
