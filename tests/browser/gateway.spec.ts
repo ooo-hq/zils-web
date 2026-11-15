@@ -36,6 +36,18 @@ test('shows each question with its saved messages and how the shadow model compa
   await expect(second.getByText('No Zils model is being compared on this question yet.')).toBeVisible();
 });
 
+test('the gateway is reached from the workspace navigation', async ({ page }) => {
+  await signIn(page);
+  await answer(page, 200, { relay: false, saving_since: null, questions_total: 0, questions: [] });
+  await page.goto('/models');
+  const nav = page.getByRole('navigation', { name: 'Workspace navigation' });
+  await expect(nav.getByRole('link')).toHaveText(['Home', 'Train', 'Models', 'Playground', 'Gateway', 'Usage', 'API keys', 'Documentation']);
+  await nav.getByRole('link', { name: 'Gateway', exact: true }).click();
+  await expect(page).toHaveURL(/\/gateway$/);
+  await expect(page.getByRole('heading', { name: 'Gateway', exact: true })).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'Gateway', exact: true })).toHaveAttribute('aria-current', 'page');
+});
+
 test('says so when the gateway is not set up, and when nothing has been saved', async ({ page }) => {
   await signIn(page);
   await answer(page, 200, { relay: false, saving_since: null, questions_total: 0, questions: [] });

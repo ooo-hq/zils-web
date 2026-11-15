@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { BookOpen, Boxes, ChartLine, ChevronsUpDown, CreditCard, FlaskConical, GraduationCap, House, KeyRound, LogOut, SquareArrowOutUpRight } from 'lucide-react';
+import { ArrowLeftRight, BookOpen, Boxes, ChartLine, ChevronsUpDown, CreditCard, FlaskConical, GraduationCap, House, KeyRound, LogOut, SquareArrowOutUpRight } from 'lucide-react';
 import { useAuthSession } from '@/components/auth-session';
 import { ThemeToggle } from '@/components/theme';
 import { ZilsWordmark } from '@/components/zils-wordmark';
@@ -16,6 +16,7 @@ const LINKS = [
   { href: '/train', label: 'Train', icon: GraduationCap },
   { href: '/models', label: 'Models', icon: Boxes },
   { href: '/playground', label: 'Playground', icon: FlaskConical },
+  { href: '/gateway', label: 'Gateway', icon: ArrowLeftRight },
   { href: '/usage', label: 'Usage', icon: ChartLine },
   { href: '/keys', label: 'API keys', icon: KeyRound },
 ] as const;
