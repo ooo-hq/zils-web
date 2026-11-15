@@ -27,7 +27,7 @@ function Question({ question, number }: { question: RelayQuestion; number: numbe
         <p className={styles.quote}>“{question.instructions || Object.keys(question.fields).join(', ')}”</p>
         <p className={workspacePage.fine}>{Object.entries(question.fields).map(([name, values]) => answers(name, values)).join(' · ')}</p>
         {question.last_at && <p className={workspacePage.fine}>Last saved {when(question.last_at)}</p>}
-        {question.shadows.length > 0 && question.rows >= TRAIN_FROM_ROWS && <div className={styles.actions}><Link className={training.secondary} href={`/train/new?gateway=${question.id}`}>Train a model from these answers</Link></div>}
+        {question.shadows.length > 0 && question.rows >= TRAIN_FROM_ROWS && <div className={styles.actions}><Link className={training.button} href={`/train/new?gateway=${question.id}`}>Train a model from these answers</Link></div>}
       </div>
       <div>
         {question.shadows.length === 0 ? (question.rows >= TRAIN_FROM_ROWS ? <>
