@@ -40,7 +40,7 @@ test('says so when the gateway is not set up, and when nothing has been saved', 
   await signIn(page);
   await answer(page, 200, { relay: false, saving_since: null, questions_total: 0, questions: [] });
   await page.goto('/gateway');
-  await expect(page.getByText('The gateway is not set up for this account yet.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Set up the gateway' })).toBeVisible();
   await answer(page, 200, { relay: true, saving_since: '2026-11-14T15:38:32+00:00', questions_total: 0, questions: [] });
   await page.reload();
   await expect(page.getByText('No questions yet.')).toBeVisible();
@@ -120,10 +120,10 @@ test('a question with enough saved answers can be trained from; one with few say
 test('runs trained from a question are listed, and a ready one can be compared with the provider', async ({ page }) => {
   await signIn(page);
   const job = '50000000-0000-4000-8000-000000000001', other = '50000000-0000-4000-8000-000000000002';
-  const run = (job_id: string, state: string, model: string | null) => ({ job_id, field: 'intent', name: `gateway-intent-${job_id.at(-1)}`, started_at: '2026-11-15T17:00:00+00:00', state, model });
+  const run = (job_id: string, state: string, model: string | null) => ({ job_id, field: 'intent', name: `gateway-intent-${job_id.at(-1)}`, started_at: '2026-11-15T17:00:00+00:00', state, model, evaluation: model ? { accuracy: 0.9339, baseline_accuracy: 0.8818 } : null });
   let compared = '';
   const question = (shadows: unknown[]) => ({ ...report.questions[0], rows: 240, shadows, trainings: [run(other, 'training', null), run(job, 'ready', 'zils-task-new')] });
-  await page.route('http://127.0.0.1:8999/v1/relay/report', route => route.fulfill({ json: { ...report, questions: [question(compared ? [{ ...shadow, model: 'zils-task-new', asked: 0, agreed: 0, by_confidence: [] }] : [shadow])] }, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' } }));
+  await page.route('http://127.0.0.1:8999/v1/relay/report', route => route.fulfill({ json: { ...report, compare: true, questions: [question(compared ? [{ ...shadow, model: 'zils-task-new', asked: 0, agreed: 0, by_confidence: [] }] : [shadow])] }, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' } }));
   await page.route('http://127.0.0.1:8999/v1/relay/trainings/*/compare', route => {
     const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' };
     if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
@@ -138,6 +138,9 @@ test('runs trained from a question are listed, and a ready one can be compared w
   const ready = runs.getByRole('listitem').nth(1);
   await expect(ready).toContainText(/gateway-intent-1.*Ready/);
   await expect(ready.getByRole('link', { name: 'gateway-intent-1' })).toHaveAttribute('href', `/train?run=${job}`);
+  // How it scored on the examples held back from its training, beside the model it started from.
+  await expect(ready.getByText('Gave your provider’s answer on 93.4% of the test examples held back from training. The model it started from: 88.2%.')).toBeVisible();
+  await expect(runs.getByRole('listitem').nth(0).getByText(/held back/)).toHaveCount(0);
   // Another model is compared on this field today: replacing it starts its counts again, and says so first.
   await ready.getByRole('button', { name: 'Compare this model' }).click();
   await expect(ready.getByText('This replaces zils-task-fixture on “intent” and starts its counts again.')).toBeVisible();
@@ -208,12 +211,55 @@ test('stopping collection asks first, because it deletes what was saved', async 
   expect(sent).toEqual([{ collect: false }]);
 });
 
-test('an account without a relay sees no address and no switch', async ({ page }) => {
+test('a question with a trained model leads with how that model scored, before any comparison', async ({ page }) => {
+  await signIn(page);
+  const run = (n: number, state: string, evaluation: unknown) => ({ job_id: `50000000-0000-4000-8000-00000000000${n}`, field: 'intent', name: `gateway-intent-${n}`, started_at: '2026-11-15T17:00:00+00:00', state, model: state === 'ready' ? `zils-task-${n}` : null, evaluation });
+  // Newest first: a run still training, then the newest finished one, then an older one.
+  const trainings = [run(3, 'training', null), run(2, 'ready', { accuracy: 0.9339, baseline_accuracy: 0.8818 }), run(1, 'ready', { accuracy: 0.5, baseline_accuracy: 0.4 })];
+  await answer(page, 200, { ...report, questions: [{ ...report.questions[0], rows: 240, shadows: [], trainings }] });
+  await page.goto('/gateway');
+  const question = page.getByRole('region', { name: 'Question 1' });
+  await expect(question.getByText('Your model gave your provider’s answer on 93.4% of test examples.')).toBeVisible();
+  await expect(question.getByText('The model it started from gave it on 88.2%. Both were measured on examples held back from training.')).toBeVisible();
+  await expect(question.getByText(/Train a Zils model on these/)).toHaveCount(0);
+  await expect(question.getByRole('link', { name: 'Train a model from these answers' })).toHaveCount(1);
+  // Comparison is not open to this account: its ready runs are listed without the button.
+  await expect(question.getByRole('list', { name: 'Models trained from this question' }).getByRole('listitem')).toHaveCount(3);
+  await expect(question.getByRole('button', { name: 'Compare this model' })).toHaveCount(0);
+});
+
+test('an account without a gateway sets one up itself and gets its address', async ({ page }) => {
+  await signIn(page);
+  let made = false, posted: unknown = 'none';
+  await page.route('http://127.0.0.1:8999/v1/relay/report', route => route.fulfill({ json: { relay: made, saving_since: null, questions_total: 0, questions: [] }, headers: cors }));
+  await page.route('http://127.0.0.1:8999/v1/relay', route => {
+    if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { ...cors, 'access-control-allow-methods': 'POST' } });
+    if (route.request().method() === 'POST') { posted = route.request().postDataJSON(); made = true; }
+    return route.fulfill({ json: { relay_id: made ? relayId : null, collecting_since: null, terms_version: 't-1' }, headers: cors });
+  });
+  await page.goto('/gateway');
+  await expect(page.getByRole('region', { name: 'Setup' })).toHaveCount(0);
+  // What it is and what it keeps, before anything is created.
+  await expect(page.getByText('Nothing is saved unless you switch collection on.')).toBeVisible();
+  await page.getByRole('button', { name: 'Set up the gateway' }).click();
+  await expect(page.getByRole('region', { name: 'Setup' })).toBeVisible();
+  expect(posted).toEqual({});
+  await expect(page.getByRole('status').filter({ hasText: 'Your gateway address is ready. It starts working within a minute.' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Set up the gateway' })).toHaveCount(0);
+});
+
+test('a gateway that could not be set up says so and can be tried again', async ({ page }) => {
   await signIn(page);
   await answer(page, 200, { relay: false, saving_since: null, questions_total: 0, questions: [] });
-  await relay(page, null, null);
+  await page.route('http://127.0.0.1:8999/v1/relay', route => {
+    if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { ...cors, 'access-control-allow-methods': 'POST' } });
+    if (route.request().method() === 'POST') return route.fulfill({ status: 405, json: { error: { code: 'method_not_allowed' } }, headers: cors });
+    return route.fulfill({ json: { relay_id: null, collecting_since: null, terms_version: 't-1' }, headers: cors });
+  });
   await page.goto('/gateway');
-  await expect(page.getByText('The gateway is not set up for this account yet.')).toBeVisible();
+  await page.getByRole('button', { name: 'Set up the gateway' }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'The gateway could not be set up. Please try again.' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Set up the gateway' })).toBeEnabled();
   await expect(page.getByRole('region', { name: 'Setup' })).toHaveCount(0);
 });
 

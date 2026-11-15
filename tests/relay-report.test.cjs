@@ -14,8 +14,8 @@ const question = {
   id: 'e'.repeat(64), instructions: 'Pick the intent.', fields: { intent: ['card_arrival', 'other'], urgent: [true, false] },
   first_at: '2026-11-14T15:55:00+00:00', rows: 25, last_at: '2026-11-14T16:03:00+00:00', shadows: [shadow], trainings: [],
 };
-const report = { relay: true, saving_since: '2026-11-14T15:38:32+00:00', questions_total: 1, questions: [question] };
-const none = { relay: false, saving_since: null, questions_total: 0, questions: [] };
+const report = { relay: true, compare: false, saving_since: '2026-11-14T15:38:32+00:00', questions_total: 1, questions: [question] };
+const none = { relay: false, compare: false, saving_since: null, questions_total: 0, questions: [] };
 const reply = (body, status = 200) => new Response(JSON.stringify(body), { status });
 
 test('parses a report, an account without a relay, and a question nothing was saved for', () => {
@@ -182,4 +182,29 @@ test('a question carries the runs trained from it, and a report from before runs
   ]);
   const notReady = relayReportApi('https://api.example/decision', async () => 'tok', async () => new Response('{"error":{"code":"not_ready"}}', { status: 409 }));
   await assert.rejects(notReady.compare(run.job_id), e => e.status === 409 && /not ready/.test(e.message));
+});
+
+test('a ready run carries its held-out result, and an account sets up its own gateway', async () => {
+  const run = { job_id: '50000000-0000-4000-8000-000000000001', field: 'intent', name: 'gateway-intent', started_at: '2026-11-15T17:00:00+00:00', state: 'ready', model: 'zils-task-x' };
+  const question = { id: 'a'.repeat(64), instructions: 'Pick.', fields: { intent: ['a', 'b'] }, first_at: '2026-11-14T00:00:00+00:00', rows: 3, last_at: null, shadows: [] };
+  const parse = trainings => parseRelayReport({ relay: true, saving_since: null, questions_total: 1, questions: [{ ...question, trainings }] });
+  // A service from before the result was reported sends none.
+  assert.equal(parse([run]).questions[0].trainings[0].evaluation, null);
+  assert.deepEqual(parse([{ ...run, evaluation: { accuracy: 0.934, baseline_accuracy: 0.882 } }]).questions[0].trainings[0].evaluation, { accuracy: 0.934, baseline_accuracy: 0.882 });
+  assert.equal(parse([{ ...run, evaluation: { accuracy: 1.2, baseline_accuracy: 0.882 } }]), null);
+
+  const calls = [];
+  const status = { relay_id: 'r'.repeat(40), collecting_since: null, terms_version: 't-1' };
+  const api = relayReportApi('https://api.example/decision', async () => 'tok', async (url, init) => { calls.push([url, init.method, init.body]); return new Response(JSON.stringify(status), { status: 200 }); });
+  assert.equal((await api.setup()).relay_id, 'r'.repeat(40));
+  assert.deepEqual(calls, [['https://api.example/decision/v1/relay', 'POST', '{}']]);
+  // A service from before accounts could set up their own answers 405.
+  const old = relayReportApi('https://api.example/decision', async () => 'tok', async () => new Response('{"error":{"code":"method_not_allowed"}}', { status: 405 }));
+  await assert.rejects(old.setup(), e => e.status === 405 && /could not be set up/.test(e.message));
+});
+
+test('comparison is off unless the report says it is open to the account', () => {
+  const base = { relay: true, saving_since: null, questions_total: 0, questions: [] };
+  assert.equal(parseRelayReport(base).compare, false);
+  assert.equal(parseRelayReport({ ...base, compare: true }).compare, true);
 });
