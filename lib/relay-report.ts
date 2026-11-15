@@ -34,14 +34,41 @@ export function shadowRows(shadow: RelayShadow) {
 }
 
 // A service from before request counts sends neither count field: that reads as no requests yet.
-// One from before providers sends none: that is an OpenAI gateway.
-const statusSchema = z.object({ relay_id: z.string().min(1).nullable(), collecting_since: z.string().nullable(), terms_version: z.string().min(1), requests: count.default(0), last_request_at: z.string().nullable().default(null), provider: z.enum(['openai', 'jev']).default('openai') });
+// One from before providers sends none: that is an OpenAI gateway. One from before outcomes sends none: nothing counted.
+const statusSchema = z.object({ relay_id: z.string().min(1).nullable(), collecting_since: z.string().nullable(), terms_version: z.string().min(1), requests: count.default(0), last_request_at: z.string().nullable().default(null), provider: z.enum(['openai', 'jev']).default('openai'), outcomes: z.record(z.string(), count).default({}), outcomes_since: z.string().nullable().default(null) });
 export type RelayStatus = z.infer<typeof statusSchema>;
 
 export const parseRelayStatus = (value: unknown): RelayStatus | null => {
   const result = statusSchema.safeParse(value);
   return result.success ? result.data : null;
 };
+
+// What became of a request that asked a model for a reply, as the service names it: saved, or why not, with what to do about it.
+const OUTCOMES: [id: string, label: string, hint: string][] = [
+  ['saved', 'Saved', ''],
+  ['no_answer', 'Your provider gave no clean answer', 'An error, a refusal, or an answer that was not on the list.'],
+  ['no_list', 'No fixed list of answers', 'Plain chat, or JSON without a schema. Ask for an answer from a list, as the cards below show, to have a call collected.'],
+  ['stream', 'Streamed', 'An answer is read from a complete reply. Turn streaming off for calls that pick from a list.'],
+  ['open_field', 'Answer includes free text or a number', 'Every field of the answer has to be a list or yes/no. Ask for fields such as a reason in a separate call.'],
+  ['optional_field', 'An answer field is optional', 'Mark every field of the answer as required.'],
+  ['chat_function', 'Function call on Chat Completions', 'A fixed-answer question in a form the gateway does not read yet. Use a schema, or the Responses API.'],
+  ['tools', 'The model was free to use tools', 'A step where the model chooses what to do is passed on and not collected.'],
+  ['conversation', 'Part of a conversation', 'A request with earlier assistant or tool turns is passed on and not collected.'],
+  ['media', 'Images, audio or files', 'Only text is collected.'],
+  ['unreadable', 'Could not be read', 'The request was not JSON, or was compressed in a way the gateway does not read.'],
+  ['other', 'Other', 'Not a single question with a fixed list of answers.'],
+];
+
+/** One row per outcome that happened: saved first, even at zero, then the reasons, most frequent first. A reason this page does not know joins Other. */
+export function outcomeRows(outcomes: Record<string, number>) {
+  const known = new Set(OUTCOMES.map(([id]) => id));
+  const counts: Record<string, number> = {};
+  for (const [id, n] of Object.entries(outcomes)) { const to = known.has(id) ? id : 'other'; counts[to] = (counts[to] ?? 0) + n; }
+  const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
+  if (!total) return [];
+  const row = ([id, label, hint]: (typeof OUTCOMES)[number]) => ({ id, label, hint, count: counts[id] ?? 0, share: agreement(counts[id] ?? 0, total) });
+  return [row(OUTCOMES[0]), ...OUTCOMES.slice(1).map(row).filter(found => found.count > 0).sort((a, b) => b.count - a.count)];
+}
 
 /** The base URL a client is pointed at: the account's relay id under the training service. An OpenAI client is given the /v1 root; a Jev client the API root, and adds /v1 itself. */
 export const relayAddress = (trainingUrl: string, relayId: string, provider: RelayStatus['provider'] = 'openai'): string => `${serviceUrl(trainingUrl)}/relay/${relayId}${provider === 'jev' ? '' : '/v1'}`;
