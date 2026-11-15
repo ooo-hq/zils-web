@@ -113,12 +113,13 @@ test('says what became of the requests: how many were saved, and why the others 
   await relay(page, '2026-11-14T15:38:32+00:00', relayId, { requests: 120, last_request_at: '2026-11-14T22:59:00+00:00', outcomes: { saved: 60, no_list: 30, stream: 6, chat_function: 4 }, outcomes_since: '2026-11-14T21:00:00+00:00' });
   await page.goto('/gateway');
   const outcomes = page.getByRole('region', { name: 'Setup' }).getByRole('region', { name: 'What happened to your requests' });
-  await expect(outcomes.getByText(/100 requests asked a model for a reply/)).toBeVisible();
+  await expect(outcomes.getByText('60 of 100 requests saved')).toBeVisible();
+  await expect(outcomes.getByText(/asked a model for a reply since/)).toBeVisible();
   const rows = outcomes.getByRole('row');
-  await expect(rows.nth(1)).toContainText(/Saved.*60.*60%/);
-  await expect(rows.nth(2)).toContainText(/No fixed list of answers.*30.*30%/);
-  await expect(rows.nth(3)).toContainText(/Streamed.*6.*6%/);
-  await expect(rows.nth(4)).toContainText(/Function call on Chat Completions.*4.*4%/);
+  await expect(rows.nth(1)).toContainText(/60%.*60.*Saved/);
+  await expect(rows.nth(2)).toContainText(/30%.*30.*No fixed list of answers/);
+  await expect(rows.nth(3)).toContainText(/6%.*6.*Streamed/);
+  await expect(rows.nth(4)).toContainText(/4%.*4.*Function call on Chat Completions/);
   // Each reason says what to do about it.
   await expect(rows.nth(3)).toContainText(/Turn streaming off/);
 });
