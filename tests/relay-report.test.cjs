@@ -206,6 +206,19 @@ test('a ready run carries its held-out result, and an account sets up its own ga
   await assert.rejects(old.setup(), e => e.status === 405 && /could not be set up/.test(e.message));
 });
 
+test('an account points its address at another provider', async () => {
+  const calls = [];
+  const status = { relay_id: 'r'.repeat(40), collecting_since: null, terms_version: 't-1', provider: 'anthropic' };
+  const api = relayReportApi('https://api.example/decision', async () => 'tok', async (url, init) => { calls.push([url, init.method, init.body]); return new Response(JSON.stringify(status), { status: 200 }); });
+  assert.equal((await api.provider('anthropic')).provider, 'anthropic');
+  assert.deepEqual(calls, [['https://api.example/decision/v1/relay/provider', 'POST', '{"provider":"anthropic"}']]);
+  const refuse = (code, status) => relayReportApi('https://api.example/decision', async () => 'tok', async () => new Response(JSON.stringify({ error: { code } }), { status }));
+  await assert.rejects(refuse('collection_on', 409).provider('openai'), e => e.status === 409 && /Stop collecting/.test(e.message));
+  await assert.rejects(refuse('provider_fixed', 409).provider('openai'), e => /set by Zils/.test(e.message));
+  // A service from before the choice answers 404.
+  await assert.rejects(refuse('not_found', 404).provider('openai'), e => e.status === 404);
+});
+
 test('comparison is off unless the report says it is open to the account', () => {
   const base = { relay: true, saving_since: null, questions_total: 0, questions: [] };
   assert.equal(parseRelayReport(base).compare, false);

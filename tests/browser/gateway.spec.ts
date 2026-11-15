@@ -86,6 +86,13 @@ async function relay(page: Page, collecting: string | null, id: string | null = 
     since = body.collect ? '2026-11-14T20:00:00+00:00' : null;
     return route.fulfill({ json: { relay_id: id, collecting_since: since, terms_version: 't-1' }, headers: cors });
   });
+  await page.route('http://127.0.0.1:8999/v1/relay/provider', route => {
+    if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { ...cors, 'access-control-allow-methods': 'POST' } });
+    const body = route.request().postDataJSON();
+    sent.push(body);
+    seen = { ...seen, provider: body.provider };
+    return route.fulfill({ json: { relay_id: id, collecting_since: since, terms_version: 't-1', ...seen }, headers: cors });
+  });
   return sent;
 }
 
@@ -131,18 +138,50 @@ test('a Claude gateway shows the root address and the Anthropic cards', async ({
   await expect(setup.getByText('Set it as the base URL of your Claude client.', { exact: false })).toBeVisible();
   const providers = setup.getByRole('group', { name: 'Provider' });
   await expect(providers.getByRole('button', { name: /Claude/ })).toHaveAttribute('aria-pressed', 'true');
-  await expect(providers.getByRole('button', { name: /OpenAI.*On request/ })).toBeDisabled();
+  await expect(providers.getByRole('button', { name: 'OpenAI' })).toBeEnabled();
   await expect(providers.getByRole('button')).toHaveCount(2);
   for (const name of ['Anthropic Python', 'Anthropic TypeScript', 'cURL']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
   await expect(setup.getByRole('button', { name: /^(OpenAI Python|LangChain|Jev)/ })).toHaveCount(0);
   // What is saved is the same as for OpenAI: requests that ask for an answer from a fixed list.
   await expect(setup.getByText(/each request that asks for an answer from a fixed list/)).toBeVisible();
-  await expect(setup.getByText(/Ask us if it should go to another provider/)).toBeVisible();
+  await expect(setup.getByText(/Ask us if it should go to another provider/)).toHaveCount(0);
 
   await setup.getByRole('button', { name: /^Anthropic Python/ }).click();
   const steps = setup.getByRole('region', { name: 'Anthropic Python setup' });
   await expect(steps.locator('pre').first()).toContainText(`client = Anthropic(base_url="${address}")`);
   await expect(steps.locator('pre mark')).toHaveText(address);
+});
+
+test('an account switches its address between OpenAI and Claude while it is not collecting', async ({ page }) => {
+  await signIn(page);
+  await answer(page, 200, { relay: true, saving_since: null, questions_total: 0, questions: [] });
+  const sent = await relay(page, null, relayId, { requests: 3, last_request_at: null });
+  await page.goto('/gateway');
+  const setup = page.getByRole('region', { name: 'Setup' });
+  const providers = setup.getByRole('group', { name: 'Provider' });
+  await expect(setup.locator('code').first()).toHaveText(`http://127.0.0.1:8999/relay/${relayId}/v1`);
+  await providers.getByRole('button', { name: 'Claude' }).click();
+  await expect(providers.getByRole('button', { name: 'Claude' })).toHaveAttribute('aria-pressed', 'true');
+  expect(sent).toEqual([{ provider: 'anthropic' }]);
+  // The address a Claude client needs is different, and the switch is not instant: the page says both.
+  await expect(setup.locator('code').first()).toHaveText(`http://127.0.0.1:8999/relay/${relayId}`);
+  await expect(page.getByRole('status').filter({ hasText: 'Your address now goes to Claude.' })).toContainText('within a minute');
+  await expect(setup.getByRole('button', { name: /^Anthropic Python/ })).toBeVisible();
+  await providers.getByRole('button', { name: 'OpenAI' }).click();
+  await expect(setup.locator('code').first()).toHaveText(`http://127.0.0.1:8999/relay/${relayId}/v1`);
+  expect(sent).toEqual([{ provider: 'anthropic' }, { provider: 'openai' }]);
+});
+
+test('the provider cannot be switched while the account collects', async ({ page }) => {
+  await signIn(page);
+  await answer(page, 200, report);
+  const sent = await relay(page, '2026-11-14T15:38:32+00:00');
+  await page.goto('/gateway');
+  const providers = page.getByRole('region', { name: 'Setup' }).getByRole('group', { name: 'Provider' });
+  await expect(providers.getByRole('button', { name: /OpenAI/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(providers.getByRole('button', { name: /Claude.*Collection is on/ })).toBeDisabled();
+  await expect(page.getByRole('region', { name: 'Setup' }).getByText(/cannot be changed while collection is on/)).toBeVisible();
+  expect(sent).toEqual([]);
 });
 
 test('a question with enough saved answers can be trained from; one with few says how many it needs', async ({ page }) => {
@@ -314,7 +353,8 @@ test('shows whether requests have come through, and a card for each tool that op
   // Providers: an address goes to one of them. Jev is set up by us and is not offered here.
   const providers = setup.getByRole('group', { name: 'Provider' });
   await expect(providers.getByRole('button', { name: /OpenAI/ })).toHaveAttribute('aria-pressed', 'true');
-  await expect(providers.getByRole('button')).toHaveCount(1);
+  await expect(providers.getByRole('button')).toHaveCount(2);
+  await expect(providers.getByRole('button', { name: 'Claude' })).toBeEnabled();
   await expect(setup.getByText(/Jev/)).toHaveCount(0);
   await expect(setup.getByText(/another provider/)).toHaveCount(0);
   await expect(setup.getByText('Set it as the base URL of your OpenAI client.', { exact: false })).toBeVisible();
