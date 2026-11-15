@@ -22,14 +22,16 @@ type Props = {
   initialName?: string;
   initialAccuracy?: string;
   initialImprovement?: string;
+  /** Train on Zils workers only, with no open tier to choose. */
+  privateOnly?: boolean;
 };
 
-export function TeachingSubmission({ config, prepare, onLock, imageAnswers, initialName = '', initialAccuracy = '80', initialImprovement = '0.01' }: Props) {
+export function TeachingSubmission({ config, prepare, onLock, imageAnswers, initialName = '', initialAccuracy = '80', initialImprovement = '0.01', privateOnly = false }: Props) {
   const { client, session, error: sessionError } = useAuthSession(config ?? undefined);
   const router = useRouter(), id = useId();
   const [name, setName] = useState(initialName), [accuracy, setAccuracy] = useState(initialAccuracy), [improvement, setImprovement] = useState(initialImprovement);
   const [selection, setSelection] = useState<PoolSelection | null>(null);
-  const [consent, setConsent] = useState(false), [comparison, setComparison] = useState(false), [tier, setTier] = useState<TrainingTier | null>(null);
+  const [consent, setConsent] = useState(false), [comparison, setComparison] = useState(false), [tier, setTier] = useState<TrainingTier | null>(privateOnly ? 'private' : null);
   const [busy, setBusy] = useState(false), [frozen, setFrozen] = useState(false), [uncertain, setUncertain] = useState(false);
   const [error, setError] = useState(''), [progress, setProgress] = useState(''), [needsCredit, setNeedsCredit] = useState(false);
   const [savedId, setSavedId] = useState(''), [savedOwner, setSavedOwner] = useState('');
@@ -157,7 +159,7 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
         <label htmlFor={`${id}-name`}>Training run name</label><input id={`${id}-name`} required maxLength={64} pattern="[a-z0-9][a-z0-9-]{0,63}" placeholder="support-routing-v1" value={name} onChange={event => setName(event.target.value)} />
         <div className={s.pairFields}><div><label htmlFor={`${id}-accuracy`}>Required accuracy (%)</label><input id={`${id}-accuracy`} type="number" required min="0" max="100" step="any" value={accuracy} onChange={event => setAccuracy(event.target.value)} /></div><div><label htmlFor={`${id}-improvement`}>Required Brier improvement</label><input id={`${id}-improvement`} type="number" required min="0" max="2" step="any" value={improvement} onChange={event => setImprovement(event.target.value)} /></div></div>
         <p className={s.hint}>The trained model must meet these targets on held-out data. Lower Brier loss means better probability estimates. Training does not guarantee an approved model.</p>
-        <TierChoice value={tier} onChange={setTier} data={imageAnswers ? 'photos' : 'examples'} price={imageAnswers ? '$2 per run' : '$0.20 per million training tokens'} />
+        {privateOnly ? <p className={s.hint}>Gateway answers train privately, on Zils workers only.</p> : <TierChoice value={tier} onChange={setTier} data={imageAnswers ? 'photos' : 'examples'} price={imageAnswers ? '$2 per run' : '$0.20 per million training tokens'} />}
         <label className={s.checkLabel}><input type="checkbox" required checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I am authorized to share these examples. {tier === 'open' ? 'Zils network miners and approved workers' : 'Approved workers'} can read and retain the training data. Calibration and test labels stay with Zils. This is not confidential compute.</span></label>
         {!imageAnswers && <label className={s.checkLabel}><input type="checkbox" checked={comparison} onChange={event => setComparison(event.target.checked)} /><span>Also compare against TypeSafe JEV. Send final-evaluation inputs and questions to TypeSafe; correct answers stay with Zils. Optional.</span></label>}
       </fieldset>

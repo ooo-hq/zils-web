@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState, type DragEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
 import { flushSync } from 'react-dom';
 import Link from 'next/link';
 import { Upload } from 'lucide-react';
@@ -9,6 +9,8 @@ import { prepareTraining, type CsvData } from '@/lib/training-csv';
 import { leaks } from '@/lib/training-review';
 import { answerLabel, guessColumns, readiness, type Columns } from '@/lib/train-table';
 import { TeachingSubmission } from '@/components/teaching-submission';
+import { useAuthSession } from '@/components/auth-session';
+import { gatewayTable, relayReportApi } from '@/lib/relay-report';
 import { AgentSteps } from '@/components/agent-training-card';
 import type { TrainingConfig } from '@/lib/training-config';
 import { PageHero, Section, workspacePage } from '@/components/workspace-page';
@@ -30,7 +32,7 @@ function moving(update: () => void) {
 }
 
 /** One screen: the customer's own rows, split by a line. Left is what the model reads; right is the one column it decides. */
-export function TrainTable({ config }: { config: TrainingConfig | null }) {
+export function TrainTable({ config, gateway }: { config: TrainingConfig | null; gateway?: string }) {
   const [file, setFile] = useState('');
   const [sheets, setSheets] = useState<SpreadsheetSheet[]>([]);
   const [data, setData] = useState<CsvData | null>(null);
@@ -43,9 +45,32 @@ export function TrainTable({ config }: { config: TrainingConfig | null }) {
   const [question, setQuestion] = useState('');
   const [locked, setLocked] = useState(false);
   const picker = useRef<HTMLInputElement>(null);
+  const { client, session } = useAuthSession(config ?? undefined);
+
+  // Opened from a gateway question: its saved messages and answers are the table.
+  useEffect(() => {
+    if (!gateway || !client || !session || !config?.decisionApiUrl) return;
+    const controller = new AbortController();
+    setWorking(true); setError('');
+    relayReportApi(config.decisionApiUrl, async () => (await client.auth.getSession()).data.session?.access_token || '').rows(gateway, controller.signal)
+      .then(saved => {
+        const table = gatewayTable(saved);
+        setFile('gateway'); setSheets([]); setData(table.data); setColumns(table.columns); setQuestion(table.question); setStage('edit');
+      })
+      .catch(failure => { if (!controller.signal.aborted) setError(failure instanceof Error ? failure.message : 'The saved messages could not be loaded.'); })
+      .finally(() => { if (!controller.signal.aborted) setWorking(false); });
+    return () => controller.abort();
+  }, [gateway, client, session, config?.decisionApiUrl]);
 
   const ready = useMemo(() => data ? readiness(data, columns) : null, [data, columns]);
   const giveaways = useMemo(() => new Set(data && columns.decide ? leaks(data, columns.decide, columns.reads).map(l => l.column) : []), [data, columns]);
+
+  // Answers with few examples, counted over the rows that train.
+  const thin = useMemo(() => {
+    if (!ready) return [];
+    const at = ready.report.data.headers.indexOf(columns.decide);
+    return ready.outcomes.filter(o => ready.report.data.rows.filter(row => row[at]?.trim() === o).length < 20);
+  }, [ready, columns.decide]);
 
   function show(next: CsvData | undefined) {
     setData(next ?? null); setMenu(null); setStage('edit');
@@ -185,10 +210,11 @@ export function TrainTable({ config }: { config: TrainingConfig | null }) {
       <div className={css.review}>
         <h3>Train on {examples(used)}?</h3>
         <p>It learns {columns.decide} ({answerLabel(ready.answer)}: {list(ready.outcomes.map(o => `“${o}”`))}) from {list(columns.reads)}.{ready.left > 0 && ` ${examples(ready.left)} are left out because they repeat, conflict or are empty.`}</p>
+        {gateway && thin.length > 0 && <p>Fewer than 20 examples of {list(thin.map(o => `“${o}”`))}. The model may rarely choose it.</p>}
         {used < 50 && <p>That’s a small set. A few hundred examples usually make a model you can rely on.</p>}
         <label className={css.question}><span>The question it answers, shown to the model with each example</span><textarea rows={2} maxLength={1000} value={question} disabled={locked} onChange={e => setQuestion(e.target.value)} /></label>
         {!locked && <div className={css.back}><button type="button" className={`${button.b} ${button.secondary}`} onClick={() => setStage('edit')}>Back</button></div>}
-        <TeachingSubmission config={config} onLock={setLocked} initialName={slug(`${file.replace(/\.[a-z]+$/i, '')}-${columns.decide}`).slice(0, 64)} prepare={async name => {
+        <TeachingSubmission config={config} onLock={setLocked} privateOnly={Boolean(gateway)} initialName={slug(`${file.replace(/\.[a-z]+$/i, '')}-${columns.decide}`).slice(0, 64)} prepare={async name => {
           if (!question.trim()) throw new Error('Write the question it answers.');
           const prepared = await prepareTraining(ready.report.data, ready.mapping, { name, question: question.trim(), outcomes: ready.outcomes }, ready.independent);
           return { kind: 'text', files: prepared.files };

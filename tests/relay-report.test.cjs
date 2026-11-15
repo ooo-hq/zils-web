@@ -139,3 +139,25 @@ test('outcomes read as rows: saved first, then why the others were not, most fre
   assert.deepEqual(outcomeRows({ no_list: 2, brand_new: 1, other: 1 }).map(row => [row.id, row.count]), [['saved', 0], ['no_list', 2], ['other', 2]]);
   assert.deepEqual(outcomeRows({}), []);
 });
+
+const { parseRelayRows, gatewayTable, TRAIN_FROM_ROWS } = require('../.private/test-build/relay-report.js');
+
+test('saved rows for a question become a table: the message, then one column per answer field', async () => {
+  const id = 'a'.repeat(64);
+  const body = { question: { id, instructions: 'Pick the intent.', fields: { intent: ['refund', 'other'], urgent: [true, false] } },
+    rows: [{ text: 'Where is my money?', answers: { intent: 'refund', urgent: true } }, { text: 'Hello', answers: { intent: 'other', urgent: false } }], truncated: false };
+  const table = gatewayTable(parseRelayRows(body));
+  assert.deepEqual(table.data, { headers: ['text', 'intent', 'urgent'], rows: [['Where is my money?', 'refund', 'true'], ['Hello', 'other', 'false']] });
+  // The model reads the message, as the gateway's comparison sends it, and decides the first field; one decision per run.
+  assert.deepEqual(table.columns, { decide: 'intent', group: '', reads: ['text'], unused: ['urgent'] });
+  assert.equal(table.question, 'Pick the intent.');
+  // Instructions longer than a training question holds are left for the customer to write.
+  assert.equal(gatewayTable(parseRelayRows({ ...body, question: { ...body.question, instructions: 'x'.repeat(1001) } })).question, '');
+  assert.equal(parseRelayRows({ rows: [] }), null);
+  assert.equal(TRAIN_FROM_ROWS, 200);
+  const calls = [];
+  const api = relayReportApi('https://api.example/decision', async () => 'tok', async (url, init) => { calls.push([url, init.method]); return new Response(JSON.stringify(body), { status: 200 }); });
+  assert.deepEqual((await api.rows(id)).question.id, id);
+  assert.deepEqual(calls, [[`https://api.example/decision/v1/relay/questions/${id}/rows`, 'GET']]);
+  await assert.rejects(api.rows('../x'), e => e.status === 404);
+});

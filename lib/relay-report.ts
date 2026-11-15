@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { serviceUrl } from './training';
+import type { CsvData } from './training-csv';
+import type { Columns } from './train-table';
 
 const count = z.number().int().nonnegative();
 const shadowSchema = z.object({
@@ -70,6 +72,33 @@ export function outcomeRows(outcomes: Record<string, number>) {
   return [row(OUTCOMES[0]), ...OUTCOMES.slice(1).map(row).filter(found => found.count > 0).sort((a, b) => b.count - a.count)];
 }
 
+const rowsSchema = z.object({
+  question: z.object({ id: z.string().regex(/^[0-9a-f]{64}$/), instructions: z.string(), fields: z.record(z.string(), z.array(z.union([z.string(), z.boolean()]))) }),
+  rows: z.array(z.object({ text: z.string(), answers: z.record(z.string(), z.union([z.string(), z.boolean()])) })), truncated: z.boolean(),
+});
+export type RelayRows = z.infer<typeof rowsSchema>;
+export const parseRelayRows = (value: unknown): RelayRows | null => {
+  const result = rowsSchema.safeParse(value);
+  return result.success ? result.data : null;
+};
+
+/** Saved messages a question needs before the console offers to train from it. */
+export const TRAIN_FROM_ROWS = 200;
+
+/**
+ * One question's saved rows as the table /train/new works on: the message in a column named text, which is how the
+ * gateway's comparison sends it to a model, then one column per answer field. The first field is what it decides;
+ * the others are left unused, one decision per run. Instructions too long for a training question are left out.
+ */
+export function gatewayTable(saved: RelayRows): { data: CsvData; columns: Columns; question: string } {
+  const fields = Object.keys(saved.question.fields).filter(name => name !== 'text');
+  return {
+    data: { headers: ['text', ...fields], rows: saved.rows.map(row => [row.text, ...fields.map(name => String(row.answers[name] ?? ''))]) },
+    columns: { decide: fields[0] ?? '', group: '', reads: ['text'], unused: fields.slice(1) },
+    question: saved.question.instructions.length <= 1000 ? saved.question.instructions : '',
+  };
+}
+
 /** The base URL a client is pointed at: the account's relay id under the training service. An OpenAI client is given the /v1 root; a Jev client the API root, and adds /v1 itself. */
 export const relayAddress = (trainingUrl: string, relayId: string, provider: RelayStatus['provider'] = 'openai'): string => `${serviceUrl(trainingUrl)}/relay/${relayId}${provider === 'jev' ? '' : '/v1'}`;
 
@@ -97,6 +126,7 @@ export function relayReportApi(rawUrl: string, token: () => Promise<string>, req
       throw new RelayReportError(
         response.status === 401 ? 'Your session has expired. Please sign in again.'
           : code === 'terms_changed' ? 'The collection terms changed. Read them and agree again.'
+          : code === 'no_question' ? 'That gateway question has no saved messages for this account.'
           : code === 'no_relay' ? 'The gateway is not set up for this account yet.'
           : response.status === 404 ? 'The gateway report is not available here yet.'
           : failed, response.status);
@@ -109,6 +139,10 @@ export function relayReportApi(rawUrl: string, token: () => Promise<string>, req
   return {
     get: (signal?: AbortSignal) => send('/v1/relay/report', parseRelayReport, 'The report could not be loaded. Please try again.', undefined, signal),
     status: (signal?: AbortSignal) => send('/v1/relay', parseRelayStatus, 'The report could not be loaded. Please try again.', undefined, signal),
+    rows: async (question: string, signal?: AbortSignal) => {
+      if (!/^[0-9a-f]{64}$/.test(question)) throw new RelayReportError('That gateway question has no saved messages for this account.', 404);
+      return send(`/v1/relay/questions/${question}/rows`, parseRelayRows, 'The saved messages could not be loaded. Please try again.', undefined, signal);
+    },
     collect: (on: boolean, termsVersion?: string) => send('/v1/relay/collection', parseRelayStatus, unchanged, on ? { collect: true, terms_version: termsVersion } : { collect: false }),
   };
 }
