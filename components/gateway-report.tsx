@@ -160,8 +160,8 @@ function Setup({ status, address, collect }: { status: RelayStatus; address: str
     </div>}
     <div className={styles.connect}>
       <p className={workspacePage.label}>Connect your app</p>
-      <div role="group" aria-label="Provider" className={styles.providers}>{gatewayProviders.filter(known => jev || known.id !== 'jev').map(known => <button key={known.id} className={styles.provider} aria-pressed={known.id === provider.id} disabled={known.id !== provider.id}>{known.name}{known.id !== provider.id && <span className={styles.tag}>On request</span>}</button>)}</div>
-      <p className={workspacePage.sub}>This address passes requests on to {provider.name}.{jev && ' Ask us if it should go to another provider.'} Choose what your app uses to call {provider.name}. {jev ? 'Each one shows where the address goes. A Jev question already has fixed answers, so every yes/no and choice question is collected.' : 'Each one shows where the address goes and how to ask for an answer from a fixed list, which is what the gateway collects.'}</p>
+      <div role="group" aria-label="Provider" className={styles.providers}>{gatewayProviders.filter(known => known.id === provider.id || known.id === 'openai').map(known => <button key={known.id} className={styles.provider} aria-pressed={known.id === provider.id} disabled={known.id !== provider.id}>{known.name}{known.id !== provider.id && <span className={styles.tag}>On request</span>}</button>)}</div>
+      <p className={workspacePage.sub}>This address passes requests on to {provider.name}.{provider.id !== 'openai' && ' Ask us if it should go to another provider.'} Choose what your app uses to call {provider.name}. {jev ? 'Each one shows where the address goes. A Jev question already has fixed answers, so every yes/no and choice question is collected.' : 'Each one shows where the address goes and how to ask for an answer from a fixed list, which is what the gateway collects.'}</p>
       {gatewayTools(address, provider.id).map(group => {
         const shown = group.tools.find(tool => tool.id === open);
         return <div key={group.label} className={styles.group}>

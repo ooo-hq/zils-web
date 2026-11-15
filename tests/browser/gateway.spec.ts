@@ -107,6 +107,32 @@ test('a Jev gateway shows the Jev address, cards and what is collected', async (
   await expect(steps.getByText(/compress/)).toHaveCount(0);
 });
 
+test('a Claude gateway shows the root address and the Anthropic cards', async ({ page }) => {
+  await signIn(page);
+  await answer(page, 200, { relay: true, saving_since: null, questions_total: 0, questions: [] });
+  await relay(page, null, relayId, { requests: 0, last_request_at: null, provider: 'anthropic' });
+  await page.goto('/gateway');
+  const setup = page.getByRole('region', { name: 'Setup' });
+  // An Anthropic client is given the API root: no /v1 on the end.
+  const address = `http://127.0.0.1:8999/relay/${relayId}`;
+  await expect(setup.locator('code').first()).toHaveText(address);
+  await expect(setup.getByText('Set it as the base URL of your Claude client.', { exact: false })).toBeVisible();
+  const providers = setup.getByRole('group', { name: 'Provider' });
+  await expect(providers.getByRole('button', { name: /Claude/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(providers.getByRole('button', { name: /OpenAI.*On request/ })).toBeDisabled();
+  await expect(providers.getByRole('button')).toHaveCount(2);
+  for (const name of ['Anthropic Python', 'Anthropic TypeScript', 'cURL']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
+  await expect(setup.getByRole('button', { name: /^(OpenAI Python|LangChain|Jev)/ })).toHaveCount(0);
+  // What is saved is the same as for OpenAI: requests that ask for an answer from a fixed list.
+  await expect(setup.getByText(/each request that asks for an answer from a fixed list/)).toBeVisible();
+  await expect(setup.getByText(/Ask us if it should go to another provider/)).toBeVisible();
+
+  await setup.getByRole('button', { name: /^Anthropic Python/ }).click();
+  const steps = setup.getByRole('region', { name: 'Anthropic Python setup' });
+  await expect(steps.locator('pre').first()).toContainText(`client = Anthropic(base_url="${address}")`);
+  await expect(steps.locator('pre mark')).toHaveText(address);
+});
+
 test('a question with enough saved answers can be trained from; one with few says how many it needs', async ({ page }) => {
   await signIn(page);
   await answer(page, 200, { ...report, questions: [{ ...report.questions[0], rows: 240, shadows: [] }, report.questions[1]] });

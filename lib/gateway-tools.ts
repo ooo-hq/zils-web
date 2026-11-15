@@ -2,17 +2,19 @@ export type ToolLanguage = 'python' | 'javascript' | 'bash';
 export type GatewayToolStep = { title: string; label: string; language: ToolLanguage; code: string };
 export type GatewayTool = { id: string; name: string; tag: string; blurb: string; steps: GatewayToolStep[]; note?: string; checked: string };
 
-export type GatewayProvider = 'openai' | 'jev';
+export type GatewayProvider = 'openai' | 'anthropic' | 'jev';
 type GatewayToolGroup = { label: string; intro: string; tools: GatewayTool[] };
 
 /** The providers a gateway address can pass requests on to. An address goes to one of them. */
 export const gatewayProviders: { id: GatewayProvider; name: string }[] = [
   { id: 'openai', name: 'OpenAI' },
+  { id: 'anthropic', name: 'Claude' },
   { id: 'jev', name: 'Jev' },
 ];
 
 // The example question every card asks. The model is the caller's own: any name their provider accepts.
 const MODEL = 'gpt-6.1-sol';
+const CLAUDE_MODEL = 'claude-opus-5-5';
 const ASK = 'Pick the intent of the customer message.';
 const SAID = 'Where is my order?';
 
@@ -24,10 +26,11 @@ const ZOD_TICKET = `z.object({ intent: z.enum(['refund', 'shipping', 'other']) }
  * How to send an app's fixed-answer questions through the gateway, per tool. Each tool's steps, joined
  * in order, are one program that was run against the relay's own decision reader with the package
  * versions in `checked`: the request it sends is one the gateway collects. The provider key is left
- * to the app's environment, as it is today. For Jev the address is the API root, without /v1.
+ * to the app's environment, as it is today. For Claude and Jev the address is the API root, without /v1.
  */
 export function gatewayTools(address: string, provider: GatewayProvider = 'openai'): GatewayToolGroup[] {
   if (provider === 'jev') return jevTools(address);
+  if (provider === 'anthropic') return claudeTools(address);
   const point = 'Point the client at your gateway';
   const ask = 'Ask for an answer from a fixed list';
   return [
@@ -154,6 +157,70 @@ reply = client.chat.completions.create(
     ],
 )
 print(reply.intent)` },
+      ] },
+    ] },
+  ];
+}
+
+/** The same for an app that calls Claude through Anthropic's own libraries: an answer from a fixed list is asked for with a schema. */
+function claudeTools(address: string): GatewayToolGroup[] {
+  const point = 'Point the client at your gateway';
+  const ask = 'Ask for an answer from a fixed list';
+  return [
+    { label: 'SDKs', intro: 'Call Claude as you do today, through the gateway.', tools: [
+      { id: 'anthropic-python', name: 'Anthropic Python', tag: 'Messages API', blurb: 'The official Python library, with a typed answer.', checked: 'anthropic 2.8, pydantic 2.14', steps: [
+        { title: point, label: 'Python', language: 'python', code: `from typing import Literal
+
+from anthropic import Anthropic
+from pydantic import BaseModel
+
+client = Anthropic(base_url="${address}")` },
+        { title: ask, label: 'Python', language: 'python', code: `${PYTHON_TICKET}
+
+reply = client.messages.parse(
+    model="${CLAUDE_MODEL}",  # the model you already use
+    max_tokens=1024,
+    system="${ASK}",
+    messages=[{"role": "user", "content": "${SAID}"}],
+    output_format=Ticket,
+)
+print(reply.parsed_output.intent)` },
+      ] },
+      { id: 'anthropic-typescript', name: 'Anthropic TypeScript', tag: 'Messages API', blurb: 'The official TypeScript and JavaScript library, with a Zod schema.', checked: '@anthropic-ai/sdk 1.8, zod 4.6', steps: [
+        { title: point, label: 'TypeScript', language: 'javascript', code: `import Anthropic from '@anthropic-ai/sdk';
+import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
+import { z } from 'zod';
+
+const client = new Anthropic({ baseURL: '${address}' });` },
+        { title: ask, label: 'TypeScript', language: 'javascript', code: `const Ticket = ${ZOD_TICKET};
+
+const reply = await client.messages.parse({
+  model: '${CLAUDE_MODEL}', // the model you already use
+  max_tokens: 1024,
+  system: '${ASK}',
+  messages: [{ role: 'user', content: '${SAID}' }],
+  output_config: { format: zodOutputFormat(Ticket) },
+});
+console.log(reply.parsed_output.intent);` },
+      ] },
+      { id: 'anthropic-curl', name: 'cURL', tag: 'Messages API', blurb: 'The raw request, for any language or a quick test from a terminal.', checked: 'curl 8', steps: [
+        { title: 'Set your gateway address', label: 'Bash', language: 'bash', code: `export ZILS_GATEWAY="${address}"` },
+        { title: ask, label: 'Bash', language: 'bash', code: `curl -s "$ZILS_GATEWAY/v1/messages" \\
+  -H "x-api-key: $ANTHROPIC_API_KEY" \\
+  -H "anthropic-version: 2026-10-21" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "${CLAUDE_MODEL}",
+    "max_tokens": 1024,
+    "system": "${ASK}",
+    "messages": [{"role": "user", "content": "${SAID}"}],
+    "output_config": {"format": {"type": "json_schema", "schema": {
+      "type": "object",
+      "properties": {"intent": {"type": "string", "enum": ["refund", "shipping", "other"]}},
+      "required": ["intent"],
+      "additionalProperties": false
+    }}}
+  }'` },
       ] },
     ] },
   ];

@@ -31,9 +31,25 @@ test('a tool whose default call is not collected says so', () => {
   assert.match(instructor.steps.map(step => step.code).join('\n'), /Mode\.JSON_SCHEMA/);
 });
 
-test('providers: the gateway passes requests on to OpenAI or Jev', () => {
+test('providers: the gateway passes requests on to OpenAI, Claude or Jev', () => {
   const { gatewayProviders } = require('../.private/test-build/gateway-tools.js');
-  assert.deepEqual(gatewayProviders.map(provider => [provider.id, provider.name]), [['openai', 'OpenAI'], ['jev', 'Jev']]);
+  assert.deepEqual(gatewayProviders.map(provider => [provider.id, provider.name]), [['openai', 'OpenAI'], ['anthropic', 'Claude'], ['jev', 'Jev']]);
+});
+
+test('a Claude account gets the Anthropic libraries, pointed at the gateway root, asking for a fixed answer list', () => {
+  const root = 'https://training.example/relay/' + 'r'.repeat(40);
+  const claude = gatewayTools(root, 'anthropic');
+  assert.deepEqual(claude.map(group => [group.label, group.tools.map(tool => tool.name)]), [['SDKs', ['Anthropic Python', 'Anthropic TypeScript', 'cURL']]]);
+  for (const tool of claude.flatMap(group => group.tools)) {
+    const code = tool.steps.map(step => step.code).join('\n');
+    assert.ok(tool.steps.length >= 2 && tool.checked, tool.name);
+    // The Anthropic libraries add /v1 themselves.
+    assert.ok(code.includes(root) && !code.includes(root + '/v1"') && !code.includes(root + "/v1'"), tool.name);
+    assert.match(code, /refund.*shipping.*other/s, tool.name);
+    assert.doesNotMatch(code, /sk-ant|api_key\s*=|apiKey\s*:|gpt-/, tool.name);
+  }
+  assert.match(claude[0].tools[2].steps[1].code, /\$ZILS_GATEWAY\/v1\/messages/);
+  assert.equal(new Set([...tools, ...claude.flatMap(group => group.tools)].map(tool => tool.id)).size, tools.length + 3);
 });
 
 test('a Jev account gets the Jev libraries, pointed at the gateway root and otherwise left alone', () => {
