@@ -70,12 +70,22 @@
 :global([data-theme=dark]) .snippet :global(.token.function),:global([data-theme=dark]) .snippet :global(.token.class-name),:global([data-theme=dark]) .snippet :global(.token.builtin) { color:#9fc7ff; }
 :global([data-theme=dark]) .snippet :global(.token.number),:global([data-theme=dark]) .snippet :global(.token.constant) { color:#f2bd94; }
 .requests { margin-top: 28px; }
+/* What happened to the requests: one sentence, one strip split by outcome, then the same split as a ledger with the numbers leading. */
 .outcomes { margin: 0 -40px; padding: 36px 40px 40px; border-top: 1px solid var(--zs-line); }
-.outcomes > p:nth-child(2) { max-width: 64ch; }
-.outcomeTable { max-width: 760px; }
-.outcomeTable tbody th { white-space: normal; padding-right: 24px; }
-.outcomeTable tbody tr:first-child th { color: var(--zs-peach); }
-.why { display: block; margin-top: 4px; max-width: 60ch; font-size: 13px; line-height: 1.5; color: var(--zs-t3); }
+.tally { margin: 18px 0 0; font-weight: 300; font-size: clamp(28px, 3.4vw, 44px); letter-spacing: -0.025em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.strip { display: flex; gap: 2px; height: 10px; margin-top: 22px; }
+.strip span { flex: 0 0 auto; min-width: 2px; background: color-mix(in srgb, var(--zs-fg) 20%, transparent); }
+.strip span[data-outcome="saved"] { background: var(--zs-peach); }
+.outcomeTable { margin-top: 8px; }
+.outcomeTable td, .outcomeTable thead th:not(:last-child) { width: 1%; padding-right: 28px; }
+.outcomeTable tbody td, .outcomeTable tbody th { vertical-align: top; line-height: 1.5; }
+.outcomeTable thead th:first-child { text-align: right; }
+.outcomeTable thead th:last-child, .outcomeTable tbody th { width: auto; text-align: left; white-space: normal; font-weight: 400; }
+.outcomeTable tbody td:nth-child(2) { color: var(--zs-t2); }
+.outcomeTable tr[data-outcome="saved"] td:first-child { color: var(--zs-peach); }
+.what { display: grid; grid-template-columns: minmax(0, 34ch) minmax(0, 60ch); gap: 4px 40px; align-items: baseline; }
+.why { font-size: 13px; line-height: 1.5; color: var(--zs-t3); }
+@media (max-width: 860px) { .outcomes { margin: 0 -16px; padding: 28px 16px 32px; }.what { grid-template-columns: minmax(0, 1fr); }.outcomeTable td, .outcomeTable thead th:not(:last-child) { padding-right: 16px; } }
 .providers { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
 .provider { display: inline-flex; align-items: center; gap: 10px; min-height: 42px; padding: 8px 16px; border: 1px solid var(--zs-line); background: none; color: inherit; font: inherit; font-size: 15px; }
 .provider[aria-pressed="true"] { border-color: var(--zs-peach); }

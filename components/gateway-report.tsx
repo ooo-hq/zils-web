@@ -111,11 +111,13 @@ function Setup({ status, address, collect }: { status: RelayStatus; address: str
     </div>
     {outcomes.length > 0 && <div className={styles.outcomes} role="region" aria-label="What happened to your requests">
       <p className={workspacePage.label}>What happened to your requests</p>
-      <p className={workspacePage.sub}>{`${counted.toLocaleString()} ${counted === 1 ? 'request' : 'requests'} asked a model for a reply since ${when(status.outcomes_since ?? status.collecting_since ?? '')}. The gateway saves the ones that ask for an answer from a fixed list.`}</p>
+      <p className={styles.tally}>{`${outcomes[0].count.toLocaleString()} of ${counted.toLocaleString()} ${counted === 1 ? 'request' : 'requests'} saved`}</p>
+      <div className={styles.strip} aria-hidden="true">{outcomes.filter(row => row.count > 0).map(row => <span key={row.id} data-outcome={row.id} style={{ flexGrow: row.count }} />)}</div>
       <div className={styles.tableWrap}><table className={`${styles.table} ${styles.outcomeTable}`}>
-        <thead><tr><th scope="col">What happened</th><th scope="col">Requests</th><th scope="col">Share</th></tr></thead>
-        <tbody>{outcomes.map(row => <tr key={row.id}><th scope="row">{row.label}{row.hint && <span className={styles.why}>{row.hint}</span>}</th><td>{row.count.toLocaleString()}</td><td>{row.share}</td></tr>)}</tbody>
+        <thead><tr><th scope="col">Share</th><th scope="col">Requests</th><th scope="col">What happened</th></tr></thead>
+        <tbody>{outcomes.map(row => <tr key={row.id} data-outcome={row.id}><td>{row.share}</td><td>{row.count.toLocaleString()}</td><th scope="row"><span className={styles.what}><span>{row.label}</span>{row.hint && <span className={styles.why}>{row.hint}</span>}</span></th></tr>)}</tbody>
       </table></div>
+      <p className={workspacePage.fine}>{`${counted === 1 ? 'The request' : 'Requests'} that asked a model for a reply since ${when(status.outcomes_since ?? status.collecting_since ?? '')}. The gateway saves the ones that ask for an answer from a fixed list.`}</p>
     </div>}
     <div className={styles.connect}>
       <p className={workspacePage.label}>Connect your app</p>
