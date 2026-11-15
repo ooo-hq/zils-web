@@ -70,6 +70,12 @@
 :global([data-theme=dark]) .snippet :global(.token.function),:global([data-theme=dark]) .snippet :global(.token.class-name),:global([data-theme=dark]) .snippet :global(.token.builtin) { color:#9fc7ff; }
 :global([data-theme=dark]) .snippet :global(.token.number),:global([data-theme=dark]) .snippet :global(.token.constant) { color:#f2bd94; }
 .requests { margin-top: 28px; }
+.runs { margin: 14px 0 0; padding: 0; list-style: none; max-width: 44ch; }
+.runs li { padding: 12px 0; border-top: 1px solid var(--zs-line); }
+.runs li:last-child { border-bottom: 1px solid var(--zs-line); }
+.run { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; font-size: 15px; }
+.run a { color: inherit; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.runs .actions { margin-top: 12px; }
 .offer { margin: 0; max-width: 18ch; font-weight: 300; font-size: clamp(26px, 2.8vw, 36px); letter-spacing: -0.02em; line-height: 1.1; }
 /* What happened to the requests: one sentence, one strip split by outcome, then the same split as a ledger with the numbers leading. */
 .outcomes { margin: 0 -40px; padding: 36px 40px 40px; border-top: 1px solid var(--zs-line); }

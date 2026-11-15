@@ -8,13 +8,19 @@ const shadowSchema = z.object({
   field: z.string().min(1), model: z.string().min(1), since: z.string(), asked: count, agreed: count, failed: count,
   by_confidence: z.array(z.object({ confidence_at_least: z.number().min(0).max(1), asked: count, agreed: count })),
 });
+// A run trained from a question: ready once its model can be called, failed if it ended without one.
+const trainingSchema = z.object({ job_id: z.string().uuid(), field: z.string().min(1), name: z.string().min(1), started_at: z.string(), state: z.enum(['training', 'ready', 'failed']), model: z.string().min(1).nullable() });
 const questionSchema = z.object({
   id: z.string().min(1), instructions: z.string(), fields: z.record(z.string(), z.array(z.union([z.string(), z.boolean()]))),
   first_at: z.string(), rows: count, last_at: z.string().nullable(), shadows: z.array(shadowSchema),
+  // A service from before runs were noted sends none.
+  trainings: z.array(trainingSchema).default([]),
 });
 const reportSchema = z.object({ relay: z.boolean(), saving_since: z.string().nullable(), questions_total: count, questions: z.array(questionSchema) });
 export type RelayShadow = z.infer<typeof shadowSchema>;
 export type RelayQuestion = z.infer<typeof questionSchema>;
+export type RelayTraining = z.infer<typeof trainingSchema>;
+export type RelayTrainingNote = { field: string; job_id: string; decision: string; outcomes: string[] };
 export type RelayReport = z.infer<typeof reportSchema>;
 
 export class RelayReportError extends Error {
@@ -127,6 +133,8 @@ export function relayReportApi(rawUrl: string, token: () => Promise<string>, req
         response.status === 401 ? 'Your session has expired. Please sign in again.'
           : code === 'terms_changed' ? 'The collection terms changed. Read them and agree again.'
           : code === 'no_question' ? 'That gateway question has no saved messages for this account.'
+          : code === 'not_ready' ? 'That run’s model is not ready to compare yet.'
+          : code === 'no_training' ? 'That run was not trained from a gateway question of this account.'
           : code === 'no_relay' ? 'The gateway is not set up for this account yet.'
           : response.status === 404 ? 'The gateway report is not available here yet.'
           : failed, response.status);
@@ -136,6 +144,7 @@ export function relayReportApi(rawUrl: string, token: () => Promise<string>, req
     return result;
   }
   const unchanged = 'Collection could not be changed. Please try again.';
+  const done = (value: unknown) => z.object({ status: z.literal('ok') }).safeParse(value).success ? true as const : null;
   return {
     get: (signal?: AbortSignal) => send('/v1/relay/report', parseRelayReport, 'The report could not be loaded. Please try again.', undefined, signal),
     status: (signal?: AbortSignal) => send('/v1/relay', parseRelayStatus, 'The report could not be loaded. Please try again.', undefined, signal),
@@ -143,6 +152,10 @@ export function relayReportApi(rawUrl: string, token: () => Promise<string>, req
       if (!/^[0-9a-f]{64}$/.test(question)) throw new RelayReportError('That gateway question has no saved messages for this account.', 404);
       return send(`/v1/relay/questions/${question}/rows`, parseRelayRows, 'The saved messages could not be loaded. Please try again.', undefined, signal);
     },
+    /** Note that a run was trained from a question's field, with the wording and answers it was trained on. */
+    note: (question: string, note: RelayTrainingNote) => send(`/v1/relay/questions/${question}/trainings`, done, 'The run could not be linked to its gateway question.', note),
+    /** Make a finished run's model the one compared on the question it was trained from. */
+    compare: (jobId: string) => send(`/v1/relay/trainings/${z.string().uuid().parse(jobId)}/compare`, done, 'The model could not be compared. Please try again.', {}),
     collect: (on: boolean, termsVersion?: string) => send('/v1/relay/collection', parseRelayStatus, unchanged, on ? { collect: true, terms_version: termsVersion } : { collect: false }),
   };
 }

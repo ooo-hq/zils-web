@@ -48,11 +48,12 @@ export function TrainTable({ config, gateway }: { config: TrainingConfig | null;
   const { client, session } = useAuthSession(config ?? undefined);
 
   // Opened from a gateway question: its saved messages and answers are the table.
+  const relay = useMemo(() => client && config?.decisionApiUrl ? relayReportApi(config.decisionApiUrl, async () => (await client.auth.getSession()).data.session?.access_token || '') : null, [client, config?.decisionApiUrl]);
   useEffect(() => {
-    if (!gateway || !client || !session || !config?.decisionApiUrl) return;
+    if (!gateway || !relay || !session) return;
     const controller = new AbortController();
     setWorking(true); setError('');
-    relayReportApi(config.decisionApiUrl, async () => (await client.auth.getSession()).data.session?.access_token || '').rows(gateway, controller.signal)
+    relay.rows(gateway, controller.signal)
       .then(saved => {
         const table = gatewayTable(saved);
         setFile('gateway'); setSheets([]); setData(table.data); setColumns(table.columns); setQuestion(table.question); setStage('edit');
@@ -60,7 +61,7 @@ export function TrainTable({ config, gateway }: { config: TrainingConfig | null;
       .catch(failure => { if (!controller.signal.aborted) setError(failure instanceof Error ? failure.message : 'The saved messages could not be loaded.'); })
       .finally(() => { if (!controller.signal.aborted) setWorking(false); });
     return () => controller.abort();
-  }, [gateway, client, session, config?.decisionApiUrl]);
+  }, [gateway, relay, session]);
 
   const ready = useMemo(() => data ? readiness(data, columns) : null, [data, columns]);
   const giveaways = useMemo(() => new Set(data && columns.decide ? leaks(data, columns.decide, columns.reads).map(l => l.column) : []), [data, columns]);
@@ -214,7 +215,7 @@ export function TrainTable({ config, gateway }: { config: TrainingConfig | null;
         {used < 50 && <p>That’s a small set. A few hundred examples usually make a model you can rely on.</p>}
         <label className={css.question}><span>The question it answers, shown to the model with each example</span><textarea rows={2} maxLength={1000} value={question} disabled={locked} onChange={e => setQuestion(e.target.value)} /></label>
         {!locked && <div className={css.back}><button type="button" className={`${button.b} ${button.secondary}`} onClick={() => setStage('edit')}>Back</button></div>}
-        <TeachingSubmission config={config} onLock={setLocked} privateOnly={Boolean(gateway)} initialName={slug(`${file.replace(/\.[a-z]+$/i, '')}-${columns.decide}`).slice(0, 64)} prepare={async name => {
+        <TeachingSubmission config={config} onLock={setLocked} privateOnly={Boolean(gateway)} onCreated={gateway && relay ? jobId => relay.note(gateway, { field: columns.decide, job_id: jobId, decision: question.trim(), outcomes: ready.outcomes }) : undefined} initialName={slug(`${file.replace(/\.[a-z]+$/i, '')}-${columns.decide}`).slice(0, 64)} prepare={async name => {
           if (!question.trim()) throw new Error('Write the question it answers.');
           const prepared = await prepareTraining(ready.report.data, ready.mapping, { name, question: question.trim(), outcomes: ready.outcomes }, ready.independent);
           return { kind: 'text', files: prepared.files };

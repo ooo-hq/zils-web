@@ -24,9 +24,11 @@ type Props = {
   initialImprovement?: string;
   /** Train on Zils workers only, with no open tier to choose. */
   privateOnly?: boolean;
+  /** Called once the run is saved, before its files upload. A failure here never stops the run. */
+  onCreated?: (jobId: string) => Promise<unknown>;
 };
 
-export function TeachingSubmission({ config, prepare, onLock, imageAnswers, initialName = '', initialAccuracy = '80', initialImprovement = '0.01', privateOnly = false }: Props) {
+export function TeachingSubmission({ config, prepare, onLock, imageAnswers, initialName = '', initialAccuracy = '80', initialImprovement = '0.01', privateOnly = false, onCreated }: Props) {
   const { client, session, error: sessionError } = useAuthSession(config ?? undefined);
   const router = useRouter(), id = useId();
   const [name, setName] = useState(initialName), [accuracy, setAccuracy] = useState(initialAccuracy), [improvement, setImprovement] = useState(initialImprovement);
@@ -110,6 +112,7 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
             const created = await api.create(input, controller.signal);
             draft.current.job = created.job; uploads = created.uploads;
             setSavedId(created.job.id); setFrozen(true);
+            await onCreated?.(created.job.id).catch(() => {});
           }
           for (const split of SPLITS) {
             update(`Uploading ${split} to private storage…`);

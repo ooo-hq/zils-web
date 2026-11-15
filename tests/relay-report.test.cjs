@@ -12,7 +12,7 @@ const shadow = {
 };
 const question = {
   id: 'e'.repeat(64), instructions: 'Pick the intent.', fields: { intent: ['card_arrival', 'other'], urgent: [true, false] },
-  first_at: '2026-11-14T15:55:00+00:00', rows: 25, last_at: '2026-11-14T16:03:00+00:00', shadows: [shadow],
+  first_at: '2026-11-14T15:55:00+00:00', rows: 25, last_at: '2026-11-14T16:03:00+00:00', shadows: [shadow], trainings: [],
 };
 const report = { relay: true, saving_since: '2026-11-14T15:38:32+00:00', questions_total: 1, questions: [question] };
 const none = { relay: false, saving_since: null, questions_total: 0, questions: [] };
@@ -160,4 +160,26 @@ test('saved rows for a question become a table: the message, then one column per
   assert.deepEqual((await api.rows(id)).question.id, id);
   assert.deepEqual(calls, [[`https://api.example/decision/v1/relay/questions/${id}/rows`, 'GET']]);
   await assert.rejects(api.rows('../x'), e => e.status === 404);
+});
+
+test('a question carries the runs trained from it, and a report from before runs carries none', async () => {
+  const run = { job_id: '50000000-0000-4000-8000-000000000001', field: 'intent', name: 'gateway-intent', started_at: '2026-11-15T17:00:00+00:00', state: 'ready', model: 'zils-task-x' };
+  const question = { id: 'a'.repeat(64), instructions: 'Pick.', fields: { intent: ['a', 'b'] }, first_at: '2026-11-14T00:00:00+00:00', rows: 3, last_at: null, shadows: [] };
+  const old = parseRelayReport({ relay: true, saving_since: null, questions_total: 1, questions: [question] });
+  assert.deepEqual(old.questions[0].trainings, []);
+  const withRuns = parseRelayReport({ relay: true, saving_since: null, questions_total: 1, questions: [{ ...question, trainings: [run, { ...run, state: 'training', model: null }] }] });
+  assert.deepEqual(withRuns.questions[0].trainings.map(found => [found.state, found.model]), [['ready', 'zils-task-x'], ['training', null]]);
+  assert.equal(parseRelayReport({ relay: true, saving_since: null, questions_total: 1, questions: [{ ...question, trainings: [{ ...run, state: 'odd' }] }] }), null);
+
+  const calls = [];
+  const api = relayReportApi('https://api.example/decision', async () => 'tok', async (url, init) => { calls.push([url, init.method, init.body]); return new Response('{"status":"ok"}', { status: 200 }); });
+  const note = { field: 'intent', job_id: run.job_id, decision: 'Which intent?', outcomes: ['a', 'b'] };
+  await api.note('a'.repeat(64), note);
+  await api.compare(run.job_id);
+  assert.deepEqual(calls, [
+    [`https://api.example/decision/v1/relay/questions/${'a'.repeat(64)}/trainings`, 'POST', JSON.stringify(note)],
+    [`https://api.example/decision/v1/relay/trainings/${run.job_id}/compare`, 'POST', '{}'],
+  ]);
+  const notReady = relayReportApi('https://api.example/decision', async () => 'tok', async () => new Response('{"error":{"code":"not_ready"}}', { status: 409 }));
+  await assert.rejects(notReady.compare(run.job_id), e => e.status === 409 && /not ready/.test(e.message));
 });
