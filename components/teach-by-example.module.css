@@ -173,3 +173,40 @@ li[data-done=true] .stepNumber { border-color:transparent; color:var(--zils-acce
 @media(max-width:760px) { .steps li button { justify-content:center; padding:9px 4px 11px; }.steps li button>span:last-child { display:none; }.steps li[data-active=true] { flex:2.5; }.steps li[data-active=true] button>span:last-child { display:block; font-size:11px; }.stepNumber { flex-basis:21px; height:21px; }.progressLine { margin-bottom:17px; font-size:11px; }.main .stepTitle { font-size:20px; }.intro { font-size:14px; margin-bottom:24px; }.taskChoices { gap:8px; }.taskChoice { min-height:145px; padding:14px 11px; }.taskChoice>svg { margin-bottom:16px; }.taskChoice strong { font-size:12px; line-height:1.4; }.taskChoice>span { font-size:10px; }.lessonPair { gap:13px; padding:16px; }.lessonPair p { font-size:12px; }.actions { gap:10px; }.primary,.secondary { font-size:12px!important; padding:11px 13px; }.textButton { font-size:11px!important; }.reviewWorkspace { grid-template-columns:1fr; }.exampleList { display:flex; overflow-x:auto; max-height:none; border-right:0; border-bottom:1px solid var(--zils-edge); padding:10px; }.exampleList button { width:auto; flex-shrink:0; margin:0 6px 0 0; }.reviewEditor { padding:18px; }.reviewProgress { flex-wrap:wrap; gap:10px; }.reviewProgress progress { min-width:100px; }.splitOverview { gap:17px; }.splitOverview strong { font-size:30px; }.splitOverview p { font-size:11px; }.coverageRow { grid-template-columns:minmax(105px,1fr) minmax(30px,1fr) 50px 16px; gap:8px; } }
 @media(max-width:440px) { .taskChoices { grid-template-columns:1fr; gap:9px; margin-bottom:23px; }.taskChoice { min-height:0; padding:13px 15px 13px 51px; }.taskChoice>svg { position:absolute; left:15px; top:17px; margin:0; }.taskChoice strong { font-size:13px; padding-right:15px; margin-bottom:3px; }.taskChoice>span { font-size:11px; }.taskChoice .choiceCheck { left:auto; right:13px; top:16px; }.pairFields { grid-template-columns:1fr; gap:20px; }.lessonPair { grid-template-columns:1fr; gap:13px; }.pairArrow { display:none; }.lessonPair>div+div { border-top:1px solid var(--zils-edge); padding-top:12px; }.tabs { gap:17px; }.tabs button { font-size:11px; gap:5px; }.actions { flex-wrap:wrap; }.actions>.primary { margin-left:auto; }.footer { font-size:10px; gap:8px; }.editorFooter .primary { width:100%; }.splitOverview { gap:12px; }.splitOverview span { font-size:12px; }.splitOverview p { font-size:10px; }.testPreview { padding:17px; }.testTitle { flex-wrap:wrap; gap:0; }.testTitle>span { margin-bottom:12px; }.demoComparison { grid-template-columns:1fr; } }
 @media(prefers-reduced-motion:reduce) { .page * { transition:none!important; scroll-behavior:auto!important; } }
+
+/* After sending ends without opening the run: one block, each part with room around it. */
+.after { margin-top:28px; padding-top:24px; border-top:1px solid var(--zils-line, rgba(127,127,127,.2)); display:grid; gap:16px; justify-items:start; }
+.after > * { margin:0; }
+.after .actions { margin-top:0; padding-top:0; border-top:0; }
+.keep { display:grid; gap:12px; }
+/* Start training: a dialog over the page until the run's own page opens. */
+.sending { width:min(520px, calc(100vw - 32px)); margin:auto; padding:40px 40px 36px; border:1px solid var(--zs-line, rgba(127,127,127,.25)); border-top:2px solid var(--zs-peach, var(--zils-accent)); border-radius:0; background:var(--zs-panel, var(--zils-surface, Canvas)); color:var(--zs-fg, CanvasText); }
+.sending::backdrop { background:rgba(var(--zs-bg-rgb, 15,15,19), .78); backdrop-filter:blur(3px); }
+.sending[open] { animation:sending-in .22s ease-out; }
+.sending h2 { margin:32px 0 0; font-weight:300; font-size:clamp(24px, 4vw, 30px); letter-spacing:-.02em; line-height:1.15; }
+.sendingName { margin:8px 0 0; font-family:var(--font-plex-mono), ui-monospace, monospace; font-size:13px; color:var(--zs-t2, var(--zils-muted)); overflow-wrap:anywhere; }
+.sendingSteps { margin:28px 0 0; padding:0; list-style:none; display:grid; gap:12px; }
+.sendingSteps li { position:relative; padding-left:26px; font-size:15px; line-height:1.4; color:var(--zs-t3, var(--zils-muted)); }
+.sendingSteps li::before { content:""; position:absolute; left:2px; top:6px; width:8px; height:8px; border:1px solid currentColor; }
+.sendingSteps li[data-state="done"] { color:var(--zs-t2, var(--zils-muted)); }
+.sendingSteps li[data-state="done"]::before { background:var(--zs-peach, var(--zils-accent)); border-color:var(--zs-peach, var(--zils-accent)); }
+.sendingSteps li[data-state="now"] { color:var(--zs-fg, inherit); }
+.sendingSteps li[data-state="now"]::before { border-color:var(--zs-peach, var(--zils-accent)); animation:sending-now 1.2s ease-in-out infinite; }
+.sendingNow { min-height:1.6em; margin:20px 0 0; font-family:var(--font-plex-mono), ui-monospace, monospace; font-size:11px; letter-spacing:.04em; line-height:1.6; color:var(--zs-t3, var(--zils-muted)); }
+.sending .actions { margin-top:20px; }
+/* The drawing: five examples on the left, the line, three answers on the right. Each example crosses and its answer lights. */
+.sort { --seam:58%; position:relative; display:grid; gap:9px; padding:6px 0; }
+.sort::before { content:""; position:absolute; left:var(--seam); top:0; bottom:0; width:1px; background:var(--zs-peach, var(--zils-accent)); }
+.sort span { position:relative; display:block; height:10px; --delay:calc(var(--row) * .34s); }
+.sort i { position:absolute; top:0; height:10px; }
+.sort i:nth-child(1) { left:0; top:4px; height:2px; width:calc(var(--seam) - 18px - var(--row) * 9%); background:rgba(var(--zs-fg-rgb, 127,127,127), .18); }
+.sort i:nth-child(2) { left:0; width:10px; background:var(--zs-fg, currentColor); opacity:0; animation:sort-cross 2.6s cubic-bezier(.5,0,.2,1) var(--delay) infinite; }
+.sort i:nth-child(3) { left:calc(var(--seam) + 16px + var(--answer) * 13%); width:10%; background:var(--zs-peach, var(--zils-accent)); opacity:.14; animation:sort-land 2.6s ease-out var(--delay) infinite; }
+.sort span[data-answer="1"] i:nth-child(3) { background:var(--zs-lilac, var(--zils-accent)); }
+.sort span[data-answer="2"] i:nth-child(3) { background:var(--zs-peri, var(--zils-accent)); }
+@keyframes sort-cross { 0% { left:0; opacity:0; } 8% { opacity:1; } 46% { left:calc(var(--seam) - 5px); opacity:1; } 56%, 100% { left:calc(var(--seam) - 5px); opacity:0; } }
+@keyframes sort-land { 0%, 46% { opacity:.14; } 56%, 84% { opacity:1; } 100% { opacity:.14; } }
+@keyframes sending-now { 50% { background:var(--zs-peach, var(--zils-accent)); } }
+@keyframes sending-in { from { opacity:0; transform:translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .sending[open], .sort i, .sendingSteps li::before { animation:none; }.sort i:nth-child(3) { opacity:1; } }
+@media (max-width: 520px) { .sending { padding:28px 20px 24px; } }

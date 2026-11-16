@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthSession } from '@/components/auth-session';
@@ -28,6 +28,12 @@ type Props = {
   onCreated?: (jobId: string) => Promise<unknown>;
 };
 
+/** The steps a run goes through between Start training and its own page, and the progress message that begins each. */
+const SENDING = ['Save the run', 'Upload your examples', 'Hand it over for checking', 'Open the run'];
+const SENDING_AT = [/^Uploading/, /^Submitting/, /^Opening/];
+/** Which of three answers each row of the drawing lands on. */
+const SORT = [0, 2, 1, 0, 1];
+
 export function TeachingSubmission({ config, prepare, onLock, imageAnswers, initialName = '', initialAccuracy = '80', initialImprovement = '0.01', privateOnly = false, onCreated }: Props) {
   const { client, session, error: sessionError } = useAuthSession(config ?? undefined);
   const router = useRouter(), id = useId();
@@ -37,6 +43,17 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
   const [busy, setBusy] = useState(false), [frozen, setFrozen] = useState(false), [uncertain, setUncertain] = useState(false);
   const [error, setError] = useState(''), [progress, setProgress] = useState(''), [needsCredit, setNeedsCredit] = useState(false);
   const [savedId, setSavedId] = useState(''), [savedOwner, setSavedOwner] = useState('');
+  // The dialog stays up from Start training until the run's page has opened, so the form is never seen half-sent.
+  const [opening, setOpening] = useState(false);
+  const dialog = useRef<HTMLDialogElement>(null);
+  const sending = busy || opening;
+  useEffect(() => {
+    const box = dialog.current;
+    if (!box) return;
+    if (sending && !box.open) box.showModal();
+    if (!sending && box.open) box.close();
+  }, [sending]);
+  const at = SENDING_AT.reduce((step, pattern, index) => pattern.test(progress) ? index + 1 : step, 0);
   const draft = useRef<ImageDraft>({ assets: {} });
   const snapshot = useRef<{ owner: string; input: Submission; data: TeachingTrainingData } | null>(null);
   const operation = useRef<AbortController | null>(null), attemptedCreate = useRef(false);
@@ -125,7 +142,7 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
         job = draft.current.job;
       }
       controller.signal.throwIfAborted();
-      setProgress('Opening your saved run…');
+      setProgress('Opening your saved run…'); setOpening(true);
       router.push(`/train?run=${job.id}`);
     } catch (failure) {
       // Only authentication/authorization failures guarantee rejection before the job is saved.
@@ -168,10 +185,21 @@ export function TeachingSubmission({ config, prepare, onLock, imageAnswers, init
       </fieldset>
       <div className={s.actions}><span className={s.hint}>{session.user.email}</span><button className={s.primary} disabled={busy || uncertain || !consent || (!frozen && (!selection || !tier))}>{busy ? 'Submitting…' : frozen ? 'Resume training submission' : 'Start training'}</button></div>
     </form>}
-    {(error || sessionError) && <p role="alert" className={s.error}>{error || sessionError}{needsCredit && <Link href="/billing" target="_blank" rel="noopener noreferrer">Add credit</Link>}</p>}
-    {progress && <p role="status" className={s.hint}>{progress}</p>}
-    {busy && <button type="button" className={s.secondary} onClick={() => operation.current?.abort()}>Stop upload</button>}
-    {(savedId || uncertain) && <Link className={s.secondary} href={savedId ? `/train?run=${savedId}` : '/train'} target="_blank" rel="noopener noreferrer">{savedId ? 'Open saved run' : 'Check my runs'}</Link>}
-    {frozen && !imageAnswers && <div><p className={s.hint}>Before closing this tab, save these exact files to resume uploads from your saved run.</p><div className={s.actions}>{SPLITS.map(split => <button key={split} type="button" className={s.secondary} onClick={() => downloadSplit(split)}>Download {split}.jsonl</button>)}</div></div>}
+    {/* What is left on the page once sending has ended without opening the run: what went wrong, what was kept, and what to do with it. */}
+    {!sending && (error || sessionError || progress || savedId || uncertain) && <div className={s.after} {...(savedId || uncertain ? { role: 'group', 'aria-label': 'Your saved run' } : {})}>
+      {(error || sessionError) && <p role="alert" className={s.error}>{error || sessionError}{needsCredit && <Link href="/billing" target="_blank" rel="noopener noreferrer">Add credit</Link>}</p>}
+      {progress && <p role="status" className={s.hint}>{progress}</p>}
+      {(savedId || uncertain) && <div className={s.actions}><Link className={s.secondary} href={savedId ? `/train?run=${savedId}` : '/train'} target="_blank" rel="noopener noreferrer">{savedId ? 'Open saved run' : 'Check my runs'}</Link></div>}
+      {frozen && !imageAnswers && <div className={s.keep}><p className={s.hint}>Before closing this tab, save these exact files to resume uploads from your saved run.</p><div className={s.actions}>{SPLITS.map(split => <button key={split} type="button" className={s.secondary} onClick={() => downloadSplit(split)}>Download {split}.jsonl</button>)}</div></div>}
+    </div>}
+    <dialog ref={dialog} className={s.sending} aria-labelledby={`${id}-sending`} onCancel={event => event.preventDefault()}>
+      {/* What a decision model does, drawn small: each example crosses the line and lands on one answer. */}
+      <div className={s.sort} aria-hidden="true">{SORT.map((answer, row) => <span key={row} data-answer={answer} style={{ '--row': row, '--answer': answer } as CSSProperties}><i /><i /><i /></span>)}</div>
+      <h2 id={`${id}-sending`}>Starting your training run</h2>
+      <p className={s.sendingName}>{name}</p>
+      <ol className={s.sendingSteps} aria-label="Steps">{SENDING.map((step, index) => <li key={step} data-state={index < at ? 'done' : index === at ? 'now' : 'next'} aria-current={index === at ? 'step' : undefined}>{step}</li>)}</ol>
+      <p role="status" className={s.sendingNow}>{sending ? progress : ''}</p>
+      {busy && <div className={s.actions}><button type="button" className={s.secondary} onClick={() => operation.current?.abort()}>Stop upload</button></div>}
+    </dialog>
   </section>;
 }
