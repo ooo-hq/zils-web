@@ -127,7 +127,7 @@ test('a Claude gateway shows the root address and the Anthropic cards', async ({
   const providers = setup.getByRole('group', { name: 'Provider' });
   await expect(providers.getByRole('button', { name: /Claude/ })).toHaveAttribute('aria-pressed', 'true');
   await expect(providers.getByRole('button', { name: 'OpenAI' })).toBeEnabled();
-  await expect(providers.getByRole('button')).toHaveCount(2);
+  await expect(providers.getByRole('button')).toHaveCount(3);
   for (const name of ['Anthropic Python', 'Anthropic TypeScript', 'cURL']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
   await expect(setup.getByRole('button', { name: /^(OpenAI Python|LangChain|Jev)/ })).toHaveCount(0);
   // What is saved is the same as for OpenAI: requests that ask for an answer from a fixed list.
@@ -138,6 +138,32 @@ test('a Claude gateway shows the root address and the Anthropic cards', async ({
   const steps = setup.getByRole('region', { name: 'Anthropic Python setup' });
   await expect(steps.locator('pre').first()).toContainText(`client = Anthropic(base_url="${address}")`);
   await expect(steps.locator('pre mark')).toHaveText(address);
+});
+
+test('a Gemini gateway shows the root address and the Google cards', async ({ page }) => {
+  await signIn(page);
+  await answer(page, 200, { relay: true, saving_since: null, questions_total: 0, questions: [] });
+  const sent = await relay(page, null, relayId, { requests: 0, last_request_at: null, provider: 'gemini' });
+  await page.goto('/gateway');
+  const setup = page.getByRole('region', { name: 'Setup' });
+  // A Google client is given the API root and adds the API version itself.
+  const address = `http://127.0.0.1:8999/relay/${relayId}`;
+  await expect(setup.locator('code').first()).toHaveText(address);
+  await expect(setup.getByText('Set it as the base URL of your Gemini client.', { exact: false })).toBeVisible();
+  const providers = setup.getByRole('group', { name: 'Provider' });
+  await expect(providers.getByRole('button', { name: /Gemini/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(providers.getByRole('button')).toHaveCount(3);
+  for (const name of ['Google Gen AI Python', 'Google Gen AI JavaScript', 'cURL']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
+  await expect(setup.getByRole('button', { name: /^(OpenAI Python|LangChain|Anthropic|Jev)/ })).toHaveCount(0);
+  await expect(setup.getByText(/each request that asks for an answer from a fixed list/)).toBeVisible();
+
+  await setup.getByRole('button', { name: /^Google Gen AI Python/ }).click();
+  const steps = setup.getByRole('region', { name: 'Google Gen AI Python setup' });
+  await expect(steps.locator('pre').first()).toContainText(`base_url="${address}"`);
+  await expect(steps.locator('pre mark')).toHaveText(address);
+  // The account may leave Gemini for another provider like any other.
+  await providers.getByRole('button', { name: 'Claude' }).click();
+  expect(sent).toEqual([{ provider: 'anthropic' }]);
 });
 
 test('an account switches its address between OpenAI and Claude while it is not collecting', async ({ page }) => {
@@ -366,8 +392,9 @@ test('shows whether requests have come through, and a card for each tool that op
   // Providers: an address goes to one of them. Jev is set up by us and is not offered here.
   const providers = setup.getByRole('group', { name: 'Provider' });
   await expect(providers.getByRole('button', { name: /OpenAI/ })).toHaveAttribute('aria-pressed', 'true');
-  await expect(providers.getByRole('button')).toHaveCount(2);
+  await expect(providers.getByRole('button')).toHaveCount(3);
   await expect(providers.getByRole('button', { name: 'Claude' })).toBeEnabled();
+  await expect(providers.getByRole('button', { name: 'Gemini' })).toBeEnabled();
   await expect(setup.getByText(/Jev/)).toHaveCount(0);
   await expect(setup.getByText(/another provider/)).toHaveCount(0);
   await expect(setup.getByText('Set it as the base URL of your OpenAI client.', { exact: false })).toBeVisible();

@@ -72,6 +72,8 @@ test('the relay address is the id under the training service, ready to paste as 
   assert.equal(relayAddress('https://training.example/', 'r'.repeat(40), 'jev'), `https://training.example/relay/${'r'.repeat(40)}`);
   // So is an Anthropic client.
   assert.equal(relayAddress('https://training.example/', 'r'.repeat(40), 'anthropic'), `https://training.example/relay/${'r'.repeat(40)}`);
+  // And a Google client, which adds the API version itself.
+  assert.equal(relayAddress('https://training.example/', 'r'.repeat(40), 'gemini'), `https://training.example/relay/${'r'.repeat(40)}`);
 });
 
 test('parses a relay status, with and without a relay', () => {
@@ -109,6 +111,7 @@ test('a status from before request counts reads as no requests yet', () => {
   assert.deepEqual(parseRelayStatus(status), { ...status, requests: 0, last_request_at: null, provider: 'openai', outcomes: {}, outcomes_since: null });
   assert.equal(parseRelayStatus({ ...status, provider: 'jev' }).provider, 'jev');
   assert.equal(parseRelayStatus({ ...status, provider: 'anthropic' }).provider, 'anthropic');
+  assert.equal(parseRelayStatus({ ...status, provider: 'gemini' }).provider, 'gemini');
   assert.equal(parseRelayStatus({ ...status, provider: 'other' }), null);
   const busy = { ...status, requests: 3026, last_request_at: '2026-11-14T20:00:00+00:00' };
   assert.deepEqual(parseRelayStatus(busy), { ...busy, provider: 'openai', outcomes: {}, outcomes_since: null });

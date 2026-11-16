@@ -103,7 +103,7 @@ function ToolSteps({ tool, address }: { tool: GatewayTool; address: string }) {
 }
 
 type Collect = (on: boolean, termsVersion?: string) => Promise<void>;
-type Choose = (provider: 'openai' | 'anthropic') => Promise<void>;
+type Choose = (provider: 'openai' | 'anthropic' | 'gemini') => Promise<void>;
 
 const BACK = <Link href="/train" className={training.textButton}>Back to Train<LinkLoading /></Link>;
 
@@ -125,8 +125,8 @@ function Setup({ status, address, collect, choose }: { status: RelayStatus; addr
     <ol className={styles.flow} aria-label="Setup steps">
       <li data-state={locked ? 'locked' : 'done'}>
         <div className={styles.flowHead}><span className={styles.flowNumber} aria-hidden="true">1</span><h3>Choose your provider</h3><p>{provider.name}{locked && ', locked'}</p></div>
-        {/* An account chooses OpenAI or Claude itself, while it is not collecting: saved answers are one provider's. Jev is set by us. */}
-        <div role="group" aria-label="Provider" className={styles.providers}>{gatewayProviders.filter(known => jev ? known.id !== 'anthropic' : known.id !== 'jev').map(known => {
+        {/* An account chooses OpenAI, Claude or Gemini itself, while it is not collecting: saved answers are one provider's. Jev is set by us. */}
+        <div role="group" aria-label="Provider" className={styles.providers}>{gatewayProviders.filter(known => jev ? known.id === 'jev' || known.id === 'openai' : known.id !== 'jev').map(known => {
           const other = known.id !== provider.id;
           return <button key={known.id} className={styles.provider} aria-pressed={!other} disabled={!other || jev || locked || switching} onClick={() => { if (known.id === 'jev') return; setSwitching(true); setOpen(''); void choose(known.id).finally(() => setSwitching(false)); }}>{known.name}{jev && other && <span className={styles.tag}>On request</span>}</button>;
         })}</div>
