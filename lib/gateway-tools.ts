@@ -16,7 +16,8 @@ export const gatewayProviders: { id: GatewayProvider; name: string }[] = [
 // The example question every card asks. The model is the caller's own: any name their provider accepts.
 const MODEL = 'gpt-6.1-sol';
 const CLAUDE_MODEL = 'claude-opus-5-5';
-const GEMINI_MODEL = 'gemini-flash-latest';
+// A name Google serves on API version v1, which its libraries call by default: the -latest names exist on v1beta only.
+const GEMINI_MODEL = 'gemini-3.8-flash';
 const ASK = 'Pick the intent of the customer message.';
 const SAID = 'Where is my order?';
 

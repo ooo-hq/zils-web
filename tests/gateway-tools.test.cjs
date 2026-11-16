@@ -64,6 +64,8 @@ test('a Gemini account gets the Google libraries, pointed at the gateway root, a
     assert.match(code, /refund.*shipping.*other/s, tool.name);
     // The key stays in the app's environment, and never goes in the address.
     assert.doesNotMatch(code, /AIza|api_key\s*=|apiKey\s*:|\?key=|gpt-|claude-/, tool.name);
+    // Google's libraries call API version v1, where the -latest model names do not exist.
+    assert.doesNotMatch(code, /-latest/, tool.name);
   }
   assert.match(gemini[0].tools[2].steps[1].code, /\$ZILS_GATEWAY\/v1beta\/models\/[a-z0-9.-]+:generateContent/);
   assert.match(gemini[0].tools[2].steps[1].code, /x-goog-api-key: \$GEMINI_API_KEY/);
