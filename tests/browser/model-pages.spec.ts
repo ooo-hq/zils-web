@@ -76,6 +76,25 @@ for (const migration of ['no_regression', true, undefined] as const) test(`resul
   await expect(page.getByText('Required:', { exact: false })).toContainText(migration ? expected : '0.0100 absolute Brier improvement');
 });
 
+test('the model page holds everything about a model, in the workspace design', async ({ page }) => {
+  await fixture(page);
+  await page.goto(path);
+  // One hero, as on every workspace page: where you came from, the model's name, its state and the way to use it.
+  const hero = page.locator('header').filter({ has: page.getByRole('heading', { name: job.name, level: 1 }) });
+  await expect(hero.getByRole('link', { name: 'Back to models' })).toHaveAttribute('href', '/models');
+  await expect(hero.getByText('Ready to use', { exact: true })).toBeVisible();
+  await expect(hero.getByRole('link', { name: 'Use this model', exact: true })).toHaveAttribute('href', '#model-access');
+  // The sections, in the order a person needs them.
+  await expect(page.locator('main h2[id^="model-"]')).toHaveText(['How this model performed', 'Access this model', 'API usage', 'Files and details']);
+  // What used to be only on the run page: the model's files, the run it came from and every candidate's scores.
+  const details = page.getByRole('region', { name: 'Files and details' });
+  await expect(details.getByRole('button', { name: 'Get model files' })).toBeVisible();
+  await expect(details.getByText(`Run ID: ${id}`, { exact: true })).toBeVisible();
+  const candidates = details.getByRole('region', { name: 'Candidate evaluations' }).getByRole('row');
+  await expect(candidates.nth(1)).toContainText(/1.*evaluated.*99\.00%/);
+  await expect(candidates.nth(2)).toContainText(/2 · selected.*evaluated.*91\.00%/);
+});
+
 test('workspace links to private model stats, exact-version usage, and runnable API examples', async ({ page, context }) => {
   await page.setViewportSize({ width: 1280, height: 1050 });
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
@@ -197,7 +216,7 @@ test('activation and approval are distinct: accepted stats are visible before AP
   await page.getByRole('region', { name: 'Run history' }).getByRole('link').click();
   await page.getByRole('link', { name: 'View model stats and access' }).click();
   await expect(page.getByRole('region', { name: 'Model activation' })).toContainText('Preparing API access');
-  await expect(page.getByText('91.00%', { exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'How this model performed' }).getByText('91.00%', { exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Access this model' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'API usage', exact: true })).toHaveCount(0);
 });

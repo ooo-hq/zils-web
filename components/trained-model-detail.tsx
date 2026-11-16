@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { WorkspaceLoading, LinkLoading } from '@/components/workspace-loading';
-import { ZilsDecisionMark } from '@/components/zils-decision-mark';
 import { useAuthSession } from '@/components/auth-session';
 import { ApiKeysPanel } from '@/components/api-keys-panel';
 import { TrainedModelQuickstart } from '@/components/trained-model-quickstart';
 import { ImageTrainingResults, PrivateImageTest } from '@/components/image-training-results';
-import { canDownload, isImageJob, trainingApi, TrainingApiError, type Job } from '@/lib/training';
+import { PageHero, Section, workspacePage } from '@/components/workspace-page';
+import { canDownload, canDownloadFiles, downloadFiles, isImageJob, trainingApi, TrainingApiError, type Job } from '@/lib/training';
 import { trainingProgress } from '@/lib/training-status';
 import { newerBase, trainingBase, type BaseConfig } from '@/lib/base-model';
 import { billingApi, formatBalance, formatCredit, type BillingSummary } from '@/lib/billing';
@@ -22,15 +22,15 @@ const percent = (value?: number) => value === undefined ? 'Not recorded' : `${(v
 const decimal = (value?: number) => value === undefined ? 'Not recorded' : value.toFixed(4);
 const date = (value: string) => new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 type Props = { jobId: string; config: TrainingConfig };
+const BACK = <Link href="/models" className={training.textButton}>Back to models<LinkLoading /></Link>;
 
 export function TrainedModelDetail(props: Props) {
   const { client, session, error } = useAuthSession(props.config);
   if (session === undefined) return <WorkspaceLoading label="Opening your model" />;
-  if (!session || !client) return <section className={`${training.panel} ${styles.empty}`}>
-    <h1>Sign in to view this model</h1><p>Model results and access details are private to the account that trained it.</p>
-    {error && <p role="alert" className={training.error}>{error}</p>}
-    <Link href="/train" className={training.button}>Sign in to Zils</Link>
-  </section>;
+  if (!session || !client) return <div className={styles.model}>
+    <PageHero back={BACK} title="Sign in to view this model" intro="Model results and access details are private to the account that trained it." action={<Link href="/train" className={training.button}>Sign in to Zils</Link>} />
+    {error && <p role="alert" className={workspacePage.notice}>{error}</p>}
+  </div>;
   return <AccountModel key={`${session.user.id}:${props.jobId}`} {...props} owner={session.user.id} client={client} />;
 }
 
@@ -40,6 +40,7 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
   const [loading, setLoading] = useState(true);
   const [revision, setRevision] = useState(0);
   const [bases, setBases] = useState<BaseConfig | null>(null);
+  const [files, setFiles] = useState<{ name: string; url: string }[]>([]), [fetching, setFetching] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
     trainingBase(config.apiUrl, controller.signal).then(value => { if (!controller.signal.aborted) setBases(value); })
@@ -79,10 +80,16 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
   }, [api, jobId, revision, signOut]);
   function refresh() { setJob(null); setError(''); setLoading(true); setRevision(value => value + 1); }
   if (loading) return <WorkspaceLoading label="Loading your model" />;
-  if (!job) return <section className={`${training.panel} ${styles.empty}`}>
-    <h1>Model unavailable</h1><p role="alert">{error}</p>
-    <button className={training.secondary} onClick={refresh}>Try again</button>
-  </section>;
+  if (!job) return <div className={styles.model}>
+    <PageHero back={BACK} title="Model unavailable" action={<button className={training.secondary} onClick={refresh}>Try again</button>} />
+    <p role="alert" className={workspacePage.notice}>{error}</p>
+  </div>;
+  async function getFiles(job: Job) {
+    setFetching(true); setError('');
+    try { setFiles(await api.downloads(job)); }
+    catch (failure) { setError(failure instanceof Error ? failure.message : 'The model files could not be prepared. Please try again.'); }
+    finally { setFetching(false); }
+  }
 
   const result = job.result!;
   const selected = result.miners.find(candidate => candidate.uid === result.delivery.uid);
@@ -96,73 +103,100 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
   const difference = comparison ? (comparison.trained_accuracy - comparison.accuracy) * 100 : null;
   const progress = trainingProgress(job);
   const migration = bases && newerBase(bases, job);
-  return <div className={styles.detail}>
-    <header className={styles.heading}>
-      <div>
-        <p className={styles.modelMeta}>{image ? 'Image' : 'Text'} model <span>{ready ? 'Ready to use' : progress.label}</span></p>
-        <h1>{job.name}</h1>
-        <p>Private to your account{job.created_at && <>. Created {date(job.created_at)}</>}.</p>
-      </div>
-      <div className={styles.headingAside}><ZilsDecisionMark className={styles.mark} /><div className={styles.actions}>
-        <button className={training.secondary} onClick={refresh}>Refresh</button>
-        {ready && !image && <Link className={training.secondary} href={`/train?upgrade=${job.id}`}>Train a replacement<LinkLoading /></Link>}
-        {ready && <a href="#model-access" className={training.button}>Use this model</a>}
-      </div></div>
-    </header>
-    <nav aria-label="Model sections" className={styles.sectionNav}><a href="#model-results">Results</a>{ready && <><a href="#model-usage">Usage</a><a href="#model-access">Access</a></>}<Link href={`/train?run=${job.id}`}>Training run<LinkLoading /></Link></nav>
-    {error && <p role="alert" className={training.error}>{error}</p>}
-    {!ready && <section className={training.notice} aria-label="Model activation"><strong>{progress.title}</strong><p>{progress.detail} {progress.next}</p></section>}
-    {migration && <section id="model-migration" className={`${training.notice} ${styles.migration}`} aria-label="Newer base available">
+  return <div className={styles.model}>
+    <PageHero back={BACK} title={job.name}
+      intro={<><span className={workspacePage.status} data-tone={ready ? undefined : 'busy'}>{ready ? 'Ready to use' : progress.label}</span>{' '}{image ? 'Image' : 'Text'} model, private to your account.{job.created_at && ` Trained ${date(job.created_at)}.`}</>}
+      action={ready && <div className={styles.heroActions}>
+        <a href="#model-access" className={training.button}>Use this model</a>
+        {!image && <Link className={training.secondary} href={`/train?upgrade=${job.id}`}>Train a replacement<LinkLoading /></Link>}
+      </div>} />
+    <nav aria-label="Model sections" className={styles.sectionNav}><a href="#model-results">Results</a>{ready && <><a href="#model-access">Access</a><a href="#model-usage">Usage</a></>}<a href="#model-details">Files and details</a><Link href={`/train?run=${job.id}`}>Training run<LinkLoading /></Link></nav>
+    {error && <p role="alert" className={workspacePage.notice}>{error}</p>}
+    {!ready && <section className={workspacePage.notice} aria-label="Model activation"><strong>{progress.title}</strong> {progress.detail} {progress.next}</section>}
+    {migration && <section id="model-migration" className={`${workspacePage.notice} ${styles.migration}`} aria-label="Newer base available">
       <div><strong>Newer base available</strong><p>{modelDisplayName(migration.name)} is available for this model. Reuse your saved examples and settings. Your current model stays live until the replacement passes your success criteria.</p></div>
       <Link className={training.secondary} href={{ pathname: '/train', query: { upgrade: job.id, migrate: migration.selection.model } }}>Migrate<LinkLoading /></Link>
     </section>}
 
-    <section id="model-results" className={styles.section} aria-labelledby="model-results-heading">
-      <div className={styles.sectionHeading}><div><h2 id="model-results-heading">How this model performed</h2><p>{comparison ? `Both models evaluated on the same ${comparison.count.toLocaleString()} held-out examples.` : 'Evaluation on examples held out from training.'}</p></div><span>{difference === null ? 'Selected version' : `${difference > 0 ? '+' : ''}${difference.toFixed(2)} percentage points vs JEV`}</span></div>
-      <div className={styles.evaluation}>
-        <div className={styles.accuracy}><h3>Accuracy</h3><dl className={styles.comparison}>
-          <div><dt>{image ? baselineLabel : 'TypeSafe JEV'}</dt><dd><strong>{referenceAccuracy === undefined ? (comparing ? 'Evaluating…' : 'Not evaluated') : percent(referenceAccuracy)}</strong>{referenceAccuracy !== undefined && <span className={styles.track} aria-hidden="true"><span style={{ width: `${referenceAccuracy * 100}%` }} /></span>}</dd></div>
-          <div data-trained="true"><dt>Your trained model</dt><dd><strong>{percent(selected?.accuracy)}</strong>{selected?.accuracy !== undefined && <span className={styles.track} aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(100, selected.accuracy * 100))}%` }} /></span>}</dd></div>
-        </dl></div>
-        <dl className={styles.supportingStats}>
-          <div><dt>Probability error</dt><dd>{decimal(selected?.brier)}</dd><p>Brier loss. Lower is better.<br />{baselineLabel}: {decimal(result.baseline.brier)}</p></div>
-          <div><dt>Test examples</dt><dd>{comparison?.count ?? selected?.count ?? selected?.cases ?? 'Not recorded'}</dd><p>{comparison ? 'Same examples for both models' : 'For the selected model'}</p></div>
-        </dl>
+    <section className={styles.section} aria-labelledby="model-results">
+      <Section label="How this model performed" id="model-results" action={<button onClick={refresh}>Refresh</button>} />
+      <div className={workspacePage.split}>
+        <div>
+          <p className={workspacePage.label}>Your trained model</p>
+          <span className={workspacePage.amount}>{percent(selected?.accuracy)}</span>
+          <p className={workspacePage.sub}>{comparison ? `Both models evaluated on the same ${comparison.count.toLocaleString()} held-out examples.` : 'Accuracy on examples held out from training.'}</p>
+          <p className={workspacePage.fine}>{difference === null ? 'Selected version' : `${difference > 0 ? '+' : ''}${difference.toFixed(2)} percentage points vs JEV`}</p>
+        </div>
+        <div>
+          <dl className={styles.comparison} aria-label="Accuracy">
+            <div data-trained="true"><dt>This model</dt><dd><span className={styles.track} aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(100, (selected?.accuracy ?? 0) * 100))}%` }} /></span></dd></div>
+            <div><dt>{image ? baselineLabel : 'TypeSafe JEV'}</dt><dd><strong>{referenceAccuracy === undefined ? (comparing ? 'Evaluating…' : 'Not evaluated') : percent(referenceAccuracy)}</strong>{referenceAccuracy !== undefined && <span className={styles.track} aria-hidden="true"><span style={{ width: `${referenceAccuracy * 100}%` }} /></span>}</dd></div>
+          </dl>
+          <dl className={styles.supportingStats}>
+            <div><dt>Probability error</dt><dd>{decimal(selected?.brier)}</dd><p>Brier loss. Lower is better.<br />{baselineLabel}: {decimal(result.baseline.brier)}</p></div>
+            <div><dt>Test examples</dt><dd>{comparison?.count ?? selected?.count ?? selected?.cases ?? 'Not recorded'}</dd><p>{comparison ? 'Same examples for both models' : 'For the selected model'}</p></div>
+          </dl>
+        </div>
       </div>
-      {!image && <p className={styles.note} role={comparing ? 'status' : undefined}>{comparison ? `${comparison.model} · Evaluated ${date(comparison.evaluated_at)}. Saved once; viewing this page makes no JEV calls.` : comparing ? `Comparing with TypeSafe JEV${jev?.status === 'running' && jev.count ? `: ${jev.completed_cases ?? 0} of ${jev.count} examples` : ' after training'}. Your model is ready to use while this runs.` : jev?.status === 'failed' ? 'The JEV comparison could not be completed. Your trained model’s results are still available.' : jev?.status === 'skipped' ? 'This test set exceeds the automatic JEV comparison limit. Your trained model’s full evaluation is shown.' : 'No JEV comparison is recorded for this run.'}</p>}
-      {!image && <p className={styles.note}>{baselineLabel} accuracy: {percent(result.baseline.accuracy)}. Model approval uses this baseline; JEV is a separate comparison.</p>}
-      {!selected && <p className={training.notice}>The selected model’s detailed scores were not included in this result. No other candidate’s scores are substituted.</p>}
-      {result.delivery.acceptance && <p className={styles.note}>Approval targets: at least {percent(result.delivery.acceptance.min_accuracy)} accuracy; {result.delivery.acceptance.migration === 'no_regression' ? 'Brier score must match or improve on your previous model' : result.delivery.acceptance.migration ? 'at most 0.005 increase in Brier loss' : `${decimal(result.delivery.acceptance.min_brier_improvement)} improvement in Brier loss`}. These results do not guarantee accuracy on future inputs.</p>}
-      {job.model?.id === 'imajev-4b-v1' && <details className={training.details}><summary>Image evaluation details</summary><ImageTrainingResults job={job} /></details>}
+      <div className={styles.notes}>
+        {!image && <p role={comparing ? 'status' : undefined}>{comparison ? `${comparison.model} · Evaluated ${date(comparison.evaluated_at)}. Saved once; viewing this page makes no JEV calls.` : comparing ? `Comparing with TypeSafe JEV${jev?.status === 'running' && jev.count ? `: ${jev.completed_cases ?? 0} of ${jev.count} examples` : ' after training'}. Your model is ready to use while this runs.` : jev?.status === 'failed' ? 'The JEV comparison could not be completed. Your trained model’s results are still available.' : jev?.status === 'skipped' ? 'This test set exceeds the automatic JEV comparison limit. Your trained model’s full evaluation is shown.' : 'No JEV comparison is recorded for this run.'}</p>}
+        {!image && <p>{baselineLabel} accuracy: {percent(result.baseline.accuracy)}. Model approval uses this baseline; JEV is a separate comparison.</p>}
+        {!selected && <p className={training.notice}>The selected model’s detailed scores were not included in this result. No other candidate’s scores are substituted.</p>}
+        {result.delivery.acceptance && <p>Approval targets: at least {percent(result.delivery.acceptance.min_accuracy)} accuracy; {result.delivery.acceptance.migration === 'no_regression' ? 'Brier score must match or improve on your previous model' : result.delivery.acceptance.migration ? 'at most 0.005 increase in Brier loss' : `${decimal(result.delivery.acceptance.min_brier_improvement)} improvement in Brier loss`}. These results do not guarantee accuracy on future inputs.</p>}
+        {job.model?.id === 'imajev-4b-v1' && <details className={training.details}><summary>Image evaluation details</summary><ImageTrainingResults job={job} /></details>}
+      </div>
     </section>
 
     {ready && job.workflow?.model_id && <>
-      <ModelUsage key={job.workflow.model_id} modelId={job.workflow.model_id} apiUrl={config.decisionApiUrl} token={token} />
-      <section id="model-access" className={styles.section} aria-labelledby="model-access-heading">
-        <h2 id="model-access-heading">Access this model</h2>
-        {image ? <>
+      <section className={styles.section} aria-labelledby="model-access">
+        <Section label="Access this model" id="model-access" />
+        <div className={styles.body}>{image ? <>
           <p>Your API model ID: <code className={styles.identifier}>{job.workflow.model_id}</code></p>
           {config.decisionApiUrl ? <>
             <p>Use your account’s API key. Open the image tester below for the saved question and an API request example.</p>
             <ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={signOut} />
             <div className={styles.imageTest}><PrivateImageTest job={job} owner={owner} token={token} apiUrl={config.decisionApiUrl} storage={config.storage} /></div>
           </> : <p>The API address is not configured here. Contact Zils for connection details.</p>}
-        </> : <TrainedModelQuickstart modelId={job.workflow.model_id} modelName={job.workflow.model_name} modelAlias={job.workflow.model_alias} apiUrl={config.decisionApiUrl} apiKeys={<ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={signOut} />} />}
+        </> : <TrainedModelQuickstart modelId={job.workflow.model_id} modelName={job.workflow.model_name} modelAlias={job.workflow.model_alias} apiUrl={config.decisionApiUrl} apiKeys={<ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={signOut} />} />}</div>
       </section>
+      <ModelUsage key={job.workflow.model_id} modelId={job.workflow.model_id} apiUrl={config.decisionApiUrl} token={token} />
     </>}
 
-    <details className={`${training.details} ${styles.technical}`}>
-      <summary>Model version and technical details</summary>
-      <dl>
-        {job.workflow?.model_id && <div><dt>Full API model ID</dt><dd><code>{job.workflow.model_id}</code></dd></div>}
-        {job.workflow?.model_name && <div><dt>API model name</dt><dd><code>{job.workflow.model_name}</code></dd></div>}
-        {job.workflow?.model_alias && <div><dt>Task alias</dt><dd><code>{job.workflow.model_alias}</code> · follows this task across replacements</dd></div>}
-        {job.model && <div><dt>Starting model</dt><dd>{modelDisplayName(job.model.name)}</dd></div>}
-        <div><dt>Training run</dt><dd><Link href={`/train?run=${job.id}`}>View full run<LinkLoading /></Link><code className={styles.identifier}>{job.id}</code></dd></div>
-        {job.selection?.previous && <div><dt>Previous version</dt><dd><Link href={`/models/${job.selection.previous.job_id}`}>{job.selection.previous.model_id}</Link></dd></div>}
-        {result.delivery.sha256 && <div><dt>Checkpoint SHA-256</dt><dd><code>{result.delivery.sha256}</code></dd></div>}
-      </dl>
-    </details>
+    {/* Everything about where this model came from, which the run page also held: its files, its run and each candidate's scores. */}
+    <section className={styles.section} aria-labelledby="model-details">
+      <Section label="Files and details" id="model-details" />
+      <div className={workspacePage.split}>
+        <div>
+          <p className={workspacePage.label}>Model files</p>
+          {canDownloadFiles(job) ? <>
+            <p className={workspacePage.sub}>Optional: download a private copy of the accepted adapter. Zils serves the model either way.</p>
+            <div className={workspacePage.actions}><button className={training.secondary} disabled={fetching} onClick={() => void getFiles(job)}>{fetching ? 'Preparing…' : 'Get model files'}</button></div>
+            {files.length > 0 && <ul className={styles.files}>{files.map(file => <li key={file.name}><a href={file.url} target="_blank" rel="noreferrer">{file.name}</a></li>)}</ul>}
+            <p className={workspacePage.fine}>Download links expire. Files: {downloadFiles(job).join(', ')}.</p>
+          </> : <p className={workspacePage.sub}>This model was trained on the open tier, so Zils serves it: use it through the API. Model files come with private training.</p>}
+        </div>
+        <div>
+          <p className={workspacePage.label}>This version</p>
+          <dl className={styles.technical}>
+            {job.workflow?.model_name && <div><dt>API model name</dt><dd><code>{job.workflow.model_name}</code></dd></div>}
+            {job.workflow?.model_alias && <div><dt>Task alias</dt><dd><code>{job.workflow.model_alias}</code> · follows this task across replacements</dd></div>}
+            {job.workflow?.model_id && <div><dt>Full API model ID</dt><dd><code>{job.workflow.model_id}</code></dd></div>}
+            {job.model && <div><dt>Starting model</dt><dd>{modelDisplayName(job.model.name)}</dd></div>}
+            {job.selection?.previous && <div><dt>Previous version</dt><dd><Link href={`/models/${job.selection.previous.job_id}`}>{job.selection.previous.model_id}</Link></dd></div>}
+            {result.delivery.sha256 && <div><dt>Checkpoint SHA-256</dt><dd><code>{result.delivery.sha256}</code></dd></div>}
+          </dl>
+          <p className={workspacePage.fine}>Run ID: {job.id}</p>
+        </div>
+      </div>
+      {job.model?.id !== 'imajev-4b-v1' && <div className={styles.body}>
+        <p className={workspacePage.label}>Every candidate from this run</p>
+        <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Candidate evaluations"><table className={styles.table}>
+          <thead><tr><th scope="col">Candidate</th><th scope="col">Status</th><th scope="col">Accuracy</th><th scope="col">Brier loss</th></tr></thead>
+          <tbody>{result.miners.map(miner => <tr key={miner.uid} data-selected={result.delivery.uid === miner.uid || undefined}><th scope="row">{miner.uid}{result.delivery.uid === miner.uid ? ' · selected' : ''}</th><td>{miner.status}</td><td>{percent(miner.accuracy)}</td><td>{decimal(miner.brier)}</td></tr>)}</tbody>
+        </table></div>
+        <p className={workspacePage.fine}>Measured on examples held aside from training. The selected candidate is the model you call.</p>
+      </div>}
+    </section>
   </div>;
 }
 
@@ -182,8 +216,10 @@ function ModelUsage({ modelId, apiUrl, token }: { modelId: string; apiUrl: strin
   const usage = summary?.usage;
   const model = usage?.models.find(row => row.model_id === modelId);
   const count = (value: string) => BigInt(value).toLocaleString();
-  return <section id="model-usage" className={styles.section} aria-labelledby="model-usage-heading">
-    <div className={styles.sectionHeading}><div><h2 id="model-usage-heading">API usage</h2><p>For this model version only{summary?.mode === 'test' ? ' (Test mode)' : ''}.</p></div><Link href="/usage" className={training.textButton}>Account usage</Link></div>
+  return <section className={styles.section} aria-labelledby="model-usage">
+    <Section label="API usage" id="model-usage" action={<Link href="/usage">Account usage</Link>} />
+    <div className={styles.body}>
+    <p>For this model version only{summary?.mode === 'test' ? ' (Test mode)' : ''}.</p>
     {loading ? <p role="status">Loading usage…</p> : error ? <p role="status">{error}</p> : !usage ? <p>Usage reporting is not available for this model yet.</p> : <>
       <p className={styles.note}>{date(usage.since)} – {date(usage.until)}</p>
       {!model ? <p>No recorded API usage for this model in this period.</p> : <dl className={styles.stats}>
@@ -193,5 +229,6 @@ function ModelUsage({ modelId, apiUrl, token }: { modelId: string; apiUrl: strin
       </dl>}
       <p className={styles.note}>Calls are grouped by when they started; spend by when it was charged. Each batch item counts as one call. Earlier calls without a recorded model or token count remain in account totals.</p>
     </>}
+    </div>
   </section>;
 }

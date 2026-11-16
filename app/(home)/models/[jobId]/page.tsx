@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { ConsoleShell } from '@/components/console-shell';
 import { LinkLoading } from '@/components/workspace-loading';
 import { TrainedModelDetail } from '@/components/trained-model-detail';
+import { PageHero } from '@/components/workspace-page';
 import { trainingConfig } from '@/lib/training-config';
 import { jobSchema } from '@/lib/training';
 import styles from '../../train/train.module.css';
@@ -18,10 +19,7 @@ export default async function ModelPage({ params }: { params: Promise<{ jobId: s
   const { jobId } = await params;
   if (!jobSchema.shape.id.safeParse(jobId).success) notFound();
   const config = trainingConfig();
-  return <ConsoleShell className={styles.page}>
-        <Link href="/models" className={styles.textButton}>Back to models<LinkLoading /></Link>
-        {config ? <TrainedModelDetail jobId={jobId} config={config} /> : <section className={styles.panel}>
-          <h1>Model details are unavailable here.</h1><p>This environment is not connected to the training service.</p>
-        </section>}
+  return <ConsoleShell bleed className={styles.page}>
+        {config ? <TrainedModelDetail jobId={jobId} config={config} /> : <PageHero back={<Link href="/models" className={styles.textButton}>Back to models<LinkLoading /></Link>} title="Model details are unavailable here." intro="This environment is not connected to the training service." />}
   </ConsoleShell>;
 }
