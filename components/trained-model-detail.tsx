@@ -66,7 +66,8 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
       if (!canDownload(job)) throw new Error('This run does not have an approved model yet. Check its progress in your training workspace.');
       setJob(job);
       setError('');
-      if (job.jev_comparison && ['pending', 'running'].includes(job.jev_comparison.status)) timer = setTimeout(load, 10_000);
+      // Keep checking while something on the page is still on its way: the JEV comparison, or API access being prepared.
+      if ((job.jev_comparison && ['pending', 'running'].includes(job.jev_comparison.status)) || job.workflow?.state === 'activating') timer = setTimeout(load, 10_000);
     }).catch(error => {
       if (controller.signal.aborted) return;
       setJob(null);
@@ -110,7 +111,7 @@ function AccountModel({ jobId, config, owner, client }: Props & { owner: string;
         <a href="#model-access" className={training.button}>Use this model</a>
         {!image && <Link className={training.secondary} href={`/train?upgrade=${job.id}`}>Train a replacement<LinkLoading /></Link>}
       </div>} />
-    <nav aria-label="Model sections" className={styles.sectionNav}><a href="#model-results">Results</a>{ready && <><a href="#model-access">Access</a><a href="#model-usage">Usage</a></>}<a href="#model-details">Files and details</a><Link href={`/train?run=${job.id}`}>Training run<LinkLoading /></Link></nav>
+    <nav aria-label="Model sections" className={styles.sectionNav}><a href="#model-results">Results</a>{ready && <><a href="#model-access">Access</a><a href="#model-usage">Usage</a></>}<a href="#model-details">Files and details</a></nav>
     {error && <p role="alert" className={workspacePage.notice}>{error}</p>}
     {!ready && <section className={workspacePage.notice} aria-label="Model activation"><strong>{progress.title}</strong> {progress.detail} {progress.next}</section>}
     {migration && <section id="model-migration" className={`${workspacePage.notice} ${styles.migration}`} aria-label="Newer base available">

@@ -71,9 +71,6 @@ for (const migration of ['no_regression', true, undefined] as const) test(`resul
   const expected = migration === 'no_regression' ? 'Brier score must match or improve on your previous model' : migration ? 'at most 0.005 increase in Brier loss' : '0.0100 improvement in Brier loss';
   await page.goto(path);
   await expect(page.getByRole('region', { name: 'How this model performed' })).toContainText(expected);
-  await page.goto(`/train?run=${id}`);
-  await page.getByText('Evaluation and technical details', { exact: true }).click();
-  await expect(page.getByText('Required:', { exact: false })).toContainText(migration ? expected : '0.0100 absolute Brier improvement');
 });
 
 test('the model page holds everything about a model, in the workspace design', async ({ page }) => {
@@ -93,6 +90,20 @@ test('the model page holds everything about a model, in the workspace design', a
   const candidates = details.getByRole('region', { name: 'Candidate evaluations' }).getByRole('row');
   await expect(candidates.nth(1)).toContainText(/1.*evaluated.*99\.00%/);
   await expect(candidates.nth(2)).toContainText(/2 · selected.*evaluated.*91\.00%/);
+});
+
+test('a finished model has one page: its run link and its history row both open the model page', async ({ page }) => {
+  const control = await fixture(page);
+  // An old run link, from an email or a bookmark, lands on the model.
+  await page.goto(`/train?run=${id}`);
+  await expect(page).toHaveURL(path);
+  await expect(page.getByRole('heading', { name: job.name, level: 1 })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Access this model' })).toBeVisible();
+  // The model page no longer sends anyone back to a second page about the same model.
+  await expect(page.locator(`a[href*="/train?run=${id}"]`)).toHaveCount(0);
+  await page.goto('/train');
+  await expect(page.getByRole('region', { name: 'Run history' }).getByRole('link', { name: new RegExp(job.name) })).toHaveAttribute('href', path);
+  expect(control.writes).toEqual([]);
 });
 
 test('workspace links to private model stats, exact-version usage, and runnable API examples', async ({ page, context }) => {
@@ -212,13 +223,17 @@ for (const target of [path, `/train?run=${id}`]) test(`changing accounts during 
 
 test('activation and approval are distinct: accepted stats are visible before API access', async ({ page }) => {
   const control = await fixture(page, { activating: true });
+  await page.clock.install();
   await page.goto('/train');
   await page.getByRole('region', { name: 'Run history' }).getByRole('link').click();
-  await page.getByRole('link', { name: 'View model stats and access' }).click();
   await expect(page.getByRole('region', { name: 'Model activation' })).toContainText('Preparing API access');
   await expect(page.getByRole('region', { name: 'How this model performed' }).getByText('91.00%', { exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Access this model' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'API usage', exact: true })).toHaveCount(0);
+  // The page keeps checking, so access appears by itself when it is ready.
+  const before = control.requests.filter(value => value === `/v1/jobs/${id}`).length;
+  await page.clock.runFor(10_000);
+  await expect.poll(() => control.requests.filter(value => value === `/v1/jobs/${id}`).length).toBeGreaterThan(before);
 });
 
 test('unapproved and invalid model links do not expose scores or API instructions', async ({ page }) => {
@@ -288,17 +303,11 @@ test('training index stays compact inside the workspace sidebar', async ({ page 
 test('full run links resolve directly, including runs outside the recent list', async ({ page }) => {
   const control = await fixture(page);
   await page.goto(`/train?run=${id}`);
-  await expect(page.locator('#current-run-title')).toHaveText(job.name);
+  await expect(page.getByRole('heading', { name: job.name, level: 1 })).toBeVisible();
   expect(control.requests).toContain(`/v1/jobs/${id}`);
   expect(control.requests).not.toContain('/v1/jobs');
-  await page.getByText('Evaluation and technical details', { exact: true }).click();
   await expect(page.getByText(`Run ID: ${id}`, { exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.locator('#current-run-title')).toHaveText(job.name);
-  await page.getByRole('link', { name: 'View model stats and access' }).click();
-  await page.getByRole('navigation', { name: 'Model sections' }).getByRole('link', { name: 'Training run' }).click();
-  await expect(page.locator('#current-run-title')).toHaveText(job.name);
-  await page.goBack();
   await expect(page.getByRole('heading', { name: job.name, level: 1 })).toBeVisible();
   expect(control.writes).toEqual([]);
 });
@@ -322,12 +331,17 @@ test('model and run navigation show loaders until private data arrives', async (
   await page.screenshot({ path: '.private/model-transition-loading.png' });
   control.release();
   await expect(page.getByRole('heading', { name: job.name, level: 1 })).toBeVisible();
-  await page.getByRole('navigation', { name: 'Model sections' }).getByRole('link', { name: 'Training run' }).click();
+  // A run link shows its own loader, then the model's, and ends on the model page.
+  await page.goto(`/train?run=${id}`);
   await expect(page.getByRole('status', { name: 'Loading your training run', exact: true })).toBeVisible();
   await expect.poll(() => control.requests.filter(value => value === `/v1/jobs/${id}`).length).toBe(2);
   control.release();
-  await expect(page.locator('#current-run-title')).toHaveText(job.name);
-  await expect(page.getByRole('status', { name: 'Loading your training run', exact: true })).toHaveCount(0);
+  await expect(page).toHaveURL(path);
+  await expect(page.getByRole('status', { name: 'Loading your model', exact: true })).toBeVisible();
+  await expect.poll(() => control.requests.filter(value => value === `/v1/jobs/${id}`).length).toBe(3);
+  control.release();
+  await expect(page.getByRole('heading', { name: job.name, level: 1 })).toBeVisible();
+  await expect(page.getByRole('status')).toHaveCount(0);
 });
 
 

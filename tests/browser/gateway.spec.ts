@@ -239,7 +239,7 @@ test('runs trained from a question are listed, and a ready one can be compared w
   await expect(runs.getByRole('listitem').nth(0).getByRole('button')).toHaveCount(0);
   const ready = runs.getByRole('listitem').nth(1);
   await expect(ready).toContainText(/gateway-intent-1.*Ready/);
-  await expect(ready.getByRole('link', { name: 'gateway-intent-1' })).toHaveAttribute('href', `/train?run=${job}`);
+  await expect(ready.getByRole('link', { name: 'gateway-intent-1' })).toHaveAttribute('href', `/models/${job}`);
   // How it scored on the examples held back from its training, beside the model it started from.
   await expect(ready.getByText('Gave your provider’s answer on 93.4% of the test examples held back from training. The model it started from: 88.2%.')).toBeVisible();
   await expect(runs.getByRole('listitem').nth(0).getByText(/held back/)).toHaveCount(0);

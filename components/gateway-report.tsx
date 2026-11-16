@@ -30,7 +30,7 @@ function Runs({ question, compare }: { question: RelayQuestion; compare: Compare
       const current = question.shadows.find(shadow => shadow.field === run.field);
       const compared = run.state === 'ready' && current?.model === run.model;
       return <li key={run.job_id}>
-        <span className={styles.run}><Link href={`/train?run=${run.job_id}`}>{run.name}</Link><span className={workspacePage.status} data-tone={run.state === 'training' ? 'busy' : undefined}>{compared ? 'Being compared' : run.state === 'ready' ? 'Ready' : run.state === 'training' ? 'Training' : 'Did not pass'}</span></span>
+        <span className={styles.run}><Link href={run.state === 'ready' ? `/models/${run.job_id}` : `/train?run=${run.job_id}`}>{run.name}</Link><span className={workspacePage.status} data-tone={run.state === 'training' ? 'busy' : undefined}>{compared ? 'Being compared' : run.state === 'ready' ? 'Ready' : run.state === 'training' ? 'Training' : 'Did not pass'}</span></span>
         {run.evaluation && <p className={workspacePage.fine}>Gave your provider’s answer on {percent(run.evaluation.accuracy)} of the test examples held back from training. The model it started from: {percent(run.evaluation.baseline_accuracy)}.</p>}
         {compare && run.state === 'ready' && !compared && (confirming === run.job_id && current ? <div role="group" aria-label="Confirm replacing the compared model">
           <p className={workspacePage.fine}>This replaces {current.model} on “{run.field}” and starts its counts again.</p>

@@ -6,15 +6,13 @@ import type { StorageLocations } from '@/lib/storage';
 import { type SupabaseClient } from '@supabase/supabase-js';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { canDownload, canDownloadFiles, downloadFiles, isImageJob, SPLITS, submissionSchema, terminal, tierLabel, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
+import { canDownload, isImageJob, SPLITS, submissionSchema, terminal, tierLabel, trainingApi, TrainingApiError, validateDatasets, type Job, type Split, type Submission } from '@/lib/training';
 import Link from 'next/link';
 import { PageHero, Section, workspacePage } from '@/components/workspace-page';
 import { WorkspaceLoading, LinkLoading } from '@/components/workspace-loading';
 import { TrainingGuide } from '@/components/training-guide';
 import { AgentTrainingCard } from '@/components/agent-training-card';
 import { TrainingIntake } from '@/components/training-intake';
-import { ApiKeysPanel } from '@/components/api-keys-panel';
-import { TrainedModelQuickstart } from '@/components/trained-model-quickstart';
 import { Plus, ArrowUpRight, ArrowRight, ImageIcon, MessageSquareText, FlaskConical, GraduationCap, KeyRound, X } from 'lucide-react';
 import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -123,7 +121,6 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
   };
   const [availableModels, setAvailableModels] = useState<Job[]>([]);
   const [panelOpen, setPanelOpen] = useState(bulkImport || Boolean(upgradeOf));
-  const [downloadJobId, setDownloadJobId] = useState('');
   const focusSubmitted = useRef(false);
   const [loading, setLoading] = useState(true);
   const [checkedAt, setCheckedAt] = useState<number | null>(null);
@@ -141,13 +138,15 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
   // A ticked "email me" box shows at once; it falls back to the job's saved choice when the request ends.
   const [emailChoice, setEmailChoice] = useState<Record<string, boolean>>({});
   const [files, setFiles] = useState<Partial<Record<Split, File>>>({});
-  const [downloads, setDownloads] = useState<{ name: string; url: string }[]>([]);
   const [formVersion, setFormVersion] = useState(0);
   const [pendingUpload, setPendingUpload] = useState('');
   const statusMessage = useRef<HTMLHeadingElement>(null);
   const life = useRef<AbortController | null>(null);
   const operation = useRef<AbortController | null>(null);
   const selected = runId ? jobs[0] : currentTrainingJob(jobs.filter(job => !terminal(job)));
+  // A run that produced a model has one page, the model's. Its run link (an email, a bookmark, a finished run being watched) goes there.
+  const hasModel = Boolean(runId && selected && canDownload(selected));
+  useEffect(() => { if (hasModel) router.replace(`/models/${runId}`); }, [hasModel, router, runId]);
   const imageService = useMemo(() => config.decisionApiUrl ? imageApi(config.decisionApiUrl, config.storage, imageToken) : null, [config.decisionApiUrl, config.storage, imageToken]);
   const api = useMemo(() => trainingApi(config.apiUrl, config.storage, imageToken), [config.apiUrl, config.storage, imageToken]);
   const history = [...jobs, ...availableModels.filter(model => !jobs.some(job => job.id === model.id))];
@@ -199,7 +198,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     if (job.status !== 'uploading') setPendingUpload(previous => previous === job.id ? '' : previous);
   }
   async function create(input: Submission, datasets: Record<Split, File>) {
-    setError(''); setDownloads([]); setFiles(datasets);
+    setError(''); setFiles(datasets);
     if (pendingUpload) { setError('Resume or cancel the saved job before submitting a new one.'); return; }
     const parsed = submissionSchema.safeParse(input);
     if (!parsed.success) { setError(parsed.error.issues[0].message); return; }
@@ -251,7 +250,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     finally { setBusy(false); setCancellable(false); operation.current = null; }
   }
   async function cancelJob(job: Job) {
-    setBusy(true); setError(''); setDownloads([]); setProgress('');
+    setBusy(true); setError(''); setProgress('');
     try { const result = await api.cancel(job.id, life.current?.signal); replaceJob(result.job); if (job.id === pendingUpload) setPendingUpload(''); }
     catch (error) { if (!life.current?.signal.aborted) handleError(error); }
     finally { setBusy(false); }
@@ -263,14 +262,8 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     finally { setEmailChoice(({ [job.id]: _, ...rest }) => rest); }
   }
   async function retrySubmit(job: Job) {
-    setBusy(true); setError(''); setDownloads([]);
+    setBusy(true); setError('');
     try { const result = await api.submit(job.id, life.current?.signal); replaceJob(result.job); setPendingUpload(''); setFiles({}); setFormVersion(v => v + 1); setProgress(''); requestAnimationFrame(() => statusMessage.current?.focus()); }
-    catch (error) { if (!life.current?.signal.aborted) handleError(error); }
-    finally { setBusy(false); }
-  }
-  async function getDownloads(job: Job) {
-    setBusy(true); setError(''); setDownloads([]); setDownloadJobId(job.id);
-    try { const items = await api.downloads(job, life.current?.signal); if (!life.current?.signal.aborted) setDownloads(items); }
     catch (error) { if (!life.current?.signal.aborted) handleError(error); }
     finally { setBusy(false); }
   }
@@ -282,7 +275,6 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
         {(emailChoice[job.id] ?? job.email_when_done) && <p className={styles.help}>We’ll email your account address once, when this run finishes.</p>}
       </>}
       {terminal(job) && job.email_sent && <p className={styles.help}>We emailed you when this run finished.</p>}
-      {canDownload(job) && <Link className={styles.secondary} href={`/models/${job.id}`}>View model stats and access</Link>}
       {isImageJob(job) && <>
         {job.data_expires_at && <p>Training photos expire {new Date(job.data_expires_at).toLocaleString()}. Saved evaluation results remain available.</p>}
         {job.model?.id === 'imajev-4b-v1' && <ImageTrainingResults job={job} />}
@@ -295,20 +287,6 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
         <button className={styles.secondary} disabled={busy} onClick={() => resumeUploads(job)}>Resume missing uploads</button>
         <button className={styles.textButton} disabled={busy} onClick={() => cancelJob(job)}>Cancel this run</button>
       </div>}
-      {!isImageJob(job) && canDownload(job) && job.workflow?.state === 'ready' && job.workflow.model_id && <div id={`use-model-${job.id}`} tabIndex={-1}><TrainedModelQuickstart
-        key={job.workflow.model_id}
-        modelId={job.workflow.model_id}
-        modelName={job.workflow.model_name}
-        apiUrl={config.decisionApiUrl}
-        apiKeys={<ApiKeysPanel client={client} apiUrl={config.decisionApiUrl} onExpired={onExpired} />}
-      /></div>}
-      {canDownload(job) && !canDownloadFiles(job) && <p className={styles.help}>This model was trained on the open tier, so Zils serves it: use it through the API. Model files come with private training.</p>}
-      {canDownloadFiles(job) && <details className={styles.details}>
-        <summary>Model files (optional)</summary>
-        <p className={styles.help}>Optional: download a private copy of the accepted adapter.</p>
-        <button disabled={busy} className={styles.secondary} onClick={() => getDownloads(job)}>Get model files</button>
-        {downloadJobId === job.id && downloads.length > 0 && <ul className={styles.downloads}>{downloads.map(file => <li key={file.name}><a href={file.url} target="_blank" rel="noreferrer">{file.name}</a></li>)}</ul>}
-      </details>}
       <details className={styles.details}>
         <summary>{job.result ? 'Evaluation and technical details' : 'Technical details'}</summary>
         <p className={styles.id}>Run ID: {job.id}</p>
@@ -323,7 +301,6 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
           {job.result.delivery.acceptance && <p className={styles.help}>Required: {metric(job.result.delivery.acceptance.min_accuracy, true)} accuracy; {job.result.delivery.acceptance.migration === 'no_regression' ? 'Brier score must match or improve on your previous model' : job.result.delivery.acceptance.migration ? 'at most 0.005 increase in Brier loss' : `${metric(job.result.delivery.acceptance.min_brier_improvement)} absolute Brier improvement`}.</p>}
           <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Candidate evaluations"><table><thead><tr><th>Candidate</th><th>Status</th><th>Accuracy</th><th>Brier loss</th></tr></thead><tbody>{job.result.miners.map(miner => <tr key={miner.uid}><th>{miner.uid}{job.result?.delivery.uid === miner.uid ? ' · selected' : ''}</th><td>{miner.status}</td><td>{metric(miner.accuracy, true)}</td><td>{metric(miner.brier)}</td></tr>)}</tbody></table></div>
           {job.result.delivery.sha256 && <p className={styles.hash}>Checkpoint SHA-256<br /><code>{job.result.delivery.sha256}</code></p>}
-          {canDownloadFiles(job) && <p className={styles.help}>Download links expire. Files: {downloadFiles(job).join(', ')}.</p>}
         </>}
       </details>
     </>;
@@ -331,7 +308,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
   function runRows(items: Job[], title: string) {
     if (!items.length) return null;
     return <section className={styles.runHistory} aria-label={title}><Section label={title} action={title === 'Run history' && <button onClick={refresh} disabled={busy || refreshing}>{refreshing ? 'Checking…' : 'Refresh runs'}</button>} /><ul>{items.map(job => <li key={job.id}>
-      <Link className={styles.historyRow} href={`/train?run=${job.id}`}>
+      <Link className={styles.historyRow} href={canDownload(job) ? `/models/${job.id}` : `/train?run=${job.id}`}>
         <span><strong>{job.name}</strong>{job.created_at && <time dateTime={job.created_at}>{new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time>}{tierLabel(job) && <small>{tierLabel(job)}</small>}</span>
         <span className={`${styles.historyStatus} ${workspacePage.status}`} data-tone={trainingProgress(job).tone}>{trainingProgress(job).label}<LinkLoading /><ArrowUpRight size={16} aria-hidden="true" /></span>
       </Link>
@@ -349,7 +326,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     {refreshError && !runId && history.length > 0 && !selected && <p role="status" className={workspacePage.notice}>Connection interrupted. Showing your last loaded runs; we’ll retry automatically.</p>}
     <div className={`${styles.workspace} ${workspacePage.stack}`}>
       {!runId && !loading && <AgentTrainingCard />}
-      {loading ? <WorkspaceLoading label={runId ? "Loading your training run" : "Loading your models and runs"} /> : !selected && (runId || !history.length) ? <section className={workspacePage.empty}>
+      {loading || hasModel ? <WorkspaceLoading label={hasModel ? 'Loading your model' : runId ? 'Loading your training run' : 'Loading your models and runs'} /> : !selected && (runId || !history.length) ? <section className={workspacePage.empty}>
         <Section label={runId ? 'Run details' : 'Get started'} />
         <h2>{runId ? 'Run unavailable' : refreshError ? 'Your runs could not be loaded.' : 'Train your first model.'}</h2>
         <p>{runId ? 'Return to Training to choose a run, or try loading it again.' : refreshError ? 'Try checking again in a moment.' : 'Bring a decision and a few reviewed examples. Zils will guide you through the rest.'}</p>

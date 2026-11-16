@@ -71,18 +71,19 @@ test('blocked clipboard selects the full ID for manual copying', async ({ page }
   expect(await page.evaluate(() => window.getSelection()?.toString())).toBe(modelId);
 });
 
-test('model usage fits a small screen and optional downloads stay collapsed', async ({ page }) => {
+test('model usage fits a small screen and optional downloads stay below it', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await workspace(page);
   await expect(page.getByRole('button', { name: 'Copy model ID' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  await expect(page.getByRole('button', { name: 'Get model files' })).not.toBeVisible();
+  await expect(page.getByRole('region', { name: 'Use your model' }).getByRole('button', { name: 'Get model files' })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Files and details' }).getByRole('button', { name: 'Get model files' })).toBeVisible();
   await page.screenshot({ path: '.private/model-quickstart-mobile.png', fullPage: true });
 });
 
 test('activation in progress does not offer a usable model prematurely', async ({ page }) => {
   await workspace(page, 'activating');
-  await expect(page.getByRole('heading', { name: 'Training passed. Preparing API access.' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Model activation' })).toContainText('Training passed. Preparing API access.');
   await expect(page.getByRole('region', { name: 'Use your model' })).toHaveCount(0);
 });
 
@@ -116,24 +117,22 @@ test('multiple named models fit on mobile and preserve full IDs in technical det
   await library.screenshot({ path: '.private/model-library-mobile.png' });
   await page.goto('/train');
   await page.getByRole('region', { name: 'Run history' }).getByRole('link', { name: /support-actions/ }).click();
-  await page.getByText('Evaluation and technical details', { exact: true }).click();
-  await expect(page.locator('details').filter({ has: page.locator('summary', { hasText: 'Evaluation and technical details' }) }).getByText(modelId, { exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Files and details' }).getByText(modelId, { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
-test('completed runs stay out of the index and open through permanent links', async ({ page }) => {
+test('finished models stay out of the index and open on their model page', async ({ page }) => {
   const writes = await workspace(page, 'ready', false, true);
   await expect(page.getByRole('region', { name: 'Use your model' })).toHaveCount(0);
   await expect(page.locator('#current-run-title')).toHaveCount(0);
   const link = page.getByRole('region', { name: 'Run history' }).getByRole('link', { name: /support-actions/ });
-  await expect(link).toHaveAttribute('href', `/train?run=${id}`);
+  await expect(link).toHaveAttribute('href', `/models/${id}`);
   await link.focus(); await page.keyboard.press('Enter');
-  await expect(page).toHaveURL(new RegExp(`/train\\?run=${id}$`));
+  await expect(page).toHaveURL(new RegExp(`/models/${id}$`));
   await expect(page.getByRole('region', { name: 'Use your model' })).toBeVisible();
   await page.reload();
-  await expect(page.locator('#current-run-title')).toHaveText('support-actions');
-  await page.getByRole('link', { name: 'Back to Training', exact: true }).click();
-  await expect(page.getByRole('region', { name: 'Use your model' })).toHaveCount(0);
-  await page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'Models', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'support-actions', level: 1 })).toBeVisible();
+  await page.getByRole('link', { name: 'Back to models', exact: true }).click();
   await page.getByRole('region', { name: 'Your models' }).getByRole('link', { name: 'View model' }).click();
   await expect(page.getByRole('heading', { name: 'support-actions', level: 1 })).toBeVisible();
   expect(writes).toEqual([]);
@@ -143,7 +142,7 @@ test('compact model names and highlighted examples preserve the exact copied cod
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await workspace(page, 'ready', true, true);
   await page.getByRole('region', { name: 'Run history' }).getByRole('link', { name: /support-actions/ }).click();
-  const example = page.locator(`#use-model-${id}`);
+  const example = page.getByRole('region', { name: 'Use your model' });
   await expect(example.getByLabel('API model name')).toHaveText('support-actions-10000000');
   await expect(example.locator('textarea')).toHaveCount(0);
   const nameHeight = await example.getByLabel('API model name').evaluate(node => node.getBoundingClientRect().height);

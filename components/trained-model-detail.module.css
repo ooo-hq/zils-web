@@ -4,7 +4,6 @@
 .heroActions { display:flex; flex-wrap:wrap; gap:10px; }
 .sectionNav { display:flex; flex-wrap:wrap; gap:8px 28px; margin:0 -40px; padding:14px 40px; border-top:1px solid var(--zs-line); font-family:var(--font-plex-mono), ui-monospace, monospace; font-size:11px; letter-spacing:.06em; }
 .sectionNav a { color:var(--zs-t2); text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--zs-line); }
-.sectionNav a:last-child { margin-left:auto; }
 .sectionNav a:hover { color:var(--zs-peach); }
 .section { min-width:0; scroll-margin-top:24px; }
 .section h2 { scroll-margin-top:24px; }
@@ -48,4 +47,4 @@
 .table th:first-child, .table th:nth-child(2), .table td:nth-child(2) { text-align:left; }
 .table thead th { padding-top:0; font-family:var(--font-plex-mono), ui-monospace, monospace; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--zs-t3); }
 .table tr[data-selected] th, .table tr[data-selected] td { color:var(--zs-peach); }
-@media (max-width:860px) { .sectionNav, .notes { margin:0 -16px; padding-left:16px; padding-right:16px; }.sectionNav a:last-child { margin-left:0; }.stats { grid-template-columns:1fr; gap:24px; }.comparison > div { grid-template-columns:1fr; gap:6px; } }
+@media (max-width:860px) { .sectionNav, .notes { margin:0 -16px; padding-left:16px; padding-right:16px; }.stats { grid-template-columns:1fr; gap:24px; }.comparison > div { grid-template-columns:1fr; gap:6px; } }
