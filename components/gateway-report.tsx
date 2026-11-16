@@ -254,7 +254,7 @@ function Report({ client, apiUrl, relayUrl, onExpired }: { client: SupabaseClien
   const refresh = <button disabled={loading} onClick={() => { setLoading(true); void load(new AbortController().signal); }}>{loading ? 'Refreshing…' : 'Refresh'}</button>;
 
   return <div>
-    <PageHero title="Gateway" intro={INTRO} back={BACK} />
+    <PageHero title="Learning gateway" intro={INTRO} back={BACK} />
     {error && <p className={workspacePage.notice} role="alert">{error}</p>}
     {fresh && status?.relay_id && <p className={workspacePage.notice} role="status">Your gateway address is ready. It starts working within a minute.</p>}
     {switched && status?.relay_id && <p className={workspacePage.notice} role="status">Your address now goes to {switched}. The address below is the one a {switched} client needs. The switch applies within a minute.</p>}
@@ -280,6 +280,6 @@ function Report({ client, apiUrl, relayUrl, onExpired }: { client: SupabaseClien
 export function GatewayReportPage({ auth, apiUrl, relayUrl }: { auth: { url: string; key: string }; apiUrl: string; relayUrl: string }) {
   const { client, session } = useAuthSession(auth);
   if (session === undefined) return <WorkspaceLoading label="Loading your report" />;
-  if (!session || !client) return <PageHero title="Gateway" intro="Sign in to see what your app has sent through the Zils gateway." action={<Link href="/train" className={training.button}>Sign in to Zils</Link>} />;
+  if (!session || !client) return <PageHero title="Learning gateway" intro="Sign in to see what your app has sent through the Zils gateway." action={<Link href="/train" className={training.button}>Sign in to Zils</Link>} />;
   return <Report key={session.user.id} client={client} apiUrl={apiUrl} relayUrl={relayUrl} onExpired={async () => { await client.auth.signOut({ scope: 'local' }); }} />;
 }

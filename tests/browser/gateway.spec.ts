@@ -21,7 +21,7 @@ test('shows each question with its saved messages and how the shadow model compa
   await signIn(page);
   await answer(page, 200, report);
   await page.goto('/gateway');
-  await expect(page.getByRole('heading', { level: 1, name: 'Gateway' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Learning gateway', exact: true })).toBeVisible();
   const first = page.getByRole('region', { name: 'Question 1' });
   await expect(first.getByText('Pick the one intent that best matches')).toBeVisible();
   await expect(first.getByText('25', { exact: true })).toBeVisible();
