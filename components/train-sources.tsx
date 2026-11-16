@@ -36,12 +36,20 @@ export function TrainSources({ apiUrl, token }: { apiUrl?: string | null; token:
       <li className={workspacePage.split} data-preferred>
         <div className={css.head}>
           <span className={workspacePage.status} data-tone="busy">Recommended</span>
+          <h3>Your coding agent or the command line</h3>
+          <p>Your coding agent can turn a spreadsheet or export into training data, check the cost and start the run. Zils tells it to ask you before choosing open or private training, and it can’t spend more than the limit you agree.</p>
+          <p className={workspacePage.fine}>Needs Node.js 20 and Python 3.11 or later. Runs it starts appear on Models.</p>
+        </div>
+        <div><AgentSteps ask="Train a Zils model on tickets.csv that decides the team." /></div>
+      </li>
+      <li className={workspacePage.split}>
+        <div className={css.head}>
           <h3>Your app, through the learning gateway</h3>
           <p>Point your app at your learning gateway address and keep using your provider. Zils saves each decision your provider makes, then trains a model from them. There is no file to prepare.</p>
         </div>
         <div className={css.act}>
           <p role="status" className={css.state} data-on={report?.saving_since ? '' : undefined}>{report ? gatewayStatus(report) : ''}</p>
-          <div className={workspacePage.actions}><Link href="/gateway" className={training.button}>{report && !report.relay ? 'Set up the gateway' : 'Open the gateway'}<LinkLoading /></Link></div>
+          <div className={workspacePage.actions}><Link href="/gateway" className={training.secondary}>{report && !report.relay ? 'Set up the gateway' : 'Open the gateway'}<LinkLoading /></Link></div>
           <p className={workspacePage.fine}>Training opens at {TRAIN_FROM_ROWS} saved answers to one question. Works with OpenAI and Claude.</p>
         </div>
       </li>
@@ -54,14 +62,6 @@ export function TrainSources({ apiUrl, token }: { apiUrl?: string | null; token:
           <div className={workspacePage.actions}><Link href="/train/new" className={training.secondary}>Upload a table<LinkLoading /></Link></div>
           <p className={workspacePage.fine}>No file yet? You can <Link href="/train/teach">teach by example</Link>: type a few cases and their answers.</p>
         </div>
-      </li>
-      <li className={workspacePage.split}>
-        <div className={css.head}>
-          <h3>Your coding agent or the command line</h3>
-          <p>Your coding agent can turn a spreadsheet or export into training data, check the cost and start the run. Zils tells it to ask you before choosing open or private training, and it can’t spend more than the limit you agree.</p>
-          <p className={workspacePage.fine}>Needs Node.js 20 and Python 3.11 or later. Runs it starts appear on Models.</p>
-        </div>
-        <div><AgentSteps ask="Train a Zils model on tickets.csv that decides the team." /></div>
       </li>
     </ol>
   </section>;
