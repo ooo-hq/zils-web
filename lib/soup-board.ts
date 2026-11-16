@@ -18,6 +18,15 @@ const categories = z.object({ reasoning: point, language: point, retrieval: poin
 // House bodies hold seats with no miner behind them: the validator publishes their hotkey as null.
 const hotkey = z.string().min(1).max(100).nullable();
 const member = z.object({ hotkey, body_sha256: sha, rate, seat_weight: z.number().finite().min(0).max(1), contribution: z.number().finite() }).strict();
+// ZIL-205, a pool with a weekly soup: the bodies a night's soup took in (paid once each), and the week's seats that
+// stopped because their body went private. The week is named like 2026-w47.
+const weekId = z.string().regex(/^\d{4}-w\d{2}$/);
+const join = z.object({ hotkey, body_sha256: sha, rate, weight: z.number().finite().min(0).max(1) }).strict();
+const closed = z.object({ week_id: weekId, bodies: z.array(sha).max(5) }).strict();
+const week = z.object({
+  week_id: weekId, round_id: z.string().min(1).max(64), soup_sha256: sha.nullable(), kept_from: weekId.nullable(),
+  members: z.array(member).max(5),
+}).strict();
 const round = z.object({
   round_id: z.string().min(1).max(64), pool_id: z.string().min(1).max(32), seed: z.string().max(128),
   finished_at: z.iso.datetime({ offset: true }),
@@ -31,6 +40,8 @@ const round = z.object({
   // zils#162: the pool's scoring and the soup's fitted temperature (grid 0.1 to 10), published together.
   scoring: z.enum(['calibrated_brier', 'calibrated_argmax', 'argmax']).optional(),
   temperature: z.number().finite().min(0.1).max(10).optional(),
+  joins: z.array(join).max(5).optional(),
+  closed: closed.optional(),
 }).strict();
 // zils#205 / zils-platform#81: the round in progress, only while it runs. One public state per committed claim;
 // refusal reasons stay in the validator's private records and are never part of this contract.
@@ -64,6 +75,7 @@ const tier = z.object({
   rounds: z.array(round).max(60), // newest first
   live: live.optional(),
   intake: intake.optional(),
+  week: week.optional(),
 }).strict();
 export const soupBoardSchema = z.object({ as_of: z.iso.datetime({ offset: true }), tiers: z.array(tier).max(8) }).strict();
 
@@ -107,6 +119,25 @@ const maker = (hotkey: string | null, sha: string, bodies: Bodies) => {
   return known?.house && known.repo ? known.repo.split('/')[0] : hotkey ?? 'house';
 };
 
+/** The tier's weekly soup and its seats (ZIL-205). A seat is paid when it clears the floor, its body is not a
+ *  house model and the newest round did not find its body private. */
+function weekSeats(t: SoupTier) {
+  const w = t.week!;
+  const latest = t.rounds[0]?.closed;
+  const shut = latest && latest.week_id === w.week_id ? latest.bodies : [];
+  return {
+    id: w.week_id, keptFrom: w.kept_from,
+    seats: w.members.map(m => {
+      const isClosed = shut.includes(m.body_sha256);
+      return {
+        name: bodyLabel(m, t.bodies), body: m.body_sha256, maker: maker(m.hotkey, m.body_sha256, t.bodies),
+        kind: kind(m.rate, Boolean(t.bodies[m.body_sha256]?.house)), contribution: m.contribution,
+        paid: m.seat_weight > 0 && !isClosed, closed: isClosed, repo: t.bodies[m.body_sha256]?.repo ?? null,
+      };
+    }),
+  };
+}
+
 /** What the page shows for one tier: tonight's soup, the change since the previous round, seats, crown, history.
  *  A tier before its first round has no tonight, no seats and no history. */
 export function tierView(t: SoupTier) {
@@ -116,8 +147,11 @@ export function tierView(t: SoupTier) {
   const [tonight, last] = t.rounds;
   const previous = last && method(last) === method(tonight) ? last : undefined;
   const base = { tier: t.tier, pool: t.pool, serving: t.serving };
-  if (!tonight) return { ...base, tonight: null, decision: null, change: null, rescored: false, seats: [], crown: null, history: [] as number[] };
+  const weekView = t.week ? weekSeats(t) : null;
+  if (!tonight) return { ...base, tonight: null, decision: null, change: null, rescored: false, seats: [], crown: null, history: [] as number[], weekly: false, week: weekView, joins: [] };
   const score = soupScore(tonight.category_scores);
+  // A round that records joins was paid weekly: its own seats and crown were not paid.
+  const weekly = tonight.joins !== undefined;
   return {
     ...base,
     tonight: { round: tonight.round_id, finished: tonight.finished_at, score, categories: tonight.category_scores },
@@ -126,11 +160,13 @@ export function tierView(t: SoupTier) {
     rescored: Boolean(last) && !previous, // earlier rounds exist, scored another way
     seats: tonight.members.map(m => ({
       name: bodyLabel(m, t.bodies), hotkey: m.hotkey, body: m.body_sha256, rate: m.rate,
-      kind: kind(m.rate, Boolean(t.bodies[m.body_sha256]?.house)), contribution: m.contribution, paid: m.seat_weight > 0,
-      maker: maker(m.hotkey, m.body_sha256, t.bodies), crowned: tonight.crown?.body_sha256 === m.body_sha256,
+      kind: kind(m.rate, Boolean(t.bodies[m.body_sha256]?.house)), contribution: m.contribution, paid: !weekly && m.seat_weight > 0,
+      maker: maker(m.hotkey, m.body_sha256, t.bodies), crowned: !weekly && tonight.crown?.body_sha256 === m.body_sha256,
       repo: t.bodies[m.body_sha256]?.repo ?? null,
     })),
-    crown: tonight.crown ? { name: bodyLabel(tonight.crown, t.bodies), rate: tonight.crown.rate } : null,
+    crown: tonight.crown && !weekly ? { name: bodyLabel(tonight.crown, t.bodies), rate: tonight.crown.rate } : null,
+    weekly, week: weekView,
+    joins: (tonight.joins ?? []).map(j => ({ name: bodyLabel(j, t.bodies), rate: j.rate, weight: j.weight })),
     history: t.rounds.filter(r => method(r) === method(tonight)).reverse().map(r => soupScore(r.category_scores)),
   };
 }

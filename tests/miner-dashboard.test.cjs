@@ -86,11 +86,43 @@ test('seat history lists the rounds a hotkey sat in, newest first, with what eac
   ]);
   assert.equal(history.rows[0].body, sha('e'));
   assert.deepEqual([history.rounds, history.paid], [3, 2]);
-  assert.deepEqual(seatHistory(board, '5Nobody'), { rows: [], rounds: 0, paid: 0 });
-  assert.deepEqual(seatHistory(null, '5Miner'), { rows: [], rounds: 0, paid: 0 });
+  assert.deepEqual(seatHistory(board, '5Nobody'), { rows: [], rounds: 0, paid: 0, week: [] });
+  assert.deepEqual(seatHistory(null, '5Miner'), { rows: [], rounds: 0, paid: 0, week: [] });
 });
 
 test('job totals count what was assigned, graded and delivered, with the median skill', () => {
   assert.deepEqual(jobTotals(valid().jobs), { assigned: 4, submitted: 2, evaluated: 2, selected: 1, medianSkill: 0.25 });
   assert.deepEqual(jobTotals([]), { assigned: 0, submitted: 0, evaluated: 0, selected: 0, medianSkill: null });
+});
+
+// ZIL-205: report entries with a weekly soup, and the feed's weekly rounds.
+test('a report entry may carry its weekly seat and its join; the new reasons have sentences', () => {
+  const v = valid();
+  v.report.pools['d3-mini'].bodies[0] = { ...seated, week: { week_id: '2026-w46', contribution: 1.5, floor: 0.5 }, joined: { weight: 0.2 } };
+  assert.equal(minerDashboardSchema.safeParse(v).success, true);
+  v.report.pools['d3-mini'].bodies[0].week.secret = 1;
+  assert.equal(minerDashboardSchema.safeParse(v).success, false);
+  for (const code of ['weekly_judge', 'went_private']) assert.notEqual(explain(code)[0], `Reason code: ${code}.`);
+  const rows = bodyNumbers(v.report.pools['d3-mini'].bodies[0]).map(r => [r.label, r.value, r.bar]);
+  assert.deepEqual(rows.filter(([label]) => ['Week seat', 'Joined'].includes(label)), [
+    ['Week seat', '1.5', 'floor 0.5 (week 2026-w46)'], ['Joined', '20%', 'of the pool, paid once'],
+  ]);
+});
+
+test('in a weekly round only a join pays, and the week\u2019s seats are listed apart', () => {
+  const weekly = { tiers: [{ pool: 'd3-mini', tier: 'z3-mini',
+    week: { week_id: '2026-w46', round_id: 'd3-mini-2026-11-09', soup_sha256: null, kept_from: null,
+      members: [member('5Miner', 'b', 0.16, 1.5), member('5Miner', 'g', 0.16, 2)] },
+    rounds: [
+      { ...round('d3-mini-2026-11-11', [member('5Miner', 'b', 0.16, 1.5)], { hotkey: '5Miner', body_sha256: sha('b'), rate: 1, weight: 0.2 }),
+        joins: [{ hotkey: '5Miner', body_sha256: sha('b'), rate: 1, weight: 0.2 }],
+        closed: { week_id: '2026-w46', bodies: [sha('g')] } },
+      { ...round('d3-mini-2026-11-10', [member('5Miner', 'b', 0.16, 1.5)]), joins: [] },
+    ] }] };
+  const history = seatHistory(weekly, '5Miner');
+  assert.deepEqual(history.rows.map(r => [r.day, r.seat, r.share]), [['2026-11-11', 'joined', 0.2], ['2026-11-10', 'unpaid', 0]]);
+  assert.deepEqual(history.week.map(w => [w.tier, w.week, w.body, w.contribution, w.share, w.closed]), [
+    ['z3-mini', '2026-w46', sha('b'), 1.5, 0.16, false], ['z3-mini', '2026-w46', sha('g'), 2, 0, true],
+  ]);
+  assert.deepEqual(seatHistory(board, '5Miner').week, []);
 });

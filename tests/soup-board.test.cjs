@@ -191,3 +191,40 @@ test('a tier’s intake passes the schema and anything extra is refused', () => 
     assert.equal(soupBoardSchema.safeParse(bad).success, false);
   }
 });
+
+// ZIL-205: a tier with a weekly soup pays the week's seats and the night's joins, not tonight's seats and crown.
+const weekly = () => {
+  const v = valid();
+  v.tiers[0].week = { week_id: '2026-w46', round_id: 'd3-mini-2026-11-09', soup_sha256: 'f'.repeat(64), kept_from: null,
+    members: [member('5House', 'a', 0, 2.5, 0), member('5Miner', 'b', 1, 0.5, 0.16), member('5Gone', '9', 1, 1.5, 0.16)] };
+  Object.assign(v.tiers[0].rounds[0], {
+    joins: [{ hotkey: '5Miner', body_sha256: 'b'.repeat(64), rate: 1, weight: 0.2 }],
+    closed: { week_id: '2026-w46', bodies: ['9'.repeat(64)] },
+  });
+  return v;
+};
+
+test('a weekly soup, the night’s joins and closed seats are accepted; extra fields are refused', () => {
+  assert.equal(soupBoardSchema.safeParse(weekly()).success, true);
+  const bad = [
+    v => { v.tiers[0].week.score = 58; },
+    v => { v.tiers[0].week.members[0].trace = []; },
+    v => { v.tiers[0].rounds[0].joins[0].secret = 1; },
+    v => { v.tiers[0].rounds[0].closed.week_id = 'week 46'; },
+  ];
+  for (const change of bad) { const v = weekly(); change(v); assert.equal(soupBoardSchema.safeParse(v).success, false); }
+});
+
+test('with a weekly soup the view shows the week’s seats and tonight’s joins, and tonight’s seats as unpaid', () => {
+  const view = tierView(weekly().tiers[0]);
+  assert.equal(view.weekly, true);
+  assert.deepEqual(view.week.seats.map(s => [s.name, s.kind, s.paid, s.closed]), [
+    ['pplx-decider-flash-v1.2', 'house', false, false], ['miner/body-one', 'trainer', true, false], ['5Gon… · 99999999', 'trainer', false, true],
+  ]);
+  assert.equal(view.week.id, '2026-w46');
+  assert.deepEqual(view.joins.map(j => [j.name, j.weight]), [['miner/body-one', 0.2]]);
+  assert.deepEqual(view.seats.map(s => s.paid), [false, false]);
+  const plain = tierView(valid().tiers[0]);
+  assert.equal(plain.weekly, false);
+  assert.equal(plain.week, null);
+});

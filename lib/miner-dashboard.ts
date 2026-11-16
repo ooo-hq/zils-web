@@ -18,6 +18,9 @@ const entry = z.object({
   trial: z.object({ gain: number, needed: number }).strict().optional(),
   seat: z.object({ contribution: number, floor: number }).strict().optional(),
   gate: z.object({ base: z.enum(['house', 'soup', 'release']).nullable(), needed: number }).strict().optional(),
+  // ZIL-205, with a weekly soup: the body's weekly seat on the sealed set, and its pay for joining tonight's soup.
+  week: z.object({ week_id: z.string().regex(/^\d{4}-w\d{2}$/), contribution: number, floor: number }).strict().optional(),
+  joined: z.object({ weight: number }).strict().optional(),
 }).strict();
 export type ReportBody = z.infer<typeof entry>;
 const job = z.object({
@@ -76,6 +79,8 @@ const EXPLAIN: Record<string, [string, string | null]> = {
   below_floor: ['Your body is in the soup, but its contribution is under the seat floor.', 'Add more of what the soup lacks.'],
   fine_tune_gate: ['Your body is a fine-tune that did not beat its base alone by the margin.', 'Train until your body alone beats what you started from.'],
   unpaid_rate: ['Your body is in the soup at rate 0, which pays nothing.', null],
+  weekly_judge: ['Your body is in tonight’s soup. Seats are paid weekly, to members of the weekly soup.', 'Nothing to do; the weekly judge measures it after Monday’s round.'],
+  went_private: ['Your body’s repo is no longer public, so its weekly seat stopped for the rest of the week.', 'Keep the committed revision public while it holds a seat.'],
 };
 
 /** [what happened, what to do next] for a report's reason code; a code this page does not know is shown as sent. */
@@ -91,6 +96,8 @@ export function bodyNumbers(body: ReportBody) {
   const rows: { label: string; value: string; bar: string }[] = [];
   if (body.trial) rows.push({ label: 'Soup gain', value: signed(body.trial.gain), bar: `needed ${signed(body.trial.needed)}` });
   if (body.seat) rows.push({ label: 'Contribution', value: String(body.seat.contribution), bar: `floor ${body.seat.floor}` });
+  if (body.week) rows.push({ label: 'Week seat', value: String(body.week.contribution), bar: `floor ${body.week.floor} (week ${body.week.week_id})` });
+  if (body.joined) rows.push({ label: 'Joined', value: `${Number((100 * body.joined.weight).toFixed(1))}%`, bar: 'of the pool, paid once' });
   if (body.gate) rows.push({ label: 'Base', value: body.gate.base ?? 'unknown', bar: `must beat it by ${body.gate.needed}` });
   if (body.solo) rows.push({ label: 'Alone', value: String(body.solo.score), bar: `soup ${body.solo.soup}` });
   if (body.screen) rows.push({ label: 'Screening', value: String(body.screen.score), bar: `needed ${body.screen.needed}` });
@@ -107,23 +114,39 @@ export function weakestCategory(categories: ReportBody['categories']) {
   return worst > 0 && behind.length === 1 ? behind[0][0] : null;
 }
 
-type Board = { tiers: { tier: string; rounds: Pick<SoupBoard['tiers'][number]['rounds'][number], 'round_id' | 'members' | 'crown'>[] }[] };
+type Round = Pick<SoupBoard['tiers'][number]['rounds'][number], 'round_id' | 'members' | 'crown' | 'joins' | 'closed'>;
+type Board = { tiers: { tier: string; rounds: Round[]; week?: SoupBoard['tiers'][number]['week'] }[] };
 
 /** The rounds in the public soup feed where the hotkey's body sat in a soup, newest first: its seat, what the soup
- *  loses without it, and the share of emissions the seat (and crown) carried. */
+ *  loses without it, and the share of emissions the seat (and crown) carried. In a round paid weekly (ZIL-205: it
+ *  records joins) only a join pays; `week` lists the hotkey's seats in each tier's weekly soup. */
 export function seatHistory(board: Board | null, hotkey: string) {
+  const round6 = (value: number) => Math.round(value * 1e6) / 1e6;
   const rows = (board?.tiers ?? []).flatMap(t => t.rounds.flatMap(r => r.members.filter(m => m.hotkey === hotkey).map(m => {
+    const day = /(\d{4}-\d{2}-\d{2})$/.exec(r.round_id)?.[1] ?? r.round_id;
+    const base = { day, tier: t.tier, round: r.round_id, body: m.body_sha256, contribution: m.contribution };
+    if (r.joins !== undefined) {
+      const join = r.joins.find(j => j.hotkey === hotkey && j.body_sha256 === m.body_sha256);
+      return { ...base, seat: join ? 'joined' as const : 'unpaid' as const, share: round6(join?.weight ?? 0) };
+    }
     const crowned = r.crown?.hotkey === hotkey && r.crown.body_sha256 === m.body_sha256;
-    const share = Math.round((m.seat_weight + (crowned ? r.crown!.weight : 0)) * 1e6) / 1e6;
     return {
-      day: /(\d{4}-\d{2}-\d{2})$/.exec(r.round_id)?.[1] ?? r.round_id, tier: t.tier, round: r.round_id, body: m.body_sha256,
-      seat: crowned ? 'crown' as const : m.seat_weight > 0 ? 'seat' as const : 'unpaid' as const,
-      contribution: m.contribution, share,
+      ...base, seat: crowned ? 'crown' as const : m.seat_weight > 0 ? 'seat' as const : 'unpaid' as const,
+      share: round6(m.seat_weight + (crowned ? r.crown!.weight : 0)),
     };
   })));
   const rank = (tier: string) => TIER_NAMES.indexOf(tier as Tier);
   rows.sort((a, b) => (a.day < b.day ? 1 : a.day > b.day ? -1 : 0) || rank(a.tier) - rank(b.tier));
-  return { rows, rounds: rows.length, paid: rows.filter(r => r.share > 0).length };
+  const week = (board?.tiers ?? []).flatMap(t => {
+    if (!t.week) return [];
+    const latest = t.rounds[0]?.closed;
+    const shut = latest && latest.week_id === t.week.week_id ? latest.bodies : [];
+    return t.week.members.filter(m => m.hotkey === hotkey).map(m => {
+      const closed = shut.includes(m.body_sha256);
+      return { tier: t.tier, week: t.week!.week_id, body: m.body_sha256, contribution: m.contribution, share: closed ? 0 : round6(m.seat_weight), closed };
+    });
+  });
+  return { rows, rounds: rows.length, paid: rows.filter(r => r.share > 0).length, week };
 }
 
 /** Counts over a hotkey's listed customer jobs, and the median skill of the graded ones. */

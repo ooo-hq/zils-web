@@ -126,7 +126,7 @@ export default async function MinersPage({ searchParams }: { searchParams: Promi
         <ol className={s.roundSteps} aria-label="A round">
           <li><FoodIcon name="bowl" className={s.stepIcon} /><b>In the pot</b>The tier’s house models, the current members and the best new bodies, at most 20.</li>
           <li><FoodIcon name="ladle" className={s.stepIcon} /><b>Greedy</b>Start from the best single body. Add the next only if the soup scores 0.5 higher. Stop at five.</li>
-          <li><FoodIcon name="ticket" className={s.stepIcon} /><b>Pay</b>A seat for each miner body that lifts the soup by 0.8 or more; scouts re-uploading public models earn a quarter. The crown goes to a body that beats every house model and the soup alone by 1.2.</li>
+          <li><FoodIcon name="ticket" className={s.stepIcon} /><b>Pay</b>A seat for each miner body that lifts the soup by 0.5 or more; scouts re-uploading public models earn a quarter. The crown goes to a body that beats every house model and the soup alone by 1.2.</li>
           <li><FoodIcon name="flame" className={s.stepIcon} /><b>Burn</b>Anything unearned burns. House models are never paid.</li>
         </ol>
         <p className={b.later}>Customer models pay from the other 20% of emissions: a miner who trains a customer’s open-tier model earns from what the customer pays to use it through the API, up to half of that spend. Until customers pay for that use, this share burns too. Feature tracks do not pay yet. The <Link href="/miners/tracks/box">box track</Link> runs as a synthetic-only pilot.</p>
