@@ -7,7 +7,7 @@ import { useAuthSession } from '@/components/auth-session';
 import { HighlightedCode } from '@/components/highlighted-code';
 import { LinkLoading, WorkspaceLoading } from '@/components/workspace-loading';
 import { PageHero, Section, workspacePage } from '@/components/workspace-page';
-import { gatewayProviders, gatewayTools, type GatewayTool } from '@/lib/gateway-tools';
+import { gatewayProviders, gatewayTools, type GatewayProvider, type GatewayTool } from '@/lib/gateway-tools';
 import { ANSWER_FROM_COMPARED, agreement, relayAddress, relayReportApi, RelayReportError, shadowRows, type RelayQuestion, type RelayShadow, type RelayReport, type RelayStatus, outcomeRows, TRAIN_FROM_ROWS } from '@/lib/relay-report';
 import training from '@/app/(home)/train/train.module.css';
 import styles from './gateway-report.module.css';
@@ -146,7 +146,7 @@ function ToolSteps({ tool, address }: { tool: GatewayTool; address: string }) {
 }
 
 type Collect = (on: boolean, termsVersion?: string) => Promise<void>;
-type Choose = (provider: 'openai' | 'anthropic' | 'gemini') => Promise<void>;
+type Choose = (provider: GatewayProvider) => Promise<void>;
 
 const BACK = <Link href="/train" className={training.textButton}>Back to Train<LinkLoading /></Link>;
 
@@ -168,13 +168,12 @@ function Setup({ status, address, collect, choose }: { status: RelayStatus; addr
     <ol className={styles.flow} aria-label="Setup steps">
       <li data-state={locked ? 'locked' : 'done'}>
         <div className={styles.flowHead}><span className={styles.flowNumber} aria-hidden="true">1</span><h3>Choose your provider</h3><p>{provider.name}{locked && ', locked'}</p></div>
-        {/* An account chooses OpenAI, Claude or Gemini itself, while it is not collecting: saved answers are one provider's. Jev is set by us; other accounts see it as coming soon. */}
-        <div role="group" aria-label="Provider" className={styles.providers}>{gatewayProviders.filter(known => !jev || known.id === 'jev' || known.id === 'openai').map(known => {
+        {/* An account chooses its provider itself, while it is not collecting: saved answers are one provider's. */}
+        <div role="group" aria-label="Provider" className={styles.providers}>{gatewayProviders.map(known => {
           const other = known.id !== provider.id;
-          return <button key={known.id} className={styles.provider} aria-pressed={!other} disabled={!other || jev || known.id === 'jev' || locked || switching} onClick={() => { if (known.id === 'jev') return; setSwitching(true); setOpen(''); void choose(known.id).finally(() => setSwitching(false)); }}>{known.name}{!jev && known.id === 'jev' && <span className={styles.tag}>Coming soon</span>}</button>;
+          return <button key={known.id} className={styles.provider} aria-pressed={!other} disabled={!other || locked || switching} onClick={() => { setSwitching(true); setOpen(''); void choose(known.id).finally(() => setSwitching(false)); }}>{known.name}</button>;
         })}</div>
-        {jev ? <p className={workspacePage.sub}>Your address sends requests to Jev. Ask us if it should go to another provider.</p>
-          : locked ? <p role="note" className={styles.lock}><strong>Locked while you collect.</strong> Every saved answer is {provider.name}’s. To change provider, stop collecting, which deletes every saved message.</p>
+        {locked ? <p role="note" className={styles.lock}><strong>Locked while you collect.</strong> Every saved answer is {provider.name}’s. To change provider, stop collecting, which deletes every saved message.</p>
           : <p className={workspacePage.sub}>Your address sends requests to {provider.name}. You can change it until you start collecting.</p>}
       </li>
       <li data-state={status.requests > 0 ? 'done' : 'open'}>
@@ -218,7 +217,7 @@ function Setup({ status, address, collect, choose }: { status: RelayStatus; addr
             <li>Saved messages are used to train and measure models for this account only.</li>
             <li>A saved message is deleted 90 days after it was last sent. Stopping collection deletes all of them at once.</li>
           </ul>
-          {!jev && <p className={workspacePage.sub}>Starting locks your provider to {provider.name} until you stop.</p>}
+          <p className={workspacePage.sub}>Starting locks your provider to {provider.name} until you stop.</p>
           <label className={styles.agree}><input type="checkbox" checked={agreed} onChange={event => setAgreed(event.target.checked)} /><span>I agree to this, and I have the right to share these messages and answers with Zils.</span></label>
           <div className={styles.actions}><button className={training.button} disabled={!agreed || busy} onClick={() => change(true)}>{busy ? 'Starting…' : 'Start collecting'}</button></div>
         </>}
