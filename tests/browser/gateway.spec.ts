@@ -99,7 +99,8 @@ test('a Jev gateway shows the Jev address, cards and what is collected', async (
   await expect(setup.getByText('Set it as the base URL of your Jev client.', { exact: false })).toBeVisible();
   const providers = setup.getByRole('group', { name: 'Provider' });
   await expect(providers.getByRole('button', { name: /Jev/ })).toHaveAttribute('aria-pressed', 'true');
-  await expect(providers.getByRole('button', { name: /OpenAI.*On request/ })).toBeDisabled();
+  await expect(providers.getByRole('button', { name: 'OpenAI' })).toBeDisabled();
+  await expect(providers.getByText(/On request|Coming soon/)).toHaveCount(0);
   for (const name of ['Jev Python', 'Jev JavaScript', 'cURL']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
   await expect(setup.getByRole('button', { name: /^(OpenAI Python|LangChain)/ })).toHaveCount(0);
   // What is saved differs for Jev, and the terms say so before anyone agrees.
@@ -127,9 +128,9 @@ test('a Claude gateway shows the root address and the Anthropic cards', async ({
   const providers = setup.getByRole('group', { name: 'Provider' });
   await expect(providers.getByRole('button', { name: /Claude/ })).toHaveAttribute('aria-pressed', 'true');
   await expect(providers.getByRole('button', { name: 'OpenAI' })).toBeEnabled();
-  await expect(providers.getByRole('button')).toHaveCount(3);
+  await expect(providers.getByRole('button')).toHaveCount(4);
   for (const name of ['Anthropic Python', 'Anthropic TypeScript', 'cURL']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
-  await expect(setup.getByRole('button', { name: /^(OpenAI Python|LangChain|Jev)/ })).toHaveCount(0);
+  await expect(setup.getByRole('button', { name: /^(OpenAI Python|LangChain|Jev Python|Jev JavaScript)/ })).toHaveCount(0);
   // What is saved is the same as for OpenAI: requests that ask for an answer from a fixed list.
   await expect(setup.getByText(/each request that asks for an answer from a fixed list/)).toBeVisible();
   await expect(setup.getByText(/Ask us if it should go to another provider/)).toHaveCount(0);
@@ -152,9 +153,9 @@ test('a Gemini gateway shows the root address and the Google cards', async ({ pa
   await expect(setup.getByText('Set it as the base URL of your Gemini client.', { exact: false })).toBeVisible();
   const providers = setup.getByRole('group', { name: 'Provider' });
   await expect(providers.getByRole('button', { name: /Gemini/ })).toHaveAttribute('aria-pressed', 'true');
-  await expect(providers.getByRole('button')).toHaveCount(3);
+  await expect(providers.getByRole('button')).toHaveCount(4);
   for (const name of ['Google Gen AI Python', 'Google Gen AI JavaScript', 'cURL']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
-  await expect(setup.getByRole('button', { name: /^(OpenAI Python|LangChain|Anthropic|Jev)/ })).toHaveCount(0);
+  await expect(setup.getByRole('button', { name: /^(OpenAI Python|LangChain|Anthropic|Jev Python|Jev JavaScript)/ })).toHaveCount(0);
   await expect(setup.getByText(/each request that asks for an answer from a fixed list/)).toBeVisible();
 
   await setup.getByRole('button', { name: /^Google Gen AI Python/ }).click();
@@ -389,13 +390,15 @@ test('shows whether requests have come through, and a card for each tool that op
   await expect(setup.getByText('No request has come through this address yet.')).toBeVisible();
   const address = `http://127.0.0.1:8999/relay/${relayId}/v1`;
   for (const name of ['OpenAI Python', 'OpenAI Node', 'cURL', 'LangChain', 'Vercel AI SDK', 'LlamaIndex', 'Instructor']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
-  // Providers: an address goes to one of them. Jev is set up by us and is not offered here.
+  // Providers: an address goes to one of them. Jev is set up by us: shown as coming soon, not chosen here.
   const providers = setup.getByRole('group', { name: 'Provider' });
   await expect(providers.getByRole('button', { name: /OpenAI/ })).toHaveAttribute('aria-pressed', 'true');
-  await expect(providers.getByRole('button')).toHaveCount(3);
+  await expect(providers.getByRole('button')).toHaveCount(4);
   await expect(providers.getByRole('button', { name: 'Claude' })).toBeEnabled();
   await expect(providers.getByRole('button', { name: 'Gemini' })).toBeEnabled();
-  await expect(setup.getByText(/Jev/)).toHaveCount(0);
+  await expect(providers.getByRole('button', { name: /Jev.*Coming soon/ })).toBeDisabled();
+  await expect(setup.getByText(/On request/)).toHaveCount(0);
+  await expect(setup.getByRole('button', { name: /^(Jev Python|Jev JavaScript)/ })).toHaveCount(0);
   await expect(setup.getByText(/another provider/)).toHaveCount(0);
   await expect(setup.getByText('Set it as the base URL of your OpenAI client.', { exact: false })).toBeVisible();
   // Closed until asked for: no code on the page yet.
