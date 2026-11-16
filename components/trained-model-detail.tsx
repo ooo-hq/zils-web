@@ -26,7 +26,7 @@ const BACK = <Link href="/models" className={training.textButton}>Back to models
 
 export function TrainedModelDetail(props: Props) {
   const { client, session, error } = useAuthSession(props.config);
-  if (session === undefined) return <WorkspaceLoading label="Opening your model" />;
+  if (session === undefined) return <WorkspaceLoading label="Loading your model" />;
   if (!session || !client) return <div className={styles.model}>
     <PageHero back={BACK} title="Sign in to view this model" intro="Model results and access details are private to the account that trained it." action={<Link href="/train" className={training.button}>Sign in to Zils</Link>} />
     {error && <p role="alert" className={workspacePage.notice}>{error}</p>}

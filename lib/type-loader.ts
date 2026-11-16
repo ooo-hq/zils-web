@@ -13,3 +13,10 @@ export function loaderFrame(tick: number, random: () => number = Math.random): L
     ? { char: letter, locked: true }
     : { char: RUNES[Math.floor(random() * RUNES.length)], locked: false });
 }
+
+/** Where a loader starts. One that replaces a loader removed within the last half second carries on from it, so swapping
+    the route's loader for the page's own reads as one loader; any other starts at the top of a cycle. */
+export function resumeTick(last: { tick: number; at: number } | null, now: number): number {
+  if (!last || now - last.at > 500) return LOADER_TICKS - 1;
+  return last.tick + Math.max(1, Math.round((now - last.at) / LOADER_TICK_MS));
+}
