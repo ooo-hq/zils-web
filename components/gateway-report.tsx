@@ -40,7 +40,7 @@ function Answering({ question, shadow, set }: { question: string; shadow: RelayS
   const offer = shadow.offers.find(found => found.promise === chosen && found.cutoff);
   return <div className={styles.answering} role="group" aria-label="Let this model answer what it is sure of">
     <p className={workspacePage.label}>Let this model answer what it is sure of</p>
-    <p className={workspacePage.sub}>Your app receives your provider’s answer on every call today. Switched on, this model answers the calls it is sure of, faster and for less, and every other call still goes to your provider.</p>
+    {!(confirming && offer?.cutoff) && <p className={workspacePage.sub}>Your app receives your provider’s answer on every call today. Switched on, this model answers the calls it is sure of, faster and for less, and every other call still goes to your provider.</p>}
     {shadow.stopped && <p className={workspacePage.sub} role="status">It stopped answering by itself on {when(shadow.stopped.at)}: {shadow.stopped.differed.toLocaleString()} of {shadow.stopped.checked.toLocaleString()} checked answers differed from your provider, too many for {whole(shadow.stopped.promise)}.</p>}
     {shadow.asked < ANSWER_FROM_COMPARED ? <p className={workspacePage.fine}>Available after {ANSWER_FROM_COMPARED.toLocaleString()} compared answers. So far: {shadow.asked.toLocaleString()}.</p>
       : !supported.length ? <p className={workspacePage.fine}>The comparison so far does not support answering: the model does not match your provider closely enough at any confidence.</p>
