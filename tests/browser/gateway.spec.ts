@@ -461,6 +461,8 @@ test.describe('a compared model answering what it is sure of', () => {
     // What changes for the app is said before anything is switched.
     const confirm = panel.getByRole('group', { name: 'Confirm answering' });
     await expect(confirm.getByText('Your app will receive this model’s answer, not your provider’s, on calls it is at least 96% confident about.')).toBeVisible();
+    // The confirmation stands in for the introduction: the two say the same thing.
+    await expect(panel.getByText('Your app receives your provider’s answer on every call today.')).toHaveCount(0);
     expect(sent).toEqual([]);
     await confirm.getByRole('button', { name: 'Start answering' }).click();
     const on = page.getByRole('region', { name: 'Question 1' }).getByRole('group', { name: 'Answering what it is sure of' });
