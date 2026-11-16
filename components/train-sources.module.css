@@ -1,0 +1,14 @@
+/* /train: the three sources of training examples as stacked /pricing-style splits. The first, the gateway, is the one we
+   recommend, so its title is set larger; the others are the same row, quieter. */
+.sources ol { list-style: none; margin: 0; padding: 0; }
+.sources li + li { border-top: 1px solid var(--zs-line); }
+/* Three classes beat the console shell's quiet h3 rule (.shell .main h3). */
+.head.head.head > h3 { margin: 0; font-weight: 300; font-size: clamp(22px, 2.1vw, 28px); letter-spacing: -0.02em; line-height: 1.15; }
+.sources li[data-preferred] .head.head > h3 { margin-top: 14px; font-size: clamp(30px, 3.4vw, 46px); line-height: 1.05; }
+.head > p:not([class]) { margin: 14px 0 0; max-width: 46ch; font-size: 15px; line-height: 1.55; color: var(--zs-t2); }
+.act { display: flex; flex-direction: column; justify-content: center; }
+.act > :first-child { margin-top: 0; }
+.state { margin: 0 0 4px; min-height: 1.5em; font-size: 15px; line-height: 1.5; color: var(--zs-t2); }
+.state[data-on] { color: var(--zs-fg); }
+.state[data-on]::before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 10px; border-radius: 50%; background: var(--zs-peach); vertical-align: 1px; }
+.state:empty + div { margin-top: 0; }

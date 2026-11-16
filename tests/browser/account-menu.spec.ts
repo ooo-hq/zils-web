@@ -45,7 +45,7 @@ test('account menu follows navigation and signing out clears both header and wor
   await page.getByRole('link', { name: 'Your workspace', exact: true }).click();
   await expect(page.getByRole('heading', { name: /^(Good (morning|afternoon|evening)|Up late)/, level: 1 })).toBeVisible();
   await page.goto('/train');
-  await expect(page.getByRole('link', { name: 'Train a model', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Upload a table', exact: true })).toBeVisible();
   const sidebar = page.getByRole('complementary', { name: 'Workspace' });
   await expect(sidebar.getByText('client@example.com', { exact: true })).toBeVisible();
   await page.screenshot({ path: '.private/account-desktop.png' });
@@ -57,7 +57,7 @@ test('account menu follows navigation and signing out clears both header and wor
   await sidebar.getByRole('button', { name: /Account menu for/ }).click();
   await sidebar.getByRole('button', { name: 'Sign out', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Sign in to Zils', exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Train a model', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Upload a table', exact: true })).toHaveCount(0);
   await expect(sidebar.getByText('Not signed in', { exact: true })).toBeVisible();
   await page.goto('/model');
   await expect(page.locator('header').getByRole('link', { name: 'Get started', exact: true })).toBeVisible();

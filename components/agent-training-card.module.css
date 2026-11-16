@@ -1,8 +1,4 @@
-/* Train with your agent, as a /pricing-style split: the pitch and agent switch on the left, the three steps on the right.
-   The commands reuse the site's copy-command box. */
-/* Three classes beat the console shell's quiet h3 rule (.shell .main h3). */
-.head.head.head > h3 { margin: 0; font-weight: 300; font-size: clamp(26px, 2.6vw, 36px); letter-spacing: -0.02em; line-height: 1.1; }
-.head > p:not([class]) { margin: 14px 0 0; max-width: 46ch; font-size: 15px; line-height: 1.55; color: var(--zs-t2); }
+/* The agent switch and the three steps to train with a coding agent. The commands reuse the site's copy-command box. */
 .agents { display: inline-flex; margin-top: 24px; border: 1px solid rgba(var(--zs-fg-rgb), .2); }
 .agents button { border: 0; background: transparent; color: var(--zs-t2); font-family: var(--font-plex-mono), ui-monospace, monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding: 10px 14px; cursor: pointer; }
 .agents button[aria-pressed=true] { background: var(--zs-fg); color: var(--zs-panel); }

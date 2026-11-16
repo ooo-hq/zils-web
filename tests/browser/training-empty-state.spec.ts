@@ -25,8 +25,8 @@ test('empty Training workspace opens a one-time welcome dialog with three starti
   // Closing leaves the ordinary empty workspace, and the welcome does not return.
   await dialog.getByRole('button', { name: 'Close' }).click();
   await expect(dialog).toBeHidden();
-  await expect(page.getByRole('heading', { name: 'Train your first model.' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Where your examples come from' })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Train your first model.' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Where your examples come from' })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });

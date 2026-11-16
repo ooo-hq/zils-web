@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { ArrowLeftRight, BookOpen, Boxes, ChartLine, ChevronsUpDown, CreditCard, FlaskConical, GraduationCap, House, KeyRound, LogOut, SquareArrowOutUpRight } from 'lucide-react';
+import { BookOpen, Boxes, ChartLine, ChevronsUpDown, CreditCard, FlaskConical, GraduationCap, House, KeyRound, LogOut, SquareArrowOutUpRight } from 'lucide-react';
 import { useAuthSession } from '@/components/auth-session';
 import { ThemeToggle } from '@/components/theme';
 import { ZilsWordmark } from '@/components/zils-wordmark';
@@ -11,12 +11,14 @@ import { billingApi, formatBalance } from '@/lib/billing';
 import { docsUrl } from '@/lib/shared';
 import styles from './console-shell.module.css';
 
+// The gateway is one of Train's sources of examples, so its page keeps Train current.
+const UNDER: Record<string, string> = { '/gateway': '/train' };
+
 const LINKS = [
   { href: '/dashboard', label: 'Home', icon: House },
   { href: '/train', label: 'Train', icon: GraduationCap },
   { href: '/models', label: 'Models', icon: Boxes },
   { href: '/playground', label: 'Playground', icon: FlaskConical },
-  { href: '/gateway', label: 'Gateway', icon: ArrowLeftRight },
   { href: '/usage', label: 'Usage', icon: ChartLine },
   { href: '/keys', label: 'API keys', icon: KeyRound },
 ] as const;
@@ -63,7 +65,7 @@ export function ConsoleNav({ auth, billingUrl }: { auth?: { url: string; key: st
   return <aside className={styles.sidebar} aria-label="Workspace">
     <Link href="/" aria-label="Zils home" className={styles.brand}><ZilsWordmark className="text-[28px]" /></Link>
     <nav aria-label="Workspace navigation" className={styles.nav}>
-      {LINKS.map(({ href, label, icon: Icon }) => <Link key={href} href={href} className={styles.link} aria-current={path === href || path.startsWith(`${href}/`) ? 'page' : undefined}>
+      {LINKS.map(({ href, label, icon: Icon }) => <Link key={href} href={href} className={styles.link} aria-current={path === href || path.startsWith(`${href}/`) || UNDER[path] === href ? 'page' : undefined}>
         <Icon size={14} aria-hidden="true" />{label}
       </Link>)}
       <a href={docsUrl} className={styles.link} target="_blank" rel="noreferrer"><BookOpen size={14} aria-hidden="true" />Documentation<SquareArrowOutUpRight size={12} aria-hidden="true" className={styles.external} /></a>

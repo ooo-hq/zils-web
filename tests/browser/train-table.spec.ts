@@ -43,7 +43,7 @@ async function workspace(page: Page) {
 test('a spreadsheet becomes a training run on one screen', async ({ page }) => {
   const state = await workspace(page);
   await page.goto('/train');
-  await page.getByRole('link', { name: 'Train a model', exact: true }).click();
+  await page.getByRole('link', { name: 'Upload a table', exact: true }).click();
   await expect(page).toHaveURL('/train/new');
   await page.getByLabel('Choose a file of examples').setInputFiles({ name: 'tickets.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
 
