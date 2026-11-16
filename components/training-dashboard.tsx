@@ -307,7 +307,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     </>;
   }
   return <Sheet open={panelOpen} onOpenChange={open => { if (open) focusSubmitted.current = false; setPanelOpen(open); }}>
-    <PageHero title={runId ? 'Training run' : 'Training'} intro={runId ? 'The progress and evaluation of this run.' : 'A Zils model learns one decision from examples of it being made. Choose where yours come from.'}
+    <PageHero title={runId ? 'Training run' : 'Train'} intro={runId ? 'The progress and evaluation of this run.' : 'A Zils model learns one decision from examples of it being made. Choose where yours come from.'}
       back={runId && <Link href="/train" className={styles.textButton}>Back to Training<LinkLoading /></Link>} />
     {bulkImport && <p className={workspacePage.notice}><SheetTrigger asChild><button className={styles.textButton} disabled={busy}>Continue bulk import</button></SheetTrigger> · Import a spreadsheet, prepared datasets, or labeled photos.</p>}
     {process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && <p className={workspacePage.notice}>Billing test preview. Submitting a standard run reserves one included run or $2 in test credit. <Link href="/billing" className={styles.textButton}>View credit and billing</Link>.</p>}

@@ -37,7 +37,7 @@ async function workspace(page: Page, options: { expired?: boolean; disabled?: bo
     return route.fulfill({ status: 404, json: {}, headers });
   });
   await page.goto('/train');
-  await expect(page.getByRole('heading', { name: 'Training', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Train', exact: true })).toBeVisible();
   return { mutations, release: () => releaseUpload?.() };
 }
 async function changeSession(page: Page, id: string, tag: string) {

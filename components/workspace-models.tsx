@@ -25,10 +25,19 @@ export function useWorkspaceModels(config: TrainingConfig) {
     if (!client || !owner) return;
     const controller = new AbortController();
     const token = async () => { const { data } = await client.auth.getSession(); return data.session?.user.id === owner ? data.session.access_token : ''; };
-    trainingApi(config.apiUrl, config.storage, token).list(controller.signal)
-      .then(({ jobs, models }) => { setRuns(jobs); setModels(readyModels(models ?? jobs)); })
-      .catch(() => { if (!controller.signal.aborted) setError('Your models could not be loaded. Refresh to try again.'); });
-    return () => controller.abort();
+    const api = trainingApi(config.apiUrl, config.storage, token);
+    let timer: ReturnType<typeof setTimeout>, loaded = false;
+    // While a run is on its way (training, or passed and waiting for API access), check again so its row moves by itself.
+    const load = () => api.list(controller.signal)
+      .then(({ jobs, models }) => {
+        if (controller.signal.aborted) return;
+        loaded = true; setRuns(jobs); setModels(readyModels(models ?? jobs));
+        if (jobs.some(job => !terminal(job) || job.workflow?.state === 'activating')) timer = setTimeout(load, 10_000);
+      })
+      // A failed re-check keeps the list already shown and tries again.
+      .catch(() => { if (controller.signal.aborted) return; if (loaded) timer = setTimeout(load, 10_000); else setError('Your models could not be loaded. Refresh to try again.'); });
+    void load();
+    return () => { controller.abort(); clearTimeout(timer); };
   }, [client, owner, config.apiUrl, config.storage]);
   return { client, session, models, runs, error };
 }

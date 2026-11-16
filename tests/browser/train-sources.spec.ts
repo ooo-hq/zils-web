@@ -20,6 +20,7 @@ async function workspace(page: Page, report: unknown = collecting) {
 test('Train asks where your examples come from, with the gateway first', async ({ page }) => {
   await workspace(page);
   await page.goto('/train');
+  await expect(page.getByRole('heading', { level: 1, name: 'Train', exact: true })).toBeVisible();
   const sources = page.getByRole('region', { name: 'Where your examples come from' });
   await expect(sources.getByRole('heading', { level: 3 })).toHaveText(['Your app, through the learning gateway', 'A file or a table', 'Your coding agent or the command line']);
   const [gateway, file, agent] = [0, 1, 2].map(index => sources.locator('ol > li').nth(index));
@@ -66,4 +67,17 @@ test('Models lists everything made: in progress, ready, and runs that gave no mo
   await expect(page.getByRole('region', { name: 'Your models' }).getByRole('link', { name: 'support-routing', exact: true })).toHaveAttribute('href', `/models/${ready.id}`);
   await expect(page.getByRole('region', { name: 'No model' }).getByRole('link', { name: /never-passed.*No qualifying model/ })).toHaveAttribute('href', `/train?run=${failed.id}`);
   await expect(page.getByRole('region', { name: 'No model' }).getByText('support-routing')).toHaveCount(0);
+});
+
+test('Models follows a run in progress without a reload', async ({ page }) => {
+  await workspace(page);
+  await page.clock.install();
+  await page.goto('/models');
+  await expect(page.getByRole('region', { name: 'In progress' }).getByRole('link', { name: /tone-check/ })).toBeVisible();
+  // The run finishes with a model: its row moves to the models by itself.
+  const done = { ...ready, id: running.id, name: running.name, workflow: { state: 'ready', model_id: 'tone-check-immutable', model_name: 'tone-check-v1' } };
+  await page.route('**/v1/jobs*', route => route.fulfill({ headers: cors, json: { jobs: [done, ready, failed], models: [done, ready] } }));
+  await page.clock.runFor(10_000);
+  await expect(page.getByRole('region', { name: 'Your models' }).getByRole('link', { name: 'tone-check', exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'In progress' })).toHaveCount(0);
 });
