@@ -48,11 +48,12 @@ function Answering({ question, shadow, set }: { question: string; shadow: RelayS
         <p className={workspacePage.sub}>Your app will receive this model’s answer, not your provider’s, on calls it is at least {whole(offer.cutoff.confidence_at_least)} confident about. So far it matched your provider on {offer.cutoff.agreed.toLocaleString()} of {offer.cutoff.asked.toLocaleString()} such answers; some of its answers will differ. Those calls are not sent to your provider and are charged to your Zils balance.</p>
         <div className={styles.actions}><button className={training.secondary} disabled={busy} onClick={() => setConfirming(false)}>Not now</button><button className={training.button} disabled={busy} onClick={() => change(offer.promise)}>{busy ? 'Starting…' : 'Start answering'}</button></div>
       </div> : <>
-        <fieldset className={styles.promises}>
-          <legend className={workspacePage.fine}>Match your provider on at least</legend>
-          {shadow.offers.map(found => <label key={found.promise} className={styles.promise}>
+        <p className={`${workspacePage.label} ${styles.promisesLabel}`} id={`promises-${question}-${shadow.field}`}>Match your provider on at least</p>
+        <fieldset className={styles.promises} aria-labelledby={`promises-${question}-${shadow.field}`}>
+          {shadow.offers.map(found => <label key={found.promise} className={styles.promise} data-off={found.cutoff ? undefined : ''}>
             <input type="radio" name={`promise-${question}-${shadow.field}`} disabled={!found.cutoff} checked={chosen === found.promise} onChange={() => setChosen(found.promise)} />
-            <span><strong>{whole(found.promise)}</strong> <span className={workspacePage.fine}>{found.cutoff ? `Answers when it is ${whole(found.cutoff.confidence_at_least)} or more confident. So far it matched your provider on ${found.cutoff.agreed.toLocaleString()} of ${found.cutoff.asked.toLocaleString()} such answers.` : 'Not supported by the comparison yet.'}</span></span>
+            <strong>{whole(found.promise)}</strong>
+            <span>{found.cutoff ? `Answers when it is ${whole(found.cutoff.confidence_at_least)} or more confident. So far it matched your provider on ${found.cutoff.agreed.toLocaleString()} of ${found.cutoff.asked.toLocaleString()} such answers.` : 'Not supported by the comparison yet.'}</span>
           </label>)}
         </fieldset>
         <div className={styles.actions}><button className={training.button} disabled={!offer} onClick={() => setConfirming(true)}>Start answering</button></div>

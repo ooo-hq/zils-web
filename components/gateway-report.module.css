@@ -120,9 +120,12 @@
 @media (max-width: 860px) { .flow { margin: 0 -16px; }.flow > li { padding: 24px 16px 32px 60px; }.flow > li::before { left: 31px; }.flowNumber { left: 16px; top: 22px; }.flow > li:first-child::before { top: 40px; }.flow > li:last-child::before { height: 24px; } }
 .answering { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--zs-line); }
 .answering .actions { margin-top: 16px; }
-.promises { margin: 24px 0 0; padding: 0; border: 0; display: grid; gap: 16px; }
-.promises legend { padding: 0; margin-bottom: 12px; }
-.promise { display: flex; gap: 12px; align-items: flex-start; cursor: pointer; }
-.promise input { margin: 3px 0 0; flex: none; }
-.promise strong { display: block; margin-bottom: 2px; font-size: 15px; font-weight: 500; }
-.promise:has(input:disabled) { cursor: default; color: var(--zs-t3); }
+.promisesLabel { margin-top: 32px; }
+.promises { min-width: 0; margin: 12px 0 0; padding: 0; border: 0; }
+.promises .promise { display: grid; grid-template-columns: 16px 3.25rem minmax(0, 1fr); column-gap: 12px; align-items: start; margin: 0; padding: 14px 0; border-top: 1px solid var(--zs-line); cursor: pointer; }
+.promises .promise:last-of-type { border-bottom: 1px solid var(--zs-line); }
+.promises .promise input { width: 16px; height: 16px; margin: 3px 0 0; accent-color: var(--zs-orange); }
+.promises .promise strong { font-size: 15px; line-height: 21px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.promises .promise span { max-width: 62ch; font-size: 14px; line-height: 1.5; color: var(--zs-t2); }
+.promises .promise[data-off] { cursor: default; }
+.promises .promise[data-off] strong, .promises .promise[data-off] span { color: var(--zs-t3); }
