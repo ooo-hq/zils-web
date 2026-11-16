@@ -8,7 +8,7 @@ import { HighlightedCode } from '@/components/highlighted-code';
 import { LinkLoading, WorkspaceLoading } from '@/components/workspace-loading';
 import { PageHero, Section, workspacePage } from '@/components/workspace-page';
 import { gatewayProviders, gatewayTools, type GatewayTool } from '@/lib/gateway-tools';
-import { relayAddress, relayReportApi, RelayReportError, shadowRows, type RelayQuestion, type RelayReport, type RelayStatus, outcomeRows, TRAIN_FROM_ROWS } from '@/lib/relay-report';
+import { ANSWER_FROM_COMPARED, agreement, relayAddress, relayReportApi, RelayReportError, shadowRows, type RelayQuestion, type RelayShadow, type RelayReport, type RelayStatus, outcomeRows, TRAIN_FROM_ROWS } from '@/lib/relay-report';
 import training from '@/app/(home)/train/train.module.css';
 import styles from './gateway-report.module.css';
 
@@ -18,6 +18,47 @@ const percent = (share: number) => `${(share * 100).toFixed(1)}%`;
 const answers = (name: string, values: (string | boolean)[]) => `${name}: ${values.every(value => typeof value === 'boolean') ? 'yes or no' : `${values.length} answers`}`;
 
 type Compare = (jobId: string) => Promise<void>;
+type SetAnswering = (question: string, field: string, promise: number | null) => Promise<void>;
+const whole = (share: number) => `${Math.round(share * 100)}%`;
+
+/** A compared model answering in the provider's place: what it answers and how its checks went while it does, else the promises the comparison supports. Nothing for a service from before answering. */
+function Answering({ question, shadow, set }: { question: string; shadow: RelayShadow; set: SetAnswering }) {
+  const [chosen, setChosen] = useState<number | null>(null), [confirming, setConfirming] = useState(false), [busy, setBusy] = useState(false);
+  const change = (promise: number | null) => { setBusy(true); void set(question, shadow.field, promise).finally(() => { setBusy(false); setConfirming(false); setChosen(null); }); };
+  const on = shadow.answering;
+  if (on) return <div className={styles.answering} role="group" aria-label="Answering what it is sure of">
+    <p className={workspacePage.label}>Answering what it is sure of</p>
+    <span className={workspacePage.amount}>{on.answered.toLocaleString()}</span>
+    <p className={workspacePage.sub}>calls answered by this model since {when(on.since)}.</p>
+    <p className={workspacePage.sub}>Answers calls itself when it is {whole(on.confidence_at_least)} or more confident, to match your provider on at least {whole(on.promise)} of them. Every other call goes to your provider as before.</p>
+    <p className={workspacePage.sub}>{on.checked ? `${on.check_agreed.toLocaleString()} of ${on.checked.toLocaleString()} checked answers matched your provider (${agreement(on.check_agreed, on.checked)}).` : 'No answers checked yet.'}</p>
+    <p className={workspacePage.fine}>One in twenty of the calls it is sure of still goes to your provider as a check. It stops by itself if the checks fall well below {whole(on.promise)}. Its answers carry the header X-Zils-Answered, and every call it is asked is charged to your Zils balance.</p>
+    <div className={styles.actions}><button className={training.secondary} disabled={busy} onClick={() => change(null)}>{busy ? 'Stopping…' : 'Stop answering'}</button></div>
+  </div>;
+  if (!shadow.offers.length && !shadow.stopped) return null;
+  const supported = shadow.offers.filter(offer => offer.cutoff);
+  const offer = shadow.offers.find(found => found.promise === chosen && found.cutoff);
+  return <div className={styles.answering} role="group" aria-label="Let this model answer what it is sure of">
+    <p className={workspacePage.label}>Let this model answer what it is sure of</p>
+    <p className={workspacePage.sub}>Your app receives your provider’s answer on every call today. Switched on, this model answers the calls it is sure of, faster and for less, and every other call still goes to your provider.</p>
+    {shadow.stopped && <p className={workspacePage.sub} role="status">It stopped answering by itself on {when(shadow.stopped.at)}: {shadow.stopped.differed.toLocaleString()} of {shadow.stopped.checked.toLocaleString()} checked answers differed from your provider, too many for {whole(shadow.stopped.promise)}.</p>}
+    {shadow.asked < ANSWER_FROM_COMPARED ? <p className={workspacePage.fine}>Available after {ANSWER_FROM_COMPARED.toLocaleString()} compared answers. So far: {shadow.asked.toLocaleString()}.</p>
+      : !supported.length ? <p className={workspacePage.fine}>The comparison so far does not support answering: the model does not match your provider closely enough at any confidence.</p>
+      : confirming && offer?.cutoff ? <div role="group" aria-label="Confirm answering">
+        <p className={workspacePage.sub}>Your app will receive this model’s answer, not your provider’s, on calls it is at least {whole(offer.cutoff.confidence_at_least)} confident about. So far it matched your provider on {offer.cutoff.agreed.toLocaleString()} of {offer.cutoff.asked.toLocaleString()} such answers; some of its answers will differ. Those calls are not sent to your provider and are charged to your Zils balance.</p>
+        <div className={styles.actions}><button className={training.secondary} disabled={busy} onClick={() => setConfirming(false)}>Not now</button><button className={training.button} disabled={busy} onClick={() => change(offer.promise)}>{busy ? 'Starting…' : 'Start answering'}</button></div>
+      </div> : <>
+        <fieldset className={styles.promises}>
+          <legend className={workspacePage.fine}>Match your provider on at least</legend>
+          {shadow.offers.map(found => <label key={found.promise} className={styles.promise}>
+            <input type="radio" name={`promise-${question}-${shadow.field}`} disabled={!found.cutoff} checked={chosen === found.promise} onChange={() => setChosen(found.promise)} />
+            <span><strong>{whole(found.promise)}</strong> <span className={workspacePage.fine}>{found.cutoff ? `Answers when it is ${whole(found.cutoff.confidence_at_least)} or more confident. So far it matched your provider on ${found.cutoff.agreed.toLocaleString()} of ${found.cutoff.asked.toLocaleString()} such answers.` : 'Not supported by the comparison yet.'}</span></span>
+          </label>)}
+        </fieldset>
+        <div className={styles.actions}><button className={training.button} disabled={!offer} onClick={() => setConfirming(true)}>Start answering</button></div>
+      </>}
+  </div>;
+}
 
 /** The runs trained from a question. Where comparison is open to the account, a ready one can become the model compared on its field; replacing another model is confirmed first. */
 function Runs({ question, compare }: { question: RelayQuestion; compare: Compare | null }) {
@@ -41,7 +82,7 @@ function Runs({ question, compare }: { question: RelayQuestion; compare: Compare
   </>;
 }
 
-function Question({ question, number, compare }: { question: RelayQuestion; number: number; compare: Compare | null }) {
+function Question({ question, number, compare, setAnswering }: { question: RelayQuestion; number: number; compare: Compare | null; setAnswering: SetAnswering }) {
   const id = `gateway-question-${number}`;
   // The newest finished run that was scored: what the account has to go on before any comparison.
   const scored = question.trainings.find(run => run.evaluation)?.evaluation;
@@ -75,7 +116,8 @@ function Question({ question, number, compare }: { question: RelayQuestion; numb
             <thead><tr><th scope="col">Model’s confidence</th><th scope="col">Calls</th><th scope="col">Share</th><th scope="col">Matched your provider</th></tr></thead>
             <tbody>{shadowRows(shadow).map(row => <tr key={row.label}><th scope="row">{row.label}</th><td>{row.asked.toLocaleString()}</td><td>{row.share}</td><td>{`${row.agreed.toLocaleString()} (${row.agreement})`}</td></tr>)}</tbody>
           </table></div>
-          <p className={workspacePage.fine}>Compared since {when(shadow.since)}. Your app always received your provider’s answer.{shadow.failed > 0 && ` ${shadow.failed.toLocaleString()} ${shadow.failed === 1 ? 'call' : 'calls'} got no answer from the model.`}</p>
+          <p className={workspacePage.fine}>Compared since {when(shadow.since)}.{!shadow.answering && !shadow.stopped && ' Your app always received your provider’s answer.'}{shadow.failed > 0 && ` ${shadow.failed.toLocaleString()} ${shadow.failed === 1 ? 'call' : 'calls'} got no answer from the model.`}</p>
+          <Answering question={question.id} shadow={shadow} set={setAnswering} />
         </div>)}
       </div>
     </div>
@@ -226,6 +268,12 @@ function Report({ client, apiUrl, relayUrl, onExpired }: { client: SupabaseClien
       if (error instanceof RelayReportError && error.status === 401) { void onExpired(); return; }
       setError(error instanceof RelayReportError ? error.message : 'The model could not be compared. Please try again.');
     });
+  const setAnswering: SetAnswering = (question, field, promise) => api.answering(question, field, promise)
+    .then(async () => { setError(''); await load(new AbortController().signal); })
+    .catch(error => {
+      if (error instanceof RelayReportError && error.status === 401) { void onExpired(); return; }
+      setError(error instanceof RelayReportError ? error.message : 'Answering could not be changed. Please try again.');
+    });
   const setup = () => {
     setSettingUp(true);
     void api.setup()
@@ -271,7 +319,7 @@ function Report({ client, apiUrl, relayUrl, onExpired }: { client: SupabaseClien
       : <>
         <Section label={`${report.questions_total.toLocaleString()} ${report.questions_total === 1 ? 'question' : 'questions'}`} action={refresh} />
         {report.questions_total > report.questions.length && <p className={workspacePage.notice}>Showing the {report.questions.length} questions with the most recent saved messages.</p>}
-        {report.questions.map((question, index) => <Question key={question.id} question={question} number={index + 1} compare={report.compare ? compare : null} />)}
+        {report.questions.map((question, index) => <Question key={question.id} question={question} number={index + 1} compare={report.compare ? compare : null} setAnswering={setAnswering} />)}
       </>}
   </div>;
 }
