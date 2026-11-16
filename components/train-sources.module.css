@@ -1,5 +1,5 @@
-/* /train: the three sources of training examples as stacked /pricing-style splits. The first, the gateway, is the one we
-   recommend, so its title is set larger; the others are the same row, quieter. */
+/* /train: the three sources of training examples as stacked /pricing-style splits. The first, your coding agent, is the
+   one we recommend, so its title is set larger; the others are the same row, quieter. */
 .sources ol { list-style: none; margin: 0; padding: 0; }
 .sources li + li { border-top: 1px solid var(--zs-line); }
 /* Three classes beat the console shell's quiet h3 rule (.shell .main h3). */

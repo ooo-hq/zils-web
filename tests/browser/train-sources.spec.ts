@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { signIn } from './signed-in';
 
-// Train is where a model starts: it asks where the examples come from, the gateway first. Everything already made, in
+// Train is where a model starts: it asks where the examples come from, your coding agent first. Everything already made, in
 // training or finished, is listed on Models. The gateway is one of Train's sources, so it has no menu entry of its own.
 const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS' };
 const result = (status: string) => ({ delivery: { status, uid: 1, acceptance: { min_accuracy: .8, min_brier_improvement: .01 } }, baseline: { accuracy: .8, brier: .3, skill: .3 }, miners: [{ uid: 1, status: 'evaluated', accuracy: .9, brier: .2 }], weights: {} });
@@ -17,14 +17,15 @@ async function workspace(page: Page, report: unknown = collecting) {
   await page.route('**/v1/relay/report', route => route.fulfill({ headers: cors, json: report }));
 }
 
-test('Train asks where your examples come from, with the gateway first', async ({ page }) => {
+test('Train asks where your examples come from, with your coding agent first', async ({ page }) => {
   await workspace(page);
   await page.goto('/train');
   await expect(page.getByRole('heading', { level: 1, name: 'Train', exact: true })).toBeVisible();
   const sources = page.getByRole('region', { name: 'Where your examples come from' });
-  await expect(sources.getByRole('heading', { level: 3 })).toHaveText(['Your app, through the learning gateway', 'A file or a table', 'Your coding agent or the command line']);
-  const [gateway, file, agent] = [0, 1, 2].map(index => sources.locator('ol > li').nth(index));
-  await expect(gateway.getByText('Recommended', { exact: true })).toBeVisible();
+  await expect(sources.getByRole('heading', { level: 3 })).toHaveText(['Your coding agent or the command line', 'Your app, through the learning gateway', 'A file or a table']);
+  const [agent, gateway, file] = [0, 1, 2].map(index => sources.locator('ol > li').nth(index));
+  await expect(agent.getByText('Recommended', { exact: true })).toBeVisible();
+  await expect(sources.getByText('Recommended', { exact: true })).toHaveCount(1);
   await expect(gateway.getByRole('status')).toHaveText('Collecting. 26 answers saved from 2 questions.');
   await expect(gateway.getByRole('link', { name: 'Open the gateway' })).toHaveAttribute('href', '/gateway');
   await expect(file.getByRole('link', { name: 'Upload a table' })).toHaveAttribute('href', '/train/new');
@@ -41,7 +42,7 @@ test('Train asks where your examples come from, with the gateway first', async (
 test('the gateway source says so when it is not set up or not collecting', async ({ page }) => {
   await workspace(page, { relay: false, saving_since: null, questions_total: 0, questions: [] });
   await page.goto('/train');
-  const gateway = page.getByRole('region', { name: 'Where your examples come from' }).locator('ol > li').first();
+  const gateway = page.getByRole('region', { name: 'Where your examples come from' }).locator('ol > li').nth(1);
   await expect(gateway.getByRole('status')).toHaveText('Not set up yet.');
   await expect(gateway.getByRole('link', { name: 'Set up the gateway' })).toHaveAttribute('href', '/gateway');
   await page.route('**/v1/relay/report', route => route.fulfill({ headers: cors, json: { relay: true, saving_since: null, questions_total: 0, questions: [] } }));
