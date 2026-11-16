@@ -429,3 +429,76 @@ test('shows whether requests have come through, and a card for each tool that op
   await expect(setup.getByText('3,026 requests have passed through.')).toBeVisible();
   await expect(setup.getByText(/Last one around Nov 14, 2026/)).toBeVisible();
 });
+
+test.describe('a compared model answering what it is sure of', () => {
+  const offers = [{ promise: 0.99, cutoff: null }, { promise: 0.98, cutoff: { confidence_at_least: 0.96, asked: 706, agreed: 698 } }, { promise: 0.95, cutoff: { confidence_at_least: 0.84, asked: 798, agreed: 783 } }];
+  const compared = { ...shadow, asked: 1200, agreed: 1130 };
+  const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' };
+  const withShadow = (extra: object) => ({ ...report, compare: true, questions: [{ ...report.questions[0], shadows: [{ ...compared, ...extra }] }] });
+
+  test('the account chooses a promise the comparison supports, confirms, and can stop it again', async ({ page }) => {
+    await signIn(page);
+    let state: object = { offers, answering: null, stopped: null };
+    const sent: unknown[] = [];
+    await page.route('http://127.0.0.1:8999/v1/relay/report', route => route.fulfill({ json: withShadow(state), headers }));
+    await page.route('http://127.0.0.1:8999/v1/relay/questions/*/answering', route => {
+      if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
+      const body = route.request().postDataJSON();
+      sent.push([new URL(route.request().url()).pathname, body]);
+      state = { offers, stopped: null, answering: body.promise ? { promise: body.promise, confidence_at_least: 0.96, since: '2026-11-16T15:00:00+00:00', answered: 0, checked: 0, check_agreed: 0 } : null };
+      return route.fulfill({ headers, json: { promise: body.promise } });
+    });
+    await page.goto('/gateway');
+    const panel = page.getByRole('region', { name: 'Question 1' }).getByRole('group', { name: 'Let this model answer what it is sure of' });
+    await expect(panel.getByText('Your app receives your provider’s answer on every call today.')).toBeVisible();
+    // A promise the comparison does not support yet cannot be chosen; the others say what they rest on.
+    await expect(panel.getByRole('radio', { name: /^99%/ })).toBeDisabled();
+    await expect(panel.getByText('Not supported by the comparison yet.')).toBeVisible();
+    await expect(panel.getByText('Answers when it is 96% or more confident. So far it matched your provider on 698 of 706 such answers.')).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Start answering' })).toBeDisabled();
+    await panel.getByRole('radio', { name: /^98%/ }).check();
+    await panel.getByRole('button', { name: 'Start answering' }).click();
+    // What changes for the app is said before anything is switched.
+    const confirm = panel.getByRole('group', { name: 'Confirm answering' });
+    await expect(confirm.getByText('Your app will receive this model’s answer, not your provider’s, on calls it is at least 96% confident about.')).toBeVisible();
+    expect(sent).toEqual([]);
+    await confirm.getByRole('button', { name: 'Start answering' }).click();
+    const on = page.getByRole('region', { name: 'Question 1' }).getByRole('group', { name: 'Answering what it is sure of' });
+    await expect(on.getByText('Answers calls itself when it is 96% or more confident, to match your provider on at least 98% of them.')).toBeVisible();
+    expect(sent).toEqual([[`/v1/relay/questions/${'e'.repeat(64)}/answering`, { field: 'intent', promise: 0.98 }]]);
+    await on.getByRole('button', { name: 'Stop answering' }).click();
+    await expect(page.getByRole('region', { name: 'Question 1' }).getByRole('group', { name: 'Let this model answer what it is sure of' })).toBeVisible();
+    expect(sent[1]).toEqual([`/v1/relay/questions/${'e'.repeat(64)}/answering`, { field: 'intent', promise: null }]);
+  });
+
+  test('while it answers the page shows what it answered and how the checks went', async ({ page }) => {
+    await signIn(page);
+    await answer(page, 200, withShadow({ offers, stopped: null, answering: { promise: 0.98, confidence_at_least: 0.96, since: '2026-11-16T15:00:00+00:00', answered: 1900, checked: 100, check_agreed: 99 } }));
+    await page.goto('/gateway');
+    const on = page.getByRole('region', { name: 'Question 1' }).getByRole('group', { name: 'Answering what it is sure of' });
+    await expect(on.getByText('1,900', { exact: true })).toBeVisible();
+    await expect(on.getByText('99 of 100 checked answers matched your provider (99%).')).toBeVisible();
+    await expect(page.getByText('Your app receives your provider’s answer on every call today.')).toHaveCount(0);
+  });
+
+  test('a model that stopped itself says when and why, and too few compared answers says how many are needed', async ({ page }) => {
+    await signIn(page);
+    await answer(page, 200, withShadow({ offers, answering: null, stopped: { at: '2026-11-16T18:00:00+00:00', promise: 0.99, checked: 120, differed: 5 } }));
+    await page.goto('/gateway');
+    const panel = page.getByRole('region', { name: 'Question 1' }).getByRole('group', { name: 'Let this model answer what it is sure of' });
+    await expect(panel.getByRole('status')).toContainText('It stopped answering by itself');
+    await expect(panel.getByRole('status')).toContainText('5 of 120 checked answers differed from your provider, too many for 99%.');
+    await answer(page, 200, withShadow({ asked: 240, agreed: 230, offers: offers.map(offer => ({ ...offer, cutoff: null })), answering: null, stopped: null }));
+    await page.reload();
+    await expect(panel.getByText('Available after 1,000 compared answers. So far: 240.')).toBeVisible();
+    await expect(panel.getByRole('radio')).toHaveCount(0);
+  });
+
+  test('a service from before answering shows nothing new', async ({ page }) => {
+    await signIn(page);
+    await answer(page, 200, withShadow({}));
+    await page.goto('/gateway');
+    await expect(page.getByRole('row', { name: /99% or more/ })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Let this model answer what it is sure of' })).toHaveCount(0);
+  });
+});

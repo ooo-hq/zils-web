@@ -4,9 +4,16 @@ import type { CsvData } from './training-csv';
 import type { Columns } from './train-table';
 
 const count = z.number().int().nonnegative();
+const share = z.number().min(0).max(1);
 const shadowSchema = z.object({
   field: z.string().min(1), model: z.string().min(1), since: z.string(), asked: count, agreed: count, failed: count,
   by_confidence: z.array(z.object({ confidence_at_least: z.number().min(0).max(1), asked: count, agreed: count })),
+  // Answering in the provider's place. A service from before it sends none of the three.
+  // For each promise an account may choose: the confidence the comparison so far gives, with the counts behind it, or null.
+  offers: z.array(z.object({ promise: share, cutoff: z.object({ confidence_at_least: share, asked: count, agreed: count }).nullable() })).default([]),
+  answering: z.object({ promise: share, confidence_at_least: share, since: z.string(), answered: count, checked: count, check_agreed: count }).nullable().default(null),
+  // Why the model last stopped answering by itself: too many of its checked answers differed.
+  stopped: z.object({ at: z.string(), promise: share, checked: count, differed: count }).nullable().default(null),
 });
 // A run trained from a question: ready once its model can be called, failed if it ended without one.
 const trainingSchema = z.object({ job_id: z.string().uuid(), field: z.string().min(1), name: z.string().min(1), started_at: z.string(), state: z.enum(['training', 'ready', 'failed']), model: z.string().min(1).nullable(),
@@ -39,6 +46,9 @@ export const parseRelayReport = (value: unknown): RelayReport | null => {
 
 /** How often two counts match, as a whole percentage; a dash when there is nothing to compare. */
 export const agreement = (agreed: number, asked: number): string => asked ? `${Math.round(100 * agreed / asked)}%` : '–';
+
+/** Compared answers a model needs before it may be set to answer; the service decides, this is for saying how far off it is. */
+export const ANSWER_FROM_COMPARED = 1000;
 
 /** One row for every answer the model gave, then one per confidence level: how many it gave at least that sure, and how many matched. */
 export function shadowRows(shadow: RelayShadow) {
@@ -140,6 +150,7 @@ export function relayReportApi(rawUrl: string, token: () => Promise<string>, req
           : code === 'no_question' ? 'That gateway question has no saved messages for this account.'
           : code === 'not_ready' ? 'That run’s model is not ready to compare yet.'
           : code === 'no_training' ? 'That run was not trained from a gateway question of this account.'
+          : code === 'not_enough' ? 'The comparison so far does not support that promise. Refresh to see what it supports now.'
           : code === 'collection_on' ? 'Stop collecting before changing the provider.'
           : code === 'provider_fixed' ? 'This gateway’s provider is set by Zils. Ask us to change it.'
           : code === 'no_relay' ? 'The gateway is not set up for this account yet.'
@@ -165,6 +176,11 @@ export function relayReportApi(rawUrl: string, token: () => Promise<string>, req
     note: (question: string, note: RelayTrainingNote) => send(`/v1/relay/questions/${question}/trainings`, done, 'The run could not be linked to its gateway question.', note),
     /** Make a finished run's model the one compared on the question it was trained from. */
     compare: (jobId: string) => send(`/v1/relay/trainings/${z.string().uuid().parse(jobId)}/compare`, done, 'The model could not be compared. Please try again.', {}),
+    /** Set a question's compared model to answer what it is sure of, to match the provider on at least `promise`; null stops it. */
+    answering: async (question: string, field: string, promise: number | null) => {
+      if (!/^[0-9a-f]{64}$/.test(question)) throw new RelayReportError('That gateway question has no compared model for this account.', 404);
+      return send(`/v1/relay/questions/${question}/answering`, value => z.object({ promise: share.nullable() }).safeParse(value).success ? true as const : null, 'Answering could not be changed. Please try again.', { field, promise });
+    },
     /** Point the account's address at another provider it may choose itself. Refused while it collects. */
     provider: (provider: 'openai' | 'anthropic' | 'gemini') => send('/v1/relay/provider', parseRelayStatus, 'The provider could not be changed. Please try again.', { provider }),
     collect: (on: boolean, termsVersion?: string) => send('/v1/relay/collection', parseRelayStatus, unchanged, on ? { collect: true, terms_version: termsVersion } : { collect: false }),

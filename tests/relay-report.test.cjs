@@ -9,6 +9,7 @@ const shadow = {
     { confidence_at_least: 0.9, asked: 22, agreed: 20 }, { confidence_at_least: 0.95, asked: 18, agreed: 17 },
     { confidence_at_least: 0.98, asked: 14, agreed: 14 }, { confidence_at_least: 0.99, asked: 11, agreed: 11 },
   ],
+  offers: [], answering: null, stopped: null,
 };
 const question = {
   id: 'e'.repeat(64), instructions: 'Pick the intent.', fields: { intent: ['card_arrival', 'other'], urgent: [true, false] },
@@ -226,4 +227,35 @@ test('comparison is off unless the report says it is open to the account', () =>
   const base = { relay: true, saving_since: null, questions_total: 0, questions: [] };
   assert.equal(parseRelayReport(base).compare, false);
   assert.equal(parseRelayReport({ ...base, compare: true }).compare, true);
+});
+
+test('a compared model carries what each promise would give, what it answers itself and why it stopped', () => {
+  const offers = [{ promise: 0.99, cutoff: null }, { promise: 0.98, cutoff: { confidence_at_least: 0.96, asked: 706, agreed: 698 } }, { promise: 0.95, cutoff: { confidence_at_least: 0.84, asked: 798, agreed: 783 } }];
+  const answering = { promise: 0.98, confidence_at_least: 0.96, since: '2026-11-16T15:00:00+00:00', answered: 1900, checked: 100, check_agreed: 99 };
+  const stopped = { at: '2026-11-16T18:00:00+00:00', promise: 0.99, checked: 120, differed: 5 };
+  const read = extra => parseRelayReport({ relay: true, saving_since: null, questions_total: 1, questions: [{ ...question, shadows: [{ ...shadow, ...extra }] }] }).questions[0].shadows[0];
+  // A service from before answering sends none of the three.
+  const { offers: _o, answering: _a, stopped: _s, ...before } = shadow;
+  const old = parseRelayReport({ relay: true, saving_since: null, questions_total: 1, questions: [{ ...question, shadows: [before] }] }).questions[0].shadows[0];
+  assert.deepEqual([old.offers, old.answering, old.stopped], [[], null, null]);
+  assert.deepEqual(read({ offers, answering: null, stopped }).offers, offers);
+  assert.deepEqual(read({ offers, answering, stopped: null }).answering, answering);
+  assert.deepEqual(read({ offers, answering: null, stopped }).stopped, stopped);
+  assert.equal(parseRelayReport({ relay: true, saving_since: null, questions_total: 1, questions: [{ ...question, shadows: [{ ...shadow, answering: { ...answering, answered: -1 } }] }] }), null);
+});
+
+test('the account sets a question to be answered by its model, or stops it', async () => {
+  const calls = [];
+  const request = async (url, init) => { calls.push([url, init.method, init.body]); return new Response(JSON.stringify(calls.length === 3 ? { error: { code: 'not_enough' } } : { promise: calls.length === 1 ? 0.98 : null }), { status: calls.length === 3 ? 409 : 200 }); };
+  const api = relayReportApi('https://service.test', async () => 'token', request);
+  const site = 'e'.repeat(64);
+  assert.equal(await api.answering(site, 'intent', 0.98), true);
+  assert.equal(await api.answering(site, 'intent', null), true);
+  assert.deepEqual(calls, [
+    [`https://service.test/v1/relay/questions/${site}/answering`, 'POST', '{"field":"intent","promise":0.98}'],
+    [`https://service.test/v1/relay/questions/${site}/answering`, 'POST', '{"field":"intent","promise":null}'],
+  ]);
+  await assert.rejects(api.answering(site, 'intent', 0.99), error => error instanceof RelayReportError && error.status === 409 && error.message === 'The comparison so far does not support that promise. Refresh to see what it supports now.');
+  await assert.rejects(api.answering('nope', 'intent', 0.99), RelayReportError);
+  assert.equal(calls.length, 3);
 });
