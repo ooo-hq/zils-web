@@ -2,19 +2,21 @@ export type ToolLanguage = 'python' | 'javascript' | 'bash';
 export type GatewayToolStep = { title: string; label: string; language: ToolLanguage; code: string };
 export type GatewayTool = { id: string; name: string; tag: string; blurb: string; steps: GatewayToolStep[]; note?: string; checked: string };
 
-export type GatewayProvider = 'openai' | 'anthropic' | 'jev';
+export type GatewayProvider = 'openai' | 'anthropic' | 'gemini' | 'jev';
 type GatewayToolGroup = { label: string; intro: string; tools: GatewayTool[] };
 
 /** The providers a gateway address can pass requests on to. An address goes to one of them. */
 export const gatewayProviders: { id: GatewayProvider; name: string }[] = [
   { id: 'openai', name: 'OpenAI' },
   { id: 'anthropic', name: 'Claude' },
+  { id: 'gemini', name: 'Gemini' },
   { id: 'jev', name: 'Jev' },
 ];
 
 // The example question every card asks. The model is the caller's own: any name their provider accepts.
 const MODEL = 'gpt-6.1-sol';
 const CLAUDE_MODEL = 'claude-opus-5-5';
+const GEMINI_MODEL = 'gemini-flash-latest';
 const ASK = 'Pick the intent of the customer message.';
 const SAID = 'Where is my order?';
 
@@ -26,11 +28,12 @@ const ZOD_TICKET = `z.object({ intent: z.enum(['refund', 'shipping', 'other']) }
  * How to send an app's fixed-answer questions through the gateway, per tool. Each tool's steps, joined
  * in order, are one program that was run against the relay's own decision reader with the package
  * versions in `checked`: the request it sends is one the gateway collects. The provider key is left
- * to the app's environment, as it is today. For Claude and Jev the address is the API root, without /v1.
+ * to the app's environment, as it is today. For Claude, Gemini and Jev the address is the API root, without /v1.
  */
 export function gatewayTools(address: string, provider: GatewayProvider = 'openai'): GatewayToolGroup[] {
   if (provider === 'jev') return jevTools(address);
   if (provider === 'anthropic') return claudeTools(address);
+  if (provider === 'gemini') return geminiTools(address);
   const point = 'Point the client at your gateway';
   const ask = 'Ask for an answer from a fixed list';
   return [
@@ -220,6 +223,71 @@ console.log(reply.parsed_output.intent);` },
       "required": ["intent"],
       "additionalProperties": false
     }}}
+  }'` },
+      ] },
+    ] },
+  ];
+}
+
+/** The same for an app that calls Gemini through Google's own libraries (generateContent): an answer from a fixed list is asked for with a schema. The key stays in a header, never in the address. */
+function geminiTools(address: string): GatewayToolGroup[] {
+  const point = 'Point the client at your gateway';
+  const ask = 'Ask for an answer from a fixed list';
+  return [
+    { label: 'SDKs', intro: 'Call Gemini as you do today, through the gateway.', tools: [
+      { id: 'gemini-python', name: 'Google Gen AI Python', tag: 'generateContent', blurb: 'The official Python library, with a typed answer.', checked: 'google-genai 3.3, pydantic 2.14', steps: [
+        { title: point, label: 'Python', language: 'python', code: `from typing import Literal
+
+from google import genai
+from google.genai import types
+from pydantic import BaseModel
+
+client = genai.Client(http_options=types.HttpOptions(base_url="${address}"))` },
+        { title: ask, label: 'Python', language: 'python', code: `${PYTHON_TICKET}
+
+reply = client.models.generate_content(
+    model="${GEMINI_MODEL}",  # the model you already use
+    contents="${SAID}",
+    config=types.GenerateContentConfig(
+        system_instruction="${ASK}",
+        response_mime_type="application/json",
+        response_schema=Ticket,
+    ),
+)
+print(reply.parsed.intent)` },
+      ] },
+      { id: 'gemini-javascript', name: 'Google Gen AI JavaScript', tag: 'generateContent', blurb: 'The official JavaScript and TypeScript library, with a schema.', checked: '@google/genai 3.3', steps: [
+        { title: point, label: 'TypeScript', language: 'javascript', code: `import { GoogleGenAI, Type } from '@google/genai';
+
+const ai = new GoogleGenAI({ httpOptions: { baseUrl: '${address}' } });` },
+        { title: ask, label: 'TypeScript', language: 'javascript', code: `const reply = await ai.models.generateContent({
+  model: '${GEMINI_MODEL}', // the model you already use
+  contents: '${SAID}',
+  config: {
+    systemInstruction: '${ASK}',
+    responseMimeType: 'application/json',
+    responseSchema: {
+      type: Type.OBJECT,
+      properties: { intent: { type: Type.STRING, enum: ['refund', 'shipping', 'other'] } },
+      required: ['intent'],
+    },
+  },
+});
+console.log(JSON.parse(reply.text).intent);` },
+      ] },
+      { id: 'gemini-curl', name: 'cURL', tag: 'generateContent', blurb: 'The raw request, for any language or a quick test from a terminal.', checked: 'curl 8', steps: [
+        { title: 'Set your gateway address', label: 'Bash', language: 'bash', code: `export ZILS_GATEWAY="${address}"` },
+        { title: ask, label: 'Bash', language: 'bash', code: `curl -s "$ZILS_GATEWAY/v1beta/models/${GEMINI_MODEL}:generateContent" \\
+  -H "x-goog-api-key: $GEMINI_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "systemInstruction": {"parts": [{"text": "${ASK}"}]},
+    "contents": [{"parts": [{"text": "${SAID}"}]}],
+    "generationConfig": {"responseMimeType": "application/json", "responseSchema": {
+      "type": "OBJECT",
+      "properties": {"intent": {"type": "STRING", "enum": ["refund", "shipping", "other"]}},
+      "required": ["intent"]
+    }}
   }'` },
       ] },
     ] },

@@ -48,7 +48,7 @@ export function shadowRows(shadow: RelayShadow) {
 
 // A service from before request counts sends neither count field: that reads as no requests yet.
 // One from before providers sends none: that is an OpenAI gateway. One from before outcomes sends none: nothing counted.
-const statusSchema = z.object({ relay_id: z.string().min(1).nullable(), collecting_since: z.string().nullable(), terms_version: z.string().min(1), requests: count.default(0), last_request_at: z.string().nullable().default(null), provider: z.enum(['openai', 'anthropic', 'jev']).default('openai'), outcomes: z.record(z.string(), count).default({}), outcomes_since: z.string().nullable().default(null) });
+const statusSchema = z.object({ relay_id: z.string().min(1).nullable(), collecting_since: z.string().nullable(), terms_version: z.string().min(1), requests: count.default(0), last_request_at: z.string().nullable().default(null), provider: z.enum(['openai', 'anthropic', 'gemini', 'jev']).default('openai'), outcomes: z.record(z.string(), count).default({}), outcomes_since: z.string().nullable().default(null) });
 export type RelayStatus = z.infer<typeof statusSchema>;
 
 export const parseRelayStatus = (value: unknown): RelayStatus | null => {
@@ -110,7 +110,7 @@ export function gatewayTable(saved: RelayRows): { data: CsvData; columns: Column
   };
 }
 
-/** The base URL a client is pointed at: the account's relay id under the training service. An OpenAI client is given the /v1 root; a Jev client the API root, and adds /v1 itself. */
+/** The base URL a client is pointed at: the account's relay id under the training service. An OpenAI client is given the /v1 root; a Claude, Gemini or Jev client the API root, and adds the version itself. */
 export const relayAddress = (trainingUrl: string, relayId: string, provider: RelayStatus['provider'] = 'openai'): string => `${serviceUrl(trainingUrl)}/relay/${relayId}${provider === 'openai' ? '/v1' : ''}`;
 
 export function relayReportApi(rawUrl: string, token: () => Promise<string>, request: typeof fetch = fetch) {
@@ -166,7 +166,7 @@ export function relayReportApi(rawUrl: string, token: () => Promise<string>, req
     /** Make a finished run's model the one compared on the question it was trained from. */
     compare: (jobId: string) => send(`/v1/relay/trainings/${z.string().uuid().parse(jobId)}/compare`, done, 'The model could not be compared. Please try again.', {}),
     /** Point the account's address at another provider it may choose itself. Refused while it collects. */
-    provider: (provider: 'openai' | 'anthropic') => send('/v1/relay/provider', parseRelayStatus, 'The provider could not be changed. Please try again.', { provider }),
+    provider: (provider: 'openai' | 'anthropic' | 'gemini') => send('/v1/relay/provider', parseRelayStatus, 'The provider could not be changed. Please try again.', { provider }),
     collect: (on: boolean, termsVersion?: string) => send('/v1/relay/collection', parseRelayStatus, unchanged, on ? { collect: true, terms_version: termsVersion } : { collect: false }),
   };
 }

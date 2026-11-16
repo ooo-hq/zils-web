@@ -31,9 +31,9 @@ test('a tool whose default call is not collected says so', () => {
   assert.match(instructor.steps.map(step => step.code).join('\n'), /Mode\.JSON_SCHEMA/);
 });
 
-test('providers: the gateway passes requests on to OpenAI, Claude or Jev', () => {
+test('providers: the gateway passes requests on to OpenAI, Claude, Gemini or Jev', () => {
   const { gatewayProviders } = require('../.private/test-build/gateway-tools.js');
-  assert.deepEqual(gatewayProviders.map(provider => [provider.id, provider.name]), [['openai', 'OpenAI'], ['anthropic', 'Claude'], ['jev', 'Jev']]);
+  assert.deepEqual(gatewayProviders.map(provider => [provider.id, provider.name]), [['openai', 'OpenAI'], ['anthropic', 'Claude'], ['gemini', 'Gemini'], ['jev', 'Jev']]);
 });
 
 test('a Claude account gets the Anthropic libraries, pointed at the gateway root, asking for a fixed answer list', () => {
@@ -50,6 +50,24 @@ test('a Claude account gets the Anthropic libraries, pointed at the gateway root
   }
   assert.match(claude[0].tools[2].steps[1].code, /\$ZILS_GATEWAY\/v1\/messages/);
   assert.equal(new Set([...tools, ...claude.flatMap(group => group.tools)].map(tool => tool.id)).size, tools.length + 3);
+});
+
+test('a Gemini account gets the Google libraries, pointed at the gateway root, asking for a fixed answer list', () => {
+  const root = 'https://training.example/relay/' + 'r'.repeat(40);
+  const gemini = gatewayTools(root, 'gemini');
+  assert.deepEqual(gemini.map(group => [group.label, group.tools.map(tool => tool.name)]), [['SDKs', ['Google Gen AI Python', 'Google Gen AI JavaScript', 'cURL']]]);
+  for (const tool of gemini.flatMap(group => group.tools)) {
+    const code = tool.steps.map(step => step.code).join('\n');
+    assert.ok(tool.steps.length >= 2 && tool.checked, tool.name);
+    // The Google libraries add the API version themselves.
+    assert.ok(code.includes(root) && !code.includes(root + '/v1"') && !code.includes(root + "/v1'"), tool.name);
+    assert.match(code, /refund.*shipping.*other/s, tool.name);
+    // The key stays in the app's environment, and never goes in the address.
+    assert.doesNotMatch(code, /AIza|api_key\s*=|apiKey\s*:|\?key=|gpt-|claude-/, tool.name);
+  }
+  assert.match(gemini[0].tools[2].steps[1].code, /\$ZILS_GATEWAY\/v1beta\/models\/[a-z0-9.-]+:generateContent/);
+  assert.match(gemini[0].tools[2].steps[1].code, /x-goog-api-key: \$GEMINI_API_KEY/);
+  assert.equal(new Set([...tools, ...gemini.flatMap(group => group.tools)].map(tool => tool.id)).size, tools.length + 3);
 });
 
 test('a Jev account gets the Jev libraries, pointed at the gateway root and otherwise left alone', () => {
