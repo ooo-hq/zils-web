@@ -21,7 +21,7 @@ test('Train asks where your examples come from, with the gateway first', async (
   await workspace(page);
   await page.goto('/train');
   const sources = page.getByRole('region', { name: 'Where your examples come from' });
-  await expect(sources.getByRole('heading', { level: 3 })).toHaveText(['Your app, through the gateway', 'A file or a table', 'Your coding agent or the command line']);
+  await expect(sources.getByRole('heading', { level: 3 })).toHaveText(['Your app, through the learning gateway', 'A file or a table', 'Your coding agent or the command line']);
   const [gateway, file, agent] = [0, 1, 2].map(index => sources.locator('ol > li').nth(index));
   await expect(gateway.getByText('Recommended', { exact: true })).toBeVisible();
   await expect(gateway.getByRole('status')).toHaveText('Collecting. 26 answers saved from 2 questions.');
@@ -54,7 +54,7 @@ test('the gateway is part of Train: no menu entry, Train stays current, and a wa
   const nav = page.getByRole('navigation', { name: 'Workspace navigation' });
   await expect(nav.getByRole('link')).toHaveText(['Home', 'Train', 'Models', 'Playground', 'Usage', 'API keys', 'Documentation']);
   await expect(nav.getByRole('link', { name: 'Train', exact: true })).toHaveAttribute('aria-current', 'page');
-  await expect(page.getByRole('heading', { level: 1, name: 'Gateway' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Learning gateway', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Back to Train' }).click();
   await expect(page).toHaveURL(/\/train$/);
 });

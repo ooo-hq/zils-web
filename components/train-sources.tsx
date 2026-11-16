@@ -36,8 +36,8 @@ export function TrainSources({ apiUrl, token }: { apiUrl?: string | null; token:
       <li className={workspacePage.split} data-preferred>
         <div className={css.head}>
           <span className={workspacePage.status} data-tone="busy">Recommended</span>
-          <h3>Your app, through the gateway</h3>
-          <p>Point your app at your gateway address and keep using your provider. Zils saves each decision your provider makes, then trains a model from them. There is no file to prepare.</p>
+          <h3>Your app, through the learning gateway</h3>
+          <p>Point your app at your learning gateway address and keep using your provider. Zils saves each decision your provider makes, then trains a model from them. There is no file to prepare.</p>
         </div>
         <div className={css.act}>
           <p role="status" className={css.state} data-on={report?.saving_since ? '' : undefined}>{report ? gatewayStatus(report) : ''}</p>
