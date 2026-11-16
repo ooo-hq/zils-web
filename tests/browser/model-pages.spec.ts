@@ -92,7 +92,7 @@ test('the model page holds everything about a model, in the workspace design', a
   await expect(candidates.nth(2)).toContainText(/2 · selected.*evaluated.*91\.00%/);
 });
 
-test('a finished model has one page: its run link and its history row both open the model page', async ({ page }) => {
+test('a finished model has one page: its run link and its row on Models both open the model page', async ({ page }) => {
   const control = await fixture(page);
   // An old run link, from an email or a bookmark, lands on the model.
   await page.goto(`/train?run=${id}`);
@@ -101,8 +101,8 @@ test('a finished model has one page: its run link and its history row both open 
   await expect(page.getByRole('region', { name: 'Access this model' })).toBeVisible();
   // The model page no longer sends anyone back to a second page about the same model.
   await expect(page.locator(`a[href*="/train?run=${id}"]`)).toHaveCount(0);
-  await page.goto('/train');
-  await expect(page.getByRole('region', { name: 'Run history' }).getByRole('link', { name: new RegExp(job.name) })).toHaveAttribute('href', path);
+  await page.goto('/models');
+  await expect(page.getByRole('region', { name: 'Your models' }).getByRole('link', { name: job.name, exact: true })).toHaveAttribute('href', path);
   expect(control.writes).toEqual([]);
 });
 
@@ -224,8 +224,8 @@ for (const target of [path, `/train?run=${id}`]) test(`changing accounts during 
 test('activation and approval are distinct: accepted stats are visible before API access', async ({ page }) => {
   const control = await fixture(page, { activating: true });
   await page.clock.install();
-  await page.goto('/train');
-  await page.getByRole('region', { name: 'Run history' }).getByRole('link').click();
+  await page.goto('/models');
+  await page.getByRole('region', { name: 'In progress' }).getByRole('link').click();
   await expect(page.getByRole('region', { name: 'Model activation' })).toContainText('Preparing API access');
   await expect(page.getByRole('region', { name: 'How this model performed' }).getByText('91.00%', { exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Access this model' })).toHaveCount(0);
@@ -288,7 +288,8 @@ test('training index stays compact inside the workspace sidebar', async ({ page 
   await fixture(page);
   await page.setViewportSize({ width: 1280, height: 1000 });
   await page.goto('/train');
-  await expect(page.getByRole('region', { name: 'Run history' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Where your examples come from' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Run history' })).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Your models' })).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Use your model' })).toHaveCount(0);
   await expect(page.getByText('Evaluation and technical details')).toHaveCount(0);

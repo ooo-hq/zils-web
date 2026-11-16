@@ -11,9 +11,10 @@ import Link from 'next/link';
 import { PageHero, Section, workspacePage } from '@/components/workspace-page';
 import { WorkspaceLoading, LinkLoading } from '@/components/workspace-loading';
 import { TrainingGuide } from '@/components/training-guide';
-import { AgentTrainingCard } from '@/components/agent-training-card';
+import { RunRows } from '@/components/run-rows';
+import { TrainSources } from '@/components/train-sources';
 import { TrainingIntake } from '@/components/training-intake';
-import { Plus, ArrowUpRight, ArrowRight, ImageIcon, MessageSquareText, FlaskConical, GraduationCap, KeyRound, X } from 'lucide-react';
+import { ArrowRight, ImageIcon, MessageSquareText, FlaskConical, GraduationCap, KeyRound, X } from 'lucide-react';
 import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import * as Dialog from '@radix-ui/react-dialog';
 import { TrainingRunStatus } from '@/components/training-run-status';
@@ -305,19 +306,9 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
       </details>
     </>;
   }
-  function runRows(items: Job[], title: string) {
-    if (!items.length) return null;
-    return <section className={styles.runHistory} aria-label={title}><Section label={title} action={title === 'Run history' && <button onClick={refresh} disabled={busy || refreshing}>{refreshing ? 'Checking…' : 'Refresh runs'}</button>} /><ul>{items.map(job => <li key={job.id}>
-      <Link className={styles.historyRow} href={canDownload(job) ? `/models/${job.id}` : `/train?run=${job.id}`}>
-        <span><strong>{job.name}</strong>{job.created_at && <time dateTime={job.created_at}>{new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time>}{tierLabel(job) && <small>{tierLabel(job)}</small>}</span>
-        <span className={`${styles.historyStatus} ${workspacePage.status}`} data-tone={trainingProgress(job).tone}>{trainingProgress(job).label}<LinkLoading /><ArrowUpRight size={16} aria-hidden="true" /></span>
-      </Link>
-    </li>)}</ul></section>;
-  }
   return <Sheet open={panelOpen} onOpenChange={open => { if (open) focusSubmitted.current = false; setPanelOpen(open); }}>
-    <PageHero title={runId ? 'Training run' : 'Training'} intro={runId ? 'The progress, evaluation, and files for this run.' : 'Start a training run and follow it until your model is ready.'}
-      back={runId && <Link href="/train" className={styles.textButton}>Back to Training<LinkLoading /></Link>}
-      action={!runId && <Link className={styles.button} href="/train/new"><Plus size={16} aria-hidden="true" />Train a model</Link>} />
+    <PageHero title={runId ? 'Training run' : 'Training'} intro={runId ? 'The progress and evaluation of this run.' : 'A Zils model learns one decision from examples of it being made. Choose where yours come from.'}
+      back={runId && <Link href="/train" className={styles.textButton}>Back to Training<LinkLoading /></Link>} />
     {bulkImport && <p className={workspacePage.notice}><SheetTrigger asChild><button className={styles.textButton} disabled={busy}>Continue bulk import</button></SheetTrigger> · Import a spreadsheet, prepared datasets, or labeled photos.</p>}
     {process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && <p className={workspacePage.notice}>Billing test preview. Submitting a standard run reserves one included run or $2 in test credit. <Link href="/billing" className={styles.textButton}>View credit and billing</Link>.</p>}
     {error && <p className={workspacePage.notice} role="alert">{error}{needsCredit && <> <Link href="/billing" className={styles.textButton}>Add credit</Link>.</>}</p>}
@@ -325,12 +316,13 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     {busy && cancellable && <button type="button" className={styles.secondary} onClick={() => operation.current?.abort()}>Stop upload</button>}
     {refreshError && !runId && history.length > 0 && !selected && <p role="status" className={workspacePage.notice}>Connection interrupted. Showing your last loaded runs; we’ll retry automatically.</p>}
     <div className={`${styles.workspace} ${workspacePage.stack}`}>
-      {!runId && !loading && <AgentTrainingCard />}
       {loading || hasModel ? <WorkspaceLoading label={hasModel ? 'Loading your model' : runId ? 'Loading your training run' : 'Loading your models and runs'} /> : !selected && (runId || !history.length) ? <section className={workspacePage.empty}>
-        <Section label={runId ? 'Run details' : 'Get started'} />
-        <h2>{runId ? 'Run unavailable' : refreshError ? 'Your runs could not be loaded.' : 'Train your first model.'}</h2>
-        <p>{runId ? 'Return to Training to choose a run, or try loading it again.' : refreshError ? 'Try checking again in a moment.' : 'Bring a decision and a few reviewed examples. Zils will guide you through the rest.'}</p>
-        {refreshError || runId ? <button className={styles.secondary} onClick={refresh} disabled={refreshing}>Try again</button> : <Link className={styles.secondary} href="/train/teach">Get started</Link>}
+        {(runId || refreshError) && <>
+          <Section label={runId ? 'Run details' : 'Your runs'} />
+          <h2>{runId ? 'Run unavailable' : 'Your runs could not be loaded.'}</h2>
+          <p>{runId ? 'Return to Training to choose a run, or try loading it again.' : 'Try checking again in a moment.'}</p>
+          <button className={styles.secondary} onClick={refresh} disabled={refreshing}>Try again</button>
+        </>}
         <Dialog.Root open={!welcomeSeen && !runId && !refreshError} onOpenChange={open => { if (!open) dismissWelcome(); }}>
           {/* No portal: the dialog stays inside the console shell so it inherits the brand tokens. */}
           <Dialog.Overlay className={styles.welcomeOverlay} />
@@ -354,8 +346,9 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
           <p className={styles.statusFreshness} data-stale={refreshError}>{refreshError ? 'Connection interrupted. Showing the last known status; we’ll retry automatically.' : <>Last checked {checkedAt ? new Date(checkedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'just now'}. {!terminal(selected) && 'Updates automatically.'}</>}</p>
         </section>
       </div> : null}
-      {!runId && runRows(jobs.filter(job => job.id !== selected?.id && !terminal(job)), 'Other active runs')}
-      {!runId && runRows(history.filter(job => terminal(job)), 'Run history')}
+      {!runId && <RunRows items={jobs.filter(job => job.id !== selected?.id && !terminal(job))} title="Other active runs" />}
+      {/* A run in training comes first; below it, or alone, the ways to start one. */}
+      {!runId && !loading && <TrainSources apiUrl={config.decisionApiUrl} token={imageToken} />}
     </div>
     {!runId && imagesAvailable && config.decisionApiUrl && <details className={imageStyles.stockTest}><summary>Test images with the starting model</summary><p>Try a batch or a single photo. For a trained model, choose View model above.</p><ImageDecisionPanel owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storage={config.storage} /></details>}
     {intakeMode === 'choose' && <SheetContent className={`${styles.page} ${styles.trainingSheet}`}>

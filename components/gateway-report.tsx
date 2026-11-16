@@ -5,7 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useAuthSession } from '@/components/auth-session';
 import { HighlightedCode } from '@/components/highlighted-code';
-import { WorkspaceLoading } from '@/components/workspace-loading';
+import { LinkLoading, WorkspaceLoading } from '@/components/workspace-loading';
 import { PageHero, Section, workspacePage } from '@/components/workspace-page';
 import { gatewayProviders, gatewayTools, type GatewayTool } from '@/lib/gateway-tools';
 import { relayAddress, relayReportApi, RelayReportError, shadowRows, type RelayQuestion, type RelayReport, type RelayStatus, outcomeRows, TRAIN_FROM_ROWS } from '@/lib/relay-report';
@@ -104,6 +104,8 @@ function ToolSteps({ tool, address }: { tool: GatewayTool; address: string }) {
 
 type Collect = (on: boolean, termsVersion?: string) => Promise<void>;
 type Choose = (provider: 'openai' | 'anthropic') => Promise<void>;
+
+const BACK = <Link href="/train" className={training.textButton}>Back to Train<LinkLoading /></Link>;
 
 /** Setup in the order it has to happen: the provider, then the address in the app, then collecting. The provider comes first
     because the address and every saved answer follow from it; it is locked while collecting, and unlocking means stopping, which deletes. */
@@ -252,7 +254,7 @@ function Report({ client, apiUrl, relayUrl, onExpired }: { client: SupabaseClien
   const refresh = <button disabled={loading} onClick={() => { setLoading(true); void load(new AbortController().signal); }}>{loading ? 'Refreshing…' : 'Refresh'}</button>;
 
   return <div>
-    <PageHero title="Gateway" intro={INTRO} />
+    <PageHero title="Gateway" intro={INTRO} back={BACK} />
     {error && <p className={workspacePage.notice} role="alert">{error}</p>}
     {fresh && status?.relay_id && <p className={workspacePage.notice} role="status">Your gateway address is ready. It starts working within a minute.</p>}
     {switched && status?.relay_id && <p className={workspacePage.notice} role="status">Your address now goes to {switched}. The address below is the one a {switched} client needs. The switch applies within a minute.</p>}

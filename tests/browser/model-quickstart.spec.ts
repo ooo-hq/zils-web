@@ -115,8 +115,7 @@ test('multiple named models fit on mobile and preserve full IDs in technical det
   await expect(library.getByRole('link', { name: 'View model' })).toHaveCount(2);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await library.screenshot({ path: '.private/model-library-mobile.png' });
-  await page.goto('/train');
-  await page.getByRole('region', { name: 'Run history' }).getByRole('link', { name: /support-actions/ }).click();
+  await library.getByRole('link', { name: 'support-actions', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Files and details' }).getByText(modelId, { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
@@ -125,7 +124,8 @@ test('finished models stay out of the index and open on their model page', async
   const writes = await workspace(page, 'ready', false, true);
   await expect(page.getByRole('region', { name: 'Use your model' })).toHaveCount(0);
   await expect(page.locator('#current-run-title')).toHaveCount(0);
-  const link = page.getByRole('region', { name: 'Run history' }).getByRole('link', { name: /support-actions/ });
+  await page.goto('/models');
+  const link = page.getByRole('region', { name: 'Your models' }).getByRole('link', { name: 'support-actions', exact: true });
   await expect(link).toHaveAttribute('href', `/models/${id}`);
   await link.focus(); await page.keyboard.press('Enter');
   await expect(page).toHaveURL(new RegExp(`/models/${id}$`));
@@ -141,7 +141,8 @@ test('finished models stay out of the index and open on their model page', async
 test('compact model names and highlighted examples preserve the exact copied code in both themes', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await workspace(page, 'ready', true, true);
-  await page.getByRole('region', { name: 'Run history' }).getByRole('link', { name: /support-actions/ }).click();
+  await page.goto('/models');
+  await page.getByRole('region', { name: 'Your models' }).getByRole('link', { name: 'support-actions', exact: true }).click();
   const example = page.getByRole('region', { name: 'Use your model' });
   await expect(example.getByLabel('API model name')).toHaveText('support-actions-10000000');
   await expect(example.locator('textarea')).toHaveCount(0);

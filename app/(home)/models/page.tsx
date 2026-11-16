@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default function ModelsPage() {
   const config = trainingConfig();
   return <ConsoleShell bleed className={styles.page}>
-    <PageHero title="Models" intro="Models trained on your examples. Call them by API name from your app." action={<Link className={styles.button} href="/train/new"><Plus size={16} aria-hidden="true" />Train a model</Link>} />
+    <PageHero title="Models" intro="Everything you have trained: models ready to call by API name, runs still in progress, and runs that gave no model." action={<Link className={styles.button} href="/train"><Plus size={16} aria-hidden="true" />Train a model</Link>} />
     {config ? <WorkspaceModels config={config} /> : <><Section label="Not available" /><p className={workspacePage.sub}>This environment is not connected to the training service.</p></>}
   </ConsoleShell>;
 }
