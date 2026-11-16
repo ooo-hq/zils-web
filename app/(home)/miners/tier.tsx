@@ -14,8 +14,10 @@ const when = (iso: string) => new Intl.DateTimeFormat('en-US', { month: 'short',
 const slice = (i: number, n: number) => ({ '--n': n, '--pos': `${n === 1 ? 50 : (i / (n - 1)) * 100}%` }) as CSSProperties;
 
 const isHouse = (seat: Seat) => seat.kind === 'house';
-function role(seat: Seat) {
+// With a weekly soup (ZIL-205) tonight's parts hold no paid seat: the weekly soup's members do.
+function role(seat: Seat, weekly: boolean) {
   if (isHouse(seat)) return 'House · never paid';
+  if (weekly) return 'In tonight’s soup';
   const pay = !seat.paid ? 'Unpaid' : seat.kind === 'scout' ? 'Scout seat, a quarter share' : 'Seat';
   return seat.crowned ? `${pay} · Crown` : pay;
 }
@@ -34,11 +36,22 @@ function Recipe({ view }: { view: TierView }) {
       {view.seats.map(seat => <li key={seat.body} data-part={isHouse(seat) ? 'house' : 'miner'} style={tint(seat)}>
         {seat.repo ? <a className={s.partName} href={`https://huggingface.co/${seat.repo}`}>{seat.name}</a> : <span className={s.partName}>{seat.name}</span>}
         <span className={s.partBy}>by {seat.maker.length > 24 ? `${seat.maker.slice(0, 6)}…${seat.maker.slice(-4)}` : seat.maker}</span>
-        <span className={s.partRole}>{role(seat)}</span>
+        <span className={s.partRole}>{role(seat, view.weekly)}</span>
         <span className={s.lift} title="What the soup loses without this body, to 0.5 point">{signed(seat.contribution)}</span>
       </li>)}
     </ol>
   </>;
+}
+
+/** The tier's weekly soup: its members and which hold a paid seat this week. */
+function Week({ week }: { week: NonNullable<TierView['week']> }) {
+  const status = (seat: (typeof week.seats)[number]) =>
+    seat.kind === 'house' ? 'house, never paid' : seat.closed ? 'stopped: its repo is no longer public' : seat.paid ? 'paid seat' : 'unpaid';
+  return <p className={s.note}>
+    <b>Weekly soup, week {week.id.slice(-2)}</b>{week.keptFrom && <> (kept from week {week.keptFrom.slice(-2)})</>}:{' '}
+    {week.seats.map((seat, i) => <span key={seat.body}>{i > 0 && '; '}{seat.name} ({status(seat)}, {signed(seat.contribution)})</span>)}.
+    {' '}Its seats are paid until the next weekly soup.
+  </p>;
 }
 
 function Pot({ tier, note, closed }: { tier: Tier; note: string | null; closed: boolean }) {
@@ -114,8 +127,11 @@ export function TierSoup({ tier, view, feed, queue, live }: { tier: Tier; view: 
     {live && !later && <Live live={live} />}
     {tonight && view ? <>
       <Recipe view={view} />
+      {view.week && <Week week={view.week} />}
       <p className={s.note}>
-        {view.crown ? <>Crown: <b>{view.crown.name}</b>. </> : 'No crown tonight: no body beat every house model and the soup alone by 1.2. '}
+        {view.weekly
+          ? view.joins.length ? <>Joined tonight: {view.joins.map(j => j.name).join(', ')}, paid once from tonight’s 20%. </> : 'No new body joined tonight; tonight’s 20% burns. '
+          : view.crown ? <>Crown: <b>{view.crown.name}</b>. </> : 'No crown tonight: no body beat every house model and the soup alone by 1.2. '}
         Round {tonight.round}, finished {when(tonight.finished)}.
         {view.decision && ` Seats decided on ${view.decision.rounds} ${view.decision.rounds === 1 ? 'round' : 'rounds'}, ${view.decision.items.toLocaleString('en-US')} items.`}
       </p>

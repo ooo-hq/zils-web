@@ -17,7 +17,7 @@ const KEY = 'zils-miner-dashboard';
 const DOCS = 'https://docs.zils.ai/operations/soup';
 const short = (hotkey: string) => `${hotkey.slice(0, 6)}…${hotkey.slice(-4)}`;
 const percent = (share: number) => share > 0 ? `${Number((share * 100).toFixed(2))}%` : '—';
-const SEAT = { crown: 'Crown', seat: 'Paid seat', unpaid: 'In the soup, unpaid' } as const;
+const SEAT = { crown: 'Crown', seat: 'Paid seat', unpaid: 'In the soup, unpaid', joined: 'Joined, paid once' } as const;
 
 /** The link's token: read from the address once, kept for this tab, and taken out of the address bar. */
 function linkToken() {
@@ -171,6 +171,11 @@ export function MinerDashboardView() {
 
     <SectionRow n="03" label="Seats and pay" note="Public feed" />
     <section aria-label="Seats and pay" className={s.split}>
+      {soup !== null && history.week.length > 0 && <ul className={s.quiet} aria-label="Weekly seats">
+        {history.week.map(w => <li key={`${w.tier}:${w.body}`}>
+          {w.tier}, week {w.week}: <code>{w.body.slice(0, 12)}</code> {w.closed ? 'stopped: its repo is no longer public' : w.share > 0 ? `holds a paid seat, ${percent(w.share)} of the pool` : 'is in the weekly soup, unpaid'} (contribution {w.contribution}).
+        </li>)}
+      </ul>}
       {soup === null ? <p className={s.quiet}>The soup feed is unavailable right now.</p>
         : history.rows.length === 0 ? <p className={s.quiet}>No body of this hotkey has sat in a soup in the rounds the public feed holds.</p>
         : <>
@@ -213,7 +218,7 @@ export function MinerDashboardView() {
       <div className={s.notes}>
         <p><b>Right now</b> is live, from the chain and tonight’s public soup feed. Everyone can see it on <Link href="/miners">the miners page</Link>.</p>
         <p><b>The round report</b> comes from the validator, for your hotkey only, and is as it was when the link was made. It covers the newest finished round of each pool. Scores are rounded to half a point, and a score that missed its bar is always shown below the bar.</p>
-        <p><b>Seats and pay</b> lists the rounds in the public feed where your body was in a soup. Contribution is what the soup loses without your body. Share is the part of that round’s emissions your seat carried, and the crown if you held it. An amount in TAO is not shown yet.</p>
+        <p><b>Seats and pay</b> lists the rounds in the public feed where your body was in a soup. Contribution is what the soup loses without your body. Share is the part of that round’s emissions your seat carried, and the crown if you held it. Once a tier has a weekly soup, its seats are paid for the week and listed above the table, and a round pays only the bodies that joined its soup that night. An amount in TAO is not shown yet.</p>
         <p><b>Customer jobs</b> are listed without their customer or data. Skill is how far your adapter beat the job’s baseline on its held-out test set. Pay for customer jobs is not shown yet.</p>
         <p>Anyone who has the link can read this page until it expires. <a href={DOCS}>Soup guide</a></p>
       </div>
