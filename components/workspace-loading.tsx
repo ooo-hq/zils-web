@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useLinkStatus } from 'next/link';
-import { loaderFrame, LOADER_TICK_MS, LOADER_TICKS, LOADER_WORD } from '@/lib/type-loader';
+import { loaderFrame, LOADER_TICK_MS, LOADER_TICKS, LOADER_WORD, resumeTick } from '@/lib/type-loader';
 import styles from './workspace-loading.module.css';
 
 export function LinkLoading() {
@@ -10,13 +10,16 @@ export function LinkLoading() {
   return <span className={styles.linkIndicator} data-pending={pending} aria-hidden="true" />;
 }
 
+// The tick of the loader last on screen, shared so the next one can carry on from it.
+let last: { tick: number; at: number } | null = null;
+
 /** Starts resolved so the server render matches; decodes once mounted, unless motion is reduced. */
 function ZilsTypeLoader() {
   const [tick, setTick] = useState(LOADER_TICKS - 1);
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    let t = LOADER_TICKS - 1;
-    const timer = window.setInterval(() => setTick(++t), LOADER_TICK_MS);
+    let t = resumeTick(last, Date.now());
+    const timer = window.setInterval(() => { setTick(++t); last = { tick: t, at: Date.now() }; }, LOADER_TICK_MS);
     return () => window.clearInterval(timer);
   }, []);
   return <span className={styles.word} aria-hidden="true">

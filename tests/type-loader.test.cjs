@@ -30,3 +30,15 @@ test('letters lock left to right and then spell Zils', () => {
 test('the loop restarts after one cycle', () => {
   assert.deepEqual(loaderFrame(LOADER_TICKS, first), loaderFrame(0, first));
 });
+
+// A page can swap one loader for the next while it opens (the route's, then the page's own). The second one carries on
+// from where the first stopped, so a person sees one loader, not the word decoding again.
+test('a loader that replaces one just removed carries on from its tick', () => {
+  const { resumeTick, LOADER_TICK_MS } = require('../.private/test-build/type-loader.js');
+  const start = LOADER_TICKS - 1;
+  assert.equal(resumeTick(null, 1000), start);
+  assert.equal(resumeTick({ tick: start + 12, at: 1000 }, 1000 + LOADER_TICK_MS), start + 13);
+  assert.equal(resumeTick({ tick: start + 12, at: 1000 }, 1000 + 4 * LOADER_TICK_MS), start + 16);
+  // Long after the last loader went away, a new one starts from the beginning.
+  assert.equal(resumeTick({ tick: start + 12, at: 1000 }, 3000), start);
+});
