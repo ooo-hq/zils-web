@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { serviceUrl } from './training';
 import type { CsvData } from './training-csv';
 import type { Columns } from './train-table';
+import type { GatewayProvider } from './gateway-tools';
 
 const count = z.number().int().nonnegative();
 const share = z.number().min(0).max(1);
@@ -182,7 +183,7 @@ export function relayReportApi(rawUrl: string, token: () => Promise<string>, req
       return send(`/v1/relay/questions/${question}/answering`, value => z.object({ promise: share.nullable() }).safeParse(value).success ? true as const : null, 'Answering could not be changed. Please try again.', { field, promise });
     },
     /** Point the account's address at another provider it may choose itself. Refused while it collects. */
-    provider: (provider: 'openai' | 'anthropic' | 'gemini') => send('/v1/relay/provider', parseRelayStatus, 'The provider could not be changed. Please try again.', { provider }),
+    provider: (provider: GatewayProvider) => send('/v1/relay/provider', parseRelayStatus, 'The provider could not be changed. Please try again.', { provider }),
     collect: (on: boolean, termsVersion?: string) => send('/v1/relay/collection', parseRelayStatus, unchanged, on ? { collect: true, terms_version: termsVersion } : { collect: false }),
   };
 }
