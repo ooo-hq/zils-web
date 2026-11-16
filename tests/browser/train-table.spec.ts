@@ -15,7 +15,7 @@ async function workspace(page: Page) {
   await page.addInitScript(({ user, expires }) => {
     localStorage.setItem('zils-training-auth', JSON.stringify({ user, access_token: `${btoa('{"alg":"HS256"}')}.${btoa(JSON.stringify({ sub: user.id, exp: expires }))}.fixture`, refresh_token: 'fixture', expires_at: expires, expires_in: 3600, token_type: 'bearer' }));
   }, { user, expires });
-  const state = { created: undefined as Record<string, unknown> | undefined, uploads: {} as Record<string, string>, status: 'uploading' };
+  const state = { created: undefined as Record<string, unknown> | undefined, uploads: {} as Record<string, string>, status: 'uploading', hold: null as Promise<void> | null };
   const job = () => ({ id: jobId, name: String(state.created?.name || 'run'), status: state.status });
   const grant = (split: string) => ({ url: `http://127.0.0.1:8998/storage/v1/object/upload/sign/fez-training-data/${jobId}/inputs/${split}.jsonl`, method: 'PUT', headers: { 'Content-Type': 'application/octet-stream', 'x-upsert': 'false' } });
   await page.route('**/*', async route => {
@@ -32,7 +32,7 @@ async function workspace(page: Page) {
       return route.fulfill({ headers, json: { job: job(), uploads: Object.fromEntries(['train', 'calibration', 'test'].map(s => [s, grant(s)])) } });
     }
     if (path === `/v1/jobs/${jobId}`) return route.fulfill({ headers, json: { job: job() } });
-    if (path === `/v1/jobs/${jobId}/submit`) { state.status = 'validating'; return route.fulfill({ headers, json: { job: job() } }); }
+    if (path === `/v1/jobs/${jobId}/submit`) { await state.hold?.catch(() => {}); state.status = 'validating'; return route.fulfill({ headers, json: { job: job() } }); }
     if (request.method() === 'PUT' && path.endsWith('.jsonl')) { state.uploads[path.split('/').at(-1)!.replace('.jsonl', '')] = request.postData()!; return route.fulfill({ headers, json: {} }); }
     return route.fulfill({ status: 404, headers, json: {} });
   });
@@ -85,6 +85,46 @@ test('a spreadsheet becomes a training run on one screen', async ({ page }) => {
   expect(JSON.stringify(rows[0])).toContain('Which team?');
   expect(state.uploads.train + state.uploads.test).not.toContain('Raj');  // the give-away column never left the browser
   expect(state.uploads.train).not.toContain('T-1,');
+});
+
+test('Start training opens a dialog that shows where the run is, until the run opens', async ({ page }) => {
+  const state = await workspace(page);
+  let release = () => {};
+  state.hold = new Promise(resolve => { release = resolve; });
+  await page.getByLabel('Choose a file of examples').setInputFiles({ name: 'tickets.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
+  await page.getByRole('button', { name: 'Train', exact: true }).click();
+  await page.getByRole('radio', { name: /^Private/ }).check();
+  await page.getByLabel('I am authorized to share these examples.', { exact: false }).check();
+  await page.getByRole('button', { name: 'Start training', exact: true }).click();
+  // The page behind is out of reach while the run is being sent; the dialog names the run and the step it is on.
+  const dialog = page.getByRole('dialog', { name: 'Starting your training run' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText('tickets-team')).toBeVisible();
+  const steps = dialog.getByRole('list', { name: 'Steps' }).getByRole('listitem');
+  await expect(steps).toHaveText(['Save the run', 'Upload your examples', 'Hand it over for checking', 'Open the run']);
+  await expect(steps.nth(2)).toHaveAttribute('aria-current', 'step');
+  await expect(dialog.getByRole('status')).toHaveText('Submitting for validation…');
+  await expect(dialog.getByRole('button', { name: 'Stop upload' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Back', exact: true })).toHaveCount(0);
+  release();
+  await expect(page).toHaveURL(`/train?run=${jobId}`);
+});
+
+test('stopping a run from the dialog closes it and says what was kept', async ({ page }) => {
+  const state = await workspace(page);
+  state.hold = new Promise(() => {});
+  await page.getByLabel('Choose a file of examples').setInputFiles({ name: 'tickets.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
+  await page.getByRole('button', { name: 'Train', exact: true }).click();
+  await page.getByRole('radio', { name: /^Private/ }).check();
+  await page.getByLabel('I am authorized to share these examples.', { exact: false }).check();
+  await page.getByRole('button', { name: 'Start training', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Stop upload' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  const after = page.getByRole('group', { name: 'Your saved run' });
+  await expect(after.getByRole('alert')).toHaveText('Upload stopped. Any saved run and completed uploads remain available.');
+  await expect(after.getByRole('link', { name: 'Open saved run' })).toBeVisible();
+  await expect(after.getByRole('button', { name: 'Download train.jsonl' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Resume training submission', exact: true })).toBeEnabled();
 });
 
 test('saved gateway answers load as the table and train privately', async ({ page }) => {
