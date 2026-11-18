@@ -40,7 +40,7 @@ export function TrainSources({ apiUrl, token }: { apiUrl?: string | null; token:
           <p>Your coding agent can turn a spreadsheet or export into training data, check the cost and start the run. Zils tells it to ask you before choosing open or private training, and it can’t spend more than the limit you agree.</p>
           <p className={workspacePage.fine}>Needs Node.js 20 and Python 3.11 or later. Runs it starts appear on Models.</p>
         </div>
-        <div><AgentSteps ask="Train a Zils model on tickets.csv that decides the team." /></div>
+        <div><AgentSteps ask="Help me train a Zils model. First check Zils is connected and I’m signed in, then ask me what it should decide and which data to use." /></div>
       </li>
       <li className={workspacePage.split}>
         <div className={css.head}>

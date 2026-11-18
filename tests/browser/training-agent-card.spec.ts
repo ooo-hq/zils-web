@@ -19,7 +19,7 @@ test('Training offers the commands to train with Claude Code or Codex', async ({
   await expect(card.getByRole('button', { name: 'Claude Code' })).toHaveAttribute('aria-pressed', 'true');
   await expect(card.getByLabel('Add Zils to your agent')).toHaveText('$ claude mcp add zils -- npx -y @zils/cli mcp');
   await expect(card.getByLabel('Sign in once')).toHaveText('$ npx -y @zils/cli login');
-  await expect(card).toContainText('Train a Zils model on tickets.csv that decides the team.');
+  await expect(card).toContainText('Help me train a Zils model. First check Zils is connected and I’m signed in, then ask me what it should decide and which data to use.');
 
   await card.getByRole('button', { name: 'Codex' }).click();
   await expect(card.getByRole('button', { name: 'Codex' })).toHaveAttribute('aria-pressed', 'true');
