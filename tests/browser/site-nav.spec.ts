@@ -119,3 +119,18 @@ test('Menu button is hidden at 1440px', async ({ page }) => {
   await page.goto('/model');
   await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeHidden();
 });
+
+test('Discord icon link sits next to the theme toggle', async ({ page }) => {
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/pricing');
+    const discord = page.locator('header').getByRole('link', { name: 'Discord', exact: true });
+    await expect(discord).toBeVisible();
+    await expect(discord).toHaveAttribute('href', /^https:\/\/discord\.gg\//);
+    await expect(discord.locator('svg')).toHaveCount(1);
+    const next = await discord.evaluate((el) => el.nextElementSibling?.getAttribute('title'));
+    expect(next).toBe('Change color theme');
+  }
+  await page.setViewportSize({ width: 320, height: 700 });
+  await expect(page.locator('header').getByRole('link', { name: 'Discord', exact: true })).toBeHidden();
+});
