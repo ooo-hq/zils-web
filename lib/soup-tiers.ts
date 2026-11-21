@@ -1,5 +1,5 @@
 // Each tier's soup starts from its own Qwen base and open house models, which enter every round and are never paid.
-// zils main 0974870: zils/data/soup-house*.json and the "Four pools" table in docs/mining.md. Flash and z3 open later.
+// zils main 0974870: zils/data/soup-house*.json and the "Four pools" table in docs/mining.md.
 export const TIERS = {
   'z3-lite': {
     pool: 'd3-lite', size: '0.8B',
@@ -22,13 +22,11 @@ export const TIERS = {
   },
   'z3-flash': {
     pool: 'd3-flash', size: '8.4B',
-    later: true,
     base: { repo: 'Qwen/Qwen3.5-9B', revision: 'c202236235762e1c871ad0ccb60c8ee5ba337b9a' },
     house: [{ name: 'd3-flash', repo: 'vllm-sr/d3-flash', revision: '13dc1cc8ef23caefa765907e1d764751e5629f7d', note: 'Also the flash chassis' }],
   },
   'z3': {
     pool: 'd3', size: '27B',
-    later: true,
     base: { repo: 'Qwen/Qwen3.8-27B', revision: '1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0' },
     house: [{ name: 'd3-ultra', repo: 'vllm-sr/d3-ultra', revision: '52ba9e7a00402f9560c7fba8c039608e7ddee7fb', note: 'Also the z3 chassis' }],
   },
