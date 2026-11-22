@@ -118,7 +118,8 @@ test('each tier shows what its soup is made of tonight, who made each part and w
   await expect(lite).toContainText('Waiting for its first round');
   await expect(lite).toContainText('Not served yet');
   await expect(lite.getByRole('list', { name: 'In the pot' })).toContainText('Intern-Decision-0.8B');
-  await expect(page.getByRole('article', { name: 'z3-flash' })).toContainText('Opens later');
+  // Owner, 20 Nov 2026: flash and z3 open on 22 Nov, so no tier says it opens later.
+  for (const tier of ['z3-flash', 'z3']) await expect(page.getByRole('article', { name: tier, exact: true })).not.toContainText('Opens later');
   for (const gone of ['Customer jobs', 'Current base', 'Worker 1', 'Customer-training workers']) await expect(page.locator('main')).not.toContainText(gone);
 });
 
@@ -147,6 +148,8 @@ test('the miners on chain are a sheet on the pass: one row per uid, its tier, it
   await expect(rows.nth(3)).toContainText('Waiting for the first round');
   await expect(table.getByRole('link', { name: 'miner/body-one' })).toHaveAttribute('href', `https://huggingface.co/miner/body-one/tree/${'f'.repeat(40)}`);
   await expect(page.getByText('Block 8,351,998')).toBeVisible();
+  // Each pool's deadline, all four open (owner, 20 Nov 2026).
+  await expect(page.locator('main')).toContainText('mini 00:00, lite 06:00, flash 12:00 and z3 18:00 UTC');
   // The sheet is paper on the purple pass: light in both themes, with the page's ink on it.
   await expect(rows.nth(1).getByRole('cell').first()).toHaveCSS('color', 'rgb(28, 26, 38)');
   await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
@@ -162,11 +165,13 @@ test('an empty chain is an invitation, not a blank', async ({ page }) => {
   await expect(plate.getByRole('table', { name: 'Miners on chain' })).toHaveCount(0);
 });
 
-test('closed soups wear the sticker: z3-flash and z3 say No soup for you, lite and mini do not', async ({ page }) => {
+test('every soup is open: no tier wears the closed sticker or says it opens later', async ({ page }) => {
   await page.goto('/miners');
-  for (const tier of ['z3-flash', 'z3']) await expect(page.getByRole('article', { name: tier, exact: true }).getByText('No soup for you!')).toBeVisible();
-  for (const tier of ['z3-lite', 'z3-mini']) await expect(page.getByRole('article', { name: tier, exact: true })).not.toContainText('No soup for you');
-  await expect(page.getByRole('article', { name: 'z3-flash' })).toContainText('Opens later');
+  for (const tier of ['z3-lite', 'z3-mini', 'z3-flash', 'z3']) {
+    const article = page.getByRole('article', { name: tier, exact: true });
+    await expect(article).not.toContainText('No soup for you');
+    await expect(article).not.toContainText('Opens later');
+  }
 });
 
 test('a chain outage says so and the rest of the page renders; the next refresh recovers', async ({ page }) => {

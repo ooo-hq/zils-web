@@ -70,7 +70,7 @@ async function expectIngredients(page: import('@playwright/test').Page) {
   await built.getByRole('button', { name: 'z3-flash' }).click();
   await expect(built.getByRole('link', { name: 'Qwen/Qwen3.5-9B' })).toHaveAttribute('href', /Qwen3\.5-9B\/tree\/c202236235762e1c871ad0ccb60c8ee5ba337b9a/);
   await expect(built.getByRole('link', { name: 'd3-flash' })).toHaveAttribute('href', /vllm-sr\/d3-flash\/tree\/13dc1cc8ef23caefa765907e1d764751e5629f7d/);
-  await expect(built).toContainText('Opens later');
+  await expect(built).not.toContainText('Opens later');
   await built.getByRole('button', { name: 'z3', exact: true }).click();
   await expect(built.getByRole('link', { name: 'Qwen/Qwen3.8-27B' })).toHaveAttribute('href', /Qwen3\.8-27B\/tree\/1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0/);
   await expect(built.getByRole('link', { name: 'd3-ultra' })).toHaveAttribute('href', /vllm-sr\/d3-ultra\/tree\/52ba9e7a00402f9560c7fba8c039608e7ddee7fb/);
@@ -102,10 +102,11 @@ test('/soup states the crown bar, house rates and house models without internal 
   await expect(steps.nth(1)).toContainText('last three rounds');
   await expect(steps.nth(1)).toContainText('Confidence counts'); // zils#162 calibrated_brier
   await expect(page.locator('main')).not.toContainText('fresh, seeded slice');
-  // zils#152: fine-tunes of the soup and release are allowed; zils#153: four pools, flash and z3 open later.
+  // zils#152: fine-tunes of the soup and release are allowed; zils#153: four pools; owner, 20 Nov 2026: all four open.
   await expect(page.locator('main')).toContainText('the current soup');
   for (const parent of ['Qwen/Qwen3.5-0.8B', 'Qwen/Qwen3.5-4B', 'Qwen/Qwen3.5-9B', 'Qwen/Qwen3.8-27B']) await expect(page.locator('main code', { hasText: parent }).first()).toBeVisible();
-  await expect(page.locator('main')).toContainText('Lite and mini cook from the launch; flash and z3 open later.');
+  await expect(page.locator('main')).toContainText('All four tiers cook a soup every day.');
+  await expect(page.locator('main')).not.toContainText('open later');
   await expectIngredients(page);
   const text = await page.locator('main').innerText();
   for (const banned of ['+4.26', '+6.63', 'as of', '30 Oct', 'testnet', 'nano', 'Nano']) expect(text).not.toContain(banned);
@@ -129,7 +130,7 @@ test('/miners: every tier is a soup, with its base and the house models in its p
   const lite = page.getByRole('article', { name: 'z3-lite' }).getByRole('list', { name: 'In the pot' });
   await expect(lite.getByRole('link', { name: 'Intern-Decision-0.8B' })).toHaveAttribute('href', /huggingface\.co\/internlm\/Intern-Decision-0\.8B\/tree\/42457fafd13d10d0b0d9be46cb30a23caa409994/);
   await expect(page.getByRole('article', { name: 'z3-flash' }).getByRole('link', { name: 'd3-flash' })).toHaveAttribute('href', /vllm-sr\/d3-flash\/tree\//);
-  await expect(page.getByRole('article', { name: 'z3-flash' })).toContainText('Opens later');
+  await expect(page.getByRole('article', { name: 'z3-flash' })).not.toContainText('Opens later');
   await expect(page.locator('main')).not.toContainText(/nano/i);
   const earn = page.getByRole('region', { name: 'How miners earn' });
   await expect(earn).toContainText('24 paid spots');
