@@ -124,7 +124,7 @@ export default function SoupPage() {
     <section className={s.section} aria-labelledby="release-heading">
       <h2 id="release-heading" className={s.h2}>A good soup becomes the next release.</h2>
       <div className={s.prose}>
-        <p>Every 14 to 28 days the soup can become the next release. It must beat the current release by at least one point on two sealed release exams that rounds never use, hold that lead 12 hours later, and keep customer adapters at least as good. A reviewed promotion then makes it that tier’s next version. Its members are paid through their seats; the release itself has no single winner. Every tier is a soup with its own house models, and each is released on its own. Lite and mini cook from the launch; flash and z3 open later.</p>
+        <p>Every 14 to 28 days the soup can become the next release. It must beat the current release by at least one point on two sealed release exams that rounds never use, hold that lead 12 hours later, and keep customer adapters at least as good. A reviewed promotion then makes it that tier’s next version. Its members are paid through their seats; the release itself has no single winner. Every tier is a soup with its own house models, and each is released on its own. All four tiers cook a soup every day.</p>
       </div>
       <div className={s.links}><Link href="/z3">The z3 model line</Link><Link href="/miners">Miner leaderboard</Link></div>
     </section>

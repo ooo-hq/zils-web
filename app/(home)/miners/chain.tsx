@@ -57,6 +57,6 @@ export function ChainTable({ chain, page, sort }: { chain: NetworkBodies; page: 
       </table>
     </div> : <p className={s.empty}>No miner has committed a body yet. <Link href="/soup">Bring a body to the soup</Link></p>}
     <Pager page={page} sort={sort} />
-    <p className={s.fine}><span>Block {chain.block.toLocaleString('en-US')}</span> on subnet {chain.netuid}. Bodies come from chain commitments; a miner may hold one per hotkey. Each round freezes its bodies at its pool’s deadline (mini 00:00 UTC, lite 06:00 UTC; 7 PM and 1 AM New York); a body committed later waits for the next round. An announced endpoint means the miner can serve; Zils does not send traffic to miners yet.</p>
+    <p className={s.fine}><span>Block {chain.block.toLocaleString('en-US')}</span> on subnet {chain.netuid}. Bodies come from chain commitments; a miner may hold one per hotkey. Each round freezes its bodies at its pool’s deadline (mini 00:00, lite 06:00, flash 12:00 and z3 18:00 UTC; 7 PM, 1 AM, 7 AM and 1 PM New York); a body committed later waits for the next round. An announced endpoint means the miner can serve; Zils does not send traffic to miners yet.</p>
   </div>;
 }

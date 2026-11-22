@@ -73,7 +73,7 @@ export default function Z3Page() {
         <thead><tr><th scope="col">Model line</th><th scope="col">Parameters</th><th scope="col">Release status</th></tr></thead>
         <tbody>{LINEUP.map(m => <tr key={m.name}><th scope="row">{m.name}</th><td>{m.params}B</td><td>{m.status}</td></tr>)}</tbody>
       </table>
-      <p className={s.fine}>A size for each workload. Lite and mini soups cook from the launch; flash and z3 open later. Each lineage needs its own qualification. Hosted availability is separate from weight publication; use the models listed for your account.</p>
+      <p className={s.fine}>A size for each workload. All four tiers cook a soup every day. Each lineage needs its own qualification. Hosted availability is separate from weight publication; use the models listed for your account.</p>
     </header>
 
     <SectionRow n="02" label="z3-mini" note="Current release: v1" />
