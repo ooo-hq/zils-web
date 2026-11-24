@@ -59,7 +59,7 @@ export function shadowRows(shadow: RelayShadow) {
 
 // A service from before request counts sends neither count field: that reads as no requests yet.
 // One from before providers sends none: that is an OpenAI gateway. One from before outcomes sends none: nothing counted.
-const statusSchema = z.object({ relay_id: z.string().min(1).nullable(), collecting_since: z.string().nullable(), terms_version: z.string().min(1), requests: count.default(0), last_request_at: z.string().nullable().default(null), provider: z.enum(['openai', 'anthropic', 'gemini', 'jev']).default('openai'), outcomes: z.record(z.string(), count).default({}), outcomes_since: z.string().nullable().default(null) });
+const statusSchema = z.object({ relay_id: z.string().min(1).nullable(), collecting_since: z.string().nullable(), terms_version: z.string().min(1), requests: count.default(0), last_request_at: z.string().nullable().default(null), provider: z.enum(['openai', 'anthropic', 'gemini', 'jev', 'openrouter']).default('openai'), outcomes: z.record(z.string(), count).default({}), outcomes_since: z.string().nullable().default(null) });
 export type RelayStatus = z.infer<typeof statusSchema>;
 
 export const parseRelayStatus = (value: unknown): RelayStatus | null => {
@@ -122,7 +122,7 @@ export function gatewayTable(saved: RelayRows): { data: CsvData; columns: Column
 }
 
 /** The base URL a client is pointed at: the account's relay id under the training service. An OpenAI client is given the /v1 root; a Claude, Gemini or Jev client the API root, and adds the version itself. */
-export const relayAddress = (trainingUrl: string, relayId: string, provider: RelayStatus['provider'] = 'openai'): string => `${serviceUrl(trainingUrl)}/relay/${relayId}${provider === 'openai' ? '/v1' : ''}`;
+export const relayAddress = (trainingUrl: string, relayId: string, provider: RelayStatus['provider'] = 'openai'): string => `${serviceUrl(trainingUrl)}/relay/${relayId}${provider === 'openai' || provider === 'openrouter' ? '/v1' : ''}`;
 
 export function relayReportApi(rawUrl: string, token: () => Promise<string>, request: typeof fetch = fetch) {
   const base = serviceUrl(rawUrl);

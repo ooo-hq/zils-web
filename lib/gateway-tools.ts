@@ -2,7 +2,7 @@ export type ToolLanguage = 'python' | 'javascript' | 'bash';
 export type GatewayToolStep = { title: string; label: string; language: ToolLanguage; code: string };
 export type GatewayTool = { id: string; name: string; tag: string; blurb: string; steps: GatewayToolStep[]; note?: string; checked: string };
 
-export type GatewayProvider = 'openai' | 'anthropic' | 'gemini' | 'jev';
+export type GatewayProvider = 'openai' | 'anthropic' | 'gemini' | 'jev' | 'openrouter';
 type GatewayToolGroup = { label: string; intro: string; tools: GatewayTool[] };
 
 /** The providers a gateway address can pass requests on to. An address goes to one of them. */
@@ -11,6 +11,7 @@ export const gatewayProviders: { id: GatewayProvider; name: string }[] = [
   { id: 'anthropic', name: 'Claude' },
   { id: 'gemini', name: 'Gemini' },
   { id: 'jev', name: 'Jev' },
+  { id: 'openrouter', name: 'OpenRouter' },
 ];
 
 // The example question every card asks. The model is the caller's own: any name their provider accepts.
@@ -35,6 +36,7 @@ export function gatewayTools(address: string, provider: GatewayProvider = 'opena
   if (provider === 'jev') return jevTools(address);
   if (provider === 'anthropic') return claudeTools(address);
   if (provider === 'gemini') return geminiTools(address);
+  if (provider === 'openrouter') return openRouterTools(address);
   const point = 'Point the client at your gateway';
   const ask = 'Ask for an answer from a fixed list';
   return [
@@ -347,4 +349,32 @@ console.log(response.answers.intent.choice);` },
       ] },
     ] },
   ];
+}
+
+/** OpenRouter speaks OpenAI's format at its /api/v1 address, so an app keeps its OpenAI-format tools, with OpenRouter's model
+    names and key. Jev is asked there too, at /systemone, and every yes/no and choice question it is asked is collected. */
+function openRouterTools(address: string): GatewayToolGroup[] {
+  const groups = gatewayTools(address, 'openai').map(group => ({ ...group, tools: group.tools.map(tool => ({
+    ...tool,
+    id: `openrouter-${tool.id}`,
+    steps: tool.steps.map(step => ({ ...step, code: step.code.replaceAll(MODEL, `openai/${MODEL}`).replaceAll('OPENAI_API_KEY', 'OPENROUTER_API_KEY') })),
+  })) }));
+  groups[0].tools.push({ id: 'openrouter-system-one', name: 'System One', tag: 'Jev', blurb: 'Jev through OpenRouter, as the raw request.', checked: 'curl 8', steps: [
+    { title: 'Set your gateway address', label: 'Bash', language: 'bash', code: `export ZILS_GATEWAY="${address}"` },
+    { title: 'Ask a question as you do today', label: 'Bash', language: 'bash', code: `curl -s "$ZILS_GATEWAY/systemone" \\
+  -H "Authorization: Bearer $OPENROUTER_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "typesafe/jev-1.14",
+    "state": "${SAID}",
+    "questions": {
+      "intent": {
+        "type": "choice",
+        "instructions": "${ASK}",
+        "criteria": {"refund": null, "shipping": null, "other": null}
+      }
+    }
+  }'` },
+  ] });
+  return groups;
 }
