@@ -352,9 +352,11 @@ console.log(response.answers.intent.choice);` },
 }
 
 /** OpenRouter speaks OpenAI's format at its /api/v1 address, so an app keeps its OpenAI-format tools, with OpenRouter's model
-    names and key. Jev is asked there too, at /systemone, and every yes/no and choice question it is asked is collected. */
+    names and key. Jev is asked there too, at /systemone, and every yes/no and choice question it is asked is collected. Each card
+    was run through the relay to OpenRouter with the versions in `checked`. LlamaIndex is left out: its OpenAI class refuses
+    OpenRouter's model names, and its OpenAI-compatible class asks with a function call, which the gateway does not collect. */
 function openRouterTools(address: string): GatewayToolGroup[] {
-  const groups = gatewayTools(address, 'openai').map(group => ({ ...group, tools: group.tools.map(tool => ({
+  const groups = gatewayTools(address, 'openai').map(group => ({ ...group, tools: group.tools.filter(tool => tool.id !== 'llamaindex').map(tool => ({
     ...tool,
     id: `openrouter-${tool.id}`,
     steps: tool.steps.map(step => ({ ...step, code: step.code.replaceAll(MODEL, `openai/${MODEL}`).replaceAll('OPENAI_API_KEY', 'OPENROUTER_API_KEY') })),

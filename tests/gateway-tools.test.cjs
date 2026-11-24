@@ -38,9 +38,11 @@ test('providers: the gateway passes requests on to OpenAI, Claude, Gemini, Jev o
 
 test('an OpenRouter account keeps its OpenAI-format tools, with OpenRouter model names and key, plus System One', () => {
   const router = gatewayTools(address, 'openrouter');
+  // LlamaIndex's OpenAI class refuses OpenRouter's model names, and its OpenAI-compatible class asks with a
+  // function call, which the gateway does not collect: it has no card for an OpenRouter account.
   assert.deepEqual(router.map(group => [group.label, group.tools.map(tool => tool.name)]), [
     ['SDKs', ['OpenAI Python', 'OpenAI Node', 'cURL', 'System One']],
-    ['Frameworks', ['LangChain', 'Vercel AI SDK', 'LlamaIndex', 'Instructor']],
+    ['Frameworks', ['LangChain', 'Vercel AI SDK', 'Instructor']],
   ]);
   for (const tool of router.flatMap(group => group.tools)) {
     const code = tool.steps.map(step => step.code).join('\n');
