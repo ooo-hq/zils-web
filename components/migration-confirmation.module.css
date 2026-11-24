@@ -28,3 +28,5 @@
 .confirmation :disabled { opacity:.5; cursor:default; }
 .confirmation :focus-visible { outline:2px solid var(--zs-peach); outline-offset:4px; }
 @media(max-width:600px) { .header { padding:24px 72px 20px 24px; }.body { padding:24px; }.footer { padding:16px 24px; flex-wrap:wrap; }.primary { flex:1; }.bases { gap:12px; }.bases>div:last-child { padding-left:12px; } }
+/* Beats the sheet's own shadow whatever order the two stylesheets load in. */
+.confirmation.confirmation { box-shadow:none; }
