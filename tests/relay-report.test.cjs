@@ -75,6 +75,12 @@ test('the relay address is the id under the training service, ready to paste as 
   assert.equal(relayAddress('https://training.example/', 'r'.repeat(40), 'anthropic'), `https://training.example/relay/${'r'.repeat(40)}`);
   // And a Google client, which adds the API version itself.
   assert.equal(relayAddress('https://training.example/', 'r'.repeat(40), 'gemini'), `https://training.example/relay/${'r'.repeat(40)}`);
+  // An OpenRouter client is given the /v1 address, as OpenRouter's own ends in /api/v1.
+  assert.equal(relayAddress('https://training.example/', 'r'.repeat(40), 'openrouter'), `https://training.example/relay/${'r'.repeat(40)}/v1`);
+});
+
+test('an OpenRouter gateway reads as OpenRouter', () => {
+  assert.equal(parseRelayStatus({ ...status, provider: 'openrouter' }).provider, 'openrouter');
 });
 
 test('parses a relay status, with and without a relay', () => {

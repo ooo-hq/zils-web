@@ -31,9 +31,34 @@ test('a tool whose default call is not collected says so', () => {
   assert.match(instructor.steps.map(step => step.code).join('\n'), /Mode\.JSON_SCHEMA/);
 });
 
-test('providers: the gateway passes requests on to OpenAI, Claude, Gemini or Jev', () => {
+test('providers: the gateway passes requests on to OpenAI, Claude, Gemini, Jev or OpenRouter', () => {
   const { gatewayProviders } = require('../.private/test-build/gateway-tools.js');
-  assert.deepEqual(gatewayProviders.map(provider => [provider.id, provider.name]), [['openai', 'OpenAI'], ['anthropic', 'Claude'], ['gemini', 'Gemini'], ['jev', 'Jev']]);
+  assert.deepEqual(gatewayProviders.map(provider => [provider.id, provider.name]), [['openai', 'OpenAI'], ['anthropic', 'Claude'], ['gemini', 'Gemini'], ['jev', 'Jev'], ['openrouter', 'OpenRouter']]);
+});
+
+test('an OpenRouter account keeps its OpenAI-format tools, with OpenRouter model names and key, plus System One', () => {
+  const router = gatewayTools(address, 'openrouter');
+  // LlamaIndex's OpenAI class refuses OpenRouter's model names, and its OpenAI-compatible class asks with a
+  // function call, which the gateway does not collect: it has no card for an OpenRouter account.
+  assert.deepEqual(router.map(group => [group.label, group.tools.map(tool => tool.name)]), [
+    ['SDKs', ['OpenAI Python', 'OpenAI Node', 'cURL', 'System One']],
+    ['Frameworks', ['LangChain', 'Vercel AI SDK', 'Instructor']],
+  ]);
+  for (const tool of router.flatMap(group => group.tools)) {
+    const code = tool.steps.map(step => step.code).join('\n');
+    assert.ok(tool.steps.length >= 2 && tool.checked, tool.name);
+    assert.ok(code.includes(address), tool.name);
+    assert.match(code, /refund.*shipping.*other/s, tool.name);
+    // OpenRouter names a model with its maker, and its key is OpenRouter's own.
+    assert.doesNotMatch(code, /["']gpt-/, tool.name);
+    assert.doesNotMatch(code, /OPENAI_API_KEY|sk-|api_key\s*=|apiKey\s*:/, tool.name);
+  }
+  const [systemOne] = router[0].tools.filter(tool => tool.name === 'System One');
+  assert.match(systemOne.steps[1].code, /\$ZILS_GATEWAY\/systemone/);
+  assert.match(systemOne.steps[1].code, /"model": "typesafe\/jev-1\.14"/);
+  assert.match(systemOne.steps[1].code, /Bearer \$OPENROUTER_API_KEY/);
+  const ids = [...tools, ...router.flatMap(group => group.tools)].map(tool => tool.id);
+  assert.equal(new Set(ids).size, ids.length);
 });
 
 test('a Claude account gets the Anthropic libraries, pointed at the gateway root, asking for a fixed answer list', () => {

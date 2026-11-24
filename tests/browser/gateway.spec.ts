@@ -100,7 +100,7 @@ test('a Jev gateway shows the Jev address, cards and what is collected', async (
   const providers = setup.getByRole('group', { name: 'Provider' });
   await expect(providers.getByRole('button', { name: /Jev/ })).toHaveAttribute('aria-pressed', 'true');
   // Jev is a provider like the others: every one is offered, and none is marked as unavailable.
-  await expect(providers.getByRole('button')).toHaveCount(4);
+  await expect(providers.getByRole('button')).toHaveCount(5);
   await expect(providers.getByRole('button', { name: 'OpenAI' })).toBeEnabled();
   await expect(setup.getByText(/On request|Coming soon|Ask us/)).toHaveCount(0);
   for (const name of ['Jev Python', 'Jev JavaScript', 'cURL']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
@@ -133,7 +133,7 @@ test('a Claude gateway shows the root address and the Anthropic cards', async ({
   const providers = setup.getByRole('group', { name: 'Provider' });
   await expect(providers.getByRole('button', { name: /Claude/ })).toHaveAttribute('aria-pressed', 'true');
   await expect(providers.getByRole('button', { name: 'OpenAI' })).toBeEnabled();
-  await expect(providers.getByRole('button')).toHaveCount(4);
+  await expect(providers.getByRole('button')).toHaveCount(5);
   for (const name of ['Anthropic Python', 'Anthropic TypeScript', 'cURL']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
   await expect(setup.getByRole('button', { name: /^(OpenAI Python|LangChain|Jev Python|Jev JavaScript)/ })).toHaveCount(0);
   // What is saved is the same as for OpenAI: requests that ask for an answer from a fixed list.
@@ -158,7 +158,7 @@ test('a Gemini gateway shows the root address and the Google cards', async ({ pa
   await expect(setup.getByText('Set it as the base URL of your Gemini client.', { exact: false })).toBeVisible();
   const providers = setup.getByRole('group', { name: 'Provider' });
   await expect(providers.getByRole('button', { name: /Gemini/ })).toHaveAttribute('aria-pressed', 'true');
-  await expect(providers.getByRole('button')).toHaveCount(4);
+  await expect(providers.getByRole('button')).toHaveCount(5);
   for (const name of ['Google Gen AI Python', 'Google Gen AI JavaScript', 'cURL']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
   await expect(setup.getByRole('button', { name: /^(OpenAI Python|LangChain|Anthropic|Jev Python|Jev JavaScript)/ })).toHaveCount(0);
   await expect(setup.getByText(/each request that asks for an answer from a fixed list/)).toBeVisible();
@@ -170,6 +170,30 @@ test('a Gemini gateway shows the root address and the Google cards', async ({ pa
   // The account may leave Gemini for another provider like any other.
   await providers.getByRole('button', { name: 'Claude' }).click();
   expect(sent).toEqual([{ provider: 'anthropic' }]);
+});
+
+test('an OpenRouter gateway shows the /v1 address, the OpenAI-format cards and System One', async ({ page }) => {
+  await signIn(page);
+  await answer(page, 200, { relay: true, saving_since: null, questions_total: 0, questions: [] });
+  const sent = await relay(page, null, relayId, { requests: 0, last_request_at: null, provider: 'openrouter' });
+  await page.goto('/gateway');
+  const setup = page.getByRole('region', { name: 'Setup' });
+  // OpenRouter's own address ends in /api/v1, so its clients are given the /v1 address.
+  const address = `http://127.0.0.1:8999/relay/${relayId}/v1`;
+  await expect(setup.locator('code').first()).toHaveText(address);
+  await expect(setup.getByText('Set it as the base URL of your OpenRouter client.', { exact: false })).toBeVisible();
+  const providers = setup.getByRole('group', { name: 'Provider' });
+  await expect(providers.getByRole('button', { name: 'OpenRouter' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(providers.getByRole('button')).toHaveCount(5);
+  for (const name of ['OpenAI Python', 'OpenAI Node', 'cURL', 'System One', 'LangChain']) await expect(setup.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
+
+  await setup.getByRole('button', { name: /^System One/ }).click();
+  const steps = setup.getByRole('region', { name: 'System One setup' });
+  await expect(steps.locator('pre').last()).toContainText('"model": "typesafe/jev-1.14"');
+  await expect(steps.locator('pre').last()).toContainText('$OPENROUTER_API_KEY');
+  // The account may leave OpenRouter for another provider like any other.
+  await providers.getByRole('button', { name: 'OpenAI' }).click();
+  expect(sent).toEqual([{ provider: 'openai' }]);
 });
 
 test('an account switches its address between OpenAI and Claude while it is not collecting', async ({ page }) => {
@@ -398,10 +422,11 @@ test('shows whether requests have come through, and a card for each tool that op
   // Providers: an address goes to one of them, Jev included.
   const providers = setup.getByRole('group', { name: 'Provider' });
   await expect(providers.getByRole('button', { name: /OpenAI/ })).toHaveAttribute('aria-pressed', 'true');
-  await expect(providers.getByRole('button')).toHaveCount(4);
+  await expect(providers.getByRole('button')).toHaveCount(5);
   await expect(providers.getByRole('button', { name: 'Claude' })).toBeEnabled();
   await expect(providers.getByRole('button', { name: 'Gemini' })).toBeEnabled();
   await expect(providers.getByRole('button', { name: 'Jev' })).toBeEnabled();
+  await expect(providers.getByRole('button', { name: 'OpenRouter' })).toBeEnabled();
   await expect(setup.getByText(/On request|Coming soon/)).toHaveCount(0);
   await expect(setup.getByRole('button', { name: /^(Jev Python|Jev JavaScript)/ })).toHaveCount(0);
   await expect(setup.getByText(/another provider/)).toHaveCount(0);
