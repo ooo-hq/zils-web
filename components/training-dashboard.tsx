@@ -12,8 +12,9 @@ import { PageHero, Section, workspacePage } from '@/components/workspace-page';
 import { WorkspaceLoading, LinkLoading } from '@/components/workspace-loading';
 import { TrainingGuide } from '@/components/training-guide';
 import { RunRows } from '@/components/run-rows';
-import { TrainSources } from '@/components/train-sources';
 import { TrainingIntake } from '@/components/training-intake';
+import { TrainTable } from '@/components/train-table';
+import { TeachByExample } from '@/components/teach-by-example';
 import { ArrowRight, ImageIcon, MessageSquareText, FlaskConical, GraduationCap, KeyRound, X } from 'lucide-react';
 import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -37,7 +38,7 @@ type Config = { assistantConfigured?: boolean; storage: StorageLocations; url: s
 const message = (error: unknown) => error instanceof Error ? error.message : 'Something went wrong. Please try again.';
 const metric = (value: number | undefined, percent = false) => value === undefined ? '—' : percent ? `${(value * 100).toFixed(2)}%` : value.toFixed(4);
 
-export function TrainingDashboard({ config, runId, bulkImport = false, upgradeOf, migrateTo }: { config: Config; runId?: string; bulkImport?: boolean; upgradeOf?: string; migrateTo?: string }) {
+export function TrainingDashboard({ config, runId, bulkImport = false, upgradeOf, migrateTo, gateway, by }: { config: Config; runId?: string; bulkImport?: boolean; upgradeOf?: string; migrateTo?: string; gateway?: string; by?: string }) {
   const { client, session, error: sessionError } = useAuthSession(config);
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -74,8 +75,8 @@ export function TrainingDashboard({ config, runId, bulkImport = false, upgradeOf
   return <>
     {(error || sessionError) && <p role="alert" className={styles.error}>{error || sessionError}</p>}
     {session && client ? <div id="training-workspace">
-      <SignedInDashboard key={`${session.user.id}:${runId || (upgradeOf ? `upgrade:${upgradeOf}:${migrateTo ?? ''}` : bulkImport ? "bulk" : "index")}`} runId={runId} bulkImport={bulkImport} upgradeOf={upgradeOf} migrateTo={migrateTo} owner={session.user.id} client={client} config={config} onExpired={signOut} />
-    </div> : <>
+      <SignedInDashboard key={`${session.user.id}:${runId || (upgradeOf ? `upgrade:${upgradeOf}:${migrateTo ?? ''}` : bulkImport ? "bulk" : "index")}`} runId={runId} bulkImport={bulkImport} upgradeOf={upgradeOf} migrateTo={migrateTo} owner={session.user.id} gateway={gateway} by={by} client={client} config={config} onExpired={signOut} />
+    </div> : by === 'examples' || by === 'photos' ? <TeachByExample config={config} start={by === 'photos' ? 'images' : 'guided'} /> /* Prepared locally; it asks for sign-in at the end. */ : <>
       <PageHero title="Training" intro="Teach Zils a decision using examples your team has reviewed." />
       <section id="training-workspace" className={`${styles.panel} ${styles.signIn}`}>
         <h2>Sign in to Zils</h2><p>New to Zils? Signing in creates your workspace.</p>
@@ -96,7 +97,7 @@ export function TrainingDashboard({ config, runId, bulkImport = false, upgradeOf
 
 const WELCOME_SEEN_KEY = 'zils-welcome-seen';
 
-function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport, upgradeOf, migrateTo }: { runId?: string; bulkImport: boolean; upgradeOf?: string; migrateTo?: string; owner: string; client: SupabaseClient; config: Config; onExpired: () => Promise<void> }) {
+function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport, upgradeOf, migrateTo, gateway, by }: { runId?: string; bulkImport: boolean; upgradeOf?: string; migrateTo?: string; gateway?: string; by?: string; owner: string; client: SupabaseClient; config: Config; onExpired: () => Promise<void> }) {
   const [intakeMode, setIntakeMode] = useState<'choose' | 'text' | 'images'>(upgradeOf ? 'text' : 'choose');
   const [imagesAvailable, setImagesAvailable] = useState(false);
   const [imageProfile, setImageProfile] = useState<ImageModels['training_profile']>();
@@ -307,7 +308,7 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
     </>;
   }
   return <Sheet open={panelOpen} onOpenChange={open => { if (open) focusSubmitted.current = false; setPanelOpen(open); }}>
-    <PageHero title={runId ? 'Training run' : 'Train'} intro={runId ? 'The progress and evaluation of this run.' : 'A Zils model learns one decision from examples of it being made. Choose where yours come from.'}
+    <PageHero title={runId ? 'Training run' : 'Train'} intro={runId ? 'The progress and evaluation of this run.' : 'A Zils model learns one decision from examples of it being made. Start one below, or follow the runs you have.'}
       back={runId && <Link href="/train" className={styles.textButton}>Back to Training<LinkLoading /></Link>} />
     {bulkImport && <p className={workspacePage.notice}><SheetTrigger asChild><button className={styles.textButton} disabled={busy}>Continue bulk import</button></SheetTrigger> · Import a spreadsheet, prepared datasets, or labeled photos.</p>}
     {process.env.NEXT_PUBLIC_ZILS_BILLING_PREVIEW === 'test' && <p className={workspacePage.notice}>Billing test preview. Submitting a standard run reserves one included run or $2 in test credit. <Link href="/billing" className={styles.textButton}>View credit and billing</Link>.</p>}
@@ -323,14 +324,14 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
           <p>{runId ? 'Return to Training to choose a run, or try loading it again.' : 'Try checking again in a moment.'}</p>
           <button className={styles.secondary} onClick={refresh} disabled={refreshing}>Try again</button>
         </>}
-        <Dialog.Root open={!welcomeSeen && !runId && !refreshError} onOpenChange={open => { if (!open) dismissWelcome(); }}>
+        <Dialog.Root open={!welcomeSeen && !runId && !refreshError && !gateway && !by} onOpenChange={open => { if (!open) dismissWelcome(); }}>
           {/* No portal: the dialog stays inside the console shell so it inherits the brand tokens. */}
           <Dialog.Overlay className={styles.welcomeOverlay} />
           <Dialog.Content className={styles.welcome}>
             <Dialog.Title>Welcome to Zils.</Dialog.Title>
             <Dialog.Description>Your account is ready. Send one request to a hosted model, get an API key, or train a model on your own examples.</Dialog.Description>
             <ul className={styles.welcomeChoices}>
-              <li><Link className={`${styles.welcomeChoice} ${styles.welcomeRecommended}`} href="/train/teach" onClick={dismissWelcome}><strong><GraduationCap size={18} aria-hidden="true" />Start training</strong><span>Bring a decision and a few reviewed examples. Zils guides you through the rest.</span><small>Start a training run</small></Link></li>
+              <li><Link className={`${styles.welcomeChoice} ${styles.welcomeRecommended}`} href="#ways-to-start" onClick={dismissWelcome}><strong><GraduationCap size={18} aria-hidden="true" />Start training</strong><span>Bring a decision and a few reviewed examples. Zils guides you through the rest.</span><small>Start a training run</small></Link></li>
               <li><Link className={styles.welcomeChoice} href="/playground" onClick={dismissWelcome}><strong><FlaskConical size={18} aria-hidden="true" />Try a model</strong><span>Ask a hosted model one request and read the answer before training anything.</span><small>Open the playground</small></Link></li>
               <li><Link className={styles.welcomeChoice} href="/keys" onClick={dismissWelcome}><strong><KeyRound size={18} aria-hidden="true" />Create an API key</strong><span>Call the hosted API from your own code or a tool you already use.</span><small>Manage API keys</small></Link></li>
             </ul>
@@ -347,8 +348,8 @@ function SignedInDashboard({ owner, client, config, onExpired, runId, bulkImport
         </section>
       </div> : null}
       {!runId && <RunRows items={jobs.filter(job => job.id !== selected?.id && !terminal(job))} title="Other active runs" />}
-      {/* A run in training comes first; below it, or alone, the ways to start one. */}
-      {!runId && !loading && <TrainSources apiUrl={config.decisionApiUrl} token={imageToken} />}
+      {/* A run in training comes first; below it, or alone, the ways to start one, each working in place. */}
+      {!runId && !loading && <TrainTable config={config} gateway={gateway} by={by} />}
     </div>
     {!runId && imagesAvailable && config.decisionApiUrl && <details className={imageStyles.stockTest}><summary>Test images with the starting model</summary><p>Try a batch or a single photo. For a trained model, choose View model above.</p><ImageDecisionPanel owner={owner} token={imageToken} apiUrl={config.decisionApiUrl} storage={config.storage} /></details>}
     {intakeMode === 'choose' && <SheetContent className={`${styles.page} ${styles.trainingSheet}`}>

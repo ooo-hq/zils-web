@@ -96,7 +96,7 @@ function Question({ question, number, compare, setAnswering }: { question: Relay
         <p className={styles.quote}>“{question.instructions || Object.keys(question.fields).join(', ')}”</p>
         <p className={workspacePage.fine}>{Object.entries(question.fields).map(([name, values]) => answers(name, values)).join(' · ')}</p>
         {question.last_at && <p className={workspacePage.fine}>Last saved {when(question.last_at)}</p>}
-        {(question.shadows.length > 0 || scored) && question.rows >= TRAIN_FROM_ROWS && <div className={styles.actions}><Link className={training.button} href={`/train/new?gateway=${question.id}`}>Train a model from these answers</Link></div>}
+        {(question.shadows.length > 0 || scored) && question.rows >= TRAIN_FROM_ROWS && <div className={styles.actions}><Link className={training.button} href={`/train?gateway=${question.id}`}>Train a model from these answers</Link></div>}
         <Runs question={question} compare={compare} />
       </div>
       <div>
@@ -106,7 +106,7 @@ function Question({ question, number, compare, setAnswering }: { question: Relay
         </> : question.rows >= TRAIN_FROM_ROWS ? <>
           <p className={styles.offer}>Train a Zils model on these {question.rows.toLocaleString()} answers.</p>
           <p className={workspacePage.sub}>It learns to give your provider’s answer to this question.</p>
-          <div className={styles.actions}><Link className={training.button} href={`/train/new?gateway=${question.id}`}>Train a model from these answers</Link></div>
+          <div className={styles.actions}><Link className={training.button} href={`/train?gateway=${question.id}`}>Train a model from these answers</Link></div>
         </> : <>
           <p className={workspacePage.sub}>No Zils model is being compared on this question yet.</p>
           <p className={workspacePage.fine}>Training opens at {TRAIN_FROM_ROWS} saved messages.</p>

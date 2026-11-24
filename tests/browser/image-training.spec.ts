@@ -74,7 +74,7 @@ for (const [mobile, insufficient, spaces] of [[false,false,false],[true,false,fa
     if(path.endsWith('/submit')) return route.fulfill({headers,json:{job:{...job(),status:'validating'}}});
     return route.fulfill({status:404,headers,json:{}});
   });
-  await page.goto('/train/teach');
+  await page.goto('/train?by=photos');
   await page.getByRole('button',{name:'Images',exact:true}).click();
   await expect(page.getByRole('link',{name:'Import labeled examples',exact:true})).not.toBeVisible();
   await page.getByRole('region',{name:'Image teaching',exact:true}).getByRole('link',{name:'Import labeled photos',exact:true}).click();

@@ -108,7 +108,7 @@ export const parseRelayRows = (value: unknown): RelayRows | null => {
 export const TRAIN_FROM_ROWS = 200;
 
 /**
- * One question's saved rows as the table /train/new works on: the message in a column named text, which is how the
+ * One question's saved rows as the table /train works on: the message in a column named text, which is how the
  * gateway's comparison sends it to a model, then one column per answer field. The first field is what it decides;
  * the others are left unused, one decision per run. Instructions too long for a training question are left out.
  */

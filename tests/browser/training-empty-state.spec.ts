@@ -15,7 +15,7 @@ test('empty Training workspace opens a one-time welcome dialog with three starti
   await expect(dialog).toBeVisible();
   const choices = dialog.getByRole('link');
   await expect(choices).toHaveCount(3);
-  expect(await choices.evaluateAll(links => links.map(link => link.getAttribute('href')))).toEqual(['/train/teach', '/playground', '/keys']);
+  expect(await choices.evaluateAll(links => links.map(link => link.getAttribute('href')))).toEqual(['#ways-to-start', '/playground', '/keys']);
   await expect(choices.getByRole('strong')).toHaveText(['Start training', 'Try a model', 'Create an API key']);
   // The dialog fits a phone without sideways scrolling.
   await page.setViewportSize({ width: 390, height: 844 });
@@ -25,8 +25,8 @@ test('empty Training workspace opens a one-time welcome dialog with three starti
   // Closing leaves the ordinary empty workspace, and the welcome does not return.
   await dialog.getByRole('button', { name: 'Close' }).click();
   await expect(dialog).toBeHidden();
-  await expect(page.getByRole('region', { name: 'Where your examples come from' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Ways to start' })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('region', { name: 'Where your examples come from' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Ways to start' })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });

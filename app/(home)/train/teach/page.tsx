@@ -1,14 +1,6 @@
-import type { Metadata } from 'next';
-import { ConsoleShell } from '@/components/console-shell';
-import { TeachByExample } from '@/components/teach-by-example';
-import { trainingConfig } from '@/lib/training-config';
+import { redirect } from 'next/navigation';
 
-export const metadata: Metadata = {
-  title: 'Teach a model · Zils',
-  description: 'Describe a task, bring examples, and show Zils what a good answer looks like.',
-  robots: { index: false, follow: false },
-};
-
+// Teaching by example moved onto /train; old links land on it.
 export default function TeachPage() {
-  return <ConsoleShell><TeachByExample config={trainingConfig()} /></ConsoleShell>;
+  redirect('/train?by=examples');
 }

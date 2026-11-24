@@ -1,21 +1,13 @@
-/* /train/new in the workspace system (workspace-page.module.css): PageHero, orange-cornered section rows, hairline
+/* The start of /train in the workspace system (workspace-page.module.css): PageHero, orange-cornered section rows, hairline
    splits, square site buttons, no boxes. The one bold element is the peach line between what the model reads and
    what it decides. */
 
-/* Empty page: two starting points of equal weight, so the split is even (pricing's is 1 : 1.4). */
-.even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-.path { display: grid; align-content: start; gap: 0; }
-.path.path.path > h3 { margin: 0; font-weight: 300; font-size: clamp(26px, 2.6vw, 36px); letter-spacing: -0.02em; line-height: 1.1; }
-.sub { margin: 14px 0 0; max-width: 46ch; font-size: 15px; line-height: 1.55; color: var(--zs-t2); }
 
-.drop { margin-top: 28px; display: grid; justify-items: start; gap: 14px; padding: 28px; border: 1px dashed rgba(var(--zs-fg-rgb), .22); color: var(--zs-t2); }
+.drop { margin-top: 0; display: grid; justify-items: start; gap: 14px; padding: 28px; border: 1px dashed rgba(var(--zs-fg-rgb), .22); color: var(--zs-t2); }
 .drop[data-over=true] { border-color: var(--zs-peach); border-style: solid; }
 .dropTitle { margin: 0; font-size: 17px; color: var(--zs-fg); }
 .try { margin: 2px 0 0; font-size: 13px; color: var(--zs-t3); }
 
-.ways { display: flex; flex-wrap: wrap; gap: 8px 28px; padding: 22px 0 56px; font-size: 14px; }
-.ways a { color: var(--zs-t2); text-decoration: underline; text-decoration-color: rgba(var(--zs-fg-rgb), .25); text-underline-offset: 4px; }
-.ways a:hover { color: var(--zs-fg); }
 
 /* Loaded: the file line, then the table edge to edge. */
 .fileLine { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 18px; padding: 22px 0 18px; font-size: 15px; }

@@ -66,7 +66,7 @@ async function workspace(page: Page, options: { signedIn?: boolean; failUpload?:
     }
     return route.fulfill({ status: 404, headers, json: {} });
   });
-  await page.goto('/train/teach');
+  await page.goto('/train?by=examples');
   return { state, created: () => created };
 }
 
@@ -116,7 +116,7 @@ test('saved text uploads recover from the run page without classic setup', async
 
 for (const recover of [false, true]) test(`reviewed examples submit without leaking metadata, with recovery (${recover})`, async ({ page }) => {
   const { state, created } = await workspace(page, { failUpload: recover });
-  await page.goto('/train/teach');  // teach by example; "Train a model" opens the table page (/train/new)
+  await page.goto('/train?by=examples');
   await page.getByRole('button', { name: 'Sort or make a decision', exact: false }).click();
   await page.getByRole('button', { name: 'Bring my first example', exact: true }).click();
   await page.getByRole('button', { name: 'Add sample examples', exact: true }).click();
@@ -189,7 +189,7 @@ for (const lostCreate of [true, 400, 409] as const) test(`an uncertain create re
 test('the teach flow sits inside the workspace with Train selected', async ({ page }) => {
   await workspace(page, {});
   await expect(page.getByRole('navigation', { name: 'Workspace navigation' }).getByRole('link', { name: 'Train', exact: true })).toHaveAttribute('aria-current', 'page');
-  await expect(page.getByRole('link', { name: 'Back to training' })).toHaveAttribute('href', '/train');
+  await expect(page.getByRole('button', { name: 'Use another way' })).toBeVisible();
   await page.screenshot({ path: '.private/teach-in-console-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 375, height: 812 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

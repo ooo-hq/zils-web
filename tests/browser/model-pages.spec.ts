@@ -288,7 +288,7 @@ test('training index stays compact inside the workspace sidebar', async ({ page 
   await fixture(page);
   await page.setViewportSize({ width: 1280, height: 1000 });
   await page.goto('/train');
-  await expect(page.getByRole('region', { name: 'Where your examples come from' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Ways to start' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Run history' })).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Your models' })).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Use your model' })).toHaveCount(0);
