@@ -18,7 +18,7 @@ export function WorkspaceHero({ email }: { email?: string }) {
     <PageHero title={`${greeting(new Date().getHours())}${name ? `, ${name}` : ''}.`} intro="Ask Zils anything about one input. Every answer comes back as a probability your code can act on."
       action={<div className={s.actions}>
         <Link href="/playground" className={s.primary}>Open the playground</Link>
-        <Link href="/train/new" className={s.secondary}>Train a model</Link>
+        <Link href="/train" className={s.secondary}>Train a model</Link>
       </div>} />
     <Section label="Three kinds of answer" />
     <ul className={s.specimens} aria-label="The three kinds of answer">

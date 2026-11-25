@@ -3,7 +3,7 @@ import { signIn } from './signed-in';
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
-// Training through an agent is one of the sources on the Training page: it gives the one-line MCP setup and what to ask.
+// Training through an agent is the first way to start on Train: it gives the one-line MCP setup and what to ask.
 test('Training offers the commands to train with Claude Code or Codex', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await signIn(page);
@@ -14,12 +14,12 @@ test('Training offers the commands to train with Claude Code or Codex', async ({
   await page.goto('/train');
   await page.getByRole('dialog', { name: 'Welcome to Zils.' }).getByRole('button', { name: 'Close' }).click();
 
-  const card = page.getByRole('region', { name: 'Where your examples come from' }).locator('ol > li').filter({ has: page.getByRole('heading', { name: 'Your coding agent or the command line' }) });
+  const card = page.getByRole('region', { name: 'Your coding agent', exact: true });
   await expect(card).toBeVisible();
   await expect(card.getByRole('button', { name: 'Claude Code' })).toHaveAttribute('aria-pressed', 'true');
   await expect(card.getByLabel('Add Zils to your agent')).toHaveText('$ claude mcp add zils -- npx -y @zils/cli mcp');
   await expect(card.getByLabel('Sign in once')).toHaveText('$ npx -y @zils/cli login');
-  await expect(card).toContainText('Help me train a Zils model. First check Zils is connected and I’m signed in, then ask me what it should decide and which data to use.');
+  await expect(card).toContainText('Find the decisions in this repo that Zils could make, measure Zils on them, and train a model for any it misses.');
 
   await card.getByRole('button', { name: 'Codex' }).click();
   await expect(card.getByRole('button', { name: 'Codex' })).toHaveAttribute('aria-pressed', 'true');

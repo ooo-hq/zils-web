@@ -1,6 +1,6 @@
 # Teach by example: local prototype
 
-Start with `npm ci` and `npm run dev -- --hostname 127.0.0.1 --port 3118`, then open `http://127.0.0.1:3118/train/teach`. The development/build scripts prepare the local OCR assets automatically.
+Start with `npm ci` and `npm run dev -- --hostname 127.0.0.1 --port 3118`, then open `http://127.0.0.1:3118/train?by=examples`. The development/build scripts prepare the local OCR assets automatically.
 
 Click **Try with sample examples** for a complete walkthrough, or describe a task and paste your own input/answer pairs. CSV, XLSX, JSON, JSONL, and NDJSON imports reuse the existing data reader and field mapping. The answer column is optional for unlabeled examples. JSON can contain an array of records or a single record; wrapped record lists are selectable. Nested objects and arrays stay intact as JSON text for review. Review each answer, resolve gaps, and inspect the separate learning, calibration, and test cases.
 

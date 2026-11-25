@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
 import { flushSync } from 'react-dom';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Upload } from 'lucide-react';
 import { readSpreadsheet, type SpreadsheetSheet } from '@/lib/training-spreadsheet';
 import { prepareTraining, type CsvData } from '@/lib/training-csv';
@@ -11,9 +11,10 @@ import { answerLabel, guessColumns, readiness, type Columns } from '@/lib/train-
 import { TeachingSubmission } from '@/components/teaching-submission';
 import { useAuthSession } from '@/components/auth-session';
 import { gatewayTable, relayReportApi } from '@/lib/relay-report';
-import { AgentSteps } from '@/components/agent-training-card';
+import { TrainSources, type Teach } from '@/components/train-sources';
+import { TeachByExample } from '@/components/teach-by-example';
 import type { TrainingConfig } from '@/lib/training-config';
-import { PageHero, Section, workspacePage } from '@/components/workspace-page';
+import { Section } from '@/components/workspace-page';
 import button from '@/components/site/site-button.module.css';
 import css from './train-table.module.css';
 
@@ -31,8 +32,10 @@ function moving(update: () => void) {
   doc.startViewTransition(() => flushSync(update));
 }
 
-/** One screen: the customer's own rows, split by a line. Left is what the model reads; right is the one column it decides. */
-export function TrainTable({ config, gateway }: { config: TrainingConfig | null; gateway?: string }) {
+/** The start of training on /train: the ways in, then whichever was picked, in place. A file or a gateway question becomes one
+    screen of the customer's own rows, split by a line: left is what the model reads, right is the one column it decides.
+    `by` (examples or photos) opens the step-by-step teaching. */
+export function TrainTable({ config, gateway, by }: { config: TrainingConfig | null; gateway?: string; by?: string }) {
   const [file, setFile] = useState('');
   const [sheets, setSheets] = useState<SpreadsheetSheet[]>([]);
   const [data, setData] = useState<CsvData | null>(null);
@@ -44,7 +47,9 @@ export function TrainTable({ config, gateway }: { config: TrainingConfig | null;
   const [stage, setStage] = useState<'edit' | 'review'>('edit');
   const [question, setQuestion] = useState('');
   const [locked, setLocked] = useState(false);
+  const [teach, setTeach] = useState<Teach | null>(by === 'photos' ? { start: 'images' } : by === 'examples' ? { start: 'guided' } : null);
   const picker = useRef<HTMLInputElement>(null);
+  const router = useRouter();
   const { client, session } = useAuthSession(config ?? undefined);
 
   // Opened from a gateway question: its saved messages and answers are the table.
@@ -81,7 +86,7 @@ export function TrainTable({ config, gateway }: { config: TrainingConfig | null;
     setError('');
     const chosen = picked[0];
     if (!chosen) return;
-    if (picked.every(f => f.type.startsWith('image/'))) { setError('Photos train through the photo setup for now. Use “Train on photos” below.'); return; }
+    if (picked.every(f => f.type.startsWith('image/'))) { setError('Photos train through the photo setup for now. Pick “Decide from photos” under Type examples.'); return; }
     if (/\.pdf$/i.test(chosen.name)) { setError('PDFs come later. For now, put each document’s text in a spreadsheet column and drop the spreadsheet.'); return; }
     setWorking(true);
     try {
@@ -146,35 +151,25 @@ export function TrainTable({ config, gateway }: { config: TrainingConfig | null;
   </>;
   const dropping = { onDragOver: (e: DragEvent) => { e.preventDefault(); if (!locked) setOver(true); }, onDragLeave: () => setOver(false), onDrop: drop };
 
-  return <>
-    <PageHero title="Train a model" intro={data ? 'Put what it should decide on the right of the line.' : 'Start from past decisions in a file, or from the decisions your code already makes.'} />
+  // Back to the four ways; a gateway question or ?by= in the address would otherwise reopen on reload.
+  function another() {
+    setData(null); setFile(''); setSheets([]); setStage('edit'); setTeach(null); setError('');
+    if (gateway || by) router.replace('/train', { scroll: false });
+  }
 
-    {!data && <>
-      <Section label="Start training" />
-      <div className={`${workspacePage.split} ${css.even}`}>
-        <div className={css.path}>
-          <h3 id="path-file">Past decisions in a file</h3>
-          <p className={css.sub}>A spreadsheet (CSV or Excel), JSON or JSON Lines, one example per row with the right answer in one column. You check what it reads and decides, then train.</p>
-          <section className={css.drop} data-over={over} aria-label="Your examples" aria-busy={working} {...dropping}>
-            <Upload size={22} strokeWidth={1.5} aria-hidden="true" />
-            <p className={css.dropTitle}>Drop the file here</p>
-            {pick}
-            <p className={css.try}>Or try it with <button type="button" className={css.inline} disabled={working} onClick={() => void example()}>support tickets</button>.</p>
-            {error && <p role="alert" className={css.error}>{error}</p>}
-          </section>
-        </div>
-        <section className={css.path} aria-labelledby="path-code">
-          <h3 id="path-code">Decisions your code makes</h3>
-          <p className={css.sub}>An LLM call that picks a label, a rule, a game or an agent choosing its next move. Your coding agent finds those decisions in your repository, logs real examples, measures Zils on them and trains a model where it falls short. It asks you before spending anything.</p>
-          <AgentSteps ask="Find the decisions in this repo that Zils could make, measure Zils on them, and train a model for any it misses." />
-        </section>
-      </div>
-      <Section label="Other ways in" />
-      <p className={css.ways}><Link href="/train/teach">No examples yet? Teach it by example</Link><Link href="/train/teach">Train on photos</Link></p>
-    </>}
+  if (teach) return <><Section label="Start training" /><TeachByExample config={config} start={teach.start} kind={teach.kind} onExit={another} key={`${teach.start}-${teach.kind}`} /></>;
+
+  return <>
+    {!data && <TrainSources onTeach={setTeach} relay={relay} file={<section className={css.drop} data-over={over} aria-label="Your examples" aria-busy={working} {...dropping}>
+      <Upload size={22} strokeWidth={1.5} aria-hidden="true" />
+      <p className={css.dropTitle}>Drop the file here</p>
+      {pick}
+      <p className={css.try}>Or try it with <button type="button" className={css.inline} disabled={working} onClick={() => void example()}>support tickets</button>.</p>
+      {error && <p role="alert" className={css.error}>{error}</p>}
+    </section>} />}
 
     {data && <section aria-label="Your examples" aria-busy={working} {...dropping}>
-      <Section label="Your examples" action={!locked ? <button type="button" onClick={() => { setData(null); setFile(''); setSheets([]); setStage('edit'); }}>Use other examples</button> : undefined} />
+      <Section label="Your examples" action={!locked ? <button type="button" onClick={another}>Use another way</button> : undefined} />
       <div className={css.fileLine}>
         <span className={css.fileName}>{file}</span>
         {sheets.length > 1 && <select className={css.sheetPick} aria-label="Sheet" disabled={locked} onChange={e => show(sheets[Number(e.target.value)]?.data)}>{sheets.map((sheet, i) => <option key={sheet.name} value={i} disabled={!sheet.data}>{sheet.name}</option>)}</select>}

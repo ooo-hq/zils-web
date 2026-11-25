@@ -1,4 +1,4 @@
-/* /train: the three sources of training examples as stacked /pricing-style splits. The first, your coding agent, is the
+/* /train: the four ways to start a model as stacked /pricing-style splits. The first, your coding agent, is the
    one we recommend, so its title is set larger; the others are the same row, quieter. */
 .sources ol { list-style: none; margin: 0; padding: 0; }
 .sources li + li { border-top: 1px solid var(--zs-line); }
@@ -12,3 +12,19 @@
 .state[data-on] { color: var(--zs-fg); }
 .state[data-on]::before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 10px; border-radius: 50%; background: var(--zs-peach); vertical-align: 1px; }
 .state:empty + div { margin-top: 0; }
+/* The gateway's questions: the ones with enough saved answers are links that start training. */
+.questions { list-style: none; margin: 8px 0 16px; padding: 0; display: grid; gap: 10px; }
+.questions li { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; border-top: 0; font-size: 15px; }
+.questions li + li { border-top: 0; }
+.questions a { color: var(--zs-fg); text-decoration: underline; text-decoration-color: var(--zs-peach); text-underline-offset: 4px; overflow-wrap: anywhere; }
+.questions span { color: var(--zs-t2); overflow-wrap: anywhere; }
+.questions small { color: var(--zs-t3); font-size: 13px; font-variant-numeric: tabular-nums; }
+/* Type examples: the teaching's first choice, made right in the row. */
+.tasks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--zs-line); border-left: 1px solid var(--zs-line); }
+.tasks button { display: grid; justify-items: start; align-content: start; gap: 6px; padding: 18px 20px; border: 0; border-right: 1px solid var(--zs-line); border-bottom: 1px solid var(--zs-line); background: transparent; color: var(--zs-fg); font: inherit; text-align: left; cursor: pointer; }
+.tasks button:hover { background: rgba(var(--zs-fg-rgb), .04); }
+.tasks button:focus-visible { outline: 2px solid var(--zs-peach); outline-offset: -2px; }
+.tasks button svg { color: var(--zs-peach); margin-bottom: 4px; }
+.tasks strong { font-weight: 400; font-size: 16px; }
+.tasks span { font-size: 13px; line-height: 1.45; color: var(--zs-t2); }
+@media (max-width: 560px) { .tasks { grid-template-columns: minmax(0, 1fr); } }

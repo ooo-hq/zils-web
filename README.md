@@ -349,7 +349,12 @@ the workflow; they are not evidence of model quality.
 ## Customer training setup
 
 The `/train` workspace prioritizes the current unfinished run and lists past runs
-below it. “Train a model” opens the full-page `/train/teach` workflow. It supports
+below it. Under the runs are the four ways to start a model, each doing its first
+step in its own row: the coding agent, the learning gateway's saved questions, a
+dropped file, and typed examples. Picking a gateway question, a file or a kind of
+task opens that work in place (`/train?gateway=<id>`, `/train?by=examples`,
+`/train?by=photos`); “Use another way” returns to the four. The old `/train/new`
+and `/train/teach` addresses redirect to `/train`. The step-by-step teaching supports
 reviewed text decisions, prepared JSONL datasets, and labeled photos. Guided text
 preparation preserves any splits reserved during assisted review and converts
 only the reviewed decision inputs, labels, groups, and task instructions into the
@@ -371,14 +376,14 @@ runs offer the exact frozen JSONL files for recovery after closing the tab.
 Refreshing still clears in-memory files; keep original photos for recovery. Image submissions
 recheck the current service's availability and limits before creating a job.
 
-`/train/teach` is available in production builds when deployed; without training
+The step-by-step teaching is available in production builds when deployed; without training
 configuration it remains a local preparation UI. Its optional assisted-review
 API is still restricted to development and previews. Browser tests intercept all
 service requests; passing them does not establish a completed live training run.
 
 ### Bulk import and upload recovery
 
-On `/train/teach`, “Import labeled examples” appears inside “I have training
+On `/train?by=examples`, “Import labeled examples” appears inside “I have training
 data,” alongside prepared datasets; “Import labeled photos” appears inside
 “Images.” Both open `/train?setup=bulk` and the existing side
 panel with four steps: Decision, Data, Review, and Ready. Closing the panel keeps

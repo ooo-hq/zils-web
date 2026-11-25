@@ -258,7 +258,7 @@ test('a question with enough saved answers can be trained from; one with few say
   await answer(page, 200, { ...report, questions: [{ ...report.questions[0], rows: 240, shadows: [] }, report.questions[1]] });
   await page.goto('/gateway');
   const first = page.getByRole('region', { name: 'Question 1' }), second = page.getByRole('region', { name: 'Question 2' });
-  await expect(first.getByRole('link', { name: 'Train a model from these answers' })).toHaveAttribute('href', `/train/new?gateway=${'e'.repeat(64)}`);
+  await expect(first.getByRole('link', { name: 'Train a model from these answers' })).toHaveAttribute('href', `/train?gateway=${'e'.repeat(64)}`);
   await expect(second.getByRole('link', { name: 'Train a model from these answers' })).toHaveCount(0);
   await expect(second.getByText('Training opens at 200 saved messages.')).toBeVisible();
 });

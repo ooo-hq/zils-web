@@ -13,6 +13,7 @@ async function workspace(page: Page) {
   const expires = Math.floor(Date.now() / 1000) + 3600;
   const user = { id: owner, email: 'trainer@example.com', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' };
   await page.addInitScript(({ user, expires }) => {
+    localStorage.setItem('zils-welcome-seen', '1');
     localStorage.setItem('zils-training-auth', JSON.stringify({ user, access_token: `${btoa('{"alg":"HS256"}')}.${btoa(JSON.stringify({ sub: user.id, exp: expires }))}.fixture`, refresh_token: 'fixture', expires_at: expires, expires_in: 3600, token_type: 'bearer' }));
   }, { user, expires });
   const state = { created: undefined as Record<string, unknown> | undefined, uploads: {} as Record<string, string>, status: 'uploading', hold: null as Promise<void> | null };
@@ -36,15 +37,12 @@ async function workspace(page: Page) {
     if (request.method() === 'PUT' && path.endsWith('.jsonl')) { state.uploads[path.split('/').at(-1)!.replace('.jsonl', '')] = request.postData()!; return route.fulfill({ headers, json: {} }); }
     return route.fulfill({ status: 404, headers, json: {} });
   });
-  await page.goto('/train/new');
+  await page.goto('/train');
   return state;
 }
 
 test('a spreadsheet becomes a training run on one screen', async ({ page }) => {
   const state = await workspace(page);
-  await page.goto('/train');
-  await page.getByRole('link', { name: 'Upload a table', exact: true }).click();
-  await expect(page).toHaveURL('/train/new');
   await page.getByLabel('Choose a file of examples').setInputFiles({ name: 'tickets.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
 
   // The guess: team on the right, the id and the give-away column out, customers kept together.
@@ -145,7 +143,7 @@ test('saved gateway answers load as the table and train privately', async ({ pag
     asked = route.request().headers().authorization || '';
     return route.fulfill({ headers, json: saved });
   });
-  await page.goto(`/train/new?gateway=${id}`);
+  await page.goto(`/train?gateway=${id}`);
   await expect(page.getByText('Learns intent (picks 1 of 3) from text, using 60 examples.')).toBeVisible();
   expect(asked).toMatch(/^Bearer .+/);  // the signed-in account's own rows
   await page.getByRole('button', { name: 'Train', exact: true }).click();
@@ -169,7 +167,7 @@ test('a gateway question that cannot be loaded says so', async ({ page }) => {
   await workspace(page);
   const id = 'b'.repeat(64);
   await page.route(`**/v1/relay/questions/${id}/rows`, route => route.fulfill({ status: 404, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' }, json: { error: { code: 'no_question', message: 'No such question for this account.' } } }));
-  await page.goto(`/train/new?gateway=${id}`);
+  await page.goto(`/train?gateway=${id}`);
   await expect(page.getByText('That gateway question has no saved messages for this account.')).toBeVisible();
 });
 
@@ -180,13 +178,13 @@ test('photos and PDFs say where they go instead of failing', async ({ page }) =>
   await expect(examples.getByRole('alert')).toContainText('PDFs come later');
   await page.getByLabel('Choose a file of examples').setInputFiles({ name: 'part.png', mimeType: 'image/png', buffer: Buffer.from('png') });
   await expect(examples.getByRole('alert')).toContainText('photo setup');
-  await expect(page.getByRole('link', { name: 'Train on photos' })).toHaveAttribute('href', '/train/teach');
+  await expect(page.getByRole('button', { name: /Decide from photos/ })).toBeVisible();
 });
 
 test('decisions made in code are a starting point of their own, through the coding agent', async ({ page }) => {
   await workspace(page);
-  const code = page.getByRole('region', { name: 'Decisions your code makes' });
-  await expect(page.getByRole('heading', { name: 'Past decisions in a file' })).toBeVisible();
+  const code = page.getByRole('region', { name: 'Your coding agent', exact: true });
+  await expect(page.getByRole('heading', { name: 'Drop a file' })).toBeVisible();
   await expect(code).toContainText('claude mcp add zils -- npx -y @zils/cli mcp');
   await expect(code).toContainText('Find the decisions in this repo that Zils could make, measure Zils on them, and train a model for any it misses.');
   await code.getByRole('button', { name: 'Codex' }).click();

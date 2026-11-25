@@ -17,7 +17,7 @@ import s from './teach-by-example.module.css';
 import training from '@/app/(home)/train/train.module.css';
 
 const steps = ['Describe the task', 'Bring examples', 'Show what’s good', 'Check the gaps', 'Review and train'];
-const starters = {
+export const starters = {
   sort: { title: 'Sort or make a decision', description: 'Route a request. Choose a category.', icon: Layers3, goal: 'Send each customer request to the right team.', input: 'Could you send me the invoice for last month?', output: 'Billing', labels: ['Billing', 'Technical support', 'Account changes'], rule: 'Use Billing for payments, Technical support for product issues, and Account changes for profile updates.' },
   write: { title: 'Write in your style', description: 'Draft a reply. Rewrite something.', icon: MessageSquareText, goal: 'Write helpful, concise replies to customer requests.', input: 'My order arrived with a broken handle. What can I do?\nPolicy: replace damaged items free of charge after receiving a photo.', output: 'Please send us a photo of the damaged handle and your order number. We’ll arrange a free replacement.', labels: [], rule: 'Use a warm, direct tone. Follow the supplied policy. Never invent order details.' },
   extract: { title: 'Pull out information', description: 'Turn text into a few useful fields.', icon: FileText, goal: 'Extract the invoice number, total, and currency from invoice text.', input: 'Invoice INV-1042\nAlder Supply Lab\nSubtotal: USD 390.00\nTax: USD 30.00\nTotal due: USD 420.00', output: 'Invoice number: INV-1042\nTotal: 420.00\nCurrency: USD', labels: [], rule: 'Use the total including tax. Write “Not provided” for a field that is not present.' },
@@ -41,13 +41,14 @@ const samplePairs: Record<TeachingTask['kind'], [string, string][]> = {
   ],
 };
 
-export function TeachByExample({ config }: { config?: TrainingConfig | null }) {
+/** `kind` opens on that task already chosen; `onExit` (inside /train) replaces the back link with Use another way. */
+export function TeachByExample({ config, start = 'guided', kind, onExit }: { config?: TrainingConfig | null; start?: 'guided' | 'images'; kind?: TeachingTask['kind']; onExit?: () => void }) {
   const [locked, setLocked] = useState(false);
   const [step, setStep] = useState(0);
   const [assisted, setAssisted] = useState(true);
-  const [path, setPath] = useState<'guided' | 'prepared' | 'images'>('guided');
-  const [task, setTask] = useState<TeachingTask>({ kind: 'sort', goal: '', rules: '', answers: [] });
-  const [answerText, setAnswerText] = useState('');
+  const [path, setPath] = useState<'guided' | 'prepared' | 'images'>(start);
+  const [task, setTask] = useState<TeachingTask>(() => kind ? { kind, goal: starters[kind].goal, rules: starters[kind].rule, answers: [...starters[kind].labels] } : { kind: 'sort', goal: '', rules: '', answers: [] });
+  const [answerText, setAnswerText] = useState(kind ? starters[kind].labels.join('\n') : '');
   const [examples, setExamples] = useState<TeachingExample[]>([]);
   const [mode, setMode] = useState<'paste' | 'file' | 'documents'>('paste');
   const [input, setInput] = useState(''), [output, setOutput] = useState(''), [group, setGroup] = useState('');
@@ -174,8 +175,9 @@ export function TeachByExample({ config }: { config?: TrainingConfig | null }) {
   const testExample = draft?.splits.test[previewIndex];
 
   return <div className={s.page}>
-    <Link href="/train" className={s.backLink} target={locked ? '_blank' : undefined} rel={locked ? 'noopener noreferrer' : undefined}><ArrowLeft size={14} /> Back to training</Link>
-    <div className={training.workspaceHeading}><div><h1>Train a model</h1><p>Teach Zils one task from examples your team has reviewed.</p></div></div>
+    {onExit ? !locked && <button type="button" className={s.backLink} onClick={onExit}><ArrowLeft size={14} /> Use another way</button>
+      : <Link href="/train" className={s.backLink} target={locked ? '_blank' : undefined} rel={locked ? 'noopener noreferrer' : undefined}><ArrowLeft size={14} /> Back to training</Link>}
+    {!onExit && <div className={training.workspaceHeading}><div><h1>Train a model</h1><p>Teach Zils one task from examples your team has reviewed.</p></div></div>}
     <div className={s.main}>
         <div className={s.entryPaths} aria-label="Choose your starting point"><button type="button" disabled={locked} aria-pressed={path === 'guided'} onClick={() => setPath('guided')}>Guide me</button><button type="button" disabled={locked} aria-pressed={path === 'prepared'} onClick={() => setPath('prepared')}>I have training data</button><button type="button" disabled={locked} aria-pressed={path === 'images'} onClick={() => setPath('images')}>Images</button></div>
         {path === 'prepared' && <p className={s.pathNote}><strong>Prepared training.</strong> Your labels and dataset splits stay as supplied. Check the files, set your success criteria, and review the run.</p>}
